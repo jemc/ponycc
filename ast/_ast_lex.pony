@@ -21,18 +21,24 @@ type _ASTLexemeKind is
 
 class _ASTLexeme
   let kind: _ASTLexemeKind
-  let source: String
+  let source: ReadSeq[U8] val
   let start: USize
   var finish: USize
   
-  new create(kind': _ASTLexemeKind, source': String, start': USize) =>
+  new create(kind': _ASTLexemeKind, source': ReadSeq[U8] val, start': USize) =>
     kind = kind'; source = source'; start = start'; finish = start' + 1
   
   fun string(): String =>
-    source.substring(start.isize(), finish.isize())
+    let size = finish - start
+    let output = recover trn String(size) end
+    var i = start
+    try while i < finish do
+      output.push(source(i))
+    i = i + 1 end end
+    consume output
 
 primitive _ASTLex
-  fun apply(source: String, pos': USize = 0): List[_ASTLexeme] =>
+  fun apply(source: ReadSeq[U8] val, pos': USize = 0): List[_ASTLexeme] =>
     let tokens = List[_ASTLexeme]
     var pos = pos'
     var last_term_pos: (USize | None) = None
@@ -68,7 +74,7 @@ primitive _ASTLex
     try tokens.tail()().finish = pos end
   
   fun _triple_string(
-    tokens: List[_ASTLexeme], source: String, pos': USize
+    tokens: List[_ASTLexeme], source: ReadSeq[U8] val, pos': USize
   ): USize =>
     var pos = pos'
     

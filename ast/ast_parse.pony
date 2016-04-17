@@ -2,12 +2,12 @@
 use "collections"
 
 class val ASTParseError
-  let message: String 
-  let _source: String 
+  let message: String
+  let _source: ReadSeq[U8] val
   let _offset: USize
   
   new val create(
-    message': String = "", source': String = "", offset': USize = 0
+    message': String = "", source': ReadSeq[U8] val = "", offset': USize = 0
   ) =>
     message = message'
     _source = source'
@@ -17,8 +17,8 @@ class ASTParse
   var _iter: Iterator[_ASTLexeme] = Array[_ASTLexeme].values()
   var _last_error: ASTParseError = ASTParseError
   
-  fun ref apply(string: String): (AST | ASTParseError) =>
-    _iter = _ASTLex(string).values()
+  fun ref apply(input: ReadSeq[U8] val): (AST | ASTParseError) =>
+    _iter = _ASTLex(input).values()
     try
       let ast = _parse_ast()
       _expect_kind(_iter.next(), _ASTLexemeEOF, "part of an AST expression")
