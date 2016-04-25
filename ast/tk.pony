@@ -392,6 +392,12 @@ primitive _TkUtil
   
   fun find_by_name(name: String): Tk? =>
     for tk in all_tokens().values() do
-      try if tk.show() == name then return tk end end
+      try if name == tk.show() then return tk end end
+    end
+    error
+  
+  fun _find_by_name_seq(name: _ReadSeqSlice[U8]): Tk? =>
+    for tk in all_tokens().values() do
+      try if name == tk.show() then return tk end end
     end
     error

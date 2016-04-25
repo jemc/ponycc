@@ -37,7 +37,7 @@ class ASTParse
     if not (token.kind is kind) then _expect_failed(token, msg) end
     token
   
-  fun tag _decode_uint(input: String): U128 ? =>
+  fun tag _decode_uint(input: ReadSeq[U8] val): U128 ? =>
     var result: U128 = 0
     for c in input.values() do
       if (c < '0') or (c > '9') then error end
@@ -45,21 +45,27 @@ class ASTParse
     end
     result
   
-  fun tag _decode_int(input: String): (U128 | I128) ? =>
+  fun tag _decode_int(input: ReadSeq[U8] val): (U128 | I128) ? =>
     if input(0) == '-' then
-      _decode_uint(input.substring(1, ISize.max_value())).i128() * -1
+      _decode_uint(_ReadSeqSlice[U8](input, 1, input.size())).i128() * -1
     else
       _decode_uint(input)
     end
   
-  fun tag _decode_float(input: String): F64 ? =>
-    let parts = input.split(".", 2)
-    if parts.size() != 2 then error end
+  fun tag _decode_float(input: ReadSeq[U8] val): F64 ? =>
+    var dot: (USize | None) = None
+    var i: USize = 0
+    for byte in input.values() do
+      if byte == '.' then dot = i end
+    i = i + 1 end
     
-    let int_part = _decode_int(parts(0)).f64()
-    let dec_part = _decode_uint(parts(1)).f64()
+    let int_part_s = _ReadSeqSlice[U8](input, 0, dot as USize)
+    let dec_part_s = _ReadSeqSlice[U8](input, (dot as USize) + 1, input.size())
     
-    int_part + (dec_part / F64(10).pow(parts(1).size().f64()))
+    let int_part = _decode_int(int_part_s).f64()
+    let dec_part = _decode_uint(dec_part_s).f64()
+    
+    int_part + (dec_part / F64(10).pow(dec_part_s.size().f64()))
   
   fun ref _parse_ast(seen_start: Bool = false): AST ? =>
     if not seen_start then
@@ -71,10 +77,10 @@ class ASTParse
     
     var name =
       _expect_kind(_iter.next(), _ASTLexemeTerm,
-        "name term in an AST expression").string()
+        "name term in an AST expression").content()
     
-    if ":scope" == name.substring(-6, ISize.max_value()) then
-      name = name.substring(0, -6)
+    if name.slice(name.size() - 6, name.size()) == ":scope" then
+      name = name.slice(0, name.size() - 6)
       ast.is_scope = true
     end
     
@@ -90,18 +96,18 @@ class ASTParse
       return consume ast
     end
     
-    ast.kind = try _TkUtil.find_by_name(name) else TkNone end
+    ast.kind = try _TkUtil._find_by_name_seq(name) else TkNone end
     
     for token in _iter do
-      let content = token.string()
       match token.kind
       | _ASTLexemeRParen => break
       | _ASTLexemeLParen => ast.push_child(_parse_ast(true))
-      | _ASTLexemeString => ast.push_child(AST(TkString, content))
+      | _ASTLexemeString => ast.push_child(AST(TkString, token.string()))
       | _ASTLexemeTerm =>
+        let content = token.content()
         try      ast.push_child(AST(TkFloat, _decode_float(content)))
         else try ast.push_child(AST(TkInt,   _decode_int(content)))
-        else try ast.push_child(AST(_TkUtil.find_by_name(content)))
+        else try ast.push_child(AST(_TkUtil._find_by_name_seq(content)))
         else _expect_failed(token, "a known term in an AST expression")
         end end end
       else _expect_failed(token, "part of an AST expression")

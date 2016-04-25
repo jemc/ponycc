@@ -28,6 +28,9 @@ class _ASTLexeme
   new create(kind': _ASTLexemeKind, source': ReadSeq[U8] val, start': USize) =>
     kind = kind'; source = source'; start = start'; finish = start' + 1
   
+  fun content(): _ReadSeqSlice[U8] =>
+    _ReadSeqSlice[U8](source, start, finish)
+  
   fun string(): String =>
     let size = finish - start
     let output = recover trn String(size) end
