@@ -21,7 +21,7 @@ class ASTParse
     _iter = _ASTLex(input).values()
     try
       let ast = _parse_ast()
-      _expect_kind(_iter.next(), _ASTLexemeEOF, "part of an AST expression")
+      _expect_kind(_iter.next(), _ASTLexemeEOF, "the end of the AST input")
       ast
     else
       _last_error
