@@ -9,6 +9,7 @@ class ASTParseTest is UnitTest
   fun apply(h: TestHelper)? =>
     match ASTParse(TestFixtures.string_1())
     | let err: ASTParseError => h.fail(err.message)
+                                h.fail(err.show_in_line())
     | let ast: AST =>
       h.assert_true(ast == TestFixtures.ast_1())
     else error

@@ -12,6 +12,18 @@ class val ASTParseError
     message = message'
     _source = source'
     _offset = offset'
+  
+  fun show_in_line(): String =>
+    (var i, var j) = (_offset, _offset)
+    while '\n' != try _source(i) else '\n' end do i = i - 1 end
+    while '\n' != try _source(j) else '\n' end do j = j + 1 end
+    
+    let output = recover trn String end
+    output.append(_ReadSeqSlice[U8](_source, i + 1, j))
+    output.push('\n')
+    for x in Range(i + 1, _offset) do output.push(' ') end
+    output.push('^')
+    consume output
 
 class ASTParse
   var _iter: Iterator[_ASTLexeme] = Array[_ASTLexeme].values()
