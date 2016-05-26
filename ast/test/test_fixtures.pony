@@ -83,6 +83,7 @@ primitive TestFixtures
                 x,
                 AST(TkSeq, recover [as AST:
                   env_out_print_ast(AST(TkString, "Hello, World!")),
+                  env_out_print_ast(AST(TkString, "quote\"slash\\null\x00!")),
                   env_out_print_ast(string_ast("U32", AST(TkInt, U128(88)))),
                   env_out_print_ast(string_ast("F32", AST(TkFloat, F64(99.9))))
                 ] end),
@@ -97,11 +98,11 @@ primitive TestFixtures
       ] end)
     ] end)
   
-  fun string_1(): String => "
+  fun string_1(): String => """
 (program:scope
   (package:scope
     (module:scope
-      (use x \"\"\"builtin\"\"\" x)
+      (use x "builtin" x)
       (actor:scope
         (id Main)
         x
@@ -117,7 +118,12 @@ primitive TestFixtures
             x
             (seq
               (call
-                (positionalargs (seq \"\"\"Hello, World!\"\"\"))
+                (positionalargs (seq "Hello, World!"))
+                x
+                (. (. (reference (id env)) (id out)) (id print))
+              )
+              (call
+                (positionalargs (seq "quote\"slash\\null\0!"))
                 x
                 (. (. (reference (id env)) (id out)) (id print))
               )
@@ -168,4 +174,4 @@ primitive TestFixtures
     )
   )
 )
-"
+"""

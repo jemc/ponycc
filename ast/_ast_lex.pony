@@ -36,8 +36,15 @@ class _ASTLexeme
     let output = recover trn String(size) end
     var i = start
     try while i < finish do
-      output.push(source(i))
-    i = i + 1 end end
+      match source(i = i + 1)
+      | '\\' =>
+        match source(i = i + 1)
+        | '0'       => output.push(0)
+        | let c: U8 => output.push(c)
+        end
+      | let c: U8 => output.push(c)
+      end
+    end end
     consume output
 
 primitive _ASTLex
@@ -53,18 +60,13 @@ primitive _ASTLex
       | ')' => tokens.push(_ASTLexeme(_ASTLexemeRParen, source, pos))
       | '[' => tokens.push(_ASTLexeme(_ASTLexemeLBracket, source, pos))
       | ']' => tokens.push(_ASTLexeme(_ASTLexemeRBracket, source, pos))
+      | '"' => pos = _string(tokens, source, pos + 1)
       else
-        if (source(pos) == '"')
-        and (source(pos + 1) == '"')
-        and (source(pos + 2) == '"') then
-          pos = _triple_string(tokens, source, pos + 3)
-        else
-          if try ((last_term_pos as USize) + 1) == pos else false end
-          then _extend_token(tokens, pos + 1)
-          else tokens.push(_ASTLexeme(_ASTLexemeTerm, source, pos))
-          end
-          last_term_pos = pos
+        if try ((last_term_pos as USize) + 1) == pos else false end
+        then _extend_token(tokens, pos + 1)
+        else tokens.push(_ASTLexeme(_ASTLexemeTerm, source, pos))
         end
+        last_term_pos = pos
       end
       pos = pos + 1
     end end
@@ -76,24 +78,23 @@ primitive _ASTLex
   fun _extend_token(tokens: List[_ASTLexeme], pos: USize) =>
     try tokens.tail()().finish = pos end
   
-  fun _triple_string(
+  fun _string(
     tokens: List[_ASTLexeme], source: ReadSeq[U8] val, pos': USize
   ): USize =>
     var pos = pos'
+    var escapes: USize = 0
     
     tokens.push(_ASTLexeme(_ASTLexemeString, source, pos))
-    var quote_count: USize = 0
     
     try while true do
-      if source(pos) == '"' then
-        quote_count = quote_count + 1
-      elseif quote_count < 3 then
-        quote_count = 0
-      else
-        _extend_token(tokens, pos - 3)
-        break
+      match source(pos)
+      | '"'  => _extend_token(tokens, pos); break
+      | '\\' => pos = pos + 1
+        match source(pos) | '"' | '\\' | '0' =>
+          escapes = escapes + 1
+        end
       end
       pos = pos + 1
     end end
     
-    pos - 1
+    pos
