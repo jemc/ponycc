@@ -98,6 +98,113 @@ primitive TestFixtures
       ] end)
     ] end)
   
+  fun ast_2(): AST =>
+    let nominal = lambda(id: String, dot_id: String, cap: Tk, sufx: Tk,
+      type_args: (Array[AST] val | None) = None): AST =>
+      AST(TkNominal, recover [as AST:
+        AST(TkId, id),
+        AST(TkId, dot_id),
+        match type_args | let type_args': Array[AST] val =>
+          AST(TkTypeArgs, type_args')
+        else
+          AST(TkNone)
+        end,
+        AST(cap),
+        AST(sufx),
+        AST(TkNone)
+      ] end)
+    end
+    
+    let env_out_print_ast = recover val
+      lambda(arg: AST)(nominal' = nominal): AST =>
+        let x: AST = AST(TkNone)
+        let nominal = nominal'
+        
+        let funtype: AST =
+          AST(TkFunType, recover [as AST:
+            AST(TkTag),
+            x,
+            AST(TkParams, recover [as AST:
+              AST(TkParam, recover [as AST:
+                AST(TkId, "data"),
+                AST(TkUnionType, recover [as AST:
+                  nominal("$0", "String", TkVal, TkNone),
+                  nominal("$0", "Array", TkVal, TkNone, recover [as AST:
+                    nominal("$0", "U8", TkVal, TkNone)
+                  ] end)
+                ] end),
+              x
+              ] end)
+            ] end),
+            nominal("$0", "StdStream", TkTag, TkNone)
+          ] end)
+        
+        AST(TkCall, recover [as AST:
+          AST(TkPositionalArgs, recover [as AST:
+            AST(TkSeq, recover [as AST:
+              arg
+            ] end, nominal("$0", "String", TkVal, TkNone))
+          ] end),
+          x,
+          AST(TkBeRef, recover [as AST:
+            AST(TkFLetRef, recover [as AST:
+              AST(TkParamRef, recover [as AST:
+                AST(TkId, "env")
+              ] end, nominal("$0", "Env", TkVal, TkNone)),
+              AST(TkId, "out", nominal("$0", "StdStream", TkTag, TkNone))
+            ] end, nominal("$0", "StdStream", TkTag, TkNone)),
+            AST(TkId, "print")
+          ] end, funtype)
+        ] end, nominal("$0", "StdStream", TkTag, TkNone))
+      end
+    end
+    
+    let x: AST = AST(TkNone)
+    
+    AST(TkProgram, recover [as AST:
+      AST(TkPackage, recover [as AST:
+        AST(TkModule, recover [as AST:
+          AST(TkUse, recover [as AST: x, AST(TkString, "builtin"), x] end),
+          AST(TkActor, recover [as AST:
+            AST(TkId, "Main"),
+            x,
+            AST(TkTag),
+            x,
+            AST(TkMembers, recover [as AST:
+              AST(TkNew, recover [as AST:
+                AST(TkTag),
+                AST(TkId, "create"),
+                x,
+                AST(TkParams, recover [as AST:
+                  AST(TkParam, recover [as AST:
+                    AST(TkId, "env"),
+                    nominal("$0", "Env", TkVal, TkNone),
+                    x
+                  ] end, nominal("$0", "Env", TkVal, TkNone))
+                ] end),
+                nominal("$1", "Main", TkTag, TkEphemeral),
+                x,
+                AST(TkSeq, recover [as AST:
+                  env_out_print_ast(AST(
+                    TkString, "Hello, World!",
+                    nominal("$0", "String", TkVal, TkNone)
+                  )),
+                  env_out_print_ast(AST(
+                    TkString, "quote\"slash\\null\x00!",
+                    nominal("$0", "String", TkVal, TkNone)
+                  ))
+                ] end, nominal("$0", "StdStream", TkTag, TkNone)),
+                x,
+                x
+              ] end)
+            ] end),
+            x,
+            x
+          ] end)
+        ] end)
+      ] end)
+    ] end)
+  
   fun string_1(): String => """
 (program:scope
   (package:scope
@@ -163,6 +270,127 @@ primitive TestFixtures
                 x
                 (. (. (reference (id env)) (id out)) (id print))
               )
+            )
+            x
+            x
+          )
+        )
+        x
+        x
+      )
+    )
+  )
+)
+"""
+  fun string_2(): String => """
+(program:scope
+  (package:scope
+    (module:scope
+      (use x "builtin" x)
+      (actor:scope
+        (id Main)
+        x
+        tag
+        x
+        (members
+          (new:scope
+            tag
+            (id create)
+            x
+            (params
+              (param
+                (id env)
+                (nominal (id $0) (id Env) x val x x)
+                x
+                [nominal (id $0) (id Env) x val x x]
+              )
+            )
+            (nominal (id $1) (id Main) x tag ^ x)
+            x
+            (seq
+              (call
+                (positionalargs
+                  (seq
+                    ("Hello, World!" [nominal (id $0) (id String) x val x x])
+                    [nominal (id $0) (id String) x val x x]
+                  )
+                )
+                x
+                (beref
+                  (fletref
+                    (paramref (id env) [nominal (id $0) (id Env) x val x x])
+                    ((id out) [nominal (id $0) (id StdStream) x tag x x])
+                    [nominal (id $0) (id StdStream) x tag x x]
+                  )
+                  (id print)
+                  [funtype
+                    tag
+                    x
+                    (params
+                      (param
+                        (id data)
+                        (uniontype
+                          (nominal (id $0) (id String) x val x x)
+                          (nominal
+                            (id $0)
+                            (id Array)
+                            (typeargs (nominal (id $0) (id U8) x val x x))
+                            val
+                            x
+                            x
+                          )
+                        )
+                        x
+                      )
+                    )
+                    (nominal (id $0) (id StdStream) x tag x x)
+                  ]
+                )
+                [nominal (id $0) (id StdStream) x tag x x]
+              )
+              (call
+                (positionalargs
+                  (seq
+                    ("quote\"slash\\null\0!"
+                      [nominal (id $0) (id String) x val x x]
+                    )
+                    [nominal (id $0) (id String) x val x x]
+                  )
+                )
+                x
+                (beref
+                  (fletref
+                    (paramref (id env) [nominal (id $0) (id Env) x val x x])
+                    ((id out) [nominal (id $0) (id StdStream) x tag x x])
+                    [nominal (id $0) (id StdStream) x tag x x]
+                  )
+                  (id print)
+                  [funtype
+                    tag
+                    x
+                    (params
+                      (param
+                        (id data)
+                        (uniontype
+                          (nominal (id $0) (id String) x val x x)
+                          (nominal
+                            (id $0)
+                            (id Array)
+                            (typeargs (nominal (id $0) (id U8) x val x x))
+                            val
+                            x
+                            x
+                          )
+                        )
+                        x
+                      )
+                    )
+                    (nominal (id $0) (id StdStream) x tag x x)
+                  ]
+                )
+                [nominal (id $0) (id StdStream) x tag x x]
+              )
+              [nominal (id $0) (id StdStream) x tag x x]
             )
             x
             x
