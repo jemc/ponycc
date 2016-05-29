@@ -79,16 +79,27 @@ class ASTParse
     
     int_part + (dec_part / F64(10).pow(dec_part_s.size().f64()))
   
-  fun ref _parse_ast(seen_start: Bool = false): AST ? =>
+  fun ref _parse_ast(seen_start: Bool = false, bracket: Bool = false): AST ? =>
     if not seen_start then
-      _expect_kind(_iter.next(), _ASTLexemeLParen,
-        "opening parenthesis of an AST expression")
+      if bracket then
+        _expect_kind(_iter.next(), _ASTLexemeLBracket,
+          "opening bracket of an AST type expression")
+      else
+        _expect_kind(_iter.next(), _ASTLexemeLParen,
+          "opening parenthesis of an AST expression")
+      end
     end
     
     let ast: AST trn = AST
     
+    let first = _iter.next()
+    match first.kind
+    | _ASTLexemeString => return _parse_rest_string_with_type(first)
+    | _ASTLexemeLParen => return _parse_rest_id_with_type(first)
+    end
+    
     var name =
-      _expect_kind(_iter.next(), _ASTLexemeTerm,
+      _expect_kind(first, _ASTLexemeTerm,
         "name term in an AST expression").content()
     
     if name.slice(name.size() - 6, name.size()) == ":scope" then
@@ -102,8 +113,13 @@ class ASTParse
         _expect_kind(_iter.next(), _ASTLexemeTerm,
           "ID term in AST expression of kind TkId").string()
       
-      _expect_kind(_iter.next(), _ASTLexemeRParen,
-        "closing parenthesis of an AST expression of kind TkId")
+      if bracket then
+        _expect_kind(_iter.next(), _ASTLexemeRBracket,
+          "closing bracket of an AST type expression of kind TkId")
+      else
+        _expect_kind(_iter.next(), _ASTLexemeRParen,
+          "closing parenthesis of an AST expression of kind TkId")
+      end
       
       return consume ast
     end
@@ -112,9 +128,17 @@ class ASTParse
     
     for token in _iter do
       match token.kind
-      | _ASTLexemeRParen => break
-      | _ASTLexemeLParen => ast.push_child(_parse_ast(true))
       | _ASTLexemeString => ast.push_child(AST(TkString, token.string()))
+      | _ASTLexemeLParen => ast.push_child(_parse_ast(true, false))
+      | _ASTLexemeRParen =>
+        if not bracket then break
+        else _expect_failed(token, "no closing parenthesis in this context")
+        end
+      | _ASTLexemeLBracket => ast.expr_type = _parse_ast(true, true)
+      | _ASTLexemeRBracket =>
+        if bracket then break
+        else _expect_failed(token, "no closing bracket in this context")
+        end
       | _ASTLexemeTerm =>
         let content = token.content()
         try      ast.push_child(AST(TkFloat, _decode_float(content)))
@@ -125,5 +149,41 @@ class ASTParse
       else _expect_failed(token, "part of an AST expression")
       end
     end
+    
+    consume ast
+  
+  fun ref _parse_rest_string_with_type(first_token: _ASTLexeme): AST ? =>
+    _expect_kind(first_token, _ASTLexemeString,
+      "string AST expression with type")
+    
+    let ast: AST trn = AST(TkString, first_token.string())
+    
+    ast.expr_type = _parse_ast(false, true)
+    
+    _expect_kind(_iter.next(), _ASTLexemeRParen,
+      "closing parenthesis of a string AST expression with type")
+    
+    consume ast
+  
+  fun ref _parse_rest_id_with_type(first_token: _ASTLexeme): AST ? =>
+    _expect_kind(first_token, _ASTLexemeLParen,
+      "opening parenthesis of an AST expression of kind TkId with type")
+    
+    let name = _expect_kind(_iter.next(), _ASTLexemeTerm,
+      "name term in an AST expression of kind TkId")
+    if name.content() != "id" then _expect_failed(name, "name term of id") end
+    
+    let ast: AST trn = AST(TkId)
+    ast.value =
+      _expect_kind(_iter.next(), _ASTLexemeTerm,
+        "ID term in AST expression of kind TkId").string()
+    
+    _expect_kind(_iter.next(), _ASTLexemeRParen,
+      "closing parenthesis of an AST expression of kind TkId with type")
+    
+    ast.expr_type = _parse_ast(false, true)
+    
+    _expect_kind(_iter.next(), _ASTLexemeRParen,
+      "closing parenthesis of an AST expression")
     
     consume ast

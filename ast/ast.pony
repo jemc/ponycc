@@ -3,13 +3,16 @@ class val AST
   var kind: Tk
   var is_scope: Bool = false
   var value: (I128 | U128 | F64 | String | None)
+  var expr_type: (AST | None) = None
   let children: Array[AST] = Array[AST]
   
   new iso create(
     kind': Tk = TkNone,
-    contents': (Array[AST] val | I128 | U128 | F64 | String | None) = None
+    contents': (Array[AST] val | I128 | U128 | F64 | String | None) = None,
+    expr_type': (AST | None) = None
   ) =>
     kind = kind'
+    expr_type = expr_type'
     value = try
       contents' as (I128 | U128 | F64 | String | None)
     else
