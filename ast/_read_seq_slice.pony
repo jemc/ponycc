@@ -9,6 +9,7 @@ class val _ReadSeqSlice[A: Equatable[A] val] is ReadSeq[A]
   fun slice(i: USize, j: USize): _ReadSeqSlice[A] =>
     _ReadSeqSlice[A](inner, start + i, (start + j).min(finish))
   
+  fun ne(that: box->ReadSeq[A]): Bool => not eq(that)
   fun eq(that: box->ReadSeq[A]): Bool =>
     if this.size() != that.size() then return false end
     let a = this.values()
