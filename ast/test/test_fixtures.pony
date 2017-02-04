@@ -3,7 +3,7 @@ use ".."
 
 primitive TestFixtures
   fun ast_1(): AST =>
-    let env_out_print_ast = lambda(arg: AST): AST =>
+    let env_out_print_ast = {(arg: AST): AST =>
       let x: AST = AST(TkNone)
       
       AST(TkCall, recover [as AST:
@@ -21,9 +21,9 @@ primitive TestFixtures
           AST(TkId, "print")
         ] end)
       ] end)
-    end
+    }
     
-    let string_ast = lambda(lit: String, rcvr: AST): AST =>
+    let string_ast = {(lit: String, rcvr: AST): AST =>
       let x: AST = AST(TkNone)
       
       AST(TkCall, recover [as AST:
@@ -40,7 +40,7 @@ primitive TestFixtures
           AST(TkId, "string")
         ] end)
       ] end)
-    end
+    }
     
     let x: AST = AST(TkNone)
     
@@ -99,7 +99,7 @@ primitive TestFixtures
     ] end)
   
   fun ast_2(): AST =>
-    let nominal = lambda(id: String, dot_id: String, cap: Tk, sufx: Tk,
+    let nominal = {(id: String, dot_id: String, cap: Tk, sufx: Tk,
       type_args: (Array[AST] val | None) = None): AST =>
       AST(TkNominal, recover [as AST:
         AST(TkId, id),
@@ -113,10 +113,10 @@ primitive TestFixtures
         AST(sufx),
         AST(TkNone)
       ] end)
-    end
+    }
     
     let env_out_print_ast = recover val
-      lambda(arg: AST)(nominal' = nominal): AST =>
+      {(arg: AST)(nominal' = nominal): AST =>
         let x: AST = AST(TkNone)
         let nominal = nominal'
         
@@ -156,7 +156,7 @@ primitive TestFixtures
             AST(TkId, "print")
           ] end, funtype)
         ] end, nominal("$0", "StdStream", TkTag, TkNone))
-      end
+      }
     end
     
     let x: AST = AST(TkNone)

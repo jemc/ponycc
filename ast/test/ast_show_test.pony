@@ -8,8 +8,8 @@ class ASTShowTest is UnitTest
   
   fun apply(h: TestHelper) =>
     h.assert_eq[String box](
-      TestFixtures.string_1().clone().strip(),
-      ASTShow(TestFixtures.ast_1()).clone().strip())
+      TestFixtures.string_1().clone().>strip(),
+      ASTShow(TestFixtures.ast_1()).clone().>strip())
     h.assert_eq[String box](
-      TestFixtures.string_2().clone().strip(),
-      ASTShow(TestFixtures.ast_2()).clone().strip())
+      TestFixtures.string_2().clone().>strip(),
+      ASTShow(TestFixtures.ast_2()).clone().>strip())
