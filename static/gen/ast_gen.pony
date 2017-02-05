@@ -7,10 +7,7 @@ class ASTGen
   
   new ref create() => None
   
-  fun ref def(name: String): _Def =>
-    let d = _Def(this, name)
-    defs.push(d)
-    d
+  fun ref def(name: String): _Def => _Def(this, name)
   
   fun string(): String =>
     let g: CodeGen = CodeGen
@@ -44,7 +41,9 @@ class _Def
   var _with_scope: Bool = false
   var _with_type:  Bool = false
   
-  new create(g: ASTGen, n: String) => (_gen, name) = (g, n)
+  new create(g: ASTGen, n: String) =>
+    (_gen, name) = (g, n)
+    _gen.defs.push(this)
   
   fun ref has(n: String, t: String) => fields.push((n, t))
   
