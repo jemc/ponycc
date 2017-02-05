@@ -7,7 +7,7 @@ class ASTGen
   
   new ref create() => None
   
-  fun ref def(n: String):                _DefFixed => _DefFixed(this, n)
+  fun ref def(n: String):                 _DefFixed => _DefFixed(this, n)
   fun ref def_wrap(n: String, t: String): _DefWrap  => _DefWrap(this, n, t)
   
   fun string(): String =>
