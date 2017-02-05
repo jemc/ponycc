@@ -3,11 +3,22 @@ primitive ASTDefs
   fun apply(g: ASTGen) =>
     // Based on treecheckdef.h (at commit: a7babdf2)
     
-    g.def("Program").>todo()
-    g.def("Package").>todo()
-    g.def("Module").>todo()
+    g.def("Program")
+      .> with_scope()
+      .> has("packages", "Array[Package]")
     
-    g.def("Use")
+    g.def("Package")
+      .> with_scope()
+      .> has("modules", "Array[Module]",      "Array[Module]")
+      .> has("docs",    "(LitString | None)", "None")
+    
+    g.def("Module")
+      .> with_scope()
+      .> has("use_decls",  "Array[UseDecl]",    "Array[UseDecl]")
+      .> has("type_decls", "Array[TypeDecl]",   "Array[TypeDecl]")
+      .> has("docs",       "(LitString | None)", "None")
+    
+    g.def("UseDecl")
       .> has("prefix", "(Id | None)")
       .> has("body",   "(FFIDecl | None)")
       .> has("guard",  "(Expr | IfDefCond | None)")
@@ -23,7 +34,7 @@ primitive ASTDefs
       "TypeAlias", "Interface", "Trait", "Primitive", "Struct", "Class", "Actor"
     ].values() do
       g.def(name)
-        .> in_union("Type")
+        .> in_union("TypeDecl")
         .> has("name",        "Id")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("cap",         "(Cap | None)",        "None")
@@ -33,16 +44,20 @@ primitive ASTDefs
         .> has("docs",        "(LitString | None)",  "None")
     end
     
-    g.def("Provides").>todo()
-    g.def("Members").>todo()
+    g.def("Provides")
+      .> has("types", "Array[Type]", "Array[Type]")
+    
+    g.def("Members")
+      .> has("fields",  "Array[Field]",  "Array[Field]")
+      .> has("methods", "Array[Method]", "Array[Method]")
     
     for name in ["FieldLet", "FieldVar", "FieldEmbed"].values() do
       g.def(name)
         .> in_union("Field")
         .> with_type()
         .> has("name",       "Id")
-        .> has("field_type", "(TypePtr | None)", "None")
-        .> has("default",    "(Expr | None)",    "None")
+        .> has("field_type", "(Type | None)", "None")
+        .> has("default",    "(Expr | None)", "None")
     end
     
     for name in ["MethodFun", "MethodNew", "MethodBe"].values() do
@@ -53,37 +68,49 @@ primitive ASTDefs
         .> has("name",        "Id")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("params",      "(Params | None)",     "None")
-        .> has("return_type", "(TypePtr | None)",    "None")
+        .> has("return_type", "(Type | None)",       "None")
         .> has("partial",     "(Question | None)",   "None")
         .> has("body",        "(RawExprSeq | None)", "None")
         .> has("docs",        "(LitString | None)",  "None")
         .> has("guard",       "(RawExprSeq | None)", "None")
     end
     
-    g.def("TypeParams").>todo()
+    g.def("TypeParams") // TODO: consider removing/inlining this type
+      .> has("list", "Array[TypeParam]", "Array[TypeParam]")
     
     g.def("TypeParam")
       .> has("name",       "Id")
-      .> has("constraint", "(TypePtr | None)")
-      .> has("default",    "(TypePtr | None)")
+      .> has("constraint", "(Type | None)")
+      .> has("default",    "(Type | None)")
     
-    g.def("TypeArgs").>todo()
+    g.def("TypeArgs") // TODO: consider removing/inlining this type
+      .> has("list", "Array[Type]", "Array[Type]")
     
-    g.def("Params").>todo()
+    g.def("Params")
+      .> has("param",    "Array[Param]",      "Array[Param]")
+      .> has("ellipsis", "(Ellipsis | None)", "None")
     
     g.def("Param")
       .> with_type()
       .> has("name",       "Id")
-      .> has("param_type", "(TypePtr | None)")
-      .> has("default",    "(Expr | None)")
+      .> has("param_type", "(Type | None)", "None")
+      .> has("default",    "(Expr | None)", "None")
     
-    g.def("ExprSeq").>todo()
-    g.def("RawExprSeq").>todo()
+    g.def("ExprSeq") // TODO: make this definition less useless
+      .> with_scope()
+      .> has("list", "Array[(Jump | Intrinsic | CompileError | Expr | Semi)]",
+                     "Array[(Jump | Intrinsic | CompileError | Expr | Semi)]")
+    
+    g.def("RawExprSeq") // TODO: make this definition less useless
+      .> has("list", "Array[(Jump | Intrinsic | CompileError | Expr | Semi)]",
+                     "Array[(Jump | Intrinsic | CompileError | Expr | Semi)]")
     
     for name in ["Return", "Break", "Continue", "Error"].values() do
-      g.def(name).>todo()
+       // TODO: consider removing the Jump union type
+      g.def(name).>in_union("Jump").>todo()
     end
     
+    g.def("Intrinsic").>todo() // TODO: consider removing/inlining this type
     g.def("CompileError").>todo()
     g.def("Expr").>todo()
     
@@ -92,22 +119,24 @@ primitive ASTDefs
         .> in_union("Local")
         .> with_type()
         .> has("name",       "Id")
-        .> has("local_type", "(TypePtr | None)")
+        .> has("local_type", "(Type | None)")
     end
     
     g.def("MatchCapture")
       .> with_type()
       .> has("name",       "Id")
-      .> has("match_type", "TypePtr")
+      .> has("match_type", "Type")
     
     g.def("Infix").>todo()
     
     g.def("As")
       .> with_type()
       .> has("expr",    "Expr")
-      .> has("as_type", "TypePtr")
+      .> has("as_type", "Type")
     
-    g.def("Tuple").>todo()
+    g.def("Tuple")
+      .> with_type()
+      .> has("elements", "Array[RawExprSeq]", "Array[RawExprSeq]")
     
     g.def("Consume")
       .> with_type()
@@ -156,8 +185,11 @@ primitive ASTDefs
       .> has("named_args", "(NamedArgs | None)", "None")
       .> has("partial",    "(Question | None)",  "None")
     
-    g.def("Args").>todo()
-    g.def("NamedArgs").>todo()
+    g.def("Args")
+      .> has("list", "Array[RawExprSeq]", "Array[RawExprSeq]")
+    
+    g.def("NamedArgs")
+      .> has("list", "Array[NamedArg]", "Array[NamedArg]")
     
     g.def("NamedArg")
       .> has("name",  "Id")
@@ -227,6 +259,8 @@ primitive ASTDefs
     
     g.def("Cases").>todo()
       .> with_scope() // to simplify branch consolidation
+      .> with_type()
+      .> has("list", "Array[Case]", "Array[Case]")
     
     g.def("Case")
       .> with_scope()
@@ -247,19 +281,21 @@ primitive ASTDefs
       .> has("type_params", "(TypeParams | None)",     "None")
       .> has("params",      "(Params | None)",         "None")
       .> has("captures",    "(LambdaCaptures | None)", "None")
-      .> has("return_type", "(TypePtr | None)",        "None")
+      .> has("return_type", "(Type | None)",           "None")
       .> has("partial",     "(Question | None)",       "None")
       .> has("body",        "(RawExprSeq)")
       .> has("object_cap",  "(Cap | None | Question)", "None")
     
-    g.def("LambdaCaptures").>todo()
+    g.def("LambdaCaptures")
+      .> has("list", "Array[LambdaCapture]", "Array[LambdaCapture]")
     
     g.def("LambdaCapture")
       .> has("name",       "Id")
-      .> has("local_type", "(TypePtr | None)", "None")
-      .> has("expr",       "(Expr | None)",    "None")
+      .> has("local_type", "(Type | None)", "None")
+      .> has("expr",       "(Expr | None)", "None")
     
-    g.def("LitArray").>todo()
+    g.def("LitArray")
+      .> has("list", "Array[RawExprSeq]", "Array[RawExprSeq]")
     
     g.def("Object")
       .> has("cap",      "(Cap | None)",      "None")
@@ -306,33 +342,39 @@ primitive ASTDefs
         .> has("name", "Id")
     end
     
-    g.def("TypePtr").>todo()
+    g.def("Type").>todo()
     
-    g.def("UnionType").>todo()
-    g.def("IsectType").>todo()
-    g.def("TupleType").>todo()
+    g.def("UnionType")
+      .> has("list", "Array[Type]", "Array[Type]")
+    
+    g.def("IsectType")
+      .> has("list", "Array[Type]", "Array[Type]")
+    
+    g.def("TupleType")
+      .> has("list", "Array[Type]", "Array[Type]")
     
     g.def("ArrowType")
-      .> has("left",  "TypePtr")
-      .> has("right", "TypePtr")
+      .> has("left",  "Type")
+      .> has("right", "Type")
     
     g.def("FunType")
       .> has("cap",         "Cap")
       .> has("type_params", "(TypeParams | None)", "None")
       .> has("params",      "(Params | None)",     "None")
-      .> has("return_type", "(TypePtr | None)",    "None")
+      .> has("return_type", "(Type | None)",       "None")
     
     g.def("LambdaType")
       .> has("method_cap",  "(Cap | None)",          "None")
       .> has("name",        "(Id | None)",           "None")
       .> has("type_params", "(TypeParams | None)",   "None")
-      .> has("params",      "(TypePtrList | None)",  "None")
-      .> has("return_type", "(TypePtr | None)",      "None")
+      .> has("params",      "(TypeList | None)",     "None")
+      .> has("return_type", "(Type | None)",         "None")
       .> has("partial",     "(Question | None)",     "None")
       .> has("object_cap",  "(Cap | GenCap | None)", "None")
       .> has("cap_mod",     "(CapMod | None)",       "None")
     
-    g.def("TypePtrList").>todo()
+    g.def("TypeList")
+      .> has("list", "Array[Type]", "Array[Type]")
     
     g.def("NominalType")
       .> has("package",   "(Id | None)",           "None")

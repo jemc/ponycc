@@ -2,8 +2,6 @@ type Cap is (Iso | Trn | Ref | Val | Box | Tag)
 
 type LitBool is (True | False)
 
-type Type is (TypeAlias | Interface | Trait | Primitive | Struct | Class | Actor)
-
 type CtrlType is (CtrlTypeIf | CtrlTypeCases | CtrlTypeReturn | CtrlTypeBreak | CtrlTypeContinue | CtrlTypeError | CtrlTypeCompileError | CtrlTypeCompileIntrinsic)
 
 type Field is (FieldLet | FieldVar | FieldEmbed)
@@ -12,28 +10,74 @@ type GenCap is (CapRead | CapSend | CapShare | CapAlias | CapAny)
 
 type Local is (LocalLet | LocalVar)
 
+type Jump is (Return | Break | Continue | Error)
+
 type MethodRef is (MethodFunRef | MethodNewRef | MethodBeRef)
 
 type CapMod is (Aliased | Ephemeral)
+
+type TypeDecl is (TypeAlias | Interface | Trait | Primitive | Struct | Class | Actor)
 
 type UnaryOperator is (Not | UMinus | UMinusUnsafe | AddressOf | DigestOf)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type FieldRef is (FieldLetRef | FieldVarRef | FieldEmbedRef)
-
 type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
 
-class Program // TODO
-  new create() => None
+type FieldRef is (FieldLetRef | FieldVarRef | FieldEmbedRef)
 
-class Package // TODO
-  new create() => None
+class Program
+  var _packages: Array[Package]
+  
+  new create(
+    packages': Array[Package])
+  =>
+    _packages = packages'
+  
+  fun packages(): this->Array[Package] => _packages
+  
+  fun ref set_packages(packages': Array[Package]) => _packages = consume packages'
 
-class Module // TODO
-  new create() => None
+class Package
+  var _modules: Array[Module]
+  var _docs: (LitString | None)
+  
+  new create(
+    modules': Array[Module] = Array[Module],
+    docs': (LitString | None) = None)
+  =>
+    _modules = modules'
+    _docs = docs'
+  
+  fun modules(): this->Array[Module] => _modules
+  fun docs(): this->(LitString | None) => _docs
+  
+  fun ref set_modules(modules': Array[Module] = Array[Module]) => _modules = consume modules'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
-class Use
+class Module
+  var _use_decls: Array[UseDecl]
+  var _type_decls: Array[TypeDecl]
+  var _docs: (LitString | None)
+  
+  new create(
+    use_decls': Array[UseDecl] = Array[UseDecl],
+    type_decls': Array[TypeDecl] = Array[TypeDecl],
+    docs': (LitString | None) = None)
+  =>
+    _use_decls = use_decls'
+    _type_decls = type_decls'
+    _docs = docs'
+  
+  fun use_decls(): this->Array[UseDecl] => _use_decls
+  fun type_decls(): this->Array[TypeDecl] => _type_decls
+  fun docs(): this->(LitString | None) => _docs
+  
+  fun ref set_use_decls(use_decls': Array[UseDecl] = Array[UseDecl]) => _use_decls = consume use_decls'
+  fun ref set_type_decls(type_decls': Array[TypeDecl] = Array[TypeDecl]) => _type_decls = consume type_decls'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+
+class UseDecl
   var _prefix: (Id | None)
   var _body: (FFIDecl | None)
   var _guard: (Expr | IfDefCond | None)
@@ -381,20 +425,43 @@ class Actor
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
-class Provides // TODO
-  new create() => None
+class Provides
+  var _types: Array[Type]
+  
+  new create(
+    types': Array[Type] = Array[Type])
+  =>
+    _types = types'
+  
+  fun types(): this->Array[Type] => _types
+  
+  fun ref set_types(types': Array[Type] = Array[Type]) => _types = consume types'
 
-class Members // TODO
-  new create() => None
+class Members
+  var _fields: Array[Field]
+  var _methods: Array[Method]
+  
+  new create(
+    fields': Array[Field] = Array[Field],
+    methods': Array[Method] = Array[Method])
+  =>
+    _fields = fields'
+    _methods = methods'
+  
+  fun fields(): this->Array[Field] => _fields
+  fun methods(): this->Array[Method] => _methods
+  
+  fun ref set_fields(fields': Array[Field] = Array[Field]) => _fields = consume fields'
+  fun ref set_methods(methods': Array[Method] = Array[Method]) => _methods = consume methods'
 
 class FieldLet
   var _name: Id
-  var _field_type: (TypePtr | None)
+  var _field_type: (Type | None)
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (TypePtr | None) = None,
+    field_type': (Type | None) = None,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -402,21 +469,21 @@ class FieldLet
     _default = default'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(TypePtr | None) => _field_type
+  fun field_type(): this->(Type | None) => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class FieldVar
   var _name: Id
-  var _field_type: (TypePtr | None)
+  var _field_type: (Type | None)
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (TypePtr | None) = None,
+    field_type': (Type | None) = None,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -424,21 +491,21 @@ class FieldVar
     _default = default'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(TypePtr | None) => _field_type
+  fun field_type(): this->(Type | None) => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class FieldEmbed
   var _name: Id
-  var _field_type: (TypePtr | None)
+  var _field_type: (Type | None)
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (TypePtr | None) = None,
+    field_type': (Type | None) = None,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -446,11 +513,11 @@ class FieldEmbed
     _default = default'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(TypePtr | None) => _field_type
+  fun field_type(): this->(Type | None) => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class MethodFun
@@ -458,7 +525,7 @@ class MethodFun
   var _name: Id
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
-  var _return_type: (TypePtr | None)
+  var _return_type: (Type | None)
   var _partial: (Question | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
@@ -469,7 +536,7 @@ class MethodFun
     name': Id,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
-    return_type': (TypePtr | None) = None,
+    return_type': (Type | None) = None,
     partial': (Question | None) = None,
     body': (RawExprSeq | None) = None,
     docs': (LitString | None) = None,
@@ -489,7 +556,7 @@ class MethodFun
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun params(): this->(Params | None) => _params
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
@@ -499,7 +566,7 @@ class MethodFun
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -510,7 +577,7 @@ class MethodNew
   var _name: Id
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
-  var _return_type: (TypePtr | None)
+  var _return_type: (Type | None)
   var _partial: (Question | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
@@ -521,7 +588,7 @@ class MethodNew
     name': Id,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
-    return_type': (TypePtr | None) = None,
+    return_type': (Type | None) = None,
     partial': (Question | None) = None,
     body': (RawExprSeq | None) = None,
     docs': (LitString | None) = None,
@@ -541,7 +608,7 @@ class MethodNew
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun params(): this->(Params | None) => _params
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
@@ -551,7 +618,7 @@ class MethodNew
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -562,7 +629,7 @@ class MethodBe
   var _name: Id
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
-  var _return_type: (TypePtr | None)
+  var _return_type: (Type | None)
   var _partial: (Question | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
@@ -573,7 +640,7 @@ class MethodBe
     name': Id,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
-    return_type': (TypePtr | None) = None,
+    return_type': (Type | None) = None,
     partial': (Question | None) = None,
     body': (RawExprSeq | None) = None,
     docs': (LitString | None) = None,
@@ -593,7 +660,7 @@ class MethodBe
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun params(): this->(Params | None) => _params
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
@@ -603,70 +670,120 @@ class MethodBe
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
 
-class TypeParams // TODO
-  new create() => None
+class TypeParams
+  var _list: Array[TypeParam]
+  
+  new create(
+    list': Array[TypeParam] = Array[TypeParam])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[TypeParam] => _list
+  
+  fun ref set_list(list': Array[TypeParam] = Array[TypeParam]) => _list = consume list'
 
 class TypeParam
   var _name: Id
-  var _constraint: (TypePtr | None)
-  var _default: (TypePtr | None)
+  var _constraint: (Type | None)
+  var _default: (Type | None)
   
   new create(
     name': Id,
-    constraint': (TypePtr | None),
-    default': (TypePtr | None))
+    constraint': (Type | None),
+    default': (Type | None))
   =>
     _name = name'
     _constraint = constraint'
     _default = default'
   
   fun name(): this->Id => _name
-  fun constraint(): this->(TypePtr | None) => _constraint
-  fun default(): this->(TypePtr | None) => _default
+  fun constraint(): this->(Type | None) => _constraint
+  fun default(): this->(Type | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_constraint(constraint': (TypePtr | None)) => _constraint = consume constraint'
-  fun ref set_default(default': (TypePtr | None)) => _default = consume default'
+  fun ref set_constraint(constraint': (Type | None)) => _constraint = consume constraint'
+  fun ref set_default(default': (Type | None)) => _default = consume default'
 
-class TypeArgs // TODO
-  new create() => None
+class TypeArgs
+  var _list: Array[Type]
+  
+  new create(
+    list': Array[Type] = Array[Type])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Type] => _list
+  
+  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
 
-class Params // TODO
-  new create() => None
+class Params
+  var _param: Array[Param]
+  var _ellipsis: (Ellipsis | None)
+  
+  new create(
+    param': Array[Param] = Array[Param],
+    ellipsis': (Ellipsis | None) = None)
+  =>
+    _param = param'
+    _ellipsis = ellipsis'
+  
+  fun param(): this->Array[Param] => _param
+  fun ellipsis(): this->(Ellipsis | None) => _ellipsis
+  
+  fun ref set_param(param': Array[Param] = Array[Param]) => _param = consume param'
+  fun ref set_ellipsis(ellipsis': (Ellipsis | None) = None) => _ellipsis = consume ellipsis'
 
 class Param
   var _name: Id
-  var _param_type: (TypePtr | None)
+  var _param_type: (Type | None)
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    param_type': (TypePtr | None),
-    default': (Expr | None))
+    param_type': (Type | None) = None,
+    default': (Expr | None) = None)
   =>
     _name = name'
     _param_type = param_type'
     _default = default'
   
   fun name(): this->Id => _name
-  fun param_type(): this->(TypePtr | None) => _param_type
+  fun param_type(): this->(Type | None) => _param_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_param_type(param_type': (TypePtr | None)) => _param_type = consume param_type'
-  fun ref set_default(default': (Expr | None)) => _default = consume default'
+  fun ref set_param_type(param_type': (Type | None) = None) => _param_type = consume param_type'
+  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
-class ExprSeq // TODO
-  new create() => None
+class ExprSeq
+  var _list: Array[(Jump | Intrinsic | CompileError | Expr | Semi)]
+  
+  new create(
+    list': Array[(Jump | Intrinsic | CompileError | Expr | Semi)] = Array[(Jump | Intrinsic | CompileError | Expr | Semi)])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[(Jump | Intrinsic | CompileError | Expr | Semi)] => _list
+  
+  fun ref set_list(list': Array[(Jump | Intrinsic | CompileError | Expr | Semi)] = Array[(Jump | Intrinsic | CompileError | Expr | Semi)]) => _list = consume list'
 
-class RawExprSeq // TODO
-  new create() => None
+class RawExprSeq
+  var _list: Array[(Jump | Intrinsic | CompileError | Expr | Semi)]
+  
+  new create(
+    list': Array[(Jump | Intrinsic | CompileError | Expr | Semi)] = Array[(Jump | Intrinsic | CompileError | Expr | Semi)])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[(Jump | Intrinsic | CompileError | Expr | Semi)] => _list
+  
+  fun ref set_list(list': Array[(Jump | Intrinsic | CompileError | Expr | Semi)] = Array[(Jump | Intrinsic | CompileError | Expr | Semi)]) => _list = consume list'
 
 class Return // TODO
   new create() => None
@@ -680,6 +797,9 @@ class Continue // TODO
 class Error // TODO
   new create() => None
 
+class Intrinsic // TODO
+  new create() => None
+
 class CompileError // TODO
   new create() => None
 
@@ -688,77 +808,86 @@ class Expr // TODO
 
 class LocalLet
   var _name: Id
-  var _local_type: (TypePtr | None)
+  var _local_type: (Type | None)
   
   new create(
     name': Id,
-    local_type': (TypePtr | None))
+    local_type': (Type | None))
   =>
     _name = name'
     _local_type = local_type'
   
   fun name(): this->Id => _name
-  fun local_type(): this->(TypePtr | None) => _local_type
+  fun local_type(): this->(Type | None) => _local_type
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (TypePtr | None)) => _local_type = consume local_type'
+  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
 
 class LocalVar
   var _name: Id
-  var _local_type: (TypePtr | None)
+  var _local_type: (Type | None)
   
   new create(
     name': Id,
-    local_type': (TypePtr | None))
+    local_type': (Type | None))
   =>
     _name = name'
     _local_type = local_type'
   
   fun name(): this->Id => _name
-  fun local_type(): this->(TypePtr | None) => _local_type
+  fun local_type(): this->(Type | None) => _local_type
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (TypePtr | None)) => _local_type = consume local_type'
+  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
 
 class MatchCapture
   var _name: Id
-  var _match_type: TypePtr
+  var _match_type: Type
   
   new create(
     name': Id,
-    match_type': TypePtr)
+    match_type': Type)
   =>
     _name = name'
     _match_type = match_type'
   
   fun name(): this->Id => _name
-  fun match_type(): this->TypePtr => _match_type
+  fun match_type(): this->Type => _match_type
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_match_type(match_type': TypePtr) => _match_type = consume match_type'
+  fun ref set_match_type(match_type': Type) => _match_type = consume match_type'
 
 class Infix // TODO
   new create() => None
 
 class As
   var _expr: Expr
-  var _as_type: TypePtr
+  var _as_type: Type
   
   new create(
     expr': Expr,
-    as_type': TypePtr)
+    as_type': Type)
   =>
     _expr = expr'
     _as_type = as_type'
   
   fun expr(): this->Expr => _expr
-  fun as_type(): this->TypePtr => _as_type
+  fun as_type(): this->Type => _as_type
   
   fun ref set_expr(expr': Expr) => _expr = consume expr'
-  fun ref set_as_type(as_type': TypePtr) => _as_type = consume as_type'
+  fun ref set_as_type(as_type': Type) => _as_type = consume as_type'
 
-class Tuple // TODO
-  new create() => None
+class Tuple
+  var _elements: Array[RawExprSeq]
+  
+  new create(
+    elements': Array[RawExprSeq] = Array[RawExprSeq])
+  =>
+    _elements = elements'
+  
+  fun elements(): this->Array[RawExprSeq] => _elements
+  
+  fun ref set_elements(elements': Array[RawExprSeq] = Array[RawExprSeq]) => _elements = consume elements'
 
 class Consume
   var _cap: (Cap | Aliased | None)
@@ -959,11 +1088,29 @@ class FFICall
   fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
 
-class Args // TODO
-  new create() => None
+class Args
+  var _list: Array[RawExprSeq]
+  
+  new create(
+    list': Array[RawExprSeq] = Array[RawExprSeq])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[RawExprSeq] => _list
+  
+  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
 
-class NamedArgs // TODO
-  new create() => None
+class NamedArgs
+  var _list: Array[NamedArg]
+  
+  new create(
+    list': Array[NamedArg] = Array[NamedArg])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[NamedArg] => _list
+  
+  fun ref set_list(list': Array[NamedArg] = Array[NamedArg]) => _list = consume list'
 
 class NamedArg
   var _name: Id
@@ -1191,7 +1338,16 @@ class Match
   fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
 
 class Cases // TODO
-  new create() => None
+  var _list: Array[Case]
+  
+  new create(
+    list': Array[Case] = Array[Case])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Case] => _list
+  
+  fun ref set_list(list': Array[Case] = Array[Case]) => _list = consume list'
 
 class Case
   var _expr: (Expr | None)
@@ -1243,7 +1399,7 @@ class Lambda
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
   var _captures: (LambdaCaptures | None)
-  var _return_type: (TypePtr | None)
+  var _return_type: (Type | None)
   var _partial: (Question | None)
   var _body: (RawExprSeq)
   var _object_cap: (Cap | None | Question)
@@ -1254,7 +1410,7 @@ class Lambda
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
     captures': (LambdaCaptures | None) = None,
-    return_type': (TypePtr | None) = None,
+    return_type': (Type | None) = None,
     partial': (Question | None) = None,
     body': (RawExprSeq),
     object_cap': (Cap | None | Question) = None)
@@ -1274,7 +1430,7 @@ class Lambda
   fun type_params(): this->(TypeParams | None) => _type_params
   fun params(): this->(Params | None) => _params
   fun captures(): this->(LambdaCaptures | None) => _captures
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun body(): this->(RawExprSeq) => _body
   fun object_cap(): this->(Cap | None | Question) => _object_cap
@@ -1284,22 +1440,31 @@ class Lambda
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_captures(captures': (LambdaCaptures | None) = None) => _captures = consume captures'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq)) => _body = consume body'
   fun ref set_object_cap(object_cap': (Cap | None | Question) = None) => _object_cap = consume object_cap'
 
-class LambdaCaptures // TODO
-  new create() => None
+class LambdaCaptures
+  var _list: Array[LambdaCapture]
+  
+  new create(
+    list': Array[LambdaCapture] = Array[LambdaCapture])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[LambdaCapture] => _list
+  
+  fun ref set_list(list': Array[LambdaCapture] = Array[LambdaCapture]) => _list = consume list'
 
 class LambdaCapture
   var _name: Id
-  var _local_type: (TypePtr | None)
+  var _local_type: (Type | None)
   var _expr: (Expr | None)
   
   new create(
     name': Id,
-    local_type': (TypePtr | None) = None,
+    local_type': (Type | None) = None,
     expr': (Expr | None) = None)
   =>
     _name = name'
@@ -1307,15 +1472,24 @@ class LambdaCapture
     _expr = expr'
   
   fun name(): this->Id => _name
-  fun local_type(): this->(TypePtr | None) => _local_type
+  fun local_type(): this->(Type | None) => _local_type
   fun expr(): this->(Expr | None) => _expr
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (TypePtr | None) = None) => _local_type = consume local_type'
+  fun ref set_local_type(local_type': (Type | None) = None) => _local_type = consume local_type'
   fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
 
-class LitArray // TODO
-  new create() => None
+class LitArray
+  var _list: Array[RawExprSeq]
+  
+  new create(
+    list': Array[RawExprSeq] = Array[RawExprSeq])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[RawExprSeq] => _list
+  
+  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
 
 class Object
   var _cap: (Cap | None)
@@ -1535,46 +1709,73 @@ class ParamRef
   
   fun ref set_name(name': Id) => _name = consume name'
 
-class TypePtr // TODO
+class Type // TODO
   new create() => None
 
-class UnionType // TODO
-  new create() => None
-
-class IsectType // TODO
-  new create() => None
-
-class TupleType // TODO
-  new create() => None
-
-class ArrowType
-  var _left: TypePtr
-  var _right: TypePtr
+class UnionType
+  var _list: Array[Type]
   
   new create(
-    left': TypePtr,
-    right': TypePtr)
+    list': Array[Type] = Array[Type])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Type] => _list
+  
+  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+
+class IsectType
+  var _list: Array[Type]
+  
+  new create(
+    list': Array[Type] = Array[Type])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Type] => _list
+  
+  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+
+class TupleType
+  var _list: Array[Type]
+  
+  new create(
+    list': Array[Type] = Array[Type])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Type] => _list
+  
+  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+
+class ArrowType
+  var _left: Type
+  var _right: Type
+  
+  new create(
+    left': Type,
+    right': Type)
   =>
     _left = left'
     _right = right'
   
-  fun left(): this->TypePtr => _left
-  fun right(): this->TypePtr => _right
+  fun left(): this->Type => _left
+  fun right(): this->Type => _right
   
-  fun ref set_left(left': TypePtr) => _left = consume left'
-  fun ref set_right(right': TypePtr) => _right = consume right'
+  fun ref set_left(left': Type) => _left = consume left'
+  fun ref set_right(right': Type) => _right = consume right'
 
 class FunType
   var _cap: Cap
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
-  var _return_type: (TypePtr | None)
+  var _return_type: (Type | None)
   
   new create(
     cap': Cap,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
-    return_type': (TypePtr | None) = None)
+    return_type': (Type | None) = None)
   =>
     _cap = cap'
     _type_params = type_params'
@@ -1584,19 +1785,19 @@ class FunType
   fun cap(): this->Cap => _cap
   fun type_params(): this->(TypeParams | None) => _type_params
   fun params(): this->(Params | None) => _params
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun return_type(): this->(Type | None) => _return_type
   
   fun ref set_cap(cap': Cap) => _cap = consume cap'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
 
 class LambdaType
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
-  var _params: (TypePtrList | None)
-  var _return_type: (TypePtr | None)
+  var _params: (TypeList | None)
+  var _return_type: (Type | None)
   var _partial: (Question | None)
   var _object_cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
@@ -1605,8 +1806,8 @@ class LambdaType
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (TypePtrList | None) = None,
-    return_type': (TypePtr | None) = None,
+    params': (TypeList | None) = None,
+    return_type': (Type | None) = None,
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
@@ -1623,8 +1824,8 @@ class LambdaType
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
   fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(TypePtrList | None) => _params
-  fun return_type(): this->(TypePtr | None) => _return_type
+  fun params(): this->(TypeList | None) => _params
+  fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun object_cap(): this->(Cap | GenCap | None) => _object_cap
   fun cap_mod(): this->(CapMod | None) => _cap_mod
@@ -1632,14 +1833,23 @@ class LambdaType
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
   fun ref set_name(name': (Id | None) = None) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (TypePtrList | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_params(params': (TypeList | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'
   fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
 
-class TypePtrList // TODO
-  new create() => None
+class TypeList
+  var _list: Array[Type]
+  
+  new create(
+    list': Array[Type] = Array[Type])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[Type] => _list
+  
+  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
 
 class NominalType
   var _package: (Id | None)
