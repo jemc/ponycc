@@ -98,12 +98,12 @@ class TypeAlias
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -122,12 +122,12 @@ class TypeAlias
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Interface
   var _name: Id
@@ -140,12 +140,12 @@ class Interface
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -164,12 +164,12 @@ class Interface
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Trait
   var _name: Id
@@ -182,12 +182,12 @@ class Trait
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -206,12 +206,12 @@ class Trait
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Primitive
   var _name: Id
@@ -224,12 +224,12 @@ class Primitive
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -248,12 +248,12 @@ class Primitive
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Struct
   var _name: Id
@@ -266,12 +266,12 @@ class Struct
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -290,12 +290,12 @@ class Struct
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Class
   var _name: Id
@@ -308,12 +308,12 @@ class Class
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -332,12 +332,12 @@ class Class
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Actor
   var _name: Id
@@ -350,12 +350,12 @@ class Actor
   
   new create(
     name': Id,
-    type_params': (TypeParams | None),
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None),
-    at': (At | None),
-    docs': (LitString | None))
+    type_params': (TypeParams | None) = None,
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None,
+    at': (At | None) = None,
+    docs': (LitString | None) = None)
   =>
     _name = name'
     _type_params = type_params'
@@ -374,12 +374,12 @@ class Actor
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
-  fun ref set_at(at': (At | None)) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun ref set_at(at': (At | None) = None) => _at = consume at'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
 
 class Provides // TODO
   new create() => None
@@ -394,8 +394,8 @@ class FieldLet
   
   new create(
     name': Id,
-    field_type': (TypePtr | None),
-    default': (Expr | None))
+    field_type': (TypePtr | None) = None,
+    default': (Expr | None) = None)
   =>
     _name = name'
     _field_type = field_type'
@@ -406,8 +406,8 @@ class FieldLet
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None)) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None)) => _default = consume default'
+  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class FieldVar
   var _name: Id
@@ -416,8 +416,8 @@ class FieldVar
   
   new create(
     name': Id,
-    field_type': (TypePtr | None),
-    default': (Expr | None))
+    field_type': (TypePtr | None) = None,
+    default': (Expr | None) = None)
   =>
     _name = name'
     _field_type = field_type'
@@ -428,8 +428,8 @@ class FieldVar
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None)) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None)) => _default = consume default'
+  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class FieldEmbed
   var _name: Id
@@ -438,8 +438,8 @@ class FieldEmbed
   
   new create(
     name': Id,
-    field_type': (TypePtr | None),
-    default': (Expr | None))
+    field_type': (TypePtr | None) = None,
+    default': (Expr | None) = None)
   =>
     _name = name'
     _field_type = field_type'
@@ -450,8 +450,8 @@ class FieldEmbed
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (TypePtr | None)) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None)) => _default = consume default'
+  fun ref set_field_type(field_type': (TypePtr | None) = None) => _field_type = consume field_type'
+  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
 
 class MethodFun
   var _cap: (Cap | None)
@@ -465,15 +465,15 @@ class MethodFun
   var _guard: (RawExprSeq | None)
   
   new create(
-    cap': (Cap | None),
+    cap': (Cap | None) = None,
     name': Id,
-    type_params': (TypeParams | None),
-    params': (Params | None),
-    return_type': (TypePtr | None),
-    partial': (Question | None),
-    body': (RawExprSeq | None),
-    docs': (LitString | None),
-    guard': (RawExprSeq | None))
+    type_params': (TypeParams | None) = None,
+    params': (Params | None) = None,
+    return_type': (TypePtr | None) = None,
+    partial': (Question | None) = None,
+    body': (RawExprSeq | None) = None,
+    docs': (LitString | None) = None,
+    guard': (RawExprSeq | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -495,15 +495,15 @@ class MethodFun
   fun docs(): this->(LitString | None) => _docs
   fun guard(): this->(RawExprSeq | None) => _guard
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_body(body': (RawExprSeq | None)) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None)) => _guard = consume guard'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (Params | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
 
 class MethodNew
   var _cap: (Cap | None)
@@ -517,15 +517,15 @@ class MethodNew
   var _guard: (RawExprSeq | None)
   
   new create(
-    cap': (Cap | None),
+    cap': (Cap | None) = None,
     name': Id,
-    type_params': (TypeParams | None),
-    params': (Params | None),
-    return_type': (TypePtr | None),
-    partial': (Question | None),
-    body': (RawExprSeq | None),
-    docs': (LitString | None),
-    guard': (RawExprSeq | None))
+    type_params': (TypeParams | None) = None,
+    params': (Params | None) = None,
+    return_type': (TypePtr | None) = None,
+    partial': (Question | None) = None,
+    body': (RawExprSeq | None) = None,
+    docs': (LitString | None) = None,
+    guard': (RawExprSeq | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -547,15 +547,15 @@ class MethodNew
   fun docs(): this->(LitString | None) => _docs
   fun guard(): this->(RawExprSeq | None) => _guard
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_body(body': (RawExprSeq | None)) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None)) => _guard = consume guard'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (Params | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
 
 class MethodBe
   var _cap: (Cap | None)
@@ -569,15 +569,15 @@ class MethodBe
   var _guard: (RawExprSeq | None)
   
   new create(
-    cap': (Cap | None),
+    cap': (Cap | None) = None,
     name': Id,
-    type_params': (TypeParams | None),
-    params': (Params | None),
-    return_type': (TypePtr | None),
-    partial': (Question | None),
-    body': (RawExprSeq | None),
-    docs': (LitString | None),
-    guard': (RawExprSeq | None))
+    type_params': (TypeParams | None) = None,
+    params': (Params | None) = None,
+    return_type': (TypePtr | None) = None,
+    partial': (Question | None) = None,
+    body': (RawExprSeq | None) = None,
+    docs': (LitString | None) = None,
+    guard': (RawExprSeq | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -599,15 +599,15 @@ class MethodBe
   fun docs(): this->(LitString | None) => _docs
   fun guard(): this->(RawExprSeq | None) => _guard
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_body(body': (RawExprSeq | None)) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None)) => _guard = consume guard'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (Params | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
 
 class TypeParams // TODO
   new create() => None
@@ -911,8 +911,8 @@ class Call
   var _receiver: Expr
   
   new create(
-    args': (Args | None),
-    named_args': (NamedArgs | None),
+    args': (Args | None) = None,
+    named_args': (NamedArgs | None) = None,
     receiver': Expr)
   =>
     _args = args'
@@ -923,8 +923,8 @@ class Call
   fun named_args(): this->(NamedArgs | None) => _named_args
   fun receiver(): this->Expr => _receiver
   
-  fun ref set_args(args': (Args | None)) => _args = consume args'
-  fun ref set_named_args(named_args': (NamedArgs | None)) => _named_args = consume named_args'
+  fun ref set_args(args': (Args | None) = None) => _args = consume args'
+  fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
   fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
 
 class FFICall
@@ -936,10 +936,10 @@ class FFICall
   
   new create(
     name': (Id | LitString),
-    type_args': (TypeArgs | None),
-    args': (Args | None),
-    named_args': (NamedArgs | None),
-    partial': (Question | None))
+    type_args': (TypeArgs | None) = None,
+    args': (Args | None) = None,
+    named_args': (NamedArgs | None) = None,
+    partial': (Question | None) = None)
   =>
     _name = name'
     _type_args = type_args'
@@ -954,10 +954,10 @@ class FFICall
   fun partial(): this->(Question | None) => _partial
   
   fun ref set_name(name': (Id | LitString)) => _name = consume name'
-  fun ref set_type_args(type_args': (TypeArgs | None)) => _type_args = consume type_args'
-  fun ref set_args(args': (Args | None)) => _args = consume args'
-  fun ref set_named_args(named_args': (NamedArgs | None)) => _named_args = consume named_args'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
+  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
+  fun ref set_args(args': (Args | None) = None) => _args = consume args'
+  fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
 
 class Args // TODO
   new create() => None
@@ -1061,7 +1061,7 @@ class If
   new create(
     condition': RawExprSeq,
     then_body': ExprSeq,
-    else_body': (ExprSeq | If | None))
+    else_body': (ExprSeq | If | None) = None)
   =>
     _condition = condition'
     _then_body = then_body'
@@ -1073,7 +1073,7 @@ class If
   
   fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
   fun ref set_then_body(then_body': ExprSeq) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (ExprSeq | If | None)) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (ExprSeq | If | None) = None) => _else_body = consume else_body'
 
 class While
   var _condition: RawExprSeq
@@ -1083,7 +1083,7 @@ class While
   new create(
     condition': RawExprSeq,
     loop_body': ExprSeq,
-    else_body': (ExprSeq | None))
+    else_body': (ExprSeq | None) = None)
   =>
     _condition = condition'
     _loop_body = loop_body'
@@ -1095,7 +1095,7 @@ class While
   
   fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
   fun ref set_loop_body(loop_body': ExprSeq) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
 
 class Repeat
   var _loop_body: ExprSeq
@@ -1105,7 +1105,7 @@ class Repeat
   new create(
     loop_body': ExprSeq,
     condition': RawExprSeq,
-    else_body': (ExprSeq | None))
+    else_body': (ExprSeq | None) = None)
   =>
     _loop_body = loop_body'
     _condition = condition'
@@ -1117,7 +1117,7 @@ class Repeat
   
   fun ref set_loop_body(loop_body': ExprSeq) => _loop_body = consume loop_body'
   fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
-  fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
 
 class For
   var _expr: ExprSeq
@@ -1129,7 +1129,7 @@ class For
     expr': ExprSeq,
     iterator': RawExprSeq,
     loop_body': RawExprSeq,
-    else_body': (ExprSeq | None))
+    else_body': (ExprSeq | None) = None)
   =>
     _expr = expr'
     _iterator = iterator'
@@ -1144,7 +1144,7 @@ class For
   fun ref set_expr(expr': ExprSeq) => _expr = consume expr'
   fun ref set_iterator(iterator': RawExprSeq) => _iterator = consume iterator'
   fun ref set_loop_body(loop_body': RawExprSeq) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
 
 class With
   var _refs: Expr
@@ -1154,7 +1154,7 @@ class With
   new create(
     refs': Expr,
     with_body': RawExprSeq,
-    else_body': (RawExprSeq | None))
+    else_body': (RawExprSeq | None) = None)
   =>
     _refs = refs'
     _with_body = with_body'
@@ -1166,7 +1166,7 @@ class With
   
   fun ref set_refs(refs': Expr) => _refs = consume refs'
   fun ref set_with_body(with_body': RawExprSeq) => _with_body = consume with_body'
-  fun ref set_else_body(else_body': (RawExprSeq | None)) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (RawExprSeq | None) = None) => _else_body = consume else_body'
 
 class Match
   var _expr: RawExprSeq
@@ -1175,8 +1175,8 @@ class Match
   
   new create(
     expr': RawExprSeq,
-    cases': (Cases | None),
-    else_body': (ExprSeq | None))
+    cases': (Cases | None) = None,
+    else_body': (ExprSeq | None) = None)
   =>
     _expr = expr'
     _cases = cases'
@@ -1187,8 +1187,8 @@ class Match
   fun else_body(): this->(ExprSeq | None) => _else_body
   
   fun ref set_expr(expr': RawExprSeq) => _expr = consume expr'
-  fun ref set_cases(cases': (Cases | None)) => _cases = consume cases'
-  fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
+  fun ref set_cases(cases': (Cases | None) = None) => _cases = consume cases'
+  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
 
 class Cases // TODO
   new create() => None
@@ -1199,9 +1199,9 @@ class Case
   var _body: (RawExprSeq | None)
   
   new create(
-    expr': (Expr | None),
-    guard': (RawExprSeq | None),
-    body': (RawExprSeq | None))
+    expr': (Expr | None) = None,
+    guard': (RawExprSeq | None) = None,
+    body': (RawExprSeq | None) = None)
   =>
     _expr = expr'
     _guard = guard'
@@ -1211,9 +1211,9 @@ class Case
   fun guard(): this->(RawExprSeq | None) => _guard
   fun body(): this->(RawExprSeq | None) => _body
   
-  fun ref set_expr(expr': (Expr | None)) => _expr = consume expr'
-  fun ref set_guard(guard': (RawExprSeq | None)) => _guard = consume guard'
-  fun ref set_body(body': (RawExprSeq | None)) => _body = consume body'
+  fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
 
 class Try
   var _body: ExprSeq
@@ -1222,8 +1222,8 @@ class Try
   
   new create(
     body': ExprSeq,
-    else_body': (ExprSeq | None),
-    then_body': (ExprSeq | None))
+    else_body': (ExprSeq | None) = None,
+    then_body': (ExprSeq | None) = None)
   =>
     _body = body'
     _else_body = else_body'
@@ -1234,8 +1234,8 @@ class Try
   fun then_body(): this->(ExprSeq | None) => _then_body
   
   fun ref set_body(body': ExprSeq) => _body = consume body'
-  fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
-  fun ref set_then_body(then_body': (ExprSeq | None)) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_then_body(then_body': (ExprSeq | None) = None) => _then_body = consume then_body'
 
 class Lambda
   var _method_cap: (Cap | None)
@@ -1249,15 +1249,15 @@ class Lambda
   var _object_cap: (Cap | None | Question)
   
   new create(
-    method_cap': (Cap | None),
-    name': (Id | None),
-    type_params': (TypeParams | None),
-    params': (Params | None),
-    captures': (LambdaCaptures | None),
-    return_type': (TypePtr | None),
-    partial': (Question | None),
+    method_cap': (Cap | None) = None,
+    name': (Id | None) = None,
+    type_params': (TypeParams | None) = None,
+    params': (Params | None) = None,
+    captures': (LambdaCaptures | None) = None,
+    return_type': (TypePtr | None) = None,
+    partial': (Question | None) = None,
     body': (RawExprSeq),
-    object_cap': (Cap | None | Question))
+    object_cap': (Cap | None | Question) = None)
   =>
     _method_cap = method_cap'
     _name = name'
@@ -1279,15 +1279,15 @@ class Lambda
   fun body(): this->(RawExprSeq) => _body
   fun object_cap(): this->(Cap | None | Question) => _object_cap
   
-  fun ref set_method_cap(method_cap': (Cap | None)) => _method_cap = consume method_cap'
-  fun ref set_name(name': (Id | None)) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_captures(captures': (LambdaCaptures | None)) => _captures = consume captures'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
+  fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
+  fun ref set_name(name': (Id | None) = None) => _name = consume name'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (Params | None) = None) => _params = consume params'
+  fun ref set_captures(captures': (LambdaCaptures | None) = None) => _captures = consume captures'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq)) => _body = consume body'
-  fun ref set_object_cap(object_cap': (Cap | None | Question)) => _object_cap = consume object_cap'
+  fun ref set_object_cap(object_cap': (Cap | None | Question) = None) => _object_cap = consume object_cap'
 
 class LambdaCaptures // TODO
   new create() => None
@@ -1299,8 +1299,8 @@ class LambdaCapture
   
   new create(
     name': Id,
-    local_type': (TypePtr | None),
-    expr': (Expr | None))
+    local_type': (TypePtr | None) = None,
+    expr': (Expr | None) = None)
   =>
     _name = name'
     _local_type = local_type'
@@ -1311,8 +1311,8 @@ class LambdaCapture
   fun expr(): this->(Expr | None) => _expr
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (TypePtr | None)) => _local_type = consume local_type'
-  fun ref set_expr(expr': (Expr | None)) => _expr = consume expr'
+  fun ref set_local_type(local_type': (TypePtr | None) = None) => _local_type = consume local_type'
+  fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
 
 class LitArray // TODO
   new create() => None
@@ -1323,9 +1323,9 @@ class Object
   var _members: (Members | None)
   
   new create(
-    cap': (Cap | None),
-    provides': (Provides | None),
-    members': (Members | None))
+    cap': (Cap | None) = None,
+    provides': (Provides | None) = None,
+    members': (Members | None) = None)
   =>
     _cap = cap'
     _provides = provides'
@@ -1335,9 +1335,9 @@ class Object
   fun provides(): this->(Provides | None) => _provides
   fun members(): this->(Members | None) => _members
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None)) => _provides = consume provides'
-  fun ref set_members(members': (Members | None)) => _members = consume members'
+  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_members(members': (Members | None) = None) => _members = consume members'
 
 class Reference
   var _name: Id
@@ -1572,9 +1572,9 @@ class FunType
   
   new create(
     cap': Cap,
-    type_params': (TypeParams | None),
-    params': (Params | None),
-    return_type': (TypePtr | None))
+    type_params': (TypeParams | None) = None,
+    params': (Params | None) = None,
+    return_type': (TypePtr | None) = None)
   =>
     _cap = cap'
     _type_params = type_params'
@@ -1587,9 +1587,9 @@ class FunType
   fun return_type(): this->(TypePtr | None) => _return_type
   
   fun ref set_cap(cap': Cap) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (Params | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
 
 class LambdaType
   var _method_cap: (Cap | None)
@@ -1602,14 +1602,14 @@ class LambdaType
   var _cap_mod: (CapMod | None)
   
   new create(
-    method_cap': (Cap | None),
-    name': (Id | None),
-    type_params': (TypeParams | None),
-    params': (TypePtrList | None),
-    return_type': (TypePtr | None),
-    partial': (Question | None),
-    object_cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    method_cap': (Cap | None) = None,
+    name': (Id | None) = None,
+    type_params': (TypeParams | None) = None,
+    params': (TypePtrList | None) = None,
+    return_type': (TypePtr | None) = None,
+    partial': (Question | None) = None,
+    object_cap': (Cap | GenCap | None) = None,
+    cap_mod': (CapMod | None) = None)
   =>
     _method_cap = method_cap'
     _name = name'
@@ -1629,14 +1629,14 @@ class LambdaType
   fun object_cap(): this->(Cap | GenCap | None) => _object_cap
   fun cap_mod(): this->(CapMod | None) => _cap_mod
   
-  fun ref set_method_cap(method_cap': (Cap | None)) => _method_cap = consume method_cap'
-  fun ref set_name(name': (Id | None)) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None)) => _type_params = consume type_params'
-  fun ref set_params(params': (TypePtrList | None)) => _params = consume params'
-  fun ref set_return_type(return_type': (TypePtr | None)) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_object_cap(object_cap': (Cap | GenCap | None)) => _object_cap = consume object_cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None)) => _cap_mod = consume cap_mod'
+  fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
+  fun ref set_name(name': (Id | None) = None) => _name = consume name'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
+  fun ref set_params(params': (TypePtrList | None) = None) => _params = consume params'
+  fun ref set_return_type(return_type': (TypePtr | None) = None) => _return_type = consume return_type'
+  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'
+  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
 
 class TypePtrList // TODO
   new create() => None
@@ -1649,11 +1649,11 @@ class NominalType
   var _cap_mod: (CapMod | None)
   
   new create(
-    package': (Id | None),
+    package': (Id | None) = None,
     name': Id,
-    type_args': (TypeArgs | None),
-    cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    type_args': (TypeArgs | None) = None,
+    cap': (Cap | GenCap | None) = None,
+    cap_mod': (CapMod | None) = None)
   =>
     _package = package'
     _name = name'
@@ -1667,11 +1667,11 @@ class NominalType
   fun cap(): this->(Cap | GenCap | None) => _cap
   fun cap_mod(): this->(CapMod | None) => _cap_mod
   
-  fun ref set_package(package': (Id | None)) => _package = consume package'
+  fun ref set_package(package': (Id | None) = None) => _package = consume package'
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_args(type_args': (TypeArgs | None)) => _type_args = consume type_args'
-  fun ref set_cap(cap': (Cap | GenCap | None)) => _cap = consume cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None)) => _cap_mod = consume cap_mod'
+  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
+  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
+  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
 
 class TypeParamRef
   var _name: Id
@@ -1680,8 +1680,8 @@ class TypeParamRef
   
   new create(
     name': Id,
-    cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    cap': (Cap | GenCap | None) = None,
+    cap_mod': (CapMod | None) = None)
   =>
     _name = name'
     _cap = cap'
@@ -1692,8 +1692,8 @@ class TypeParamRef
   fun cap_mod(): this->(CapMod | None) => _cap_mod
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | GenCap | None)) => _cap = consume cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None)) => _cap_mod = consume cap_mod'
+  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
+  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
 
 class At // TODO
   new create() => None

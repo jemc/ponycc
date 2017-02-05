@@ -9,7 +9,7 @@ class _DefFixed is _Def
   let _gen: ASTGen
   let _name: String
   
-  let fields: List[(String, String)] = fields.create()
+  let fields: List[(String, String, String)] = fields.create()
   
   var _todo:       Bool = false
   var _with_scope: Bool = false
@@ -19,7 +19,7 @@ class _DefFixed is _Def
     (_gen, _name) = (g, n)
     _gen.defs.push(this)
   
-  fun ref has(n: String, t: String) => fields.push((n, t))
+  fun ref has(n: String, t: String, d: String = "") => fields.push((n, t, d))
   
   fun ref todo()       => _todo       = true
   fun ref with_scope() => _with_scope = true
@@ -38,7 +38,7 @@ class _DefFixed is _Def
     g.push_indent()
     
     // Declare all fields.
-    for (field_name, field_type) in fields.values() do
+    for (field_name, field_type, _) in fields.values() do
       g.line("var _" + field_name + ": " + field_type)
     end
     if fields.size() > 0 then g.line() end
@@ -47,8 +47,9 @@ class _DefFixed is _Def
     g.line("new create(")
     var iter = fields.values()
     g.push_indent()
-    for (field_name, field_type) in iter do
+    for (field_name, field_type, field_default) in iter do
       g.line(field_name + "': " + field_type)
+      if field_default.size() > 0 then g.add(" = " + field_default) end
       if iter.has_next() then g.add(",") end
     end
     g.add(")")
@@ -58,7 +59,7 @@ class _DefFixed is _Def
     else
       g.line("=>")
       g.push_indent()
-      for (field_name, field_type) in fields.values() do
+      for (field_name, field_type, _) in fields.values() do
         g.line("_" + field_name + " = " + field_name + "'")
       end
       g.pop_indent()
@@ -66,16 +67,18 @@ class _DefFixed is _Def
     if fields.size() > 0 then g.line() end
     
     // Declare getter methods for all fields.
-    for (field_name, field_type) in fields.values() do
+    for (field_name, field_type, _) in fields.values() do
       g.line("fun " + field_name + "(): this->" + field_type + " => ")
       g.add("_" + field_name)
     end
     if fields.size() > 0 then g.line() end
     
     // Declare setter methods for all fields.
-    for (field_name, field_type) in fields.values() do
+    for (field_name, field_type, field_default) in fields.values() do
       g.line("fun ref set_" + field_name + "(")
-      g.add(field_name + "': " + field_type + ") => ")
+      g.add(field_name + "': " + field_type)
+      if field_default.size() > 0 then g.add(" = " + field_default) end
+      g.add(") => ")
       g.add("_" + field_name + " = consume " + field_name + "'")
     end
     
