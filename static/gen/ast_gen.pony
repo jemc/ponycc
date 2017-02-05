@@ -40,17 +40,17 @@ class _Def
   
   let fields: List[(String, String)] = fields.create()
   
-  var _todo:     Bool = false
-  var _is_scope: Bool = false
-  var _has_type: Bool = false
+  var _todo:       Bool = false
+  var _with_scope: Bool = false
+  var _with_type:  Bool = false
   
   new create(g: ASTGen, n: String) => (_gen, name) = (g, n)
   
   fun ref has(n: String, t: String) => fields.push((n, t))
   
-  fun ref todo()     => _todo     = true
-  fun ref is_scope() => _is_scope = true
-  fun ref has_type() => _has_type = true
+  fun ref todo()       => _todo       = true
+  fun ref with_scope() => _with_scope = true
+  fun ref with_type()  => _with_type  = true
   
   fun ref in_union(n: String) =>
     try  _gen.unions(n).push(this)

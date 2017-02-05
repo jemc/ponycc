@@ -39,7 +39,7 @@ primitive ASTDefs
     for name in ["FieldLet", "FieldVar", "FieldEmbed"].values() do
       g.def(name)
         .> in_union("Field")
-        .> has_type()
+        .> with_type()
         .> has("name",       "Id")
         .> has("field_type", "(TypePtr | None)")
         .> has("default",    "(Expr | None)")
@@ -48,7 +48,7 @@ primitive ASTDefs
     for name in ["MethodFun", "MethodNew", "MethodBe"].values() do
       g.def(name)
         .> in_union("Method")
-        .> is_scope()
+        .> with_scope()
         .> has("cap",         "(Cap | None)")
         .> has("name",        "Id")
         .> has("type_params", "(TypeParams | None)")
@@ -72,7 +72,7 @@ primitive ASTDefs
     g.def("Params").>todo()
     
     g.def("Param")
-      .> has_type()
+      .> with_type()
       .> has("name",       "Id")
       .> has("param_type", "(TypePtr | None)")
       .> has("default",    "(Expr | None)")
@@ -90,32 +90,32 @@ primitive ASTDefs
     for name in ["LocalLet", "LocalVar"].values() do
       g.def(name)
         .> in_union("Local")
-        .> has_type()
+        .> with_type()
         .> has("name",       "Id")
         .> has("local_type", "(TypePtr | None)")
     end
     
     g.def("MatchCapture")
-      .> has_type()
+      .> with_type()
       .> has("name",       "Id")
       .> has("match_type", "TypePtr")
     
     g.def("Infix").>todo()
     
     g.def("As")
-      .> has_type()
+      .> with_type()
       .> has("expr",    "Expr")
       .> has("as_type", "TypePtr")
     
     g.def("Tuple").>todo()
     
     g.def("Consume")
-      .> has_type()
+      .> with_type()
       .> has("cap",  "(Cap | Aliased | None)")
       .> has("expr", "Expr")
     
     g.def("Recover")
-      .> has_type()
+      .> with_type()
       .> has("cap",   "(Cap | None)")
       .> has("block", "Expr")
     
@@ -124,17 +124,17 @@ primitive ASTDefs
     ].values() do
       g.def(name)
         .> in_union("UnaryOperator")
-        .> has_type()
+        .> with_type()
         .> has("expr", "Expr")
     end
     
     g.def("Dot")
-      .> has_type()
+      .> with_type()
       .> has("left",  "Expr")
       .> has("right", "(Id | LitInteger | TypeArgs)")
     
     g.def("Tilde")
-      .> has_type()
+      .> with_type()
       .> has("left",  "Expr")
       .> has("right", "Id")
     
@@ -143,13 +143,13 @@ primitive ASTDefs
       .> has("right", "TypeArgs")
     
     g.def("Call")
-      .> has_type()
+      .> with_type()
       .> has("args",       "(Args | None)")
       .> has("named_args", "(NamedArgs | None)")
       .> has("receiver",   "Expr")
     
     g.def("FFICall")
-      .> has_type()
+      .> with_type()
       .> has("name",       "(Id | LitString)")
       .> has("type_args",  "(TypeArgs | None)")
       .> has("args",       "(Args | None)")
@@ -164,8 +164,8 @@ primitive ASTDefs
       .> has("value", "RawExprSeq")
     
     g.def("IfDef")
-      .> is_scope()
-      .> has_type()
+      .> with_scope()
+      .> with_type()
       .> has("then_expr", "(Expr | IfDefCond)")
       .> has("then_body", "ExprSeq")
       .> has("else_body", "(Expr | IfDef | None)")
@@ -184,64 +184,64 @@ primitive ASTDefs
       .> has("name", "Id")
     
     g.def("If")
-      .> is_scope()
-      .> has_type()
+      .> with_scope()
+      .> with_type()
       .> has("condition", "RawExprSeq")
       .> has("then_body", "ExprSeq")
       .> has("else_body", "(ExprSeq | If | None)")
     
     g.def("While")
-      .> is_scope()
-      .> has_type()
+      .> with_scope()
+      .> with_type()
       .> has("condition", "RawExprSeq")
       .> has("loop_body", "ExprSeq")
       .> has("else_body", "(ExprSeq | None)")
     
     g.def("Repeat")
-      .> is_scope()
-      .> has_type()
+      .> with_scope()
+      .> with_type()
       .> has("loop_body", "ExprSeq")
       .> has("condition", "RawExprSeq")
       .> has("else_body", "(ExprSeq | None)")
     
     g.def("For")
       // not a scope because sugar wraps it in a seq for us
-      .> has_type()
+      .> with_type()
       .> has("expr",      "ExprSeq")
       .> has("iterator",  "RawExprSeq")
       .> has("loop_body", "RawExprSeq")
       .> has("else_body", "(ExprSeq | None)")
     
     g.def("With")
-      .> has_type()
+      .> with_type()
       .> has("refs",      "Expr")
       .> has("with_body", "RawExprSeq")
       .> has("else_body", "(RawExprSeq | None)")
     
     g.def("Match")
-      .> is_scope()
-      .> has_type()
+      .> with_scope()
+      .> with_type()
       .> has("expr",      "RawExprSeq")
       .> has("cases",     "(Cases | None)")
       .> has("else_body", "(ExprSeq | None)")
     
     g.def("Cases").>todo()
-      .> is_scope() // to simplify branch consolidation
+      .> with_scope() // to simplify branch consolidation
     
     g.def("Case")
-      .> is_scope()
+      .> with_scope()
       .> has("expr",  "(Expr | None)")
       .> has("guard", "(RawExprSeq | None)")
       .> has("body",  "(RawExprSeq | None)")
     
     g.def("Try")
-      .> has_type()
+      .> with_type()
       .> has("body",      "ExprSeq")
       .> has("else_body", "(ExprSeq | None)")
       .> has("then_body", "(ExprSeq | None)")
     
     g.def("Lambda")
-      .> has_type()
+      .> with_type()
       .> has("method_cap",  "(Cap | None)")
       .> has("name",        "(Id | None)")
       .> has("type_params", "(TypeParams | None)")
@@ -267,7 +267,7 @@ primitive ASTDefs
       .> has("members",  "(Members | None)")
     
     g.def("Reference")
-      .> has_type()
+      .> with_type()
       .> has("name", "Id")
     
     g.def("PackageRef")
@@ -276,33 +276,33 @@ primitive ASTDefs
     for name in ["MethodFunRef", "MethodNewRef", "MethodBeRef"].values() do
       g.def(name)
         .> in_union("MethodRef")
-        .> is_scope()
+        .> with_scope()
         .> has("receiver", "Expr")
         .> has("name",     "(Id, TypeArgs)")
     end
     
     g.def("TypeRef")
-      .> has_type()
+      .> with_type()
       .> has("package", "Expr")
       .> has("name",    "(Id, TypeArgs)") // TODO: Why??
     
     for name in ["FieldLetRef", "FieldVarRef", "FieldEmbedRef"].values() do
       g.def(name)
         .> in_union("FieldRef")
-        .> has_type()
+        .> with_type()
         .> has("receiver", "Expr")
         .> has("name",     "Id")
     end
     
     g.def("TupleElementRef")
-      .> has_type()
+      .> with_type()
       .> has("receiver", "Expr")
       .> has("name",     "LitInteger")
     
     for name in ["LocalLetRef", "LocalVarRef", "ParamRef"].values() do
       g.def(name)
         .> in_union("LocalRef")
-        .> has_type()
+        .> with_type()
         .> has("name", "Id")
     end
     
