@@ -36,6 +36,7 @@ class ASTGen
       for (field_name, field_type) in d.fields.values() do
         g.line("var _" + field_name + ": " + field_type)
       end
+      if d.fields.size() > 0 then g.line() end
       
       // Declare a constructor that initializes all fields from parameters.
       g.line("new create(")
@@ -56,6 +57,21 @@ class ASTGen
           g.line("_" + field_name + " = " + field_name + "'")
         end
         g.pop_indent()
+      end
+      if d.fields.size() > 0 then g.line() end
+      
+      // Declare getter methods for all def fields.
+      for (field_name, field_type) in d.fields.values() do
+        g.line("fun " + field_name + "(): this->" + field_type + " => ")
+        g.add("_" + field_name)
+      end
+      if d.fields.size() > 0 then g.line() end
+      
+      // Declare setter methods for all def fields.
+      for (field_name, field_type) in d.fields.values() do
+        g.line("fun ref set_" + field_name + "(")
+        g.add(field_name + "': " + field_type + ") => ")
+        g.add("_" + field_name + " = consume " + field_name + "'")
       end
       
       g.pop_indent()
