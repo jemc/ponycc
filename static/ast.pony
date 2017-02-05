@@ -1776,19 +1776,31 @@ class CapAlias
 class CapAny
   new create() => None
 
-class Id // TODO
-  new create() => None
+class Id
+  var _value: String
+  new create(value': String) => _value = value'
+  fun value(): String => _value
+  fun ref set_value(value': String) => _value = value'
 
-class LitFloat // TODO
-  new create() => None
+class LitFloat
+  var _value: F64
+  new create(value': F64) => _value = value'
+  fun value(): F64 => _value
+  fun ref set_value(value': F64) => _value = value'
 
-class LitInteger // TODO
-  new create() => None
+class LitInteger
+  var _value: I128
+  new create(value': I128) => _value = value'
+  fun value(): I128 => _value
+  fun ref set_value(value': I128) => _value = value'
+
+class LitString
+  var _value: String
+  new create(value': String) => _value = value'
+  fun value(): String => _value
+  fun ref set_value(value': String) => _value = value'
 
 class LitLocation // TODO
-  new create() => None
-
-class LitString // TODO
   new create() => None
 
 class LiteralType // TODO

@@ -383,11 +383,12 @@ primitive ASTDefs
         .> in_union("GenCap")
     end
     
-    g.def("Id").>todo()
-    g.def("LitFloat").>todo()
-    g.def("LitInteger").>todo()
+    g.def_wrap("Id", "String")
+    g.def_wrap("LitFloat", "F64")
+    g.def_wrap("LitInteger", "I128")
+    g.def_wrap("LitString", "String")
+    
     g.def("LitLocation").>todo()
-    g.def("LitString").>todo() // TODO: Why??
     g.def("LiteralType").>todo() // TODO: Why??
     g.def("LiteralTypeBranch").>todo() // TODO: Why??
     g.def("OpLiteralType").>todo() // TODO: Why??
