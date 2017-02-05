@@ -59,6 +59,7 @@ class _Def
   
   fun code_gen(g: CodeGen) =>
     g.line("class " + name)
+    if _todo then g.add(" // TODO") end
     g.push_indent()
     
     // Declare all fields.

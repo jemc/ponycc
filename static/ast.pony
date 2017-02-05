@@ -24,13 +24,13 @@ type FieldRef is (FieldLetRef | FieldVarRef | FieldEmbedRef)
 
 type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
 
-class Program
+class Program // TODO
   new create() => None
 
-class Package
+class Package // TODO
   new create() => None
 
-class Module
+class Module // TODO
   new create() => None
 
 class Use
@@ -381,10 +381,10 @@ class Actor
   fun ref set_at(at': (At | None)) => _at = consume at'
   fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
 
-class Provides
+class Provides // TODO
   new create() => None
 
-class Members
+class Members // TODO
   new create() => None
 
 class FieldLet
@@ -609,7 +609,7 @@ class MethodBe
   fun ref set_docs(docs': (LitString | None)) => _docs = consume docs'
   fun ref set_guard(guard': (RawExprSeq | None)) => _guard = consume guard'
 
-class TypeParams
+class TypeParams // TODO
   new create() => None
 
 class TypeParam
@@ -634,10 +634,10 @@ class TypeParam
   fun ref set_constraint(constraint': (TypePtr | None)) => _constraint = consume constraint'
   fun ref set_default(default': (TypePtr | None)) => _default = consume default'
 
-class TypeArgs
+class TypeArgs // TODO
   new create() => None
 
-class Params
+class Params // TODO
   new create() => None
 
 class Param
@@ -662,28 +662,28 @@ class Param
   fun ref set_param_type(param_type': (TypePtr | None)) => _param_type = consume param_type'
   fun ref set_default(default': (Expr | None)) => _default = consume default'
 
-class ExprSeq
+class ExprSeq // TODO
   new create() => None
 
-class RawExprSeq
+class RawExprSeq // TODO
   new create() => None
 
-class Return
+class Return // TODO
   new create() => None
 
-class Break
+class Break // TODO
   new create() => None
 
-class Continue
+class Continue // TODO
   new create() => None
 
-class Error
+class Error // TODO
   new create() => None
 
-class CompileError
+class CompileError // TODO
   new create() => None
 
-class Expr
+class Expr // TODO
   new create() => None
 
 class LocalLet
@@ -737,7 +737,7 @@ class MatchCapture
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_match_type(match_type': TypePtr) => _match_type = consume match_type'
 
-class Infix
+class Infix // TODO
   new create() => None
 
 class As
@@ -757,7 +757,7 @@ class As
   fun ref set_expr(expr': Expr) => _expr = consume expr'
   fun ref set_as_type(as_type': TypePtr) => _as_type = consume as_type'
 
-class Tuple
+class Tuple // TODO
   new create() => None
 
 class Consume
@@ -959,10 +959,10 @@ class FFICall
   fun ref set_named_args(named_args': (NamedArgs | None)) => _named_args = consume named_args'
   fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
 
-class Args
+class Args // TODO
   new create() => None
 
-class NamedArgs
+class NamedArgs // TODO
   new create() => None
 
 class NamedArg
@@ -1009,7 +1009,7 @@ class IfDef
   fun ref set_else_body(else_body': (Expr | IfDef | None)) => _else_body = consume else_body'
   fun ref set_else_expr(else_expr': (None | IfDefCond)) => _else_expr = consume else_expr'
 
-class IfDefCond
+class IfDefCond // TODO
   new create() => None
 
 class IfDefInfix
@@ -1190,7 +1190,7 @@ class Match
   fun ref set_cases(cases': (Cases | None)) => _cases = consume cases'
   fun ref set_else_body(else_body': (ExprSeq | None)) => _else_body = consume else_body'
 
-class Cases
+class Cases // TODO
   new create() => None
 
 class Case
@@ -1289,7 +1289,7 @@ class Lambda
   fun ref set_body(body': (RawExprSeq)) => _body = consume body'
   fun ref set_object_cap(object_cap': (Cap | None | Question)) => _object_cap = consume object_cap'
 
-class LambdaCaptures
+class LambdaCaptures // TODO
   new create() => None
 
 class LambdaCapture
@@ -1314,7 +1314,7 @@ class LambdaCapture
   fun ref set_local_type(local_type': (TypePtr | None)) => _local_type = consume local_type'
   fun ref set_expr(expr': (Expr | None)) => _expr = consume expr'
 
-class LitArray
+class LitArray // TODO
   new create() => None
 
 class Object
@@ -1535,16 +1535,16 @@ class ParamRef
   
   fun ref set_name(name': Id) => _name = consume name'
 
-class TypePtr
+class TypePtr // TODO
   new create() => None
 
-class UnionType
+class UnionType // TODO
   new create() => None
 
-class IsectType
+class IsectType // TODO
   new create() => None
 
-class TupleType
+class TupleType // TODO
   new create() => None
 
 class ArrowType
@@ -1638,7 +1638,7 @@ class LambdaType
   fun ref set_object_cap(object_cap': (Cap | GenCap | None)) => _object_cap = consume object_cap'
   fun ref set_cap_mod(cap_mod': (CapMod | None)) => _cap_mod = consume cap_mod'
 
-class TypePtrList
+class TypePtrList // TODO
   new create() => None
 
 class NominalType
@@ -1695,7 +1695,7 @@ class TypeParamRef
   fun ref set_cap(cap': (Cap | GenCap | None)) => _cap = consume cap'
   fun ref set_cap_mod(cap_mod': (CapMod | None)) => _cap_mod = consume cap_mod'
 
-class At
+class At // TODO
   new create() => None
 
 class True
@@ -1776,28 +1776,28 @@ class CapAlias
 class CapAny
   new create() => None
 
-class Id
+class Id // TODO
   new create() => None
 
-class LitFloat
+class LitFloat // TODO
   new create() => None
 
-class LitInteger
+class LitInteger // TODO
   new create() => None
 
-class LitLocation
+class LitLocation // TODO
   new create() => None
 
-class LitString
+class LitString // TODO
   new create() => None
 
-class LiteralType
+class LiteralType // TODO
   new create() => None
 
-class LiteralTypeBranch
+class LiteralTypeBranch // TODO
   new create() => None
 
-class OpLiteralType
+class OpLiteralType // TODO
   new create() => None
 
 class Question
