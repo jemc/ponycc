@@ -25,10 +25,9 @@ class _DefFixed is _Def
   fun ref with_scope() => _with_scope = true
   fun ref with_type()  => _with_type  = true
   
-  fun ref in_union(n: String) =>
-    try  _gen.unions(n).push(this)
-    else _gen.unions(n) = List[_Def].>push(this)
-    end
+  fun ref in_union(n: String, n2: String = "") =>
+    _gen._add_to_union(n, _name)
+    if n2.size() > 0 then _gen._add_to_union(n2, n) end
   
   fun name(): String => _name
   
@@ -93,6 +92,10 @@ class _DefWrap is _Def
   new create(g: ASTGen, n: String, t: String) =>
     (_gen, _name, value_type) = (g, n, t)
     _gen.defs.push(this)
+  
+  fun ref in_union(n: String, n2: String = "") =>
+    _gen._add_to_union(n, _name)
+    if n2.size() > 0 then _gen._add_to_union(n2, n) end
   
   fun name(): String => _name
   

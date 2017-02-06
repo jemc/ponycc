@@ -2,8 +2,8 @@
 use "collections"
 
 class ASTGen
-  let defs:   List[_Def]              = defs.create()
-  let unions: Map[String, List[_Def]] = unions.create()
+  let defs:   List[_Def]                = defs.create()
+  let unions: Map[String, List[String]] = unions.create()
   
   new ref create() => None
   
@@ -18,7 +18,7 @@ class ASTGen
       g.line("type " + name + " is (")
       let iter = types.values()
       for t in iter do
-        g.add(t.name())
+        g.add(t)
         if iter.has_next() then g.add(" | ") end
       end
       g.add(")")
@@ -31,3 +31,8 @@ class ASTGen
     end
     
     g.string()
+  
+  fun ref _add_to_union(u: String, m: String) =>
+    try  unions(u).push(m)
+    else unions(u) = List[String].>push(m)
+    end
