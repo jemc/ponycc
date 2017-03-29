@@ -2,8 +2,8 @@
 use "collections"
 
 class ASTGen
-  let defs:   List[_Def]                = defs.create()
-  let unions: Map[String, List[String]] = unions.create()
+  let defs:   List[_Def]               = defs.create()
+  let unions: Map[String, Set[String]] = unions.create()
   
   new ref create() => None
   
@@ -33,6 +33,6 @@ class ASTGen
     g.string()
   
   fun ref _add_to_union(u: String, m: String) =>
-    try  unions(u).push(m)
-    else unions(u) = List[String].>push(m)
+    try  unions(u).set(m)
+    else unions(u) = Set[String].>set(m)
     end
