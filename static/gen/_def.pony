@@ -80,6 +80,35 @@ class _DefFixed is _Def
       g.add(") => ")
       g.add("_" + field_name + " = consume " + field_name + "'")
     end
+    if fields.size() > 0 then g.line() end
+    
+    // Declare a string method to print itself.
+    g.line("fun string(): String iso^ =>")
+    g.push_indent()
+    g.line("let s = recover iso String end")
+    g.line("s.append(\"" + _name + "\")")
+    if fields.size() > 0 then
+      g.line("s.push('(')")
+      iter = fields.values()
+      for (field_name, field_type, _) in iter do
+        if field_type.at("Array[", 0) then
+          g.line("let " + field_name + "_iter = _" + field_name + ".values()")
+          g.line("for v in " + field_name + "_iter do")
+          g.line("  s.append(v.string())")
+          g.line("  if " + field_name + "_iter.has_next() then")
+          g.line("    s.>push(',').push(' ')")
+          g.line("  end")
+          g.line("end")
+          if iter.has_next() then g.line("s.>push(',').push(' ')") end
+        else
+          g.line("s.>append(_" + field_name + ".string())")
+          if iter.has_next() then g.add(".>push(',').push(' ')") end
+        end
+      end
+      g.line("s.push(')')")
+    end
+    g.line("consume s")
+    g.pop_indent()
     
     g.pop_indent()
     g.line()
@@ -114,6 +143,17 @@ class _DefWrap is _Def
     
     // Declare a setter methods for the value field.
     g.line("fun ref set_value(value': " + value_type + ") => _value = value'")
+    
+    // Declare a string method to print itself.
+    g.line("fun string(): String iso^ =>")
+    g.push_indent()
+    g.line("recover")
+    g.push_indent()
+    g.line("String.>append(\"" + _name + "(\")")
+    g.add(".>append(_value.string()).>push(')')")
+    g.pop_indent()
+    g.line("end")
+    g.pop_indent()
     
     g.pop_indent()
     g.line()
