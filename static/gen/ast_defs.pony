@@ -101,17 +101,23 @@ primitive ASTDefs
       .> has("list", "Array[Expr]", "Array[Expr]")
     
     g.def("RawExprSeq")
-      // TODO: make this work in the ExprSeq union
-      // .> in_union("Expr")
+      .> in_union("Expr")
       .> has("list", "Array[Expr]", "Array[Expr]")
     
     for name in ["Return", "Break", "Continue", "Error"].values() do
        // TODO: consider removing the Jump union type
-      g.def(name).>in_union("Jump", "Expr").>todo()
+      g.def(name)
+        .> in_union("Jump", "Expr")
+        .> has("value", "RawExprSeq") // TODO: consider using an Expr (here, and in ponyc)?
     end
     
-    g.def("Intrinsic").>in_union("Expr").>todo() // TODO: consider removing/inlining this type
-    g.def("CompileError").>in_union("Expr").>todo()
+    g.def("CompileIntrinsic")
+      .> in_union("Expr")
+    
+    g.def("CompileError")
+      .> in_union("Expr")
+      .> with_type()                  // TODO: consider removing the type?
+      .> has("message", "RawExprSeq") // TODO: consider using a LitString (here, and in ponyc)?
     
     for name in ["LocalLet", "LocalVar"].values() do
       g.def(name)
@@ -126,8 +132,6 @@ primitive ASTDefs
       .> with_type()
       .> has("name",       "Id")
       .> has("match_type", "Type")
-    
-    g.def("Infix").>in_union("Expr").>todo()
     
     g.def("As")
       .> in_union("Expr")
@@ -232,16 +236,19 @@ primitive ASTDefs
       .> has("else_body", "(Expr | IfDef | None)")
       .> has("else_expr", "(None | IfDefCond)")
     
-    g.def("IfDefCond").>todo()
-    
-    g.def("IfDefInfix")
-      .> has("left",  "IfDefCond")
-      .> has("right", "IfDefCond")
+    for name in ["IfDefAnd", "IfDefOr"].values() do
+      g.def(name)
+        .> in_union("IfDefBinaryOp", "IfDefCond")
+        .> has("left",  "IfDefCond")
+        .> has("right", "IfDefCond")
+    end
     
     g.def("IfDefNot")
+      .> in_union("IfDefCond")
       .> has("expr", "IfDefCond")
     
     g.def("IfDefFlag")
+      .> in_union("IfDefCond")
       .> has("name", "Id")
     
     g.def("If")
@@ -355,14 +362,14 @@ primitive ASTDefs
         .> in_union("MethodRef", "Expr")
         .> with_scope()
         .> has("receiver", "Expr")
-        .> has("name",     "(Id, TypeArgs)")
+        .> has("name",     "(Id | TypeArgs)")
     end
     
     g.def("TypeRef")
       .> in_union("Expr")
       .> with_type()
       .> has("package", "Expr")
-      .> has("name",    "(Id, TypeArgs)") // TODO: Why??
+      .> has("name",    "(Id | TypeArgs)") // TODO: Why??
     
     for name in ["FieldLetRef", "FieldVarRef", "FieldEmbedRef"].values() do
       g.def(name)
@@ -439,10 +446,13 @@ primitive ASTDefs
     
     g.def("At")
     
-    for name in ["True", "False"].values() do
+    for name in ["LitTrue", "LitFalse"].values() do
       g.def(name)
         .> in_union("LitBool", "Expr")
     end
+    
+    g.def("LitNone")
+      .> in_union("Expr")
     
     for name in ["Iso", "Trn", "Ref", "Val", "Box", "Tag"].values() do
       g.def(name)
@@ -490,10 +500,19 @@ primitive ASTDefs
     g.def_wrap("LitString", "String")
       .> in_union("Expr")
     
-    g.def("LitLocation").>in_union("Expr").>todo()
-    g.def("LiteralType").>in_union("Type").>todo() // TODO: Why??
-    g.def("LiteralTypeBranch").>todo() // TODO: Why??
-    g.def("OpLiteralType").>in_union("Type").>todo() // TODO: Why??
+    g.def("LitLocation")
+      .> in_union("Expr")
+      .> with_type()
+    
+    g.def("LiteralType")
+      .> in_union("Type")
+    
+    g.def("LiteralTypeBranch")
+      .> in_union("Type")
+    
+    g.def("OpLiteralType")
+      .> in_union("Type")
+    
     g.def("Question")
     
     g.def("This")
