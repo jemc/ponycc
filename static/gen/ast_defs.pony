@@ -165,7 +165,11 @@ primitive ASTDefs
         .> has("expr", "Expr")
     end
     
-    for name in ["Add"; "AddUnsafe"; "Sub"; "SubUnsafe";"Mul"; "MulUnsafe"; "Div"; "DivUnsafe"; "Mod"; "ModUnsafe"; "LShift"; "LShiftUnsafe"; "RShift"; "RShiftUnsafe";"Is"; "Isnt"; "Eq"; "NE"; "LT"; "LE"; "GE"; "GT"; "And"; "Or"; "XOr"].values() do
+    for name in ["Add"; "AddUnsafe"; "Sub"; "SubUnsafe"; "Mul"
+                 "MulUnsafe"; "Div"; "DivUnsafe"; "Mod"
+                 "ModUnsafe"; "LShift"; "LShiftUnsafe"; "RShift"
+                 "RShiftUnsafe";"Is"; "Isnt"; "Eq"; "NE"; "LT"
+                 "LE"; "GE"; "GT"; "And"; "Or"; "XOr"].values() do
       g.def(name)
         .> in_union("BinaryOp", "Expr")
         .> with_type()
@@ -459,8 +463,9 @@ primitive ASTDefs
         .> in_union("CapMod")
     end
     
-    for name in [
-      "CtrlTypeIf"; "CtrlTypeCases"; "CtrlTypeReturn"; "CtrlTypeBreak";"CtrlTypeContinue"; "CtrlTypeError"; "CtrlTypeCompileError";"CtrlTypeCompileIntrinsic"].values() do
+    for name in ["CtrlTypeIf"; "CtrlTypeCases"; "CtrlTypeReturn"
+                 "CtrlTypeBreak";"CtrlTypeContinue"; "CtrlTypeError"
+                 "CtrlTypeCompileError";"CtrlTypeCompileIntrinsic"].values() do
       g.def(name)
         .> in_union("CtrlType", "Type")
     end
