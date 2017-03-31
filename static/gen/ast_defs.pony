@@ -31,7 +31,7 @@ primitive ASTDefs
       .> has("partial",      "(Question | None)")
     
     for name in [
-      "TypeAlias", "Interface", "Trait", "Primitive", "Struct", "Class", "Actor"
+      "TypeAlias"; "Interface"; "Trait"; "Primitive"; "Struct"; "Class"; "Actor"
     ].values() do
       g.def(name)
         .> in_union("TypeDecl")
@@ -51,7 +51,7 @@ primitive ASTDefs
       .> has("fields",  "Array[Field]",  "Array[Field]")
       .> has("methods", "Array[Method]", "Array[Method]")
     
-    for name in ["FieldLet", "FieldVar", "FieldEmbed"].values() do
+    for name in ["FieldLet"; "FieldVar"; "FieldEmbed"].values() do
       g.def(name)
         .> in_union("Field")
         .> with_type()
@@ -60,7 +60,7 @@ primitive ASTDefs
         .> has("default",    "(Expr | None)", "None")
     end
     
-    for name in ["MethodFun", "MethodNew", "MethodBe"].values() do
+    for name in ["MethodFun"; "MethodNew"; "MethodBe"].values() do
       g.def(name)
         .> in_union("Method")
         .> with_scope()
@@ -104,7 +104,7 @@ primitive ASTDefs
       .> in_union("Expr")
       .> has("list", "Array[Expr]", "Array[Expr]")
     
-    for name in ["Return", "Break", "Continue", "Error"].values() do
+    for name in ["Return"; "Break"; "Continue"; "Error"].values() do
        // TODO: consider removing the Jump union type
       g.def(name)
         .> in_union("Jump", "Expr")
@@ -119,7 +119,7 @@ primitive ASTDefs
       .> with_type()                  // TODO: consider removing the type?
       .> has("message", "RawExprSeq") // TODO: consider using a LitString (here, and in ponyc)?
     
-    for name in ["LocalLet", "LocalVar"].values() do
+    for name in ["LocalLet"; "LocalVar"].values() do
       g.def(name)
         .> in_union("Local", "Expr")
         .> with_type()
@@ -157,7 +157,7 @@ primitive ASTDefs
       .> has("block", "Expr")
     
     for name in [
-      "Not", "Neg", "NegUnsafe", "AddressOf", "DigestOf"
+      "Not"; "Neg"; "NegUnsafe"; "AddressOf"; "DigestOf"
     ].values() do
       g.def(name)
         .> in_union("UnaryOp", "Expr")
@@ -165,12 +165,7 @@ primitive ASTDefs
         .> has("expr", "Expr")
     end
     
-    for name in [
-      "Add", "AddUnsafe", "Sub", "SubUnsafe",
-      "Mul", "MulUnsafe", "Div", "DivUnsafe", "Mod", "ModUnsafe",
-      "LShift", "LShiftUnsafe", "RShift", "RShiftUnsafe",
-      "Is", "Isnt", "Eq", "NE", "LT", "LE", "GE", "GT", "And", "Or", "XOr"
-    ].values() do
+    for name in ["Add"; "AddUnsafe"; "Sub"; "SubUnsafe";"Mul"; "MulUnsafe"; "Div"; "DivUnsafe"; "Mod"; "ModUnsafe"; "LShift"; "LShiftUnsafe"; "RShift"; "RShiftUnsafe";"Is"; "Isnt"; "Eq"; "NE"; "LT"; "LE"; "GE"; "GT"; "And"; "Or"; "XOr"].values() do
       g.def(name)
         .> in_union("BinaryOp", "Expr")
         .> with_type()
@@ -236,7 +231,7 @@ primitive ASTDefs
       .> has("else_body", "(Expr | IfDef | None)")
       .> has("else_expr", "(None | IfDefCond)")
     
-    for name in ["IfDefAnd", "IfDefOr"].values() do
+    for name in ["IfDefAnd"; "IfDefOr"].values() do
       g.def(name)
         .> in_union("IfDefBinaryOp", "IfDefCond")
         .> has("left",  "IfDefCond")
@@ -357,7 +352,7 @@ primitive ASTDefs
       .> has("name", "Id")
       .> in_union("Expr")
     
-    for name in ["MethodFunRef", "MethodNewRef", "MethodBeRef"].values() do
+    for name in ["MethodFunRef"; "MethodNewRef"; "MethodBeRef"].values() do
       g.def(name)
         .> in_union("MethodRef", "Expr")
         .> with_scope()
@@ -371,7 +366,7 @@ primitive ASTDefs
       .> has("package", "Expr")
       .> has("name",    "(Id | TypeArgs)") // TODO: Why??
     
-    for name in ["FieldLetRef", "FieldVarRef", "FieldEmbedRef"].values() do
+    for name in ["FieldLetRef"; "FieldVarRef"; "FieldEmbedRef"].values() do
       g.def(name)
         .> in_union("FieldRef", "Expr")
         .> with_type()
@@ -385,7 +380,7 @@ primitive ASTDefs
       .> has("receiver", "Expr")
       .> has("name",     "LitInteger")
     
-    for name in ["LocalLetRef", "LocalVarRef", "ParamRef"].values() do
+    for name in ["LocalLetRef"; "LocalVarRef"; "ParamRef"].values() do
       g.def(name)
         .> in_union("LocalRef", "Expr")
         .> with_type()
@@ -446,7 +441,7 @@ primitive ASTDefs
     
     g.def("At")
     
-    for name in ["LitTrue", "LitFalse"].values() do
+    for name in ["LitTrue"; "LitFalse"].values() do
       g.def(name)
         .> in_union("LitBool", "Expr")
     end
@@ -454,21 +449,18 @@ primitive ASTDefs
     g.def("LitNone")
       .> in_union("Expr")
     
-    for name in ["Iso", "Trn", "Ref", "Val", "Box", "Tag"].values() do
+    for name in ["Iso"; "Trn"; "Ref"; "Val"; "Box"; "Tag"].values() do
       g.def(name)
         .> in_union("Cap")
     end
     
-    for name in ["Aliased", "Ephemeral"].values() do
+    for name in ["Aliased"; "Ephemeral"].values() do
       g.def(name)
         .> in_union("CapMod")
     end
     
     for name in [
-      "CtrlTypeIf", "CtrlTypeCases", "CtrlTypeReturn", "CtrlTypeBreak",
-      "CtrlTypeContinue", "CtrlTypeError", "CtrlTypeCompileError",
-      "CtrlTypeCompileIntrinsic"
-    ].values() do
+      "CtrlTypeIf"; "CtrlTypeCases"; "CtrlTypeReturn"; "CtrlTypeBreak";"CtrlTypeContinue"; "CtrlTypeError"; "CtrlTypeCompileError";"CtrlTypeCompileIntrinsic"].values() do
       g.def(name)
         .> in_union("CtrlType", "Type")
     end
@@ -482,7 +474,7 @@ primitive ASTDefs
       .> in_union("Type")
     
     for name in [
-      "CapRead", "CapSend", "CapShare", "CapAlias", "CapAny"
+      "CapRead"; "CapSend"; "CapShare"; "CapAlias"; "CapAny"
     ].values() do
       g.def(name)
         .> in_union("GenCap")
