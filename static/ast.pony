@@ -64,19 +64,26 @@ primitive ASTInfo
     elseiftype A <: LShiftUnsafe then "LShiftUnsafe"
     elseiftype A <: RShift then "RShift"
     elseiftype A <: RShiftUnsafe then "RShiftUnsafe"
+    elseiftype A <: Eq then "Eq"
+    elseiftype A <: EqUnsafe then "EqUnsafe"
+    elseiftype A <: NE then "NE"
+    elseiftype A <: NEUnsafe then "NEUnsafe"
+    elseiftype A <: LT then "LT"
+    elseiftype A <: LTUnsafe then "LTUnsafe"
+    elseiftype A <: LE then "LE"
+    elseiftype A <: LEUnsafe then "LEUnsafe"
+    elseiftype A <: GE then "GE"
+    elseiftype A <: GEUnsafe then "GEUnsafe"
+    elseiftype A <: GT then "GT"
+    elseiftype A <: GTUnsafe then "GTUnsafe"
     elseiftype A <: Is then "Is"
     elseiftype A <: Isnt then "Isnt"
-    elseiftype A <: Eq then "Eq"
-    elseiftype A <: NE then "NE"
-    elseiftype A <: LT then "LT"
-    elseiftype A <: LE then "LE"
-    elseiftype A <: GE then "GE"
-    elseiftype A <: GT then "GT"
     elseiftype A <: And then "And"
     elseiftype A <: Or then "Or"
     elseiftype A <: XOr then "XOr"
     elseiftype A <: Assign then "Assign"
     elseiftype A <: Dot then "Dot"
+    elseiftype A <: Chain then "Chain"
     elseiftype A <: Tilde then "Tilde"
     elseiftype A <: Qualify then "Qualify"
     elseiftype A <: Call then "Call"
@@ -104,6 +111,7 @@ primitive ASTInfo
     elseiftype A <: Object then "Object"
     elseiftype A <: LitArray then "LitArray"
     elseiftype A <: Reference then "Reference"
+    elseiftype A <: DontCare then "DontCare"
     elseiftype A <: PackageRef then "PackageRef"
     elseiftype A <: MethodFunRef then "MethodFunRef"
     elseiftype A <: MethodNewRef then "MethodNewRef"
@@ -152,12 +160,48 @@ primitive ASTInfo
     elseiftype A <: LitFalse then "LitFalse"
     elseiftype A <: LitFloat then "LitFloat"
     elseiftype A <: LitInteger then "LitInteger"
+    elseiftype A <: LitCharacter then "LitCharacter"
     elseiftype A <: LitString then "LitString"
     elseiftype A <: LitLocation then "LitLocation"
+    elseiftype A <: EOF then "EOF"
+    elseiftype A <: LexError then "LexError"
+    elseiftype A <: NewLine then "NewLine"
+    elseiftype A <: Use then "Use"
+    elseiftype A <: Colon then "Colon"
+    elseiftype A <: Semicolon then "Semicolon"
+    elseiftype A <: Comma then "Comma"
+    elseiftype A <: Constant then "Constant"
+    elseiftype A <: Pipe then "Pipe"
+    elseiftype A <: Ampersand then "Ampersand"
+    elseiftype A <: Arrow then "Arrow"
+    elseiftype A <: DoubleArrow then "DoubleArrow"
+    elseiftype A <: Backslash then "Backslash"
+    elseiftype A <: LParen then "LParen"
+    elseiftype A <: RParen then "RParen"
+    elseiftype A <: LBrace then "LBrace"
+    elseiftype A <: RBrace then "RBrace"
+    elseiftype A <: LSquare then "LSquare"
+    elseiftype A <: RSquare then "RSquare"
+    elseiftype A <: LParenNew then "LParenNew"
+    elseiftype A <: LBraceNew then "LBraceNew"
+    elseiftype A <: LSquareNew then "LSquareNew"
+    elseiftype A <: SubNew then "SubNew"
+    elseiftype A <: SubUnsafeNew then "SubUnsafeNew"
+    elseiftype A <: In then "In"
+    elseiftype A <: Until then "Until"
+    elseiftype A <: Do then "Do"
+    elseiftype A <: Else then "Else"
+    elseiftype A <: ElseIf then "ElseIf"
+    elseiftype A <: Then then "Then"
+    elseiftype A <: End then "End"
+    elseiftype A <: Var then "Var"
+    elseiftype A <: Let then "Let"
+    elseiftype A <: Embed then "Embed"
+    elseiftype A <: Where then "Where"
     else "???"
     end
 
-type BinaryOp is (MulUnsafe | GE | Eq | Is | And | DivUnsafe | NE | Div | AddUnsafe | XOr | SubUnsafe | Mod | Or | Mul | ModUnsafe | Sub | RShiftUnsafe | GT | Add | LT | RShift | LShift | Isnt | LShiftUnsafe | LE)
+type BinaryOp is (GTUnsafe | NEUnsafe | LEUnsafe | MulUnsafe | GE | Eq | LTUnsafe | GEUnsafe | Is | And | EqUnsafe | DivUnsafe | NE | Div | AddUnsafe | XOr | SubUnsafe | Mod | Or | Mul | ModUnsafe | Sub | RShiftUnsafe | GT | Add | LT | RShift | LShift | Isnt | LShiftUnsafe | LE)
 
 type Cap is (Ref | Val | Tag | Box | Trn | Iso)
 
@@ -179,13 +223,15 @@ type Jump is (Continue | Error | Break | Return)
 
 type UseDecl is (UseFFIDecl | UsePackage)
 
+type Lexeme is (SubUnsafeNew | Where | LSquareNew | Let | Else | DoubleArrow | In | Use | Comma | LBrace | RParen | LBraceNew | Embed | Then | LParen | Arrow | Ampersand | Semicolon | EOF | Colon | LexError | Constant | Pipe | Until | LParenNew | NewLine | RBrace | Backslash | RSquare | End | LSquare | ElseIf | Do | Var | SubNew)
+
 type TypeDecl is (Trait | Primitive | Struct | Actor | Class | Interface | TypeAlias)
 
 type IfDefCond is (IfDefBinaryOp | IfDefNot | IfDefFlag)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | TupleElementRef | MatchCapture | TypeRef | Jump | LitBool | As | Consume | If | LitLocation | CompileIntrinsic | Dot | Match | Repeat | While | IfDef | Object | With | Try | BinaryOp | Reference | PackageRef | LitInteger | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
+type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | PackageRef | LitInteger | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
 
 type CapMod is (Aliased | Ephemeral)
 
@@ -2107,6 +2153,318 @@ class RShiftUnsafe is AST
     s.push(')')
     consume s
 
+class Eq is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Eq")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class EqUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("EqUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class NE is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("NE")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class NEUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("NEUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class LT is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LT")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class LTUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LTUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class LE is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LE")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class LEUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LEUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class GE is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("GE")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class GEUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("GEUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class GT is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("GT")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class GTUnsafe is AST
+  var _left: Expr
+  var _right: Expr
+  
+  new create(
+    left': Expr,
+    right': Expr)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("GTUnsafe")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
 class Is is AST
   var _left: Expr
   var _right: Expr
@@ -2153,162 +2511,6 @@ class Isnt is AST
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Isnt")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class Eq is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Eq")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class NE is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("NE")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class LT is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LT")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class LE is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LE")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class GE is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("GE")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class GT is AST
-  var _left: Expr
-  var _right: Expr
-  
-  new create(
-    left': Expr,
-    right': Expr)
-  =>
-    _left = left'
-    _right = right'
-  
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
-  
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("GT")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
     s.>append(_right.string())
@@ -2439,6 +2641,32 @@ class Dot is AST
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Dot")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class Chain is AST
+  var _left: Expr
+  var _right: Id
+  
+  new create(
+    left': Expr,
+    right': Id)
+  =>
+    _left = left'
+    _right = right'
+  
+  fun left(): this->Expr => _left
+  fun right(): this->Id => _right
+  
+  fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Id) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Chain")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
     s.>append(_right.string())
@@ -3273,6 +3501,13 @@ class Reference is AST
     s.push(')')
     consume s
 
+class DontCare is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("DontCare")
+    consume s
+
 class PackageRef is AST
   var _name: Id
   
@@ -4053,6 +4288,16 @@ class LitInteger
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
 
+class LitCharacter
+  var _value: U8
+  new create(value': U8) => _value = value'
+  fun value(): U8 => _value
+  fun ref set_value(value': U8) => _value = value'
+  fun string(): String iso^ =>
+    recover
+      String.>append("LitCharacter(").>append(_value.string()).>push(')')
+    end
+
 class LitString
   var _value: String
   new create(value': String) => _value = value'
@@ -4068,6 +4313,251 @@ class LitLocation is AST
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
+    consume s
+
+class EOF is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("EOF")
+    consume s
+
+class LexError is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LexError")
+    consume s
+
+class NewLine is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("NewLine")
+    consume s
+
+class Use is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Use")
+    consume s
+
+class Colon is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Colon")
+    consume s
+
+class Semicolon is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Semicolon")
+    consume s
+
+class Comma is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Comma")
+    consume s
+
+class Constant is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Constant")
+    consume s
+
+class Pipe is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Pipe")
+    consume s
+
+class Ampersand is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Ampersand")
+    consume s
+
+class Arrow is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Arrow")
+    consume s
+
+class DoubleArrow is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("DoubleArrow")
+    consume s
+
+class Backslash is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Backslash")
+    consume s
+
+class LParen is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LParen")
+    consume s
+
+class RParen is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("RParen")
+    consume s
+
+class LBrace is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LBrace")
+    consume s
+
+class RBrace is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("RBrace")
+    consume s
+
+class LSquare is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LSquare")
+    consume s
+
+class RSquare is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("RSquare")
+    consume s
+
+class LParenNew is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LParenNew")
+    consume s
+
+class LBraceNew is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LBraceNew")
+    consume s
+
+class LSquareNew is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LSquareNew")
+    consume s
+
+class SubNew is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("SubNew")
+    consume s
+
+class SubUnsafeNew is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("SubUnsafeNew")
+    consume s
+
+class In is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("In")
+    consume s
+
+class Until is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Until")
+    consume s
+
+class Do is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Do")
+    consume s
+
+class Else is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Else")
+    consume s
+
+class ElseIf is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("ElseIf")
+    consume s
+
+class Then is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Then")
+    consume s
+
+class End is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("End")
+    consume s
+
+class Var is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Var")
+    consume s
+
+class Let is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Let")
+    consume s
+
+class Embed is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Embed")
+    consume s
+
+class Where is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Where")
     consume s
 
 

@@ -173,7 +173,10 @@ primitive ASTDefs
       "Add"; "AddUnsafe"; "Sub"; "SubUnsafe"
       "Mul"; "MulUnsafe"; "Div"; "DivUnsafe"; "Mod"; "ModUnsafe"
       "LShift"; "LShiftUnsafe"; "RShift"; "RShiftUnsafe"
-      "Is"; "Isnt"; "Eq"; "NE"; "LT"; "LE"; "GE"; "GT"; "And"; "Or"; "XOr"
+      "Eq"; "EqUnsafe"; "NE"; "NEUnsafe"
+      "LT"; "LTUnsafe"; "LE"; "LEUnsafe"
+      "GE"; "GEUnsafe"; "GT"; "GTUnsafe"
+      "Is"; "Isnt"; "And"; "Or"; "XOr"
     ].values() do
       g.def(name)
         .> in_union("BinaryOp", "Expr")
@@ -193,6 +196,12 @@ primitive ASTDefs
       .> with_type()
       .> has("left",  "Expr")
       .> has("right", "(Id | LitInteger | TypeArgs)")
+    
+    g.def("Chain")
+      .> in_union("Expr")
+      .> with_type()
+      .> has("left",  "Expr")
+      .> has("right", "Id")
     
     g.def("Tilde")
       .> in_union("Expr")
@@ -357,6 +366,10 @@ primitive ASTDefs
       .> has("name", "Id")
       .> in_union("Expr")
     
+    g.def("DontCare")
+      .> with_type()
+      .> in_union("Expr")
+    
     g.def("PackageRef")
       .> has("name", "Id")
       .> in_union("Expr")
@@ -503,9 +516,53 @@ primitive ASTDefs
     g.def_wrap("LitInteger", "I128")
       .> in_union("Expr")
     
+    g.def_wrap("LitCharacter", "U8")
+      .> in_union("Expr")
+    
     g.def_wrap("LitString", "String")
       .> in_union("Expr")
     
     g.def("LitLocation")
       .> in_union("Expr")
       .> with_type()
+    
+    for name in [
+      "EOF"
+      "LexError"
+      "NewLine"
+      "Use"
+      "Colon"
+      "Semicolon"
+      "Comma"
+      "Constant"
+      "Pipe"
+      "Ampersand"
+      "Arrow"
+      "DoubleArrow"
+      "Backslash"
+      "LParen"
+      "RParen"
+      "LBrace"
+      "RBrace"
+      "LSquare"
+      "RSquare"
+      "LParenNew"
+      "LBraceNew"
+      "LSquareNew"
+      "SubNew"
+      "SubUnsafeNew"
+      "In"
+      "Until"
+      "Do"
+      "Else"
+      "ElseIf"
+      "Then"
+      "End"
+      "Var"
+      "Let"
+      "Embed"
+      "Where"
+    ].values() do
+      g.def(name)
+        .> in_union("Lexeme")
+    end
