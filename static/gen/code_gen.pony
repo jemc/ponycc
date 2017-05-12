@@ -20,6 +20,11 @@ class CodeGen
   fun ref line(s: String = "") =>
     _lines.push(current_indent() + s)
   
+  fun ref block(s: String = "") =>
+    for s' in s.split_by("\n").values() do
+      _lines.push(current_indent() + s')
+    end
+  
   fun ref push_indent(s: String = "  ") =>
     _indents.push(current_indent() + s)
   
