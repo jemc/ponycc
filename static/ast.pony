@@ -1,3 +1,162 @@
+trait AST
+  fun string(): String iso^
+
+primitive ASTInfo
+  fun name[A: (AST | None)](): String =>
+    iftype A <: None then "x"
+    elseiftype A <: Program then "Program"
+    elseiftype A <: Package then "Package"
+    elseiftype A <: Module then "Module"
+    elseiftype A <: UsePackage then "UsePackage"
+    elseiftype A <: UseFFIDecl then "UseFFIDecl"
+    elseiftype A <: FFIDecl then "FFIDecl"
+    elseiftype A <: TypeAlias then "TypeAlias"
+    elseiftype A <: Interface then "Interface"
+    elseiftype A <: Trait then "Trait"
+    elseiftype A <: Primitive then "Primitive"
+    elseiftype A <: Struct then "Struct"
+    elseiftype A <: Class then "Class"
+    elseiftype A <: Actor then "Actor"
+    elseiftype A <: Provides then "Provides"
+    elseiftype A <: Members then "Members"
+    elseiftype A <: FieldLet then "FieldLet"
+    elseiftype A <: FieldVar then "FieldVar"
+    elseiftype A <: FieldEmbed then "FieldEmbed"
+    elseiftype A <: MethodFun then "MethodFun"
+    elseiftype A <: MethodNew then "MethodNew"
+    elseiftype A <: MethodBe then "MethodBe"
+    elseiftype A <: TypeParams then "TypeParams"
+    elseiftype A <: TypeParam then "TypeParam"
+    elseiftype A <: TypeArgs then "TypeArgs"
+    elseiftype A <: Params then "Params"
+    elseiftype A <: Param then "Param"
+    elseiftype A <: ExprSeq then "ExprSeq"
+    elseiftype A <: RawExprSeq then "RawExprSeq"
+    elseiftype A <: Return then "Return"
+    elseiftype A <: Break then "Break"
+    elseiftype A <: Continue then "Continue"
+    elseiftype A <: Error then "Error"
+    elseiftype A <: CompileIntrinsic then "CompileIntrinsic"
+    elseiftype A <: CompileError then "CompileError"
+    elseiftype A <: LocalLet then "LocalLet"
+    elseiftype A <: LocalVar then "LocalVar"
+    elseiftype A <: MatchCapture then "MatchCapture"
+    elseiftype A <: As then "As"
+    elseiftype A <: Tuple then "Tuple"
+    elseiftype A <: Consume then "Consume"
+    elseiftype A <: Recover then "Recover"
+    elseiftype A <: Not then "Not"
+    elseiftype A <: Neg then "Neg"
+    elseiftype A <: NegUnsafe then "NegUnsafe"
+    elseiftype A <: AddressOf then "AddressOf"
+    elseiftype A <: DigestOf then "DigestOf"
+    elseiftype A <: Add then "Add"
+    elseiftype A <: AddUnsafe then "AddUnsafe"
+    elseiftype A <: Sub then "Sub"
+    elseiftype A <: SubUnsafe then "SubUnsafe"
+    elseiftype A <: Mul then "Mul"
+    elseiftype A <: MulUnsafe then "MulUnsafe"
+    elseiftype A <: Div then "Div"
+    elseiftype A <: DivUnsafe then "DivUnsafe"
+    elseiftype A <: Mod then "Mod"
+    elseiftype A <: ModUnsafe then "ModUnsafe"
+    elseiftype A <: LShift then "LShift"
+    elseiftype A <: LShiftUnsafe then "LShiftUnsafe"
+    elseiftype A <: RShift then "RShift"
+    elseiftype A <: RShiftUnsafe then "RShiftUnsafe"
+    elseiftype A <: Is then "Is"
+    elseiftype A <: Isnt then "Isnt"
+    elseiftype A <: Eq then "Eq"
+    elseiftype A <: NE then "NE"
+    elseiftype A <: LT then "LT"
+    elseiftype A <: LE then "LE"
+    elseiftype A <: GE then "GE"
+    elseiftype A <: GT then "GT"
+    elseiftype A <: And then "And"
+    elseiftype A <: Or then "Or"
+    elseiftype A <: XOr then "XOr"
+    elseiftype A <: Assign then "Assign"
+    elseiftype A <: Dot then "Dot"
+    elseiftype A <: Tilde then "Tilde"
+    elseiftype A <: Qualify then "Qualify"
+    elseiftype A <: Call then "Call"
+    elseiftype A <: FFICall then "FFICall"
+    elseiftype A <: Args then "Args"
+    elseiftype A <: NamedArgs then "NamedArgs"
+    elseiftype A <: NamedArg then "NamedArg"
+    elseiftype A <: IfDef then "IfDef"
+    elseiftype A <: IfDefAnd then "IfDefAnd"
+    elseiftype A <: IfDefOr then "IfDefOr"
+    elseiftype A <: IfDefNot then "IfDefNot"
+    elseiftype A <: IfDefFlag then "IfDefFlag"
+    elseiftype A <: If then "If"
+    elseiftype A <: While then "While"
+    elseiftype A <: Repeat then "Repeat"
+    elseiftype A <: For then "For"
+    elseiftype A <: With then "With"
+    elseiftype A <: Match then "Match"
+    elseiftype A <: Cases then "Cases"
+    elseiftype A <: Case then "Case"
+    elseiftype A <: Try then "Try"
+    elseiftype A <: Lambda then "Lambda"
+    elseiftype A <: LambdaCaptures then "LambdaCaptures"
+    elseiftype A <: LambdaCapture then "LambdaCapture"
+    elseiftype A <: Object then "Object"
+    elseiftype A <: LitArray then "LitArray"
+    elseiftype A <: Reference then "Reference"
+    elseiftype A <: PackageRef then "PackageRef"
+    elseiftype A <: MethodFunRef then "MethodFunRef"
+    elseiftype A <: MethodNewRef then "MethodNewRef"
+    elseiftype A <: MethodBeRef then "MethodBeRef"
+    elseiftype A <: TypeRef then "TypeRef"
+    elseiftype A <: FieldLetRef then "FieldLetRef"
+    elseiftype A <: FieldVarRef then "FieldVarRef"
+    elseiftype A <: FieldEmbedRef then "FieldEmbedRef"
+    elseiftype A <: TupleElementRef then "TupleElementRef"
+    elseiftype A <: LocalLetRef then "LocalLetRef"
+    elseiftype A <: LocalVarRef then "LocalVarRef"
+    elseiftype A <: ParamRef then "ParamRef"
+    elseiftype A <: UnionType then "UnionType"
+    elseiftype A <: IsectType then "IsectType"
+    elseiftype A <: TupleType then "TupleType"
+    elseiftype A <: ArrowType then "ArrowType"
+    elseiftype A <: FunType then "FunType"
+    elseiftype A <: LambdaType then "LambdaType"
+    elseiftype A <: NominalType then "NominalType"
+    elseiftype A <: TypeParamRef then "TypeParamRef"
+    elseiftype A <: ThisType then "ThisType"
+    elseiftype A <: DontCareType then "DontCareType"
+    elseiftype A <: ErrorType then "ErrorType"
+    elseiftype A <: LiteralType then "LiteralType"
+    elseiftype A <: LiteralTypeBranch then "LiteralTypeBranch"
+    elseiftype A <: OpLiteralType then "OpLiteralType"
+    elseiftype A <: Iso then "Iso"
+    elseiftype A <: Trn then "Trn"
+    elseiftype A <: Ref then "Ref"
+    elseiftype A <: Val then "Val"
+    elseiftype A <: Box then "Box"
+    elseiftype A <: Tag then "Tag"
+    elseiftype A <: CapRead then "CapRead"
+    elseiftype A <: CapSend then "CapSend"
+    elseiftype A <: CapShare then "CapShare"
+    elseiftype A <: CapAlias then "CapAlias"
+    elseiftype A <: CapAny then "CapAny"
+    elseiftype A <: Aliased then "Aliased"
+    elseiftype A <: Ephemeral then "Ephemeral"
+    elseiftype A <: At then "At"
+    elseiftype A <: Question then "Question"
+    elseiftype A <: Ellipsis then "Ellipsis"
+    elseiftype A <: Id then "Id"
+    elseiftype A <: This then "This"
+    elseiftype A <: LitTrue then "LitTrue"
+    elseiftype A <: LitFalse then "LitFalse"
+    elseiftype A <: LitFloat then "LitFloat"
+    elseiftype A <: LitInteger then "LitInteger"
+    elseiftype A <: LitString then "LitString"
+    elseiftype A <: LitLocation then "LitLocation"
+    else "???"
+    end
+
 type BinaryOp is (MulUnsafe | GE | Eq | Is | And | DivUnsafe | NE | Div | AddUnsafe | XOr | SubUnsafe | Mod | Or | Mul | ModUnsafe | Sub | RShiftUnsafe | GT | Add | LT | RShift | LShift | Isnt | LShiftUnsafe | LE)
 
 type Cap is (Ref | Val | Tag | Box | Trn | Iso)
@@ -36,7 +195,7 @@ type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
 
 type UnaryOp is (Neg | AddressOf | NegUnsafe | DigestOf | Not)
 
-class Program
+class Program is AST
   var _packages: Array[Package]
   
   new create(
@@ -62,7 +221,7 @@ class Program
     s.push(')')
     consume s
 
-class Package
+class Package is AST
   var _modules: Array[Module]
   var _docs: (LitString | None)
   
@@ -95,7 +254,7 @@ class Package
     s.push(')')
     consume s
 
-class Module
+class Module is AST
   var _use_decls: Array[UseDecl]
   var _type_decls: Array[TypeDecl]
   var _docs: (LitString | None)
@@ -141,7 +300,7 @@ class Module
     s.push(')')
     consume s
 
-class UsePackage
+class UsePackage is AST
   var _prefix: (Id | None)
   var _package: String
   
@@ -167,7 +326,7 @@ class UsePackage
     s.push(')')
     consume s
 
-class UseFFIDecl
+class UseFFIDecl is AST
   var _body: FFIDecl
   var _guard: (Expr | IfDefCond | None)
   
@@ -193,7 +352,7 @@ class UseFFIDecl
     s.push(')')
     consume s
 
-class FFIDecl
+class FFIDecl is AST
   var _name: (Id | LitString)
   var _return_type: TypeArgs
   var _params: (Params | None)
@@ -237,7 +396,7 @@ class FFIDecl
     s.push(')')
     consume s
 
-class TypeAlias
+class TypeAlias is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -293,7 +452,7 @@ class TypeAlias
     s.push(')')
     consume s
 
-class Interface
+class Interface is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -349,7 +508,7 @@ class Interface
     s.push(')')
     consume s
 
-class Trait
+class Trait is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -405,7 +564,7 @@ class Trait
     s.push(')')
     consume s
 
-class Primitive
+class Primitive is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -461,7 +620,7 @@ class Primitive
     s.push(')')
     consume s
 
-class Struct
+class Struct is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -517,7 +676,7 @@ class Struct
     s.push(')')
     consume s
 
-class Class
+class Class is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -573,7 +732,7 @@ class Class
     s.push(')')
     consume s
 
-class Actor
+class Actor is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -629,7 +788,7 @@ class Actor
     s.push(')')
     consume s
 
-class Provides
+class Provides is AST
   var _types: Array[Type]
   
   new create(
@@ -655,7 +814,7 @@ class Provides
     s.push(')')
     consume s
 
-class Members
+class Members is AST
   var _fields: Array[Field]
   var _methods: Array[Method]
   
@@ -694,7 +853,7 @@ class Members
     s.push(')')
     consume s
 
-class FieldLet
+class FieldLet is AST
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -726,7 +885,7 @@ class FieldLet
     s.push(')')
     consume s
 
-class FieldVar
+class FieldVar is AST
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -758,7 +917,7 @@ class FieldVar
     s.push(')')
     consume s
 
-class FieldEmbed
+class FieldEmbed is AST
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -790,7 +949,7 @@ class FieldEmbed
     s.push(')')
     consume s
 
-class MethodFun
+class MethodFun is AST
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -858,7 +1017,7 @@ class MethodFun
     s.push(')')
     consume s
 
-class MethodNew
+class MethodNew is AST
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -926,7 +1085,7 @@ class MethodNew
     s.push(')')
     consume s
 
-class MethodBe
+class MethodBe is AST
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -994,7 +1153,7 @@ class MethodBe
     s.push(')')
     consume s
 
-class TypeParams
+class TypeParams is AST
   var _list: Array[TypeParam]
   
   new create(
@@ -1020,7 +1179,7 @@ class TypeParams
     s.push(')')
     consume s
 
-class TypeParam
+class TypeParam is AST
   var _name: Id
   var _constraint: (Type | None)
   var _default: (Type | None)
@@ -1052,7 +1211,7 @@ class TypeParam
     s.push(')')
     consume s
 
-class TypeArgs
+class TypeArgs is AST
   var _list: Array[Type]
   
   new create(
@@ -1078,7 +1237,7 @@ class TypeArgs
     s.push(')')
     consume s
 
-class Params
+class Params is AST
   var _list: Array[Param]
   var _ellipsis: (Ellipsis | None)
   
@@ -1111,7 +1270,7 @@ class Params
     s.push(')')
     consume s
 
-class Param
+class Param is AST
   var _name: Id
   var _param_type: (Type | None)
   var _default: (Expr | None)
@@ -1143,7 +1302,7 @@ class Param
     s.push(')')
     consume s
 
-class ExprSeq
+class ExprSeq is AST
   var _list: Array[Expr]
   
   new create(
@@ -1169,7 +1328,7 @@ class ExprSeq
     s.push(')')
     consume s
 
-class RawExprSeq
+class RawExprSeq is AST
   var _list: Array[Expr]
   
   new create(
@@ -1195,7 +1354,7 @@ class RawExprSeq
     s.push(')')
     consume s
 
-class Return
+class Return is AST
   var _value: RawExprSeq
   
   new create(
@@ -1215,7 +1374,7 @@ class Return
     s.push(')')
     consume s
 
-class Break
+class Break is AST
   var _value: RawExprSeq
   
   new create(
@@ -1235,7 +1394,7 @@ class Break
     s.push(')')
     consume s
 
-class Continue
+class Continue is AST
   var _value: RawExprSeq
   
   new create(
@@ -1255,7 +1414,7 @@ class Continue
     s.push(')')
     consume s
 
-class Error
+class Error is AST
   var _value: RawExprSeq
   
   new create(
@@ -1275,14 +1434,14 @@ class Error
     s.push(')')
     consume s
 
-class CompileIntrinsic
+class CompileIntrinsic is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
     consume s
 
-class CompileError
+class CompileError is AST
   var _message: RawExprSeq
   
   new create(
@@ -1302,7 +1461,7 @@ class CompileError
     s.push(')')
     consume s
 
-class LocalLet
+class LocalLet is AST
   var _name: Id
   var _local_type: (Type | None)
   
@@ -1328,7 +1487,7 @@ class LocalLet
     s.push(')')
     consume s
 
-class LocalVar
+class LocalVar is AST
   var _name: Id
   var _local_type: (Type | None)
   
@@ -1354,7 +1513,7 @@ class LocalVar
     s.push(')')
     consume s
 
-class MatchCapture
+class MatchCapture is AST
   var _name: Id
   var _local_type: Type
   
@@ -1380,7 +1539,7 @@ class MatchCapture
     s.push(')')
     consume s
 
-class As
+class As is AST
   var _expr: Expr
   var _as_type: Type
   
@@ -1406,7 +1565,7 @@ class As
     s.push(')')
     consume s
 
-class Tuple
+class Tuple is AST
   var _elements: Array[RawExprSeq]
   
   new create(
@@ -1432,7 +1591,7 @@ class Tuple
     s.push(')')
     consume s
 
-class Consume
+class Consume is AST
   var _cap: (Cap | None)
   var _expr: Expr
   
@@ -1458,7 +1617,7 @@ class Consume
     s.push(')')
     consume s
 
-class Recover
+class Recover is AST
   var _cap: (Cap | None)
   var _expr: Expr
   
@@ -1484,7 +1643,7 @@ class Recover
     s.push(')')
     consume s
 
-class Not
+class Not is AST
   var _expr: Expr
   
   new create(
@@ -1504,7 +1663,7 @@ class Not
     s.push(')')
     consume s
 
-class Neg
+class Neg is AST
   var _expr: Expr
   
   new create(
@@ -1524,7 +1683,7 @@ class Neg
     s.push(')')
     consume s
 
-class NegUnsafe
+class NegUnsafe is AST
   var _expr: Expr
   
   new create(
@@ -1544,7 +1703,7 @@ class NegUnsafe
     s.push(')')
     consume s
 
-class AddressOf
+class AddressOf is AST
   var _expr: Expr
   
   new create(
@@ -1564,7 +1723,7 @@ class AddressOf
     s.push(')')
     consume s
 
-class DigestOf
+class DigestOf is AST
   var _expr: Expr
   
   new create(
@@ -1584,7 +1743,7 @@ class DigestOf
     s.push(')')
     consume s
 
-class Add
+class Add is AST
   var _left: Expr
   var _right: Expr
   
@@ -1610,7 +1769,7 @@ class Add
     s.push(')')
     consume s
 
-class AddUnsafe
+class AddUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1636,7 +1795,7 @@ class AddUnsafe
     s.push(')')
     consume s
 
-class Sub
+class Sub is AST
   var _left: Expr
   var _right: Expr
   
@@ -1662,7 +1821,7 @@ class Sub
     s.push(')')
     consume s
 
-class SubUnsafe
+class SubUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1688,7 +1847,7 @@ class SubUnsafe
     s.push(')')
     consume s
 
-class Mul
+class Mul is AST
   var _left: Expr
   var _right: Expr
   
@@ -1714,7 +1873,7 @@ class Mul
     s.push(')')
     consume s
 
-class MulUnsafe
+class MulUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1740,7 +1899,7 @@ class MulUnsafe
     s.push(')')
     consume s
 
-class Div
+class Div is AST
   var _left: Expr
   var _right: Expr
   
@@ -1766,7 +1925,7 @@ class Div
     s.push(')')
     consume s
 
-class DivUnsafe
+class DivUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1792,7 +1951,7 @@ class DivUnsafe
     s.push(')')
     consume s
 
-class Mod
+class Mod is AST
   var _left: Expr
   var _right: Expr
   
@@ -1818,7 +1977,7 @@ class Mod
     s.push(')')
     consume s
 
-class ModUnsafe
+class ModUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1844,7 +2003,7 @@ class ModUnsafe
     s.push(')')
     consume s
 
-class LShift
+class LShift is AST
   var _left: Expr
   var _right: Expr
   
@@ -1870,7 +2029,7 @@ class LShift
     s.push(')')
     consume s
 
-class LShiftUnsafe
+class LShiftUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1896,7 +2055,7 @@ class LShiftUnsafe
     s.push(')')
     consume s
 
-class RShift
+class RShift is AST
   var _left: Expr
   var _right: Expr
   
@@ -1922,7 +2081,7 @@ class RShift
     s.push(')')
     consume s
 
-class RShiftUnsafe
+class RShiftUnsafe is AST
   var _left: Expr
   var _right: Expr
   
@@ -1948,7 +2107,7 @@ class RShiftUnsafe
     s.push(')')
     consume s
 
-class Is
+class Is is AST
   var _left: Expr
   var _right: Expr
   
@@ -1974,7 +2133,7 @@ class Is
     s.push(')')
     consume s
 
-class Isnt
+class Isnt is AST
   var _left: Expr
   var _right: Expr
   
@@ -2000,7 +2159,7 @@ class Isnt
     s.push(')')
     consume s
 
-class Eq
+class Eq is AST
   var _left: Expr
   var _right: Expr
   
@@ -2026,7 +2185,7 @@ class Eq
     s.push(')')
     consume s
 
-class NE
+class NE is AST
   var _left: Expr
   var _right: Expr
   
@@ -2052,7 +2211,7 @@ class NE
     s.push(')')
     consume s
 
-class LT
+class LT is AST
   var _left: Expr
   var _right: Expr
   
@@ -2078,7 +2237,7 @@ class LT
     s.push(')')
     consume s
 
-class LE
+class LE is AST
   var _left: Expr
   var _right: Expr
   
@@ -2104,7 +2263,7 @@ class LE
     s.push(')')
     consume s
 
-class GE
+class GE is AST
   var _left: Expr
   var _right: Expr
   
@@ -2130,7 +2289,7 @@ class GE
     s.push(')')
     consume s
 
-class GT
+class GT is AST
   var _left: Expr
   var _right: Expr
   
@@ -2156,7 +2315,7 @@ class GT
     s.push(')')
     consume s
 
-class And
+class And is AST
   var _left: Expr
   var _right: Expr
   
@@ -2182,7 +2341,7 @@ class And
     s.push(')')
     consume s
 
-class Or
+class Or is AST
   var _left: Expr
   var _right: Expr
   
@@ -2208,7 +2367,7 @@ class Or
     s.push(')')
     consume s
 
-class XOr
+class XOr is AST
   var _left: Expr
   var _right: Expr
   
@@ -2234,7 +2393,7 @@ class XOr
     s.push(')')
     consume s
 
-class Assign
+class Assign is AST
   var _right: Expr
   var _left: Expr
   
@@ -2260,7 +2419,7 @@ class Assign
     s.push(')')
     consume s
 
-class Dot
+class Dot is AST
   var _left: Expr
   var _right: (Id | LitInteger | TypeArgs)
   
@@ -2286,7 +2445,7 @@ class Dot
     s.push(')')
     consume s
 
-class Tilde
+class Tilde is AST
   var _left: Expr
   var _right: Id
   
@@ -2312,7 +2471,7 @@ class Tilde
     s.push(')')
     consume s
 
-class Qualify
+class Qualify is AST
   var _left: Expr
   var _right: TypeArgs
   
@@ -2338,7 +2497,7 @@ class Qualify
     s.push(')')
     consume s
 
-class Call
+class Call is AST
   var _args: (Args | None)
   var _named_args: (NamedArgs | None)
   var _receiver: Expr
@@ -2370,7 +2529,7 @@ class Call
     s.push(')')
     consume s
 
-class FFICall
+class FFICall is AST
   var _name: (Id | LitString)
   var _type_args: (TypeArgs | None)
   var _args: (Args | None)
@@ -2414,7 +2573,7 @@ class FFICall
     s.push(')')
     consume s
 
-class Args
+class Args is AST
   var _list: Array[RawExprSeq]
   
   new create(
@@ -2440,7 +2599,7 @@ class Args
     s.push(')')
     consume s
 
-class NamedArgs
+class NamedArgs is AST
   var _list: Array[NamedArg]
   
   new create(
@@ -2466,7 +2625,7 @@ class NamedArgs
     s.push(')')
     consume s
 
-class NamedArg
+class NamedArg is AST
   var _name: Id
   var _value: RawExprSeq
   
@@ -2492,7 +2651,7 @@ class NamedArg
     s.push(')')
     consume s
 
-class IfDef
+class IfDef is AST
   var _then_expr: (Expr | IfDefCond)
   var _then_body: ExprSeq
   var _else_body: (Expr | IfDef | None)
@@ -2530,7 +2689,7 @@ class IfDef
     s.push(')')
     consume s
 
-class IfDefAnd
+class IfDefAnd is AST
   var _left: IfDefCond
   var _right: IfDefCond
   
@@ -2556,7 +2715,7 @@ class IfDefAnd
     s.push(')')
     consume s
 
-class IfDefOr
+class IfDefOr is AST
   var _left: IfDefCond
   var _right: IfDefCond
   
@@ -2582,7 +2741,7 @@ class IfDefOr
     s.push(')')
     consume s
 
-class IfDefNot
+class IfDefNot is AST
   var _expr: IfDefCond
   
   new create(
@@ -2602,7 +2761,7 @@ class IfDefNot
     s.push(')')
     consume s
 
-class IfDefFlag
+class IfDefFlag is AST
   var _name: Id
   
   new create(
@@ -2622,7 +2781,7 @@ class IfDefFlag
     s.push(')')
     consume s
 
-class If
+class If is AST
   var _condition: RawExprSeq
   var _then_body: ExprSeq
   var _else_body: (ExprSeq | If | None)
@@ -2654,7 +2813,7 @@ class If
     s.push(')')
     consume s
 
-class While
+class While is AST
   var _condition: RawExprSeq
   var _loop_body: ExprSeq
   var _else_body: (ExprSeq | None)
@@ -2686,7 +2845,7 @@ class While
     s.push(')')
     consume s
 
-class Repeat
+class Repeat is AST
   var _loop_body: ExprSeq
   var _condition: RawExprSeq
   var _else_body: (ExprSeq | None)
@@ -2718,7 +2877,7 @@ class Repeat
     s.push(')')
     consume s
 
-class For
+class For is AST
   var _expr: ExprSeq
   var _iterator: RawExprSeq
   var _loop_body: RawExprSeq
@@ -2756,7 +2915,7 @@ class For
     s.push(')')
     consume s
 
-class With
+class With is AST
   var _refs: Expr
   var _with_body: RawExprSeq
   var _else_body: (RawExprSeq | None)
@@ -2788,7 +2947,7 @@ class With
     s.push(')')
     consume s
 
-class Match
+class Match is AST
   var _expr: RawExprSeq
   var _cases: (Cases | None)
   var _else_body: (ExprSeq | None)
@@ -2820,7 +2979,7 @@ class Match
     s.push(')')
     consume s
 
-class Cases
+class Cases is AST
   var _list: Array[Case]
   
   new create(
@@ -2846,7 +3005,7 @@ class Cases
     s.push(')')
     consume s
 
-class Case
+class Case is AST
   var _expr: (Expr | None)
   var _guard: (RawExprSeq | None)
   var _body: (RawExprSeq | None)
@@ -2878,7 +3037,7 @@ class Case
     s.push(')')
     consume s
 
-class Try
+class Try is AST
   var _body: ExprSeq
   var _else_body: (ExprSeq | None)
   var _then_body: (ExprSeq | None)
@@ -2910,7 +3069,7 @@ class Try
     s.push(')')
     consume s
 
-class Lambda
+class Lambda is AST
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
@@ -2978,7 +3137,7 @@ class Lambda
     s.push(')')
     consume s
 
-class LambdaCaptures
+class LambdaCaptures is AST
   var _list: Array[LambdaCapture]
   
   new create(
@@ -3004,7 +3163,7 @@ class LambdaCaptures
     s.push(')')
     consume s
 
-class LambdaCapture
+class LambdaCapture is AST
   var _name: Id
   var _local_type: (Type | None)
   var _expr: (Expr | None)
@@ -3036,7 +3195,7 @@ class LambdaCapture
     s.push(')')
     consume s
 
-class Object
+class Object is AST
   var _cap: (Cap | None)
   var _provides: (Provides | None)
   var _members: (Members | None)
@@ -3068,7 +3227,7 @@ class Object
     s.push(')')
     consume s
 
-class LitArray
+class LitArray is AST
   var _list: Array[RawExprSeq]
   
   new create(
@@ -3094,7 +3253,7 @@ class LitArray
     s.push(')')
     consume s
 
-class Reference
+class Reference is AST
   var _name: Id
   
   new create(
@@ -3114,7 +3273,7 @@ class Reference
     s.push(')')
     consume s
 
-class PackageRef
+class PackageRef is AST
   var _name: Id
   
   new create(
@@ -3134,7 +3293,7 @@ class PackageRef
     s.push(')')
     consume s
 
-class MethodFunRef
+class MethodFunRef is AST
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3160,7 +3319,7 @@ class MethodFunRef
     s.push(')')
     consume s
 
-class MethodNewRef
+class MethodNewRef is AST
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3186,7 +3345,7 @@ class MethodNewRef
     s.push(')')
     consume s
 
-class MethodBeRef
+class MethodBeRef is AST
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3212,7 +3371,7 @@ class MethodBeRef
     s.push(')')
     consume s
 
-class TypeRef
+class TypeRef is AST
   var _package: Expr
   var _name: (Id | TypeArgs)
   
@@ -3238,7 +3397,7 @@ class TypeRef
     s.push(')')
     consume s
 
-class FieldLetRef
+class FieldLetRef is AST
   var _receiver: Expr
   var _name: Id
   
@@ -3264,7 +3423,7 @@ class FieldLetRef
     s.push(')')
     consume s
 
-class FieldVarRef
+class FieldVarRef is AST
   var _receiver: Expr
   var _name: Id
   
@@ -3290,7 +3449,7 @@ class FieldVarRef
     s.push(')')
     consume s
 
-class FieldEmbedRef
+class FieldEmbedRef is AST
   var _receiver: Expr
   var _name: Id
   
@@ -3316,7 +3475,7 @@ class FieldEmbedRef
     s.push(')')
     consume s
 
-class TupleElementRef
+class TupleElementRef is AST
   var _receiver: Expr
   var _name: LitInteger
   
@@ -3342,7 +3501,7 @@ class TupleElementRef
     s.push(')')
     consume s
 
-class LocalLetRef
+class LocalLetRef is AST
   var _name: Id
   
   new create(
@@ -3362,7 +3521,7 @@ class LocalLetRef
     s.push(')')
     consume s
 
-class LocalVarRef
+class LocalVarRef is AST
   var _name: Id
   
   new create(
@@ -3382,7 +3541,7 @@ class LocalVarRef
     s.push(')')
     consume s
 
-class ParamRef
+class ParamRef is AST
   var _name: Id
   
   new create(
@@ -3402,7 +3561,7 @@ class ParamRef
     s.push(')')
     consume s
 
-class UnionType
+class UnionType is AST
   var _list: Array[Type]
   
   new create(
@@ -3428,7 +3587,7 @@ class UnionType
     s.push(')')
     consume s
 
-class IsectType
+class IsectType is AST
   var _list: Array[Type]
   
   new create(
@@ -3454,7 +3613,7 @@ class IsectType
     s.push(')')
     consume s
 
-class TupleType
+class TupleType is AST
   var _list: Array[Type]
   
   new create(
@@ -3480,7 +3639,7 @@ class TupleType
     s.push(')')
     consume s
 
-class ArrowType
+class ArrowType is AST
   var _left: Type
   var _right: Type
   
@@ -3506,7 +3665,7 @@ class ArrowType
     s.push(')')
     consume s
 
-class FunType
+class FunType is AST
   var _cap: Cap
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
@@ -3544,7 +3703,7 @@ class FunType
     s.push(')')
     consume s
 
-class LambdaType
+class LambdaType is AST
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
@@ -3613,7 +3772,7 @@ class LambdaType
     s.push(')')
     consume s
 
-class NominalType
+class NominalType is AST
   var _package: (Id | None)
   var _name: Id
   var _type_args: (TypeArgs | None)
@@ -3657,7 +3816,7 @@ class NominalType
     s.push(')')
     consume s
 
-class TypeParamRef
+class TypeParamRef is AST
   var _name: Id
   var _cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
@@ -3689,154 +3848,154 @@ class TypeParamRef
     s.push(')')
     consume s
 
-class ThisType
+class ThisType is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ThisType")
     consume s
 
-class DontCareType
+class DontCareType is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCareType")
     consume s
 
-class ErrorType
+class ErrorType is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ErrorType")
     consume s
 
-class LiteralType
+class LiteralType is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralType")
     consume s
 
-class LiteralTypeBranch
+class LiteralTypeBranch is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralTypeBranch")
     consume s
 
-class OpLiteralType
+class OpLiteralType is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("OpLiteralType")
     consume s
 
-class Iso
+class Iso is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Iso")
     consume s
 
-class Trn
+class Trn is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trn")
     consume s
 
-class Ref
+class Ref is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ref")
     consume s
 
-class Val
+class Val is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Val")
     consume s
 
-class Box
+class Box is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Box")
     consume s
 
-class Tag
+class Tag is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tag")
     consume s
 
-class CapRead
+class CapRead is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapRead")
     consume s
 
-class CapSend
+class CapSend is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapSend")
     consume s
 
-class CapShare
+class CapShare is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapShare")
     consume s
 
-class CapAlias
+class CapAlias is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAlias")
     consume s
 
-class CapAny
+class CapAny is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAny")
     consume s
 
-class Aliased
+class Aliased is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Aliased")
     consume s
 
-class Ephemeral
+class Ephemeral is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ephemeral")
     consume s
 
-class At
+class At is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("At")
     consume s
 
-class Question
+class Question is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Question")
     consume s
 
-class Ellipsis
+class Ellipsis is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3853,21 +4012,21 @@ class Id
       String.>append("Id(").>append(_value.string()).>push(')')
     end
 
-class This
+class This is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("This")
     consume s
 
-class LitTrue
+class LitTrue is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitTrue")
     consume s
 
-class LitFalse
+class LitFalse is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3904,7 +4063,7 @@ class LitString
       String.>append("LitString(").>append(_value.string()).>push(')')
     end
 
-class LitLocation
+class LitLocation is AST
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end

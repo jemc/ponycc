@@ -13,6 +13,28 @@ class ASTGen
   fun string(): String =>
     let g: CodeGen = CodeGen
     
+    // Declare the AST trait
+    g.line("trait AST")
+    g.push_indent()
+    g.line("fun string(): String iso^")
+    g.pop_indent()
+    g.line()
+    
+    // Declare the ASTInfo primitive
+    g.line("primitive ASTInfo")
+    g.push_indent()
+    g.line("fun name[A: (AST | None)](): String =>")
+    g.push_indent()
+    g.line("iftype A <: None then \"x\"")
+    for d in defs.values() do
+      g.line("elseiftype A <: " + d.name() + " then \"" + d.name() + "\"")
+    end
+    g.line("else \"???\"")
+    g.line("end")
+    g.pop_indent()
+    g.pop_indent()
+    g.line()
+    
     // Declare each type union.
     for (name, types) in unions.pairs() do
       g.line("type " + name + " is (")

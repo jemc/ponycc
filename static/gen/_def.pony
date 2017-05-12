@@ -32,7 +32,7 @@ class _DefFixed is _Def
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name)
+    g.line("class " + _name + " is AST")
     if _todo then g.add(" // TODO") end
     g.push_indent()
     
