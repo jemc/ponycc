@@ -14,17 +14,17 @@ primitive ASTDefs
     
     g.def("Module")
       .> with_scope()
-      .> has("use_decls",  "Array[Use]",        "Array[Use]")
-      .> has("type_decls", "Array[TypeDecl]",   "Array[TypeDecl]")
+      .> has("use_decls",  "Array[UseDecl]",     "Array[UseDecl]")
+      .> has("type_decls", "Array[TypeDecl]",    "Array[TypeDecl]")
       .> has("docs",       "(LitString | None)", "None")
     
     g.def("UsePackage")
-      .> in_union("Use")
+      .> in_union("UseDecl")
       .> has("prefix",  "(Id | None)", "None")
       .> has("package", "String")
     
     g.def("UseFFIDecl")
-      .> in_union("Use")
+      .> in_union("UseDecl")
       .> has("body",  "FFIDecl")
       .> has("guard", "(Expr | IfDefCond | None)", "None")
     
@@ -496,9 +496,6 @@ primitive ASTDefs
       g.def(name)
         .> in_union("LitBool", "Expr")
     end
-    
-    g.def("LitNone")
-      .> in_union("Expr")
     
     g.def_wrap("LitFloat", "F64")
       .> in_union("Expr")

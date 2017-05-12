@@ -18,7 +18,7 @@ type MethodRef is (MethodNewRef | MethodFunRef | MethodBeRef)
 
 type Jump is (Continue | Error | Break | Return)
 
-type Use is (UseFFIDecl | UsePackage)
+type UseDecl is (UseFFIDecl | UsePackage)
 
 type TypeDecl is (Trait | Primitive | Struct | Actor | Class | Interface | TypeAlias)
 
@@ -26,7 +26,7 @@ type IfDefCond is (IfDefBinaryOp | IfDefNot | IfDefFlag)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | TupleElementRef | MatchCapture | TypeRef | Jump | LitBool | As | Consume | If | LitLocation | CompileIntrinsic | Dot | Match | Repeat | While | IfDef | Object | With | Try | BinaryOp | Reference | PackageRef | LitNone | LocalRef | LitInteger | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
+type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | TupleElementRef | MatchCapture | TypeRef | Jump | LitBool | As | Consume | If | LitLocation | CompileIntrinsic | Dot | Match | Repeat | While | IfDef | Object | With | Try | BinaryOp | Reference | PackageRef | LitInteger | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
 
 type CapMod is (Aliased | Ephemeral)
 
@@ -96,12 +96,12 @@ class Package
     consume s
 
 class Module
-  var _use_decls: Array[Use]
+  var _use_decls: Array[UseDecl]
   var _type_decls: Array[TypeDecl]
   var _docs: (LitString | None)
   
   new create(
-    use_decls': Array[Use] = Array[Use],
+    use_decls': Array[UseDecl] = Array[UseDecl],
     type_decls': Array[TypeDecl] = Array[TypeDecl],
     docs': (LitString | None) = None)
   =>
@@ -109,11 +109,11 @@ class Module
     _type_decls = type_decls'
     _docs = docs'
   
-  fun use_decls(): this->Array[Use] => _use_decls
+  fun use_decls(): this->Array[UseDecl] => _use_decls
   fun type_decls(): this->Array[TypeDecl] => _type_decls
   fun docs(): this->(LitString | None) => _docs
   
-  fun ref set_use_decls(use_decls': Array[Use] = Array[Use]) => _use_decls = consume use_decls'
+  fun ref set_use_decls(use_decls': Array[UseDecl] = Array[UseDecl]) => _use_decls = consume use_decls'
   fun ref set_type_decls(type_decls': Array[TypeDecl] = Array[TypeDecl]) => _type_decls = consume type_decls'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   
@@ -3872,13 +3872,6 @@ class LitFalse
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitFalse")
-    consume s
-
-class LitNone
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LitNone")
     consume s
 
 class LitFloat
