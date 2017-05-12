@@ -4,9 +4,7 @@ type Cap is (Ref | Val | Tag | Box | Trn | Iso)
 
 type LitBool is (LitTrue | LitFalse)
 
-type Type is (LiteralTypeBranch | LambdaType | FunType | CtrlType | IsectType | TypeParamRef | ErrorType | OpLiteralType | NominalType | DontCareType | LiteralType | TupleType | ArrowType | ThisType | UnionType)
-
-type CtrlType is (CtrlTypeContinue | CtrlTypeReturn | CtrlTypeIf | CtrlTypeCases | CtrlTypeCompileError | CtrlTypeBreak | CtrlTypeCompileIntrinsic | CtrlTypeError)
+type Type is (LiteralTypeBranch | LambdaType | FunType | OpLiteralType | IsectType | TypeParamRef | ErrorType | NominalType | DontCareType | LiteralType | TupleType | ArrowType | ThisType | UnionType)
 
 type Field is (FieldVar | FieldLet | FieldEmbed)
 
@@ -16,11 +14,11 @@ type GenCap is (CapAlias | CapAny | CapRead | CapSend | CapShare)
 
 type Local is (LocalVar | LocalLet)
 
-type Jump is (Continue | Error | Break | Return)
-
 type MethodRef is (MethodNewRef | MethodFunRef | MethodBeRef)
 
-type CapMod is (Aliased | Ephemeral)
+type Jump is (Continue | Error | Break | Return)
+
+type Use is (UseFFIDecl | UsePackage)
 
 type TypeDecl is (Trait | Primitive | Struct | Actor | Class | Interface | TypeAlias)
 
@@ -30,9 +28,11 @@ type Method is (MethodFun | MethodNew | MethodBe)
 
 type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | TupleElementRef | MatchCapture | TypeRef | Jump | LitBool | As | Consume | If | LitLocation | CompileIntrinsic | Dot | Match | Repeat | While | IfDef | Object | With | Try | BinaryOp | Reference | PackageRef | LitNone | LocalRef | LitInteger | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
 
-type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
+type CapMod is (Aliased | Ephemeral)
 
 type FieldRef is (FieldVarRef | FieldLetRef | FieldEmbedRef)
+
+type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
 
 type UnaryOp is (Neg | AddressOf | NegUnsafe | DigestOf | Not)
 
@@ -141,33 +141,53 @@ class Module
     s.push(')')
     consume s
 
-class Use
+class UsePackage
   var _prefix: (Id | None)
-  var _body: (FFIDecl | String)
-  var _guard: (Expr | IfDefCond | None)
+  var _package: String
   
   new create(
     prefix': (Id | None) = None,
-    body': (FFIDecl | String),
-    guard': (Expr | IfDefCond | None) = None)
+    package': String)
   =>
     _prefix = prefix'
+    _package = package'
+  
+  fun prefix(): this->(Id | None) => _prefix
+  fun package(): this->String => _package
+  
+  fun ref set_prefix(prefix': (Id | None) = None) => _prefix = consume prefix'
+  fun ref set_package(package': String) => _package = consume package'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("UsePackage")
+    s.push('(')
+    s.>append(_prefix.string()).>push(',').push(' ')
+    s.>append(_package.string())
+    s.push(')')
+    consume s
+
+class UseFFIDecl
+  var _body: FFIDecl
+  var _guard: (Expr | IfDefCond | None)
+  
+  new create(
+    body': FFIDecl,
+    guard': (Expr | IfDefCond | None) = None)
+  =>
     _body = body'
     _guard = guard'
   
-  fun prefix(): this->(Id | None) => _prefix
-  fun body(): this->(FFIDecl | String) => _body
+  fun body(): this->FFIDecl => _body
   fun guard(): this->(Expr | IfDefCond | None) => _guard
   
-  fun ref set_prefix(prefix': (Id | None) = None) => _prefix = consume prefix'
-  fun ref set_body(body': (FFIDecl | String)) => _body = consume body'
+  fun ref set_body(body': FFIDecl) => _body = consume body'
   fun ref set_guard(guard': (Expr | IfDefCond | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("Use")
+    s.append("UseFFIDecl")
     s.push('(')
-    s.>append(_prefix.string()).>push(',').push(' ')
     s.>append(_body.string()).>push(',').push(' ')
     s.>append(_guard.string())
     s.push(')')
@@ -1059,30 +1079,30 @@ class TypeArgs
     consume s
 
 class Params
-  var _param: Array[Param]
+  var _list: Array[Param]
   var _ellipsis: (Ellipsis | None)
   
   new create(
-    param': Array[Param] = Array[Param],
+    list': Array[Param] = Array[Param],
     ellipsis': (Ellipsis | None) = None)
   =>
-    _param = param'
+    _list = list'
     _ellipsis = ellipsis'
   
-  fun param(): this->Array[Param] => _param
+  fun list(): this->Array[Param] => _list
   fun ellipsis(): this->(Ellipsis | None) => _ellipsis
   
-  fun ref set_param(param': Array[Param] = Array[Param]) => _param = consume param'
+  fun ref set_list(list': Array[Param] = Array[Param]) => _list = consume list'
   fun ref set_ellipsis(ellipsis': (Ellipsis | None) = None) => _ellipsis = consume ellipsis'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Params")
     s.push('(')
-    let param_iter = _param.values()
-    for v in param_iter do
+    let list_iter = _list.values()
+    for v in list_iter do
       s.append(v.string())
-      if param_iter.has_next() then
+      if list_iter.has_next() then
         s.>push(',').push(' ')
       end
     end
@@ -1336,27 +1356,27 @@ class LocalVar
 
 class MatchCapture
   var _name: Id
-  var _match_type: Type
+  var _local_type: Type
   
   new create(
     name': Id,
-    match_type': Type)
+    local_type': Type)
   =>
     _name = name'
-    _match_type = match_type'
+    _local_type = local_type'
   
   fun name(): this->Id => _name
-  fun match_type(): this->Type => _match_type
+  fun local_type(): this->Type => _local_type
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_match_type(match_type': Type) => _match_type = consume match_type'
+  fun ref set_local_type(local_type': Type) => _local_type = consume local_type'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MatchCapture")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_match_type.string())
+    s.>append(_local_type.string())
     s.push(')')
     consume s
 
@@ -1413,20 +1433,20 @@ class Tuple
     consume s
 
 class Consume
-  var _cap: (Cap | Aliased | None)
+  var _cap: (Cap | None)
   var _expr: Expr
   
   new create(
-    cap': (Cap | Aliased | None),
+    cap': (Cap | None),
     expr': Expr)
   =>
     _cap = cap'
     _expr = expr'
   
-  fun cap(): this->(Cap | Aliased | None) => _cap
+  fun cap(): this->(Cap | None) => _cap
   fun expr(): this->Expr => _expr
   
-  fun ref set_cap(cap': (Cap | Aliased | None)) => _cap = consume cap'
+  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
   fun ref set_expr(expr': Expr) => _expr = consume expr'
   
   fun string(): String iso^ =>
@@ -1440,27 +1460,27 @@ class Consume
 
 class Recover
   var _cap: (Cap | None)
-  var _block: Expr
+  var _expr: Expr
   
   new create(
     cap': (Cap | None),
-    block': Expr)
+    expr': Expr)
   =>
     _cap = cap'
-    _block = block'
+    _expr = expr'
   
   fun cap(): this->(Cap | None) => _cap
-  fun block(): this->Expr => _block
+  fun expr(): this->Expr => _expr
   
   fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_block(block': Expr) => _block = consume block'
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Recover")
     s.push('(')
     s.>append(_cap.string()).>push(',').push(' ')
-    s.>append(_block.string())
+    s.>append(_expr.string())
     s.push(')')
     consume s
 
@@ -3016,32 +3036,6 @@ class LambdaCapture
     s.push(')')
     consume s
 
-class LitArray
-  var _list: Array[RawExprSeq]
-  
-  new create(
-    list': Array[RawExprSeq] = Array[RawExprSeq])
-  =>
-    _list = list'
-  
-  fun list(): this->Array[RawExprSeq] => _list
-  
-  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LitArray")
-    s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
-      s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
-    s.push(')')
-    consume s
-
 class Object
   var _cap: (Cap | None)
   var _provides: (Provides | None)
@@ -3071,6 +3065,32 @@ class Object
     s.>append(_cap.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string())
+    s.push(')')
+    consume s
+
+class LitArray
+  var _list: Array[RawExprSeq]
+  
+  new create(
+    list': Array[RawExprSeq] = Array[RawExprSeq])
+  =>
+    _list = list'
+  
+  fun list(): this->Array[RawExprSeq] => _list
+  
+  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitArray")
+    s.push('(')
+    let list_iter = _list.values()
+    for v in list_iter do
+      s.append(v.string())
+      if list_iter.has_next() then
+        s.>push(',').push(' ')
+      end
+    end
     s.push(')')
     consume s
 
@@ -3528,7 +3548,7 @@ class LambdaType
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
-  var _params: (TypeList | None)
+  var _param_types: Array[Type]
   var _return_type: (Type | None)
   var _partial: (Question | None)
   var _object_cap: (Cap | GenCap | None)
@@ -3538,7 +3558,7 @@ class LambdaType
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (TypeList | None) = None,
+    param_types': Array[Type] = Array[Type],
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
@@ -3547,7 +3567,7 @@ class LambdaType
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
-    _params = params'
+    _param_types = param_types'
     _return_type = return_type'
     _partial = partial'
     _object_cap = object_cap'
@@ -3556,7 +3576,7 @@ class LambdaType
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
   fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(TypeList | None) => _params
+  fun param_types(): this->Array[Type] => _param_types
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun object_cap(): this->(Cap | GenCap | None) => _object_cap
@@ -3565,7 +3585,7 @@ class LambdaType
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
   fun ref set_name(name': (Id | None) = None) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (TypeList | None) = None) => _params = consume params'
+  fun ref set_param_types(param_types': Array[Type] = Array[Type]) => _param_types = consume param_types'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'
@@ -3578,37 +3598,18 @@ class LambdaType
     s.>append(_method_cap.string()).>push(',').push(' ')
     s.>append(_name.string()).>push(',').push(' ')
     s.>append(_type_params.string()).>push(',').push(' ')
-    s.>append(_params.string()).>push(',').push(' ')
+    let param_types_iter = _param_types.values()
+    for v in param_types_iter do
+      s.append(v.string())
+      if param_types_iter.has_next() then
+        s.>push(',').push(' ')
+      end
+    end
+    s.>push(',').push(' ')
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_partial.string()).>push(',').push(' ')
     s.>append(_object_cap.string()).>push(',').push(' ')
     s.>append(_cap_mod.string())
-    s.push(')')
-    consume s
-
-class TypeList
-  var _list: Array[Type]
-  
-  new create(
-    list': Array[Type] = Array[Type])
-  =>
-    _list = list'
-  
-  fun list(): this->Array[Type] => _list
-  
-  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("TypeList")
-    s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
-      s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
     s.push(')')
     consume s
 
@@ -3688,32 +3689,46 @@ class TypeParamRef
     s.push(')')
     consume s
 
-class At
+class ThisType
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("At")
+    s.append("ThisType")
     consume s
 
-class LitTrue
+class DontCareType
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("LitTrue")
+    s.append("DontCareType")
     consume s
 
-class LitFalse
+class ErrorType
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("LitFalse")
+    s.append("ErrorType")
     consume s
 
-class LitNone
+class LiteralType
   new create() => None
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("LitNone")
+    s.append("LiteralType")
+    consume s
+
+class LiteralTypeBranch
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LiteralTypeBranch")
+    consume s
+
+class OpLiteralType
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("OpLiteralType")
     consume s
 
 class Iso
@@ -3758,97 +3773,6 @@ class Tag
     s.append("Tag")
     consume s
 
-class Aliased
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Aliased")
-    consume s
-
-class Ephemeral
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Ephemeral")
-    consume s
-
-class CtrlTypeIf
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeIf")
-    consume s
-
-class CtrlTypeCases
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeCases")
-    consume s
-
-class CtrlTypeReturn
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeReturn")
-    consume s
-
-class CtrlTypeBreak
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeBreak")
-    consume s
-
-class CtrlTypeContinue
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeContinue")
-    consume s
-
-class CtrlTypeError
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeError")
-    consume s
-
-class CtrlTypeCompileError
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeCompileError")
-    consume s
-
-class CtrlTypeCompileIntrinsic
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("CtrlTypeCompileIntrinsic")
-    consume s
-
-class DontCareType
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("DontCareType")
-    consume s
-
-class Ellipsis
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Ellipsis")
-    consume s
-
-class ErrorType
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("ErrorType")
-    consume s
-
 class CapRead
   new create() => None
   fun string(): String iso^ =>
@@ -3884,6 +3808,41 @@ class CapAny
     s.append("CapAny")
     consume s
 
+class Aliased
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Aliased")
+    consume s
+
+class Ephemeral
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Ephemeral")
+    consume s
+
+class At
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("At")
+    consume s
+
+class Question
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Question")
+    consume s
+
+class Ellipsis
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Ellipsis")
+    consume s
+
 class Id
   var _value: String
   new create(value': String) => _value = value'
@@ -3893,6 +3852,34 @@ class Id
     recover
       String.>append("Id(").>append(_value.string()).>push(')')
     end
+
+class This
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("This")
+    consume s
+
+class LitTrue
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitTrue")
+    consume s
+
+class LitFalse
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitFalse")
+    consume s
+
+class LitNone
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitNone")
+    consume s
 
 class LitFloat
   var _value: F64
@@ -3929,48 +3916,6 @@ class LitLocation
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
-    consume s
-
-class LiteralType
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LiteralType")
-    consume s
-
-class LiteralTypeBranch
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LiteralTypeBranch")
-    consume s
-
-class OpLiteralType
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("OpLiteralType")
-    consume s
-
-class Question
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Question")
-    consume s
-
-class This
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("This")
-    consume s
-
-class ThisType
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("ThisType")
     consume s
 
 
