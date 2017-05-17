@@ -1,17 +1,17 @@
 .PHONY: all
-all: static/test/test
+all: ast/test/test
 
-static/gen/gen: $(shell find static/gen/*.pony)
-	stable env ponyc --debug -o static/gen static/gen
+ast/gen/gen: $(shell find ast/gen/*.pony)
+	stable env ponyc --debug -o ast/gen ast/gen
 
-static/ast.pony: static/gen/gen
-	static/gen/gen ast > $@
+ast/ast.pony: ast/gen/gen
+	ast/gen/gen ast > $@
 
-static/parser/parser.pony: static/gen/gen
-	static/gen/gen parser > $@
+ast/parser/parser.pony: ast/gen/gen
+	ast/gen/gen parser > $@
 
-static/parser/parser: static/parser/parser.pony $(shell find static/parser/*.pony)
-	stable env ponyc --debug -o static/parser static/parser
+ast/parser/parser: ast/parser/parser.pony $(shell find ast/parser/*.pony)
+	stable env ponyc --debug -o ast/parser ast/parser
 
-static/test/test: static/ast.pony static/parser/parser.pony $(shell find static/*.pony) $(shell find static/test/*.pony) $(shell find static/parser/*.pony)
-	stable env ponyc --debug -o static/test static/test
+ast/test/test: ast/ast.pony ast/parser/parser.pony $(shell find ast/*.pony) $(shell find ast/test/*.pony) $(shell find ast/parser/*.pony)
+	stable env ponyc --debug -o ast/test ast/test
