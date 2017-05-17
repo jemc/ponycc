@@ -1,6 +1,6 @@
 use peg = "peg"
 
-class val _LexerDict
+class val _Lexicon
   // Note that for keywords where one keyword starts with another,
   // the longer one must appear first in this list.
   // For example "ifdef" must appear before "if".
