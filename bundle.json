@@ -1,0 +1,12 @@
+{
+  "deps": [
+    {
+      "type": "github",
+      "repo": "sylvanc/peg"
+    },
+    {
+      "type": "github",
+      "repo": "jemc/pony-inspect"
+    }
+  ]
+}
