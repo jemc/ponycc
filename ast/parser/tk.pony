@@ -42,8 +42,7 @@ primitive ASTInfo
     elseif A <: TypeArgs then "TypeArgs"
     elseif A <: Params then "Params"
     elseif A <: Param then "Param"
-    elseif A <: ExprSeq then "ExprSeq"
-    elseif A <: RawExprSeq then "RawExprSeq"
+    elseif A <: Sequence then "Sequence"
     elseif A <: Return then "Return"
     elseif A <: Break then "Break"
     elseif A <: Continue then "Continue"
@@ -238,8 +237,7 @@ class TypeParam is AST
 class TypeArgs is AST
 class Params is AST
 class Param is AST
-class ExprSeq is AST
-class RawExprSeq is AST
+class Sequence is AST
 class Return is AST
 class Break is AST
 class Continue is AST

@@ -550,7 +550,7 @@ primitive ParserDefs
     
     // idseq
     g.def("idseq_in_seq")
-      .> tree("Tk[ExprSeq]")
+      .> tree("Tk[Sequence]")
       .> rule("variable name", ["idseqsingle"; "idseqmulti"])
     
     // ID | (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
@@ -705,7 +705,7 @@ primitive ParserDefs
     
     // idseq = rawseq
     g.def("withelem")
-      .> tree("Tk[ExprSeq]")
+      .> tree("Tk[Sequence]")
       .> rule("with name", ["idseq"])
       .> skip("None", ["Tk[Assign]"])
       .> rule("initialiser", ["rawseq"])
@@ -713,7 +713,7 @@ primitive ParserDefs
     // withelem {COMMA withelem}
     g.def("withexpr")
       .> print_inline()
-      .> tree("Tk[ExprSeq]")
+      .> tree("Tk[Sequence]")
       .> rule("with expression", ["withelem"])
       .> while_token_do_rule("Tk[Comma]", "with expression", ["withelem"])
     
@@ -874,7 +874,7 @@ primitive ParserDefs
     
     // (exprseq | jump)
     g.def("rawseq")
-      .> tree("Tk[ExprSeq]")
+      .> tree("Tk[Sequence]")
       .> rule("value", ["exprseq"; "jump"])
     
     // rawseq
@@ -883,7 +883,7 @@ primitive ParserDefs
     
     // [annotations] (exprseq | jump)
     g.def("annotatedrawseq")
-      .> tree("Tk[ExprSeq]")
+      .> tree("Tk[Sequence]")
       .> annotate()
       .> rule("value", ["exprseq"; "jump"])
     

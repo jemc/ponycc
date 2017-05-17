@@ -31,8 +31,7 @@ primitive ASTInfo
     elseif A <: TypeArgs then "TypeArgs"
     elseif A <: Params then "Params"
     elseif A <: Param then "Param"
-    elseif A <: ExprSeq then "ExprSeq"
-    elseif A <: RawExprSeq then "RawExprSeq"
+    elseif A <: Sequence then "Sequence"
     elseif A <: Return then "Return"
     elseif A <: Break then "Break"
     elseif A <: Continue then "Continue"
@@ -233,7 +232,7 @@ type IfDefCond is (IfDefBinaryOp | IfDefNot | IfDefFlag)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | IfType | LitInteger | PackageRef | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
+type Expr is (Id | Lambda | FFICall | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | IfType | LitInteger | PackageRef | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
 
 type CapMod is (Aliased | Ephemeral)
 
@@ -1651,8 +1650,8 @@ class MethodFun is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
-  var _guard: (RawExprSeq | None)
-  var _body: (RawExprSeq | None)
+  var _guard: (Sequence | None)
+  var _body: (Sequence | None)
   var _docs: (LitString | None)
   
   new create(
@@ -1662,8 +1661,8 @@ class MethodFun is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
-    guard': (RawExprSeq | None) = None,
-    body': (RawExprSeq | None) = None,
+    guard': (Sequence | None) = None,
+    body': (Sequence | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
@@ -1724,11 +1723,11 @@ class MethodFun is AST
       else err("incompatible field: partial", partial'); error
       end
     _guard =
-      try guard' as (RawExprSeq | None)
+      try guard' as (Sequence | None)
       else err("incompatible field: guard", guard'); error
       end
     _body =
-      try body' as (RawExprSeq | None)
+      try body' as (Sequence | None)
       else err("incompatible field: body", body'); error
       end
     _docs =
@@ -1745,8 +1744,8 @@ class MethodFun is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(RawExprSeq | None) => _guard
-  fun body(): this->(RawExprSeq | None) => _body
+  fun guard(): this->(Sequence | None) => _guard
+  fun body(): this->(Sequence | None) => _body
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
@@ -1755,8 +1754,8 @@ class MethodFun is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   
   fun string(): String iso^ =>
@@ -1784,8 +1783,8 @@ class MethodNew is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
-  var _guard: (RawExprSeq | None)
-  var _body: (RawExprSeq | None)
+  var _guard: (Sequence | None)
+  var _body: (Sequence | None)
   var _docs: (LitString | None)
   
   new create(
@@ -1795,8 +1794,8 @@ class MethodNew is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
-    guard': (RawExprSeq | None) = None,
-    body': (RawExprSeq | None) = None,
+    guard': (Sequence | None) = None,
+    body': (Sequence | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
@@ -1857,11 +1856,11 @@ class MethodNew is AST
       else err("incompatible field: partial", partial'); error
       end
     _guard =
-      try guard' as (RawExprSeq | None)
+      try guard' as (Sequence | None)
       else err("incompatible field: guard", guard'); error
       end
     _body =
-      try body' as (RawExprSeq | None)
+      try body' as (Sequence | None)
       else err("incompatible field: body", body'); error
       end
     _docs =
@@ -1878,8 +1877,8 @@ class MethodNew is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(RawExprSeq | None) => _guard
-  fun body(): this->(RawExprSeq | None) => _body
+  fun guard(): this->(Sequence | None) => _guard
+  fun body(): this->(Sequence | None) => _body
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
@@ -1888,8 +1887,8 @@ class MethodNew is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   
   fun string(): String iso^ =>
@@ -1917,8 +1916,8 @@ class MethodBe is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
-  var _guard: (RawExprSeq | None)
-  var _body: (RawExprSeq | None)
+  var _guard: (Sequence | None)
+  var _body: (Sequence | None)
   var _docs: (LitString | None)
   
   new create(
@@ -1928,8 +1927,8 @@ class MethodBe is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
-    guard': (RawExprSeq | None) = None,
-    body': (RawExprSeq | None) = None,
+    guard': (Sequence | None) = None,
+    body': (Sequence | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
@@ -1990,11 +1989,11 @@ class MethodBe is AST
       else err("incompatible field: partial", partial'); error
       end
     _guard =
-      try guard' as (RawExprSeq | None)
+      try guard' as (Sequence | None)
       else err("incompatible field: guard", guard'); error
       end
     _body =
-      try body' as (RawExprSeq | None)
+      try body' as (Sequence | None)
       else err("incompatible field: body", body'); error
       end
     _docs =
@@ -2011,8 +2010,8 @@ class MethodBe is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(RawExprSeq | None) => _guard
-  fun body(): this->(RawExprSeq | None) => _body
+  fun guard(): this->(Sequence | None) => _guard
+  fun body(): this->(Sequence | None) => _body
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
@@ -2021,8 +2020,8 @@ class MethodBe is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   
   fun string(): String iso^ =>
@@ -2337,7 +2336,7 @@ class Param is AST
     s.push(')')
     consume s
 
-class ExprSeq is AST
+class Sequence is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _list: Array[Expr]
@@ -2372,54 +2371,7 @@ class ExprSeq is AST
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("ExprSeq")
-    s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
-      s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
-    s.push(')')
-    consume s
-
-class RawExprSeq is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _list: Array[Expr]
-  
-  new create(
-    list': Array[Expr] = Array[Expr])
-  =>
-    _list = list'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let list' = Array[Expr]
-    var list_next' = try iter.next() else None end
-    while true do
-      try list'.push(list_next' as Expr) else break end
-      try list_next' = iter.next() else list_next' = None; break end
-    end
-    if list_next' isnt None then
-      let extra' = list_next'
-      err("unexpected extra field", extra'); error
-    end
-    
-    _list = list'
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun list(): this->Array[Expr] => _list
-  
-  fun ref set_list(list': Array[Expr] = Array[Expr]) => _list = consume list'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("RawExprSeq")
+    s.append("Sequence")
     s.push('(')
     let list_iter = _list.values()
     for v in list_iter do
@@ -2434,10 +2386,10 @@ class RawExprSeq is AST
 class Return is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: RawExprSeq
+  var _value: Sequence
   
   new create(
-    value': RawExprSeq)
+    value': Sequence)
   =>
     _value = value'
   
@@ -2457,16 +2409,16 @@ class Return is AST
     then error end
     
     _value =
-      try value' as RawExprSeq
+      try value' as Sequence
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->RawExprSeq => _value
+  fun value(): this->Sequence => _value
   
-  fun ref set_value(value': RawExprSeq) => _value = consume value'
+  fun ref set_value(value': Sequence) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2479,10 +2431,10 @@ class Return is AST
 class Break is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: RawExprSeq
+  var _value: Sequence
   
   new create(
-    value': RawExprSeq)
+    value': Sequence)
   =>
     _value = value'
   
@@ -2502,16 +2454,16 @@ class Break is AST
     then error end
     
     _value =
-      try value' as RawExprSeq
+      try value' as Sequence
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->RawExprSeq => _value
+  fun value(): this->Sequence => _value
   
-  fun ref set_value(value': RawExprSeq) => _value = consume value'
+  fun ref set_value(value': Sequence) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2524,10 +2476,10 @@ class Break is AST
 class Continue is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: RawExprSeq
+  var _value: Sequence
   
   new create(
-    value': RawExprSeq)
+    value': Sequence)
   =>
     _value = value'
   
@@ -2547,16 +2499,16 @@ class Continue is AST
     then error end
     
     _value =
-      try value' as RawExprSeq
+      try value' as Sequence
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->RawExprSeq => _value
+  fun value(): this->Sequence => _value
   
-  fun ref set_value(value': RawExprSeq) => _value = consume value'
+  fun ref set_value(value': Sequence) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2569,10 +2521,10 @@ class Continue is AST
 class Error is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: RawExprSeq
+  var _value: Sequence
   
   new create(
-    value': RawExprSeq)
+    value': Sequence)
   =>
     _value = value'
   
@@ -2592,16 +2544,16 @@ class Error is AST
     then error end
     
     _value =
-      try value' as RawExprSeq
+      try value' as Sequence
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->RawExprSeq => _value
+  fun value(): this->Sequence => _value
   
-  fun ref set_value(value': RawExprSeq) => _value = consume value'
+  fun ref set_value(value': Sequence) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2637,10 +2589,10 @@ class CompileIntrinsic is AST
 class CompileError is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _message: RawExprSeq
+  var _message: Sequence
   
   new create(
-    message': RawExprSeq)
+    message': Sequence)
   =>
     _message = message'
   
@@ -2660,16 +2612,16 @@ class CompileError is AST
     then error end
     
     _message =
-      try message' as RawExprSeq
+      try message' as Sequence
       else err("incompatible field: message", message'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun message(): this->RawExprSeq => _message
+  fun message(): this->Sequence => _message
   
-  fun ref set_message(message': RawExprSeq) => _message = consume message'
+  fun ref set_message(message': Sequence) => _message = consume message'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2918,20 +2870,20 @@ class As is AST
 class Tuple is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _elements: Array[RawExprSeq]
+  var _elements: Array[Sequence]
   
   new create(
-    elements': Array[RawExprSeq] = Array[RawExprSeq])
+    elements': Array[Sequence] = Array[Sequence])
   =>
     _elements = elements'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let elements' = Array[RawExprSeq]
+    let elements' = Array[Sequence]
     var elements_next' = try iter.next() else None end
     while true do
-      try elements'.push(elements_next' as RawExprSeq) else break end
+      try elements'.push(elements_next' as Sequence) else break end
       try elements_next' = iter.next() else elements_next' = None; break end
     end
     if elements_next' isnt None then
@@ -2944,9 +2896,9 @@ class Tuple is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun elements(): this->Array[RawExprSeq] => _elements
+  fun elements(): this->Array[Sequence] => _elements
   
-  fun ref set_elements(elements': Array[RawExprSeq] = Array[RawExprSeq]) => _elements = consume elements'
+  fun ref set_elements(elements': Array[Sequence] = Array[Sequence]) => _elements = consume elements'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5588,20 +5540,20 @@ class FFICall is AST
 class Args is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[RawExprSeq]
+  var _list: Array[Sequence]
   
   new create(
-    list': Array[RawExprSeq] = Array[RawExprSeq])
+    list': Array[Sequence] = Array[Sequence])
   =>
     _list = list'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let list' = Array[RawExprSeq]
+    let list' = Array[Sequence]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as RawExprSeq) else break end
+      try list'.push(list_next' as Sequence) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -5614,9 +5566,9 @@ class Args is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[RawExprSeq] => _list
+  fun list(): this->Array[Sequence] => _list
   
-  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
+  fun ref set_list(list': Array[Sequence] = Array[Sequence]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5683,11 +5635,11 @@ class NamedArg is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _value: RawExprSeq
+  var _value: Sequence
   
   new create(
     name': Id,
-    value': RawExprSeq)
+    value': Sequence)
   =>
     _name = name'
     _value = value'
@@ -5716,7 +5668,7 @@ class NamedArg is AST
       else err("incompatible field: name", name'); error
       end
     _value =
-      try value' as RawExprSeq
+      try value' as Sequence
       else err("incompatible field: value", value'); error
       end
   
@@ -5724,10 +5676,10 @@ class NamedArg is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun value(): this->RawExprSeq => _value
+  fun value(): this->Sequence => _value
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_value(value': RawExprSeq) => _value = consume value'
+  fun ref set_value(value': Sequence) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5742,13 +5694,13 @@ class IfDef is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _then_expr: (Expr | IfDefCond)
-  var _then_body: ExprSeq
+  var _then_body: Sequence
   var _else_body: (Expr | IfDef | None)
   var _else_expr: (None | IfDefCond)
   
   new create(
     then_expr': (Expr | IfDefCond),
-    then_body': ExprSeq,
+    then_body': Sequence,
     else_body': (Expr | IfDef | None),
     else_expr': (None | IfDefCond))
   =>
@@ -5789,7 +5741,7 @@ class IfDef is AST
       else err("incompatible field: then_expr", then_expr'); error
       end
     _then_body =
-      try then_body' as ExprSeq
+      try then_body' as Sequence
       else err("incompatible field: then_body", then_body'); error
       end
     _else_body =
@@ -5805,12 +5757,12 @@ class IfDef is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun then_expr(): this->(Expr | IfDefCond) => _then_expr
-  fun then_body(): this->ExprSeq => _then_body
+  fun then_body(): this->Sequence => _then_body
   fun else_body(): this->(Expr | IfDef | None) => _else_body
   fun else_expr(): this->(None | IfDefCond) => _else_expr
   
   fun ref set_then_expr(then_expr': (Expr | IfDefCond)) => _then_expr = consume then_expr'
-  fun ref set_then_body(then_body': ExprSeq) => _then_body = consume then_body'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
   fun ref set_else_body(else_body': (Expr | IfDef | None)) => _else_body = consume else_body'
   fun ref set_else_expr(else_expr': (None | IfDefCond)) => _else_expr = consume else_expr'
   
@@ -5830,13 +5782,13 @@ class IfType is AST
   
   var _sub: TypeRef
   var _super: TypeRef
-  var _then_body: ExprSeq
+  var _then_body: Sequence
   var _else_body: (Expr | IfType | None)
   
   new create(
     sub': TypeRef,
     super': TypeRef,
-    then_body': ExprSeq,
+    then_body': Sequence,
     else_body': (Expr | IfType | None))
   =>
     _sub = sub'
@@ -5880,7 +5832,7 @@ class IfType is AST
       else err("incompatible field: super", super'); error
       end
     _then_body =
-      try then_body' as ExprSeq
+      try then_body' as Sequence
       else err("incompatible field: then_body", then_body'); error
       end
     _else_body =
@@ -5893,12 +5845,12 @@ class IfType is AST
   
   fun sub(): this->TypeRef => _sub
   fun super(): this->TypeRef => _super
-  fun then_body(): this->ExprSeq => _then_body
+  fun then_body(): this->Sequence => _then_body
   fun else_body(): this->(Expr | IfType | None) => _else_body
   
   fun ref set_sub(sub': TypeRef) => _sub = consume sub'
   fun ref set_super(super': TypeRef) => _super = consume super'
-  fun ref set_then_body(then_body': ExprSeq) => _then_body = consume then_body'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
   fun ref set_else_body(else_body': (Expr | IfType | None)) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
@@ -6123,14 +6075,14 @@ class IfDefFlag is AST
 class If is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _condition: RawExprSeq
-  var _then_body: ExprSeq
-  var _else_body: (ExprSeq | If | None)
+  var _condition: Sequence
+  var _then_body: Sequence
+  var _else_body: (Sequence | If | None)
   
   new create(
-    condition': RawExprSeq,
-    then_body': ExprSeq,
-    else_body': (ExprSeq | If | None) = None)
+    condition': Sequence,
+    then_body': Sequence,
+    else_body': (Sequence | If | None) = None)
   =>
     _condition = condition'
     _then_body = then_body'
@@ -6157,28 +6109,28 @@ class If is AST
     then error end
     
     _condition =
-      try condition' as RawExprSeq
+      try condition' as Sequence
       else err("incompatible field: condition", condition'); error
       end
     _then_body =
-      try then_body' as ExprSeq
+      try then_body' as Sequence
       else err("incompatible field: then_body", then_body'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | If | None)
+      try else_body' as (Sequence | If | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun condition(): this->RawExprSeq => _condition
-  fun then_body(): this->ExprSeq => _then_body
-  fun else_body(): this->(ExprSeq | If | None) => _else_body
+  fun condition(): this->Sequence => _condition
+  fun then_body(): this->Sequence => _then_body
+  fun else_body(): this->(Sequence | If | None) => _else_body
   
-  fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
-  fun ref set_then_body(then_body': ExprSeq) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (ExprSeq | If | None) = None) => _else_body = consume else_body'
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (Sequence | If | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6193,14 +6145,14 @@ class If is AST
 class While is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _condition: RawExprSeq
-  var _loop_body: ExprSeq
-  var _else_body: (ExprSeq | None)
+  var _condition: Sequence
+  var _loop_body: Sequence
+  var _else_body: (Sequence | None)
   
   new create(
-    condition': RawExprSeq,
-    loop_body': ExprSeq,
-    else_body': (ExprSeq | None) = None)
+    condition': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None) = None)
   =>
     _condition = condition'
     _loop_body = loop_body'
@@ -6227,28 +6179,28 @@ class While is AST
     then error end
     
     _condition =
-      try condition' as RawExprSeq
+      try condition' as Sequence
       else err("incompatible field: condition", condition'); error
       end
     _loop_body =
-      try loop_body' as ExprSeq
+      try loop_body' as Sequence
       else err("incompatible field: loop_body", loop_body'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun condition(): this->RawExprSeq => _condition
-  fun loop_body(): this->ExprSeq => _loop_body
-  fun else_body(): this->(ExprSeq | None) => _else_body
+  fun condition(): this->Sequence => _condition
+  fun loop_body(): this->Sequence => _loop_body
+  fun else_body(): this->(Sequence | None) => _else_body
   
-  fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
-  fun ref set_loop_body(loop_body': ExprSeq) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6263,14 +6215,14 @@ class While is AST
 class Repeat is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _loop_body: ExprSeq
-  var _condition: RawExprSeq
-  var _else_body: (ExprSeq | None)
+  var _loop_body: Sequence
+  var _condition: Sequence
+  var _else_body: (Sequence | None)
   
   new create(
-    loop_body': ExprSeq,
-    condition': RawExprSeq,
-    else_body': (ExprSeq | None) = None)
+    loop_body': Sequence,
+    condition': Sequence,
+    else_body': (Sequence | None) = None)
   =>
     _loop_body = loop_body'
     _condition = condition'
@@ -6297,28 +6249,28 @@ class Repeat is AST
     then error end
     
     _loop_body =
-      try loop_body' as ExprSeq
+      try loop_body' as Sequence
       else err("incompatible field: loop_body", loop_body'); error
       end
     _condition =
-      try condition' as RawExprSeq
+      try condition' as Sequence
       else err("incompatible field: condition", condition'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun loop_body(): this->ExprSeq => _loop_body
-  fun condition(): this->RawExprSeq => _condition
-  fun else_body(): this->(ExprSeq | None) => _else_body
+  fun loop_body(): this->Sequence => _loop_body
+  fun condition(): this->Sequence => _condition
+  fun else_body(): this->(Sequence | None) => _else_body
   
-  fun ref set_loop_body(loop_body': ExprSeq) => _loop_body = consume loop_body'
-  fun ref set_condition(condition': RawExprSeq) => _condition = consume condition'
-  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6333,16 +6285,16 @@ class Repeat is AST
 class For is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _expr: ExprSeq
-  var _iterator: RawExprSeq
-  var _loop_body: RawExprSeq
-  var _else_body: (ExprSeq | None)
+  var _expr: Sequence
+  var _iterator: Sequence
+  var _loop_body: Sequence
+  var _else_body: (Sequence | None)
   
   new create(
-    expr': ExprSeq,
-    iterator': RawExprSeq,
-    loop_body': RawExprSeq,
-    else_body': (ExprSeq | None) = None)
+    expr': Sequence,
+    iterator': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None) = None)
   =>
     _expr = expr'
     _iterator = iterator'
@@ -6374,34 +6326,34 @@ class For is AST
     then error end
     
     _expr =
-      try expr' as ExprSeq
+      try expr' as Sequence
       else err("incompatible field: expr", expr'); error
       end
     _iterator =
-      try iterator' as RawExprSeq
+      try iterator' as Sequence
       else err("incompatible field: iterator", iterator'); error
       end
     _loop_body =
-      try loop_body' as RawExprSeq
+      try loop_body' as Sequence
       else err("incompatible field: loop_body", loop_body'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun expr(): this->ExprSeq => _expr
-  fun iterator(): this->RawExprSeq => _iterator
-  fun loop_body(): this->RawExprSeq => _loop_body
-  fun else_body(): this->(ExprSeq | None) => _else_body
+  fun expr(): this->Sequence => _expr
+  fun iterator(): this->Sequence => _iterator
+  fun loop_body(): this->Sequence => _loop_body
+  fun else_body(): this->(Sequence | None) => _else_body
   
-  fun ref set_expr(expr': ExprSeq) => _expr = consume expr'
-  fun ref set_iterator(iterator': RawExprSeq) => _iterator = consume iterator'
-  fun ref set_loop_body(loop_body': RawExprSeq) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_expr(expr': Sequence) => _expr = consume expr'
+  fun ref set_iterator(iterator': Sequence) => _iterator = consume iterator'
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6418,13 +6370,13 @@ class With is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _refs: Expr
-  var _with_body: RawExprSeq
-  var _else_body: (RawExprSeq | None)
+  var _with_body: Sequence
+  var _else_body: (Sequence | None)
   
   new create(
     refs': Expr,
-    with_body': RawExprSeq,
-    else_body': (RawExprSeq | None) = None)
+    with_body': Sequence,
+    else_body': (Sequence | None) = None)
   =>
     _refs = refs'
     _with_body = with_body'
@@ -6455,11 +6407,11 @@ class With is AST
       else err("incompatible field: refs", refs'); error
       end
     _with_body =
-      try with_body' as RawExprSeq
+      try with_body' as Sequence
       else err("incompatible field: with_body", with_body'); error
       end
     _else_body =
-      try else_body' as (RawExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
@@ -6467,12 +6419,12 @@ class With is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun refs(): this->Expr => _refs
-  fun with_body(): this->RawExprSeq => _with_body
-  fun else_body(): this->(RawExprSeq | None) => _else_body
+  fun with_body(): this->Sequence => _with_body
+  fun else_body(): this->(Sequence | None) => _else_body
   
   fun ref set_refs(refs': Expr) => _refs = consume refs'
-  fun ref set_with_body(with_body': RawExprSeq) => _with_body = consume with_body'
-  fun ref set_else_body(else_body': (RawExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_with_body(with_body': Sequence) => _with_body = consume with_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6487,14 +6439,14 @@ class With is AST
 class Match is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _expr: RawExprSeq
+  var _expr: Sequence
   var _cases: (Cases | None)
-  var _else_body: (ExprSeq | None)
+  var _else_body: (Sequence | None)
   
   new create(
-    expr': RawExprSeq,
+    expr': Sequence,
     cases': (Cases | None) = None,
-    else_body': (ExprSeq | None) = None)
+    else_body': (Sequence | None) = None)
   =>
     _expr = expr'
     _cases = cases'
@@ -6518,7 +6470,7 @@ class Match is AST
     then error end
     
     _expr =
-      try expr' as RawExprSeq
+      try expr' as Sequence
       else err("incompatible field: expr", expr'); error
       end
     _cases =
@@ -6526,20 +6478,20 @@ class Match is AST
       else err("incompatible field: cases", cases'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun expr(): this->RawExprSeq => _expr
+  fun expr(): this->Sequence => _expr
   fun cases(): this->(Cases | None) => _cases
-  fun else_body(): this->(ExprSeq | None) => _else_body
+  fun else_body(): this->(Sequence | None) => _else_body
   
-  fun ref set_expr(expr': RawExprSeq) => _expr = consume expr'
+  fun ref set_expr(expr': Sequence) => _expr = consume expr'
   fun ref set_cases(cases': (Cases | None) = None) => _cases = consume cases'
-  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6602,13 +6554,13 @@ class Case is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: (Expr | None)
-  var _guard: (RawExprSeq | None)
-  var _body: (RawExprSeq | None)
+  var _guard: (Sequence | None)
+  var _body: (Sequence | None)
   
   new create(
     expr': (Expr | None) = None,
-    guard': (RawExprSeq | None) = None,
-    body': (RawExprSeq | None) = None)
+    guard': (Sequence | None) = None,
+    body': (Sequence | None) = None)
   =>
     _expr = expr'
     _guard = guard'
@@ -6633,11 +6585,11 @@ class Case is AST
       else err("incompatible field: expr", expr'); error
       end
     _guard =
-      try guard' as (RawExprSeq | None)
+      try guard' as (Sequence | None)
       else err("incompatible field: guard", guard'); error
       end
     _body =
-      try body' as (RawExprSeq | None)
+      try body' as (Sequence | None)
       else err("incompatible field: body", body'); error
       end
   
@@ -6645,12 +6597,12 @@ class Case is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->(Expr | None) => _expr
-  fun guard(): this->(RawExprSeq | None) => _guard
-  fun body(): this->(RawExprSeq | None) => _body
+  fun guard(): this->(Sequence | None) => _guard
+  fun body(): this->(Sequence | None) => _body
   
   fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
+  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6665,14 +6617,14 @@ class Case is AST
 class Try is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _body: ExprSeq
-  var _else_body: (ExprSeq | None)
-  var _then_body: (ExprSeq | None)
+  var _body: Sequence
+  var _else_body: (Sequence | None)
+  var _then_body: (Sequence | None)
   
   new create(
-    body': ExprSeq,
-    else_body': (ExprSeq | None) = None,
-    then_body': (ExprSeq | None) = None)
+    body': Sequence,
+    else_body': (Sequence | None) = None,
+    then_body': (Sequence | None) = None)
   =>
     _body = body'
     _else_body = else_body'
@@ -6696,28 +6648,28 @@ class Try is AST
     then error end
     
     _body =
-      try body' as ExprSeq
+      try body' as Sequence
       else err("incompatible field: body", body'); error
       end
     _else_body =
-      try else_body' as (ExprSeq | None)
+      try else_body' as (Sequence | None)
       else err("incompatible field: else_body", else_body'); error
       end
     _then_body =
-      try then_body' as (ExprSeq | None)
+      try then_body' as (Sequence | None)
       else err("incompatible field: then_body", then_body'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun body(): this->ExprSeq => _body
-  fun else_body(): this->(ExprSeq | None) => _else_body
-  fun then_body(): this->(ExprSeq | None) => _then_body
+  fun body(): this->Sequence => _body
+  fun else_body(): this->(Sequence | None) => _else_body
+  fun then_body(): this->(Sequence | None) => _then_body
   
-  fun ref set_body(body': ExprSeq) => _body = consume body'
-  fun ref set_else_body(else_body': (ExprSeq | None) = None) => _else_body = consume else_body'
-  fun ref set_then_body(then_body': (ExprSeq | None) = None) => _then_body = consume then_body'
+  fun ref set_body(body': Sequence) => _body = consume body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun ref set_then_body(then_body': (Sequence | None) = None) => _then_body = consume then_body'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6739,7 +6691,7 @@ class Lambda is AST
   var _captures: (LambdaCaptures | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
-  var _body: (RawExprSeq)
+  var _body: (Sequence)
   var _object_cap: (Cap | None)
   
   new create(
@@ -6750,7 +6702,7 @@ class Lambda is AST
     captures': (LambdaCaptures | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
-    body': (RawExprSeq),
+    body': (Sequence),
     object_cap': (Cap | None) = None)
   =>
     _method_cap = method_cap'
@@ -6815,7 +6767,7 @@ class Lambda is AST
       else err("incompatible field: partial", partial'); error
       end
     _body =
-      try body' as (RawExprSeq)
+      try body' as (Sequence)
       else err("incompatible field: body", body'); error
       end
     _object_cap =
@@ -6833,7 +6785,7 @@ class Lambda is AST
   fun captures(): this->(LambdaCaptures | None) => _captures
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
-  fun body(): this->(RawExprSeq) => _body
+  fun body(): this->(Sequence) => _body
   fun object_cap(): this->(Cap | None) => _object_cap
   
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
@@ -6843,7 +6795,7 @@ class Lambda is AST
   fun ref set_captures(captures': (LambdaCaptures | None) = None) => _captures = consume captures'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_body(body': (RawExprSeq)) => _body = consume body'
+  fun ref set_body(body': (Sequence)) => _body = consume body'
   fun ref set_object_cap(object_cap': (Cap | None) = None) => _object_cap = consume object_cap'
   
   fun string(): String iso^ =>
@@ -7043,20 +6995,20 @@ class Object is AST
 class LitArray is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[RawExprSeq]
+  var _list: Array[Sequence]
   
   new create(
-    list': Array[RawExprSeq] = Array[RawExprSeq])
+    list': Array[Sequence] = Array[Sequence])
   =>
     _list = list'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let list' = Array[RawExprSeq]
+    let list' = Array[Sequence]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as RawExprSeq) else break end
+      try list'.push(list_next' as Sequence) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -7069,9 +7021,9 @@ class LitArray is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[RawExprSeq] => _list
+  fun list(): this->Array[Sequence] => _list
   
-  fun ref set_list(list': Array[RawExprSeq] = Array[RawExprSeq]) => _list = consume list'
+  fun ref set_list(list': Array[Sequence] = Array[Sequence]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end

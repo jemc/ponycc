@@ -68,8 +68,8 @@ primitive ASTDefs
         .> has("params",      "(Params | None)",     "None")
         .> has("return_type", "(Type | None)",       "None")
         .> has("partial",     "(Question | None)",   "None")
-        .> has("guard",       "(RawExprSeq | None)", "None")
-        .> has("body",        "(RawExprSeq | None)", "None")
+        .> has("guard",       "(Sequence | None)",   "None")
+        .> has("body",        "(Sequence | None)",   "None")
         .> has("docs",        "(LitString | None)",  "None")
     end
     
@@ -94,18 +94,14 @@ primitive ASTDefs
       .> has("param_type", "(Type | None)", "None")
       .> has("default",    "(Expr | None)", "None")
     
-    g.def("ExprSeq")
-      .> with_scope()
-      .> has("list", "Array[Expr]", "Array[Expr]")
-    
-    g.def("RawExprSeq")
-      .> in_union("Expr")
+    g.def("Sequence")
+      .> with_scope() // TODO: doesn't always have a scope...
       .> has("list", "Array[Expr]", "Array[Expr]")
     
     for name in ["Return"; "Break"; "Continue"; "Error"].values() do
       g.def(name)
         .> in_union("Jump", "Expr")
-        .> has("value", "RawExprSeq") // TODO: consider using an Expr (here, and in ponyc)?
+        .> has("value", "Sequence")
     end
     
     g.def("CompileIntrinsic")
@@ -113,8 +109,8 @@ primitive ASTDefs
     
     g.def("CompileError")
       .> in_union("Expr")
-      .> with_type()                  // TODO: consider removing the type?
-      .> has("message", "RawExprSeq") // TODO: consider using a LitString (here, and in ponyc)?
+      .> with_type()                // TODO: consider removing the type?
+      .> has("message", "Sequence") // TODO: consider using a LitString (here, and in ponyc)?
     
     for name in ["LocalLet"; "LocalVar"].values() do
       g.def(name)
@@ -139,7 +135,7 @@ primitive ASTDefs
     g.def("Tuple")
       .> in_union("Expr")
       .> with_type()
-      .> has("elements", "Array[RawExprSeq]", "Array[RawExprSeq]")
+      .> has("elements", "Array[Sequence]", "Array[Sequence]")
     
     g.def("Consume")
       .> in_union("Expr")
@@ -224,21 +220,21 @@ primitive ASTDefs
       .> has("partial",    "(Question | None)",  "None")
     
     g.def("Args")
-      .> has("list", "Array[RawExprSeq]", "Array[RawExprSeq]")
+      .> has("list", "Array[Sequence]", "Array[Sequence]")
     
     g.def("NamedArgs")
       .> has("list", "Array[NamedArg]", "Array[NamedArg]")
     
     g.def("NamedArg")
       .> has("name",  "Id")
-      .> has("value", "RawExprSeq")
+      .> has("value", "Sequence")
     
     g.def("IfDef")
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
       .> has("then_expr", "(Expr | IfDefCond)")
-      .> has("then_body", "ExprSeq")
+      .> has("then_body", "Sequence")
       .> has("else_body", "(Expr | IfDef | None)")
       .> has("else_expr", "(None | IfDefCond)")
     
@@ -248,7 +244,7 @@ primitive ASTDefs
       .> with_type()
       .> has("sub",       "TypeRef")
       .> has("super",     "TypeRef")
-      .> has("then_body", "ExprSeq")
+      .> has("then_body", "Sequence")
       .> has("else_body", "(Expr | IfType | None)")
     
     for name in ["IfDefAnd"; "IfDefOr"].values() do
@@ -270,49 +266,49 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("condition", "RawExprSeq")
-      .> has("then_body", "ExprSeq")
-      .> has("else_body", "(ExprSeq | If | None)", "None")
+      .> has("condition", "Sequence")
+      .> has("then_body", "Sequence")
+      .> has("else_body", "(Sequence | If | None)", "None")
     
     g.def("While")
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("condition", "RawExprSeq")
-      .> has("loop_body", "ExprSeq")
-      .> has("else_body", "(ExprSeq | None)", "None")
+      .> has("condition", "Sequence")
+      .> has("loop_body", "Sequence")
+      .> has("else_body", "(Sequence | None)", "None")
     
     g.def("Repeat")
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("loop_body", "ExprSeq")
-      .> has("condition", "RawExprSeq")
-      .> has("else_body", "(ExprSeq | None)", "None")
+      .> has("loop_body", "Sequence")
+      .> has("condition", "Sequence")
+      .> has("else_body", "(Sequence | None)", "None")
     
     g.def("For")
       .> in_union("Expr")
       // not a scope because sugar wraps it in a seq for us
       .> with_type()
-      .> has("expr",      "ExprSeq")
-      .> has("iterator",  "RawExprSeq")
-      .> has("loop_body", "RawExprSeq")
-      .> has("else_body", "(ExprSeq | None)", "None")
+      .> has("expr",      "Sequence")
+      .> has("iterator",  "Sequence")
+      .> has("loop_body", "Sequence")
+      .> has("else_body", "(Sequence | None)", "None")
     
     g.def("With")
       .> in_union("Expr")
       .> with_type()
       .> has("refs",      "Expr")
-      .> has("with_body", "RawExprSeq")
-      .> has("else_body", "(RawExprSeq | None)", "None")
+      .> has("with_body", "Sequence")
+      .> has("else_body", "(Sequence | None)", "None")
     
     g.def("Match")
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("expr",      "RawExprSeq")
-      .> has("cases",     "(Cases | None)",   "None")
-      .> has("else_body", "(ExprSeq | None)", "None")
+      .> has("expr",      "Sequence")
+      .> has("cases",     "(Cases | None)",    "None")
+      .> has("else_body", "(Sequence | None)", "None")
     
     g.def("Cases")
       .> with_scope() // to simplify branch consolidation
@@ -321,16 +317,16 @@ primitive ASTDefs
     
     g.def("Case")
       .> with_scope()
-      .> has("expr",  "(Expr | None)",       "None")
-      .> has("guard", "(RawExprSeq | None)", "None")
-      .> has("body",  "(RawExprSeq | None)", "None")
+      .> has("expr",  "(Expr | None)",     "None")
+      .> has("guard", "(Sequence | None)", "None")
+      .> has("body",  "(Sequence | None)", "None")
     
     g.def("Try")
       .> in_union("Expr")
       .> with_type()
-      .> has("body",      "ExprSeq")
-      .> has("else_body", "(ExprSeq | None)", "None")
-      .> has("then_body", "(ExprSeq | None)", "None")
+      .> has("body",      "Sequence")
+      .> has("else_body", "(Sequence | None)", "None")
+      .> has("then_body", "(Sequence | None)", "None")
     
     g.def("Lambda")
       .> in_union("Expr")
@@ -342,7 +338,7 @@ primitive ASTDefs
       .> has("captures",    "(LambdaCaptures | None)", "None")
       .> has("return_type", "(Type | None)",           "None")
       .> has("partial",     "(Question | None)",       "None")
-      .> has("body",        "(RawExprSeq)")
+      .> has("body",        "(Sequence)")
       .> has("object_cap",  "(Cap | None)",            "None")
     
     g.def("LambdaCaptures")
@@ -361,7 +357,7 @@ primitive ASTDefs
     
     g.def("LitArray")
       .> in_union("Expr")
-      .> has("list", "Array[RawExprSeq]", "Array[RawExprSeq]")
+      .> has("list", "Array[Sequence]", "Array[Sequence]")
     
     g.def("Reference")
       .> with_type()

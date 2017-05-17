@@ -5497,7 +5497,7 @@ class PonyParser
     let state = _RuleState("idseq_in_seq", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[ExprSeq], _current_pos()))
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     Debug("Rule idseq_in_seq: Looking for required rule(s) 'variable name'")
     
@@ -7113,7 +7113,7 @@ class PonyParser
     let state = _RuleState("withelem", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[ExprSeq], _current_pos()))
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     Debug("Rule withelem: Looking for required rule(s) 'with name'")
     
@@ -7177,7 +7177,7 @@ class PonyParser
     let state = _RuleState("withexpr", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[ExprSeq], _current_pos()))
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     Debug("Rule withexpr: Looking for required rule(s) 'with expression'")
     
@@ -8506,7 +8506,7 @@ class PonyParser
     let state = _RuleState("rawseq", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[ExprSeq], _current_pos()))
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     Debug("Rule rawseq: Looking for required rule(s) 'value'")
     
@@ -8567,7 +8567,7 @@ class PonyParser
     let state = _RuleState("annotatedrawseq", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[ExprSeq], _current_pos()))
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     Debug("Rule annotatedrawseq: Looking for required rule(s) 'value'")
     
