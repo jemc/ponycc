@@ -10,8 +10,12 @@ ast/ast.pony: ast/gen/gen
 ast/parser/parser.pony: ast/gen/gen
 	ast/gen/gen parser > $@
 
-ast/parser/parser: ast/parser/parser.pony $(shell find ast/parser/*.pony)
+ast/parser/parser: ast/parser/parser.pony \
+	$(shell find ast/parser/*.pony)
 	stable env ponyc --debug -o ast/parser ast/parser
 
-ast/test/test: ast/ast.pony ast/parser/parser.pony $(shell find ast/*.pony) $(shell find ast/test/*.pony) $(shell find ast/parser/*.pony)
+ast/test/test: ast/ast.pony ast/parser/parser.pony \
+	$(shell find ast/*.pony) \
+	$(shell find ast/test/*.pony) \
+	$(shell find ast/parser/*.pony)
 	stable env ponyc --debug -o ast/test ast/test
