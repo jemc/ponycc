@@ -36,6 +36,10 @@ class _ASTDefFixed is _ASTDef
     if _todo then g.add(" // TODO") end
     g.push_indent()
     
+    // Declare common fields.
+    g.line("var _pos: SourcePosAny = SourcePosNone")
+    g.line()
+    
     // Declare all fields.
     for (field_name, field_type, _) in fields.values() do
       g.line("var _" + field_name + ": " + field_type)
@@ -64,6 +68,11 @@ class _ASTDefFixed is _ASTDef
       g.pop_indent()
     end
     if fields.size() > 0 then g.line() end
+    
+    // Declare common getters and setters.
+    g.line("fun pos(): SourcePosAny => _pos")
+    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line()
     
     // Declare getter methods for all fields.
     for (field_name, field_type, _) in fields.values() do
@@ -132,11 +141,19 @@ class _ASTDefWrap is _ASTDef
     g.line("class " + _name + " is AST")
     g.push_indent()
     
+    // Declare common fields.
+    g.line("var _pos: SourcePosAny = SourcePosNone")
+    
     // Declare the value field.
     g.line("var _value: " + value_type)
     
     // Declare a constructor that initializes the value field from a parameter.
     g.line("new create(value': " + value_type + ") => _value = value'")
+    
+    // Declare common getters and setters.
+    g.line("fun pos(): SourcePosAny => _pos")
+    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line()
     
     // Declare a getter method for the value field.
     g.line("fun value(): " + value_type + " => _value")

@@ -1,6 +1,4 @@
 
-// TODO: remove this file and use ".." to access Source-related types
-
 interface val SourceAny
   fun content(): String
   fun path():    String

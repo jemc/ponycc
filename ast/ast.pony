@@ -243,12 +243,17 @@ type LocalRef is (LocalLetRef | LocalVarRef | ParamRef)
 type UnaryOp is (Neg | AddressOf | NegUnsafe | DigestOf | Not)
 
 class Program is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _packages: Array[Package]
   
   new create(
     packages': Array[Package])
   =>
     _packages = packages'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun packages(): this->Array[Package] => _packages
   
@@ -269,6 +274,8 @@ class Program is AST
     consume s
 
 class Package is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _modules: Array[Module]
   var _docs: (LitString | None)
   
@@ -278,6 +285,9 @@ class Package is AST
   =>
     _modules = modules'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun modules(): this->Array[Module] => _modules
   fun docs(): this->(LitString | None) => _docs
@@ -302,6 +312,8 @@ class Package is AST
     consume s
 
 class Module is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _use_decls: Array[UseDecl]
   var _type_decls: Array[TypeDecl]
   var _docs: (LitString | None)
@@ -314,6 +326,9 @@ class Module is AST
     _use_decls = use_decls'
     _type_decls = type_decls'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun use_decls(): this->Array[UseDecl] => _use_decls
   fun type_decls(): this->Array[TypeDecl] => _type_decls
@@ -348,6 +363,8 @@ class Module is AST
     consume s
 
 class UsePackage is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _prefix: (Id | None)
   var _package: String
   
@@ -357,6 +374,9 @@ class UsePackage is AST
   =>
     _prefix = prefix'
     _package = package'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun prefix(): this->(Id | None) => _prefix
   fun package(): this->String => _package
@@ -374,6 +394,8 @@ class UsePackage is AST
     consume s
 
 class UseFFIDecl is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _body: FFIDecl
   var _guard: (Expr | IfDefCond | None)
   
@@ -383,6 +405,9 @@ class UseFFIDecl is AST
   =>
     _body = body'
     _guard = guard'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun body(): this->FFIDecl => _body
   fun guard(): this->(Expr | IfDefCond | None) => _guard
@@ -400,6 +425,8 @@ class UseFFIDecl is AST
     consume s
 
 class FFIDecl is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: (Id | LitString)
   var _return_type: TypeArgs
   var _params: (Params | None)
@@ -418,6 +445,9 @@ class FFIDecl is AST
     _params = params'
     _named_params = named_params'
     _partial = partial'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->(Id | LitString) => _name
   fun return_type(): this->TypeArgs => _return_type
@@ -444,6 +474,8 @@ class FFIDecl is AST
     consume s
 
 class TypeAlias is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -468,6 +500,9 @@ class TypeAlias is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -500,6 +535,8 @@ class TypeAlias is AST
     consume s
 
 class Interface is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -524,6 +561,9 @@ class Interface is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -556,6 +596,8 @@ class Interface is AST
     consume s
 
 class Trait is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -580,6 +622,9 @@ class Trait is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -612,6 +657,8 @@ class Trait is AST
     consume s
 
 class Primitive is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -636,6 +683,9 @@ class Primitive is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -668,6 +718,8 @@ class Primitive is AST
     consume s
 
 class Struct is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -692,6 +744,9 @@ class Struct is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -724,6 +779,8 @@ class Struct is AST
     consume s
 
 class Class is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -748,6 +805,9 @@ class Class is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -780,6 +840,8 @@ class Class is AST
     consume s
 
 class Actor is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
@@ -804,6 +866,9 @@ class Actor is AST
     _members = members'
     _at = at'
     _docs = docs'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -836,12 +901,17 @@ class Actor is AST
     consume s
 
 class Provides is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _types: Array[Type]
   
   new create(
     types': Array[Type] = Array[Type])
   =>
     _types = types'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun types(): this->Array[Type] => _types
   
@@ -862,6 +932,8 @@ class Provides is AST
     consume s
 
 class Members is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _fields: Array[Field]
   var _methods: Array[Method]
   
@@ -871,6 +943,9 @@ class Members is AST
   =>
     _fields = fields'
     _methods = methods'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun fields(): this->Array[Field] => _fields
   fun methods(): this->Array[Method] => _methods
@@ -901,6 +976,8 @@ class Members is AST
     consume s
 
 class FieldLet is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -913,6 +990,9 @@ class FieldLet is AST
     _name = name'
     _field_type = field_type'
     _default = default'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun field_type(): this->(Type | None) => _field_type
@@ -933,6 +1013,8 @@ class FieldLet is AST
     consume s
 
 class FieldVar is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -945,6 +1027,9 @@ class FieldVar is AST
     _name = name'
     _field_type = field_type'
     _default = default'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun field_type(): this->(Type | None) => _field_type
@@ -965,6 +1050,8 @@ class FieldVar is AST
     consume s
 
 class FieldEmbed is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _field_type: (Type | None)
   var _default: (Expr | None)
@@ -977,6 +1064,9 @@ class FieldEmbed is AST
     _name = name'
     _field_type = field_type'
     _default = default'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun field_type(): this->(Type | None) => _field_type
@@ -997,6 +1087,8 @@ class FieldEmbed is AST
     consume s
 
 class MethodFun is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -1027,6 +1119,9 @@ class MethodFun is AST
     _body = body'
     _docs = docs'
     _guard = guard'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun name(): this->Id => _name
@@ -1065,6 +1160,8 @@ class MethodFun is AST
     consume s
 
 class MethodNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -1095,6 +1192,9 @@ class MethodNew is AST
     _body = body'
     _docs = docs'
     _guard = guard'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun name(): this->Id => _name
@@ -1133,6 +1233,8 @@ class MethodNew is AST
     consume s
 
 class MethodBe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _name: Id
   var _type_params: (TypeParams | None)
@@ -1163,6 +1265,9 @@ class MethodBe is AST
     _body = body'
     _docs = docs'
     _guard = guard'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun name(): this->Id => _name
@@ -1201,12 +1306,17 @@ class MethodBe is AST
     consume s
 
 class TypeParams is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[TypeParam]
   
   new create(
     list': Array[TypeParam] = Array[TypeParam])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[TypeParam] => _list
   
@@ -1227,6 +1337,8 @@ class TypeParams is AST
     consume s
 
 class TypeParam is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _constraint: (Type | None)
   var _default: (Type | None)
@@ -1239,6 +1351,9 @@ class TypeParam is AST
     _name = name'
     _constraint = constraint'
     _default = default'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun constraint(): this->(Type | None) => _constraint
@@ -1259,12 +1374,17 @@ class TypeParam is AST
     consume s
 
 class TypeArgs is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Type]
   
   new create(
     list': Array[Type] = Array[Type])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Type] => _list
   
@@ -1285,6 +1405,8 @@ class TypeArgs is AST
     consume s
 
 class Params is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Param]
   var _ellipsis: (Ellipsis | None)
   
@@ -1294,6 +1416,9 @@ class Params is AST
   =>
     _list = list'
     _ellipsis = ellipsis'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Param] => _list
   fun ellipsis(): this->(Ellipsis | None) => _ellipsis
@@ -1318,6 +1443,8 @@ class Params is AST
     consume s
 
 class Param is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _param_type: (Type | None)
   var _default: (Expr | None)
@@ -1330,6 +1457,9 @@ class Param is AST
     _name = name'
     _param_type = param_type'
     _default = default'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun param_type(): this->(Type | None) => _param_type
@@ -1350,12 +1480,17 @@ class Param is AST
     consume s
 
 class ExprSeq is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Expr]
   
   new create(
     list': Array[Expr] = Array[Expr])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Expr] => _list
   
@@ -1376,12 +1511,17 @@ class ExprSeq is AST
     consume s
 
 class RawExprSeq is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Expr]
   
   new create(
     list': Array[Expr] = Array[Expr])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Expr] => _list
   
@@ -1402,12 +1542,17 @@ class RawExprSeq is AST
     consume s
 
 class Return is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _value: RawExprSeq
   
   new create(
     value': RawExprSeq)
   =>
     _value = value'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun value(): this->RawExprSeq => _value
   
@@ -1422,12 +1567,17 @@ class Return is AST
     consume s
 
 class Break is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _value: RawExprSeq
   
   new create(
     value': RawExprSeq)
   =>
     _value = value'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun value(): this->RawExprSeq => _value
   
@@ -1442,12 +1592,17 @@ class Break is AST
     consume s
 
 class Continue is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _value: RawExprSeq
   
   new create(
     value': RawExprSeq)
   =>
     _value = value'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun value(): this->RawExprSeq => _value
   
@@ -1462,12 +1617,17 @@ class Continue is AST
     consume s
 
 class Error is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _value: RawExprSeq
   
   new create(
     value': RawExprSeq)
   =>
     _value = value'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun value(): this->RawExprSeq => _value
   
@@ -1482,19 +1642,29 @@ class Error is AST
     consume s
 
 class CompileIntrinsic is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
     consume s
 
 class CompileError is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _message: RawExprSeq
   
   new create(
     message': RawExprSeq)
   =>
     _message = message'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun message(): this->RawExprSeq => _message
   
@@ -1509,6 +1679,8 @@ class CompileError is AST
     consume s
 
 class LocalLet is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _local_type: (Type | None)
   
@@ -1518,6 +1690,9 @@ class LocalLet is AST
   =>
     _name = name'
     _local_type = local_type'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun local_type(): this->(Type | None) => _local_type
@@ -1535,6 +1710,8 @@ class LocalLet is AST
     consume s
 
 class LocalVar is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _local_type: (Type | None)
   
@@ -1544,6 +1721,9 @@ class LocalVar is AST
   =>
     _name = name'
     _local_type = local_type'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun local_type(): this->(Type | None) => _local_type
@@ -1561,6 +1741,8 @@ class LocalVar is AST
     consume s
 
 class MatchCapture is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _local_type: Type
   
@@ -1570,6 +1752,9 @@ class MatchCapture is AST
   =>
     _name = name'
     _local_type = local_type'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun local_type(): this->Type => _local_type
@@ -1587,6 +1772,8 @@ class MatchCapture is AST
     consume s
 
 class As is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   var _as_type: Type
   
@@ -1596,6 +1783,9 @@ class As is AST
   =>
     _expr = expr'
     _as_type = as_type'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   fun as_type(): this->Type => _as_type
@@ -1613,12 +1803,17 @@ class As is AST
     consume s
 
 class Tuple is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _elements: Array[RawExprSeq]
   
   new create(
     elements': Array[RawExprSeq] = Array[RawExprSeq])
   =>
     _elements = elements'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun elements(): this->Array[RawExprSeq] => _elements
   
@@ -1639,6 +1834,8 @@ class Tuple is AST
     consume s
 
 class Consume is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _expr: Expr
   
@@ -1648,6 +1845,9 @@ class Consume is AST
   =>
     _cap = cap'
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun expr(): this->Expr => _expr
@@ -1665,6 +1865,8 @@ class Consume is AST
     consume s
 
 class Recover is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _expr: Expr
   
@@ -1674,6 +1876,9 @@ class Recover is AST
   =>
     _cap = cap'
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun expr(): this->Expr => _expr
@@ -1691,12 +1896,17 @@ class Recover is AST
     consume s
 
 class Not is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   
   new create(
     expr': Expr)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   
@@ -1711,12 +1921,17 @@ class Not is AST
     consume s
 
 class Neg is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   
   new create(
     expr': Expr)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   
@@ -1731,12 +1946,17 @@ class Neg is AST
     consume s
 
 class NegUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   
   new create(
     expr': Expr)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   
@@ -1751,12 +1971,17 @@ class NegUnsafe is AST
     consume s
 
 class AddressOf is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   
   new create(
     expr': Expr)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   
@@ -1771,12 +1996,17 @@ class AddressOf is AST
     consume s
 
 class DigestOf is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: Expr
   
   new create(
     expr': Expr)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
   
@@ -1791,6 +2021,8 @@ class DigestOf is AST
     consume s
 
 class Add is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1800,6 +2032,9 @@ class Add is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1817,6 +2052,8 @@ class Add is AST
     consume s
 
 class AddUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1826,6 +2063,9 @@ class AddUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1843,6 +2083,8 @@ class AddUnsafe is AST
     consume s
 
 class Sub is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1852,6 +2094,9 @@ class Sub is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1869,6 +2114,8 @@ class Sub is AST
     consume s
 
 class SubUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1878,6 +2125,9 @@ class SubUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1895,6 +2145,8 @@ class SubUnsafe is AST
     consume s
 
 class Mul is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1904,6 +2156,9 @@ class Mul is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1921,6 +2176,8 @@ class Mul is AST
     consume s
 
 class MulUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1930,6 +2187,9 @@ class MulUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1947,6 +2207,8 @@ class MulUnsafe is AST
     consume s
 
 class Div is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1956,6 +2218,9 @@ class Div is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1973,6 +2238,8 @@ class Div is AST
     consume s
 
 class DivUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -1982,6 +2249,9 @@ class DivUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -1999,6 +2269,8 @@ class DivUnsafe is AST
     consume s
 
 class Mod is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2008,6 +2280,9 @@ class Mod is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2025,6 +2300,8 @@ class Mod is AST
     consume s
 
 class ModUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2034,6 +2311,9 @@ class ModUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2051,6 +2331,8 @@ class ModUnsafe is AST
     consume s
 
 class LShift is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2060,6 +2342,9 @@ class LShift is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2077,6 +2362,8 @@ class LShift is AST
     consume s
 
 class LShiftUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2086,6 +2373,9 @@ class LShiftUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2103,6 +2393,8 @@ class LShiftUnsafe is AST
     consume s
 
 class RShift is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2112,6 +2404,9 @@ class RShift is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2129,6 +2424,8 @@ class RShift is AST
     consume s
 
 class RShiftUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2138,6 +2435,9 @@ class RShiftUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2155,6 +2455,8 @@ class RShiftUnsafe is AST
     consume s
 
 class Eq is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2164,6 +2466,9 @@ class Eq is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2181,6 +2486,8 @@ class Eq is AST
     consume s
 
 class EqUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2190,6 +2497,9 @@ class EqUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2207,6 +2517,8 @@ class EqUnsafe is AST
     consume s
 
 class NE is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2216,6 +2528,9 @@ class NE is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2233,6 +2548,8 @@ class NE is AST
     consume s
 
 class NEUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2242,6 +2559,9 @@ class NEUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2259,6 +2579,8 @@ class NEUnsafe is AST
     consume s
 
 class LT is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2268,6 +2590,9 @@ class LT is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2285,6 +2610,8 @@ class LT is AST
     consume s
 
 class LTUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2294,6 +2621,9 @@ class LTUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2311,6 +2641,8 @@ class LTUnsafe is AST
     consume s
 
 class LE is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2320,6 +2652,9 @@ class LE is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2337,6 +2672,8 @@ class LE is AST
     consume s
 
 class LEUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2346,6 +2683,9 @@ class LEUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2363,6 +2703,8 @@ class LEUnsafe is AST
     consume s
 
 class GE is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2372,6 +2714,9 @@ class GE is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2389,6 +2734,8 @@ class GE is AST
     consume s
 
 class GEUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2398,6 +2745,9 @@ class GEUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2415,6 +2765,8 @@ class GEUnsafe is AST
     consume s
 
 class GT is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2424,6 +2776,9 @@ class GT is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2441,6 +2796,8 @@ class GT is AST
     consume s
 
 class GTUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2450,6 +2807,9 @@ class GTUnsafe is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2467,6 +2827,8 @@ class GTUnsafe is AST
     consume s
 
 class Is is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2476,6 +2838,9 @@ class Is is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2493,6 +2858,8 @@ class Is is AST
     consume s
 
 class Isnt is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2502,6 +2869,9 @@ class Isnt is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2519,6 +2889,8 @@ class Isnt is AST
     consume s
 
 class And is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2528,6 +2900,9 @@ class And is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2545,6 +2920,8 @@ class And is AST
     consume s
 
 class Or is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2554,6 +2931,9 @@ class Or is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2571,6 +2951,8 @@ class Or is AST
     consume s
 
 class XOr is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Expr
   
@@ -2580,6 +2962,9 @@ class XOr is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Expr => _right
@@ -2597,6 +2982,8 @@ class XOr is AST
     consume s
 
 class Assign is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _right: Expr
   var _left: Expr
   
@@ -2606,6 +2993,9 @@ class Assign is AST
   =>
     _right = right'
     _left = left'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun right(): this->Expr => _right
   fun left(): this->Expr => _left
@@ -2623,6 +3013,8 @@ class Assign is AST
     consume s
 
 class Dot is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: (Id | LitInteger | TypeArgs)
   
@@ -2632,6 +3024,9 @@ class Dot is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->(Id | LitInteger | TypeArgs) => _right
@@ -2649,6 +3044,8 @@ class Dot is AST
     consume s
 
 class Chain is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Id
   
@@ -2658,6 +3055,9 @@ class Chain is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Id => _right
@@ -2675,6 +3075,8 @@ class Chain is AST
     consume s
 
 class Tilde is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: Id
   
@@ -2684,6 +3086,9 @@ class Tilde is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->Id => _right
@@ -2701,6 +3106,8 @@ class Tilde is AST
     consume s
 
 class Qualify is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Expr
   var _right: TypeArgs
   
@@ -2710,6 +3117,9 @@ class Qualify is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
   fun right(): this->TypeArgs => _right
@@ -2727,6 +3137,8 @@ class Qualify is AST
     consume s
 
 class Call is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _args: (Args | None)
   var _named_args: (NamedArgs | None)
   var _receiver: Expr
@@ -2739,6 +3151,9 @@ class Call is AST
     _args = args'
     _named_args = named_args'
     _receiver = receiver'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun args(): this->(Args | None) => _args
   fun named_args(): this->(NamedArgs | None) => _named_args
@@ -2759,6 +3174,8 @@ class Call is AST
     consume s
 
 class FFICall is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: (Id | LitString)
   var _type_args: (TypeArgs | None)
   var _args: (Args | None)
@@ -2777,6 +3194,9 @@ class FFICall is AST
     _args = args'
     _named_args = named_args'
     _partial = partial'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->(Id | LitString) => _name
   fun type_args(): this->(TypeArgs | None) => _type_args
@@ -2803,12 +3223,17 @@ class FFICall is AST
     consume s
 
 class Args is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[RawExprSeq]
   
   new create(
     list': Array[RawExprSeq] = Array[RawExprSeq])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[RawExprSeq] => _list
   
@@ -2829,12 +3254,17 @@ class Args is AST
     consume s
 
 class NamedArgs is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[NamedArg]
   
   new create(
     list': Array[NamedArg] = Array[NamedArg])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[NamedArg] => _list
   
@@ -2855,6 +3285,8 @@ class NamedArgs is AST
     consume s
 
 class NamedArg is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _value: RawExprSeq
   
@@ -2864,6 +3296,9 @@ class NamedArg is AST
   =>
     _name = name'
     _value = value'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun value(): this->RawExprSeq => _value
@@ -2881,6 +3316,8 @@ class NamedArg is AST
     consume s
 
 class IfDef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _then_expr: (Expr | IfDefCond)
   var _then_body: ExprSeq
   var _else_body: (Expr | IfDef | None)
@@ -2896,6 +3333,9 @@ class IfDef is AST
     _then_body = then_body'
     _else_body = else_body'
     _else_expr = else_expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun then_expr(): this->(Expr | IfDefCond) => _then_expr
   fun then_body(): this->ExprSeq => _then_body
@@ -2919,6 +3359,8 @@ class IfDef is AST
     consume s
 
 class IfType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _sub: TypeRef
   var _super: TypeRef
   var _then_body: ExprSeq
@@ -2934,6 +3376,9 @@ class IfType is AST
     _super = super'
     _then_body = then_body'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun sub(): this->TypeRef => _sub
   fun super(): this->TypeRef => _super
@@ -2957,6 +3402,8 @@ class IfType is AST
     consume s
 
 class IfDefAnd is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: IfDefCond
   var _right: IfDefCond
   
@@ -2966,6 +3413,9 @@ class IfDefAnd is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->IfDefCond => _left
   fun right(): this->IfDefCond => _right
@@ -2983,6 +3433,8 @@ class IfDefAnd is AST
     consume s
 
 class IfDefOr is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: IfDefCond
   var _right: IfDefCond
   
@@ -2992,6 +3444,9 @@ class IfDefOr is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->IfDefCond => _left
   fun right(): this->IfDefCond => _right
@@ -3009,12 +3464,17 @@ class IfDefOr is AST
     consume s
 
 class IfDefNot is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: IfDefCond
   
   new create(
     expr': IfDefCond)
   =>
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->IfDefCond => _expr
   
@@ -3029,12 +3489,17 @@ class IfDefNot is AST
     consume s
 
 class IfDefFlag is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3049,6 +3514,8 @@ class IfDefFlag is AST
     consume s
 
 class If is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _condition: RawExprSeq
   var _then_body: ExprSeq
   var _else_body: (ExprSeq | If | None)
@@ -3061,6 +3528,9 @@ class If is AST
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun condition(): this->RawExprSeq => _condition
   fun then_body(): this->ExprSeq => _then_body
@@ -3081,6 +3551,8 @@ class If is AST
     consume s
 
 class While is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _condition: RawExprSeq
   var _loop_body: ExprSeq
   var _else_body: (ExprSeq | None)
@@ -3093,6 +3565,9 @@ class While is AST
     _condition = condition'
     _loop_body = loop_body'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun condition(): this->RawExprSeq => _condition
   fun loop_body(): this->ExprSeq => _loop_body
@@ -3113,6 +3588,8 @@ class While is AST
     consume s
 
 class Repeat is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _loop_body: ExprSeq
   var _condition: RawExprSeq
   var _else_body: (ExprSeq | None)
@@ -3125,6 +3602,9 @@ class Repeat is AST
     _loop_body = loop_body'
     _condition = condition'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun loop_body(): this->ExprSeq => _loop_body
   fun condition(): this->RawExprSeq => _condition
@@ -3145,6 +3625,8 @@ class Repeat is AST
     consume s
 
 class For is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: ExprSeq
   var _iterator: RawExprSeq
   var _loop_body: RawExprSeq
@@ -3160,6 +3642,9 @@ class For is AST
     _iterator = iterator'
     _loop_body = loop_body'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->ExprSeq => _expr
   fun iterator(): this->RawExprSeq => _iterator
@@ -3183,6 +3668,8 @@ class For is AST
     consume s
 
 class With is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _refs: Expr
   var _with_body: RawExprSeq
   var _else_body: (RawExprSeq | None)
@@ -3195,6 +3682,9 @@ class With is AST
     _refs = refs'
     _with_body = with_body'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun refs(): this->Expr => _refs
   fun with_body(): this->RawExprSeq => _with_body
@@ -3215,6 +3705,8 @@ class With is AST
     consume s
 
 class Match is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: RawExprSeq
   var _cases: (Cases | None)
   var _else_body: (ExprSeq | None)
@@ -3227,6 +3719,9 @@ class Match is AST
     _expr = expr'
     _cases = cases'
     _else_body = else_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->RawExprSeq => _expr
   fun cases(): this->(Cases | None) => _cases
@@ -3247,12 +3742,17 @@ class Match is AST
     consume s
 
 class Cases is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Case]
   
   new create(
     list': Array[Case] = Array[Case])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Case] => _list
   
@@ -3273,6 +3773,8 @@ class Cases is AST
     consume s
 
 class Case is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _expr: (Expr | None)
   var _guard: (RawExprSeq | None)
   var _body: (RawExprSeq | None)
@@ -3285,6 +3787,9 @@ class Case is AST
     _expr = expr'
     _guard = guard'
     _body = body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->(Expr | None) => _expr
   fun guard(): this->(RawExprSeq | None) => _guard
@@ -3305,6 +3810,8 @@ class Case is AST
     consume s
 
 class Try is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _body: ExprSeq
   var _else_body: (ExprSeq | None)
   var _then_body: (ExprSeq | None)
@@ -3317,6 +3824,9 @@ class Try is AST
     _body = body'
     _else_body = else_body'
     _then_body = then_body'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun body(): this->ExprSeq => _body
   fun else_body(): this->(ExprSeq | None) => _else_body
@@ -3337,6 +3847,8 @@ class Try is AST
     consume s
 
 class Lambda is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
@@ -3367,6 +3879,9 @@ class Lambda is AST
     _partial = partial'
     _body = body'
     _object_cap = object_cap'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
@@ -3405,12 +3920,17 @@ class Lambda is AST
     consume s
 
 class LambdaCaptures is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[LambdaCapture]
   
   new create(
     list': Array[LambdaCapture] = Array[LambdaCapture])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[LambdaCapture] => _list
   
@@ -3431,6 +3951,8 @@ class LambdaCaptures is AST
     consume s
 
 class LambdaCapture is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _local_type: (Type | None)
   var _expr: (Expr | None)
@@ -3443,6 +3965,9 @@ class LambdaCapture is AST
     _name = name'
     _local_type = local_type'
     _expr = expr'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun local_type(): this->(Type | None) => _local_type
@@ -3463,6 +3988,8 @@ class LambdaCapture is AST
     consume s
 
 class Object is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: (Cap | None)
   var _provides: (Provides | None)
   var _members: (Members | None)
@@ -3475,6 +4002,9 @@ class Object is AST
     _cap = cap'
     _provides = provides'
     _members = members'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
   fun provides(): this->(Provides | None) => _provides
@@ -3495,12 +4025,17 @@ class Object is AST
     consume s
 
 class LitArray is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[RawExprSeq]
   
   new create(
     list': Array[RawExprSeq] = Array[RawExprSeq])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[RawExprSeq] => _list
   
@@ -3521,12 +4056,17 @@ class LitArray is AST
     consume s
 
 class Reference is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3541,19 +4081,29 @@ class Reference is AST
     consume s
 
 class DontCare is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCare")
     consume s
 
 class PackageRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3568,6 +4118,8 @@ class PackageRef is AST
     consume s
 
 class MethodFunRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3577,6 +4129,9 @@ class MethodFunRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->(Id | TypeArgs) => _name
@@ -3594,6 +4149,8 @@ class MethodFunRef is AST
     consume s
 
 class MethodNewRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3603,6 +4160,9 @@ class MethodNewRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->(Id | TypeArgs) => _name
@@ -3620,6 +4180,8 @@ class MethodNewRef is AST
     consume s
 
 class MethodBeRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
@@ -3629,6 +4191,9 @@ class MethodBeRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->(Id | TypeArgs) => _name
@@ -3646,6 +4211,8 @@ class MethodBeRef is AST
     consume s
 
 class TypeRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _package: Expr
   var _name: (Id | TypeArgs)
   
@@ -3655,6 +4222,9 @@ class TypeRef is AST
   =>
     _package = package'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun package(): this->Expr => _package
   fun name(): this->(Id | TypeArgs) => _name
@@ -3672,6 +4242,8 @@ class TypeRef is AST
     consume s
 
 class FieldLetRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: Id
   
@@ -3681,6 +4253,9 @@ class FieldLetRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->Id => _name
@@ -3698,6 +4273,8 @@ class FieldLetRef is AST
     consume s
 
 class FieldVarRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: Id
   
@@ -3707,6 +4284,9 @@ class FieldVarRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->Id => _name
@@ -3724,6 +4304,8 @@ class FieldVarRef is AST
     consume s
 
 class FieldEmbedRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: Id
   
@@ -3733,6 +4315,9 @@ class FieldEmbedRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->Id => _name
@@ -3750,6 +4335,8 @@ class FieldEmbedRef is AST
     consume s
 
 class TupleElementRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _receiver: Expr
   var _name: LitInteger
   
@@ -3759,6 +4346,9 @@ class TupleElementRef is AST
   =>
     _receiver = receiver'
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun receiver(): this->Expr => _receiver
   fun name(): this->LitInteger => _name
@@ -3776,12 +4366,17 @@ class TupleElementRef is AST
     consume s
 
 class LocalLetRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3796,12 +4391,17 @@ class LocalLetRef is AST
     consume s
 
 class LocalVarRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3816,12 +4416,17 @@ class LocalVarRef is AST
     consume s
 
 class ParamRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   
   new create(
     name': Id)
   =>
     _name = name'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   
@@ -3836,12 +4441,17 @@ class ParamRef is AST
     consume s
 
 class UnionType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Type]
   
   new create(
     list': Array[Type] = Array[Type])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Type] => _list
   
@@ -3862,12 +4472,17 @@ class UnionType is AST
     consume s
 
 class IsectType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Type]
   
   new create(
     list': Array[Type] = Array[Type])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Type] => _list
   
@@ -3888,12 +4503,17 @@ class IsectType is AST
     consume s
 
 class TupleType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _list: Array[Type]
   
   new create(
     list': Array[Type] = Array[Type])
   =>
     _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun list(): this->Array[Type] => _list
   
@@ -3914,6 +4534,8 @@ class TupleType is AST
     consume s
 
 class ArrowType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _left: Type
   var _right: Type
   
@@ -3923,6 +4545,9 @@ class ArrowType is AST
   =>
     _left = left'
     _right = right'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Type => _left
   fun right(): this->Type => _right
@@ -3940,6 +4565,8 @@ class ArrowType is AST
     consume s
 
 class FunType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _cap: Cap
   var _type_params: (TypeParams | None)
   var _params: (Params | None)
@@ -3955,6 +4582,9 @@ class FunType is AST
     _type_params = type_params'
     _params = params'
     _return_type = return_type'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->Cap => _cap
   fun type_params(): this->(TypeParams | None) => _type_params
@@ -3978,6 +4608,8 @@ class FunType is AST
     consume s
 
 class LambdaType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
@@ -4005,6 +4637,9 @@ class LambdaType is AST
     _partial = partial'
     _object_cap = object_cap'
     _cap_mod = cap_mod'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
@@ -4047,6 +4682,8 @@ class LambdaType is AST
     consume s
 
 class NominalType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _package: (Id | None)
   var _name: Id
   var _type_args: (TypeArgs | None)
@@ -4065,6 +4702,9 @@ class NominalType is AST
     _type_args = type_args'
     _cap = cap'
     _cap_mod = cap_mod'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun package(): this->(Id | None) => _package
   fun name(): this->Id => _name
@@ -4091,6 +4731,8 @@ class NominalType is AST
     consume s
 
 class TypeParamRef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   var _name: Id
   var _cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
@@ -4103,6 +4745,9 @@ class TypeParamRef is AST
     _name = name'
     _cap = cap'
     _cap_mod = cap_mod'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
   fun cap(): this->(Cap | GenCap | None) => _cap
@@ -4123,162 +4768,276 @@ class TypeParamRef is AST
     consume s
 
 class ThisType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ThisType")
     consume s
 
 class DontCareType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCareType")
     consume s
 
 class ErrorType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ErrorType")
     consume s
 
 class LiteralType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralType")
     consume s
 
 class LiteralTypeBranch is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralTypeBranch")
     consume s
 
 class OpLiteralType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("OpLiteralType")
     consume s
 
 class Iso is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Iso")
     consume s
 
 class Trn is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trn")
     consume s
 
 class Ref is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ref")
     consume s
 
 class Val is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Val")
     consume s
 
 class Box is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Box")
     consume s
 
 class Tag is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tag")
     consume s
 
 class CapRead is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapRead")
     consume s
 
 class CapSend is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapSend")
     consume s
 
 class CapShare is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapShare")
     consume s
 
 class CapAlias is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAlias")
     consume s
 
 class CapAny is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAny")
     consume s
 
 class Aliased is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Aliased")
     consume s
 
 class Ephemeral is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ephemeral")
     consume s
 
 class At is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("At")
     consume s
 
 class Question is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Question")
     consume s
 
 class Ellipsis is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ellipsis")
     consume s
 
-class Id
+class Id is AST
+  var _pos: SourcePosAny = SourcePosNone
   var _value: String
   new create(value': String) => _value = value'
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun value(): String => _value
   fun ref set_value(value': String) => _value = value'
   fun string(): String iso^ =>
@@ -4287,29 +5046,48 @@ class Id
     end
 
 class This is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("This")
     consume s
 
 class LitTrue is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitTrue")
     consume s
 
 class LitFalse is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitFalse")
     consume s
 
-class LitFloat
+class LitFloat is AST
+  var _pos: SourcePosAny = SourcePosNone
   var _value: F64
   new create(value': F64) => _value = value'
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun value(): F64 => _value
   fun ref set_value(value': F64) => _value = value'
   fun string(): String iso^ =>
@@ -4317,9 +5095,13 @@ class LitFloat
       String.>append("LitFloat(").>append(_value.string()).>push(')')
     end
 
-class LitInteger
+class LitInteger is AST
+  var _pos: SourcePosAny = SourcePosNone
   var _value: I128
   new create(value': I128) => _value = value'
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun value(): I128 => _value
   fun ref set_value(value': I128) => _value = value'
   fun string(): String iso^ =>
@@ -4327,9 +5109,13 @@ class LitInteger
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
 
-class LitCharacter
+class LitCharacter is AST
+  var _pos: SourcePosAny = SourcePosNone
   var _value: U8
   new create(value': U8) => _value = value'
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun value(): U8 => _value
   fun ref set_value(value': U8) => _value = value'
   fun string(): String iso^ =>
@@ -4337,9 +5123,13 @@ class LitCharacter
       String.>append("LitCharacter(").>append(_value.string()).>push(')')
     end
 
-class LitString
+class LitString is AST
+  var _pos: SourcePosAny = SourcePosNone
   var _value: String
   new create(value': String) => _value = value'
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun value(): String => _value
   fun ref set_value(value': String) => _value = value'
   fun string(): String iso^ =>
@@ -4348,252 +5138,432 @@ class LitString
     end
 
 class LitLocation is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
     consume s
 
 class EOF is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("EOF")
     consume s
 
 class NewLine is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NewLine")
     consume s
 
 class Use is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Use")
     consume s
 
 class Colon is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Colon")
     consume s
 
 class Semicolon is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Semicolon")
     consume s
 
 class Comma is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Comma")
     consume s
 
 class Constant is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Constant")
     consume s
 
 class Pipe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Pipe")
     consume s
 
 class Ampersand is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ampersand")
     consume s
 
 class SubType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("SubType")
     consume s
 
 class Arrow is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Arrow")
     consume s
 
 class DoubleArrow is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DoubleArrow")
     consume s
 
 class Backslash is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Backslash")
     consume s
 
 class LParen is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LParen")
     consume s
 
 class RParen is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RParen")
     consume s
 
 class LBrace is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LBrace")
     consume s
 
 class RBrace is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RBrace")
     consume s
 
 class LSquare is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LSquare")
     consume s
 
 class RSquare is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RSquare")
     consume s
 
 class LParenNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LParenNew")
     consume s
 
 class LBraceNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LBraceNew")
     consume s
 
 class LSquareNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LSquareNew")
     consume s
 
 class SubNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("SubNew")
     consume s
 
 class SubUnsafeNew is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("SubUnsafeNew")
     consume s
 
 class In is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("In")
     consume s
 
 class Until is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Until")
     consume s
 
 class Do is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Do")
     consume s
 
 class Else is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Else")
     consume s
 
 class ElseIf is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ElseIf")
     consume s
 
 class Then is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Then")
     consume s
 
 class End is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("End")
     consume s
 
 class Var is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Var")
     consume s
 
 class Let is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Let")
     consume s
 
 class Embed is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Embed")
     consume s
 
 class Where is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
   new create() => None
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Where")
