@@ -7,11 +7,14 @@ class ASTGen
   
   new ref create() => None
   
-  fun ref def(n: String):                 _ASTDefFixed =>
+  fun ref def(n: String): _ASTDefFixed =>
     _ASTDefFixed(this, n)
   
-  fun ref def_wrap(n: String, t: String): _ASTDefWrap  =>
+  fun ref def_wrap(n: String, t: String): _ASTDefWrap =>
     _ASTDefWrap(this, n, t)
+  
+  fun ref def_lexeme(n: String): _ASTDefLexeme =>
+    _ASTDefLexeme(this, n)
   
   fun string(): String =>
     let g: CodeGen = CodeGen
@@ -19,6 +22,12 @@ class ASTGen
     // Declare the AST trait
     g.line("trait AST")
     g.push_indent()
+    g.line("new from_iter(iter: Iterator[(AST | None)]")
+    g.add(", pos': SourcePosAny = SourcePosNone")
+    g.add(", err: {(String, (AST | None))}")
+    g.add(" = {(s: String, a: (AST | None)) => None } ref)?")
+    g.line("fun pos(): SourcePosAny")
+    g.line("fun ref set_pos(pos': SourcePosAny)")
     g.line("fun string(): String iso^")
     g.pop_indent()
     g.line()
@@ -30,7 +39,7 @@ class ASTGen
     g.push_indent()
     g.line("iftype A <: None then \"x\"")
     for d in defs.values() do
-      g.line("elseiftype A <: " + d.name() + " then \"" + d.name() + "\"")
+      g.line("elseif A <: " + d.name() + " then \"" + d.name() + "\"")
     end
     g.line("else \"???\"")
     g.line("end")

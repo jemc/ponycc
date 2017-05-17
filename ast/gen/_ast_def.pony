@@ -69,6 +69,94 @@ class _ASTDefFixed is _ASTDef
     end
     if fields.size() > 0 then g.line() end
     
+    // Declare a constructor that initializes all fields from an iterator.
+    g.line("new from_iter(iter: Iterator[(AST | None)]")
+    g.add(", pos': SourcePosAny = SourcePosNone")
+    g.add(", err: {(String, (AST | None))}")
+    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.push_indent()
+    g.line("_pos = pos'")
+    g.line()
+    
+    var iter_next = "iter.next()"
+    for (field_name, field_type, field_default) in fields.values() do
+      if (try field_type.find("Array[") == 0 else false end) then
+        let elem_type: String = field_type.substring(6, -1)
+        g.line("let " + field_name + "' = " + field_type)
+        g.line("var " + field_name + "_next' = ")
+        if iter_next != "iter.next()" then
+          g.add(iter_next)
+        else
+          g.add("try iter.next() else None end")
+        end
+        g.line("while true do")
+        g.push_indent()
+        g.line("try " + field_name + "'.push(" + field_name + "_next'")
+        g.add(" as " + elem_type + ") else break end")
+        g.line("try " + field_name + "_next' = iter.next()")
+        g.add(" else " + field_name + "_next' = None; break end")
+        g.pop_indent()
+        g.line("end")
+        iter_next = field_name + "_next'"
+      else
+        g.line("let " + field_name + "': (AST | None) =")
+        if iter_next != "iter.next()" then
+          g.add(" " + iter_next)
+        else
+          if field_default.size() > 0 then
+            g.add(" try iter.next() else " + field_default + " end")
+          else
+            g.push_indent()
+            g.line("try iter.next()")
+            g.line("else err(\"missing required field: " + field_name + "\"")
+            g.add(", None); error")
+            g.line("end")
+            g.pop_indent()
+          end
+        end
+        iter_next = "iter.next()"
+      end
+    end
+    
+    if iter_next != "iter.next()" then
+      g.line("if " + iter_next + " isnt None then")
+      g.push_indent()
+      g.line("let extra' = " + iter_next)
+      g.line("err(\"unexpected extra field\", extra'); error")
+      g.pop_indent()
+      g.line("end")
+    else
+      g.line("if")
+      g.push_indent()
+      g.line("try")
+      g.push_indent()
+      g.line("let extra' = " + iter_next)
+      g.line("err(\"unexpected extra field\", extra'); true")
+      g.pop_indent()
+      g.line("else false")
+      g.line("end")
+      g.pop_indent()
+      g.line("then error end")
+    end
+    
+    if fields.size() > 0 then g.line() end
+    for (field_name, field_type, field_default) in fields.values() do
+      g.line("_" + field_name + " =")
+      if (try field_type.find("Array[") == 0 else false end) then
+        g.add(" " + field_name + "'")
+      else
+        g.push_indent()
+        g.line("try " + field_name + "' as " + field_type)
+        g.line("else err(\"incompatible field: " + field_name)
+        g.add("\", " + field_name + "'); error")
+        g.line("end")
+        g.pop_indent()
+      end
+    end
+    
+    g.pop_indent()
+    g.line()
+    
     // Declare common getters and setters.
     g.line("fun pos(): SourcePosAny => _pos")
     g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
@@ -150,6 +238,32 @@ class _ASTDefWrap is _ASTDef
     // Declare a constructor that initializes the value field from a parameter.
     g.line("new create(value': " + value_type + ") => _value = value'")
     
+    g.line("new from_iter(iter: Iterator[(AST | None)]")
+    g.add(", pos': SourcePosAny = SourcePosNone")
+    g.add(", err: {(String, (AST | None))}")
+    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.push_indent()
+    g.line("_pos = pos'")
+    if value_type == "String" then
+      g.line("_value = \"foo\" // TODO: parse from _pos?")
+    else
+      g.line("_value = 88 // TODO: parse from _pos?")
+    end
+    g.line()
+    g.line("if")
+    g.push_indent()
+    g.line("try")
+    g.push_indent()
+    g.line("let extra' = iter.next()")
+    g.line("err(\"unexpected extra field\", extra'); true")
+    g.pop_indent()
+    g.line("else false")
+    g.line("end")
+    g.pop_indent()
+    g.line("then error end")
+    g.pop_indent()
+    g.line()
+    
     // Declare common getters and setters.
     g.line("fun pos(): SourcePosAny => _pos")
     g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
@@ -170,6 +284,54 @@ class _ASTDefWrap is _ASTDef
     g.add(".>append(_value.string()).>push(')')")
     g.pop_indent()
     g.line("end")
+    g.pop_indent()
+    
+    g.pop_indent()
+    g.line()
+
+class _ASTDefLexeme is _ASTDef
+  let _gen: ASTGen
+  let _name: String
+  
+  new create(g: ASTGen, n: String) =>
+    (_gen, _name) = (g, n)
+    _gen.defs.push(this)
+  
+  fun ref in_union(n: String, n2: String = "") =>
+    _gen._add_to_union(n, _name)
+    if n2.size() > 0 then _gen._add_to_union(n2, n) end
+  
+  fun name(): String => _name
+  
+  fun code_gen(g: CodeGen) =>
+    g.line("class " + _name + " is AST")
+    g.push_indent()
+    
+    // Declare common fields.
+    g.line("var _pos: SourcePosAny = SourcePosNone")
+    
+    // Declare a constructor that does nothing.
+    g.line("new create() => None")
+    
+    // Declare a constructor that accepts an iterator but always errors.
+    g.line("new from_iter(iter: Iterator[(AST | None)]")
+    g.add(", pos': SourcePosAny = SourcePosNone")
+    g.add(", err: {(String, (AST | None))}")
+    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.push_indent()
+    g.line("err(\"this lexeme-only type should never be built\", None); error")
+    g.pop_indent()
+    g.line()
+    
+    // Declare common getters and setters.
+    g.line("fun pos(): SourcePosAny => _pos")
+    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line()
+    
+    // Declare a string method to print itself.
+    g.line("fun string(): String iso^ =>")
+    g.push_indent()
+    g.line("recover String.>append(\"" + _name + "\") end")
     g.pop_indent()
     
     g.pop_indent()

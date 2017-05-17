@@ -21,7 +21,7 @@ primitive ASTDefs
     g.def("UsePackage")
       .> in_union("UseDecl")
       .> has("prefix",  "(Id | None)", "None")
-      .> has("package", "String")
+      .> has("package", "LitString")
     
     g.def("UseFFIDecl")
       .> in_union("UseDecl")
@@ -447,7 +447,7 @@ primitive ASTDefs
       .> has("method_cap",  "(Cap | None)",          "None")
       .> has("name",        "(Id | None)",           "None")
       .> has("type_params", "(TypeParams | None)",   "None")
-      .> has("param_types", "Array[Type]",           "Array[Type]")
+      .> has("param_types", "TupleType",             "TupleType")
       .> has("return_type", "(Type | None)",         "None")
       .> has("partial",     "(Question | None)",     "None")
       .> has("object_cap",  "(Cap | GenCap | None)", "None")
@@ -572,6 +572,6 @@ primitive ASTDefs
       "Embed"
       "Where"
     ].values() do
-      g.def(name)
+      g.def_lexeme(name)
         .> in_union("Lexeme")
     end
