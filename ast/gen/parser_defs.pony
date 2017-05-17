@@ -121,12 +121,56 @@ primitive ParserDefs
       // cap id type_params params return_type error guard body docstring
       // TODO: REORDER(0, 1, 2, 3, 4, 5, 6, 8, 7)
     
+    // LSQUARE typeparam {COMMA typeparam} RSQUARE
+    g.def("typeparams")
+      .> tree("Tk[TypeParams]")
+      .> skip("None", ["Tk[LSquare]"; "Tk[LSquareNew]"])
+      .> rule("type parameter", ["typeparam"])
+      .> while_token_do_rule("Tk[Comma]", "type parameter", ["typeparam"])
+      .> terminate("type parameters", ["Tk[RSquare]"])
+    
+    // ID [COLON type] [ASSIGN typearg]
+    g.def("typeparam")
+      .> tree("Tk[TypeParam]")
+      .> token("name", ["Tk[Id]"])
+      .> if_token_then_rule("Tk[Colon]", "type constraint", ["type"])
+      .> if_token_then_rule("Tk[Assign]", "default type argument", ["typearg"])
+    
+    // LSQUARE type {COMMA type} RSQUARE
+    g.def("typeargs")
+      .> tree("Tk[TypeArgs]")
+      .> skip("None", ["Tk[LSquare]"])
+      .> rule("type argument", ["typearg"])
+      .> while_token_do_rule("Tk[Comma]", "type argument", ["typearg"])
+      .> terminate("type arguments", ["Tk[RSquare]"])
+    
+    // type | typearg_literal | const_expr
+    g.def("typearg")
+      .> rule("type argument", ["type"; "typearg_literal"; "const_expr"])
+    
+    // literal
+    g.def("typearg_literal")
+      .> tree("Tk[Constant]")
+      .> print_inline()
+      .> rule("type argument literal", ["literal"])
+    
+    // HASH postfix
+    g.def("const_expr")
+      .> print_inline()
+      .> token("None", ["Tk[Constant]"])
+      .> rule("formal argument value", ["postfix"])
+    
+    // param {COMMA (param | ellipsis)}
+    g.def("params")
+      .> tree("Tk[Params]")
+      .> rule("parameter", ["param"; "ellipsis"])
+      .> while_token_do_rule("Tk[Comma]", "parameter", ["param"; "ellipsis"])
+    
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
       .> tree("Tk[Param]")
-      .> rule("name", ["parampattern"])
+      .> token("parameter name", ["Tk[Id]"])
       .> if_token_then_rule("Tk[Colon]", "parameter type", ["type"])
-      // TODO: UNWRAP(0, "Tk[Reference]")
       .> if_token_then_rule("Tk[Assign]", "default value", ["infix"])
     
     // ELLIPSIS
@@ -136,57 +180,6 @@ primitive ParserDefs
     // TRUE | FALSE | INT | FLOAT | STRING
     g.def("literal")
       .> token("literal", ["Tk[LitTrue]"; "Tk[LitFalse]"; "Tk[LitInteger]"; "Tk[LitFloat]"; "Tk[LitString]"; "Tk[LitCharacter]"])
-    
-    // HASH postfix
-    g.def("const_expr")
-      .> print_inline()
-      .> token("None", ["Tk[Constant]"])
-      .> rule("formal argument value", ["postfix"])
-    
-    // literal
-    g.def("typeargliteral")
-      .> tree("Tk[Constant]")
-      .> print_inline()
-      .> rule("type argument", ["literal"])
-    
-    // HASH postfix
-    g.def("typeargconst")
-      .> tree("Tk[Constant]")
-      .> print_inline()
-      .> rule("formal argument value", ["const_expr"])
-    
-    // type | typeargliteral | typeargconst
-    g.def("typearg")
-      .> rule("type argument", ["type"; "typeargliteral"; "typeargconst"])
-    
-    // ID [COLON type] [ASSIGN typearg]
-    g.def("typeparam")
-      .> tree("Tk[TypeParam]")
-      .> token("name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "type constraint", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "default type argument", ["typearg"])
-    
-    // param {COMMA param}
-    g.def("params")
-      .> tree("Tk[Params]")
-      .> rule("parameter", ["param"; "ellipsis"])
-      .> while_token_do_rule("Tk[Comma]", "parameter", ["param"; "ellipsis"])
-    
-    // LSQUARE typeparam {COMMA typeparam} RSQUARE
-    g.def("typeparams")
-      .> tree("Tk[TypeParams]")
-      .> skip("None", ["Tk[LSquare]"; "Tk[LSquareNew]"])
-      .> rule("type parameter", ["typeparam"])
-      .> while_token_do_rule("Tk[Comma]", "type parameter", ["typeparam"])
-      .> terminate("type parameters", ["Tk[RSquare]"])
-    
-    // LSQUARE type {COMMA type} RSQUARE
-    g.def("typeargs")
-      .> tree("Tk[TypeArgs]")
-      .> skip("None", ["Tk[LSquare]"])
-      .> rule("type argument", ["typearg"])
-      .> while_token_do_rule("Tk[Comma]", "type argument", ["typearg"])
-      .> terminate("type arguments", ["Tk[RSquare]"])
     
     // CAP
     g.def("cap")
@@ -513,7 +506,7 @@ primitive ParserDefs
       // TODO: MAP_ID("Tk[SubUnsafe]", "Tk[UnarySubUnsafe]")
       // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
       // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
-      .> rule("expression", ["parampattern"])
+      .> rule("expression", ["rhspattern"])
     
     // (NOT | AMP | MINUS_NEW | MINUS_TILDE_NEW | DIGESTOF) pattern
     g.def("nextprefix")
@@ -521,23 +514,23 @@ primitive ParserDefs
       .> token("prefix", ["Tk[Not]"; "Tk[AddressOf]"; "Tk[SubNew]"; "Tk[SubUnsafeNew]"; "Tk[DigestOf]"])
       // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
       // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
-      .> rule("expression", ["parampattern"])
+      .> rule("expression", ["rhspattern"])
     
     // (prefix | postfix)
-    g.def("parampattern")
+    g.def("rhspattern")
       .> rule("pattern", ["prefix"; "postfix"])
     
     // (prefix | postfix)
-    g.def("nextparampattern")
+    g.def("nextrhspattern")
       .> rule("pattern", ["nextprefix"; "nextpostfix"])
     
     // (local | prefix | postfix)
     g.def("pattern")
-      .> rule("pattern", ["local"; "parampattern"])
+      .> rule("pattern", ["local"; "rhspattern"])
     
     // (local | prefix | postfix)
     g.def("nextpattern")
-      .> rule("pattern", ["local"; "nextparampattern"])
+      .> rule("pattern", ["local"; "nextrhspattern"])
     
     // (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
     g.def("idseqmulti")

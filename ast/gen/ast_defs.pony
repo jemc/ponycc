@@ -68,12 +68,12 @@ primitive ASTDefs
         .> has("params",      "(Params | None)",     "None")
         .> has("return_type", "(Type | None)",       "None")
         .> has("partial",     "(Question | None)",   "None")
+        .> has("guard",       "(RawExprSeq | None)", "None")
         .> has("body",        "(RawExprSeq | None)", "None")
         .> has("docs",        "(LitString | None)",  "None")
-        .> has("guard",       "(RawExprSeq | None)", "None")
     end
     
-    g.def("TypeParams") // TODO: consider removing/inlining this type
+    g.def("TypeParams")
       .> has("list", "Array[TypeParam]", "Array[TypeParam]")
     
     g.def("TypeParam")
@@ -81,11 +81,11 @@ primitive ASTDefs
       .> has("constraint", "(Type | None)")
       .> has("default",    "(Type | None)")
     
-    g.def("TypeArgs") // TODO: consider removing/inlining this type
+    g.def("TypeArgs")
       .> has("list", "Array[Type]", "Array[Type]")
     
     g.def("Params")
-      .> has("list",     "Array[Param]",      "Array[Param]")
+      .> has("list",     "Array[Param]",      "Array[Param]") // TODO: account for case where parser emits ellipsis in multiple argument positions
       .> has("ellipsis", "(Ellipsis | None)", "None")
     
     g.def("Param")

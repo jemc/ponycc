@@ -1224,28 +1224,533 @@ class PonyParser
     
     (_complete(state), _BuildDefault)
   
+  fun ref _parse_typeparams(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("typeparams", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[TypeParams], _current_pos()))
+    
+    Debug("Rule typeparams: Looking for required rule(s) '" + Tk[LSquare].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LSquare] | Tk[LSquareNew] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[LSquare].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[LSquare].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule typeparams: Looking for required rule(s) 'type parameter'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_typeparam("type parameter")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type parameter"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type parameter", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    while true do
+      
+      Debug("Rule typeparams: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      while _current_tk() is Tk[NewLine] do _consume_token() end
+      res =
+        match _current_tk() | Tk[Comma] =>
+          Debug("Compatible")
+          found = true
+          last_matched = Tk[Comma].desc()
+          _handle_found(state, (_consume_token(); None), _BuildDefault)
+        else
+          Debug("Not compatible")
+          found = false
+          _handle_not_found(state, Tk[Comma].desc(), false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+      
+      Debug("Rule typeparams: Looking for required rule(s) 'type parameter'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_typeparam("type parameter")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "type parameter"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "type parameter", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule typeparams: Looking for required rule(s) '" + "type parameters" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[RSquare] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "type parameters"
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "type parameters", true)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_typeparam(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("typeparam", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[TypeParam], _current_pos()))
+    
+    Debug("Rule typeparam: Looking for required rule(s) '" + "name" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Id] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "name", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule typeparam: Looking for optional rule(s) '" + Tk[Colon].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Colon] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Colon].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Colon].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule typeparam: Looking for required rule(s) 'type constraint'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_type("type constraint")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "type constraint"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "type constraint", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule typeparam: Looking for optional rule(s) '" + Tk[Assign].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Assign] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Assign].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Assign].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule typeparam: Looking for required rule(s) 'default type argument'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_typearg("default type argument")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "default type argument"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "default type argument", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_typeargs(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("typeargs", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[TypeArgs], _current_pos()))
+    
+    Debug("Rule typeargs: Looking for required rule(s) '" + Tk[LSquare].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LSquare] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[LSquare].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[LSquare].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule typeargs: Looking for required rule(s) 'type argument'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_typearg("type argument")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type argument"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type argument", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    while true do
+      
+      Debug("Rule typeargs: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      while _current_tk() is Tk[NewLine] do _consume_token() end
+      res =
+        match _current_tk() | Tk[Comma] =>
+          Debug("Compatible")
+          found = true
+          last_matched = Tk[Comma].desc()
+          _handle_found(state, (_consume_token(); None), _BuildDefault)
+        else
+          Debug("Not compatible")
+          found = false
+          _handle_not_found(state, Tk[Comma].desc(), false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+      
+      Debug("Rule typeargs: Looking for required rule(s) 'type argument'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_typearg("type argument")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "type argument"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "type argument", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule typeargs: Looking for required rule(s) '" + "type arguments" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[RSquare] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "type arguments"
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "type arguments", true)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_typearg(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("typearg", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    Debug("Rule typearg: Looking for required rule(s) 'type argument'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_type("type argument")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type argument"
+          break _handle_found(state, tree, build)
+        end
+        
+        match _parse_typearg_literal("type argument")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type argument"
+          break _handle_found(state, tree, build)
+        end
+        
+        match _parse_const_expr("type argument")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type argument"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type argument", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_typearg_literal(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("typearg_literal", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[Constant], _current_pos()))
+    
+    Debug("Rule typearg_literal: Looking for required rule(s) 'type argument literal'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_literal("type argument literal")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type argument literal"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type argument literal", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_const_expr(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("const_expr", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    Debug("Rule const_expr: Looking for required rule(s) '" + Tk[Constant].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Constant] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Constant].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Constant].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule const_expr: Looking for required rule(s) 'formal argument value'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_postfix("formal argument value")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "formal argument value"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "formal argument value", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_params(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("params", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[Params], _current_pos()))
+    
+    Debug("Rule params: Looking for required rule(s) 'parameter'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_param("parameter")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "parameter"
+          break _handle_found(state, tree, build)
+        end
+        
+        match _parse_ellipsis("parameter")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "parameter"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "parameter", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    while true do
+      
+      Debug("Rule params: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      while _current_tk() is Tk[NewLine] do _consume_token() end
+      res =
+        match _current_tk() | Tk[Comma] =>
+          Debug("Compatible")
+          found = true
+          last_matched = Tk[Comma].desc()
+          _handle_found(state, (_consume_token(); None), _BuildDefault)
+        else
+          Debug("Not compatible")
+          found = false
+          _handle_not_found(state, Tk[Comma].desc(), false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+      
+      Debug("Rule params: Looking for required rule(s) 'parameter'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_param("parameter")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "parameter"
+            break _handle_found(state, tree, build)
+          end
+          
+          match _parse_ellipsis("parameter")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "parameter"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "parameter", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    (_complete(state), _BuildDefault)
+  
   fun ref _parse_param(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("param", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
     state.add_deferrable_ast((Tk[Param], _current_pos()))
     
-    Debug("Rule param: Looking for required rule(s) 'name'")
+    Debug("Rule param: Looking for required rule(s) '" + "parameter name" + "'. Found " + _current_tk().string())
     
     state.default_tk = None
     found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
-      while true do
-        match _parse_parampattern("name")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "name"
-          break _handle_found(state, tree, build)
-        end
-        
+      match _current_tk() | Tk[Id] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "parameter name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
         found = false
-        break _handle_not_found(state, "name", false)
+        _handle_not_found(state, "parameter name", false)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -1374,539 +1879,6 @@ class PonyParser
         Debug("Not compatible")
         found = false
         _handle_not_found(state, "literal", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_const_expr(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("const_expr", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    Debug("Rule const_expr: Looking for required rule(s) '" + Tk[Constant].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Constant] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Constant].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Constant].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule const_expr: Looking for required rule(s) 'formal argument value'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_postfix("formal argument value")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "formal argument value"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "formal argument value", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typeargliteral(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typeargliteral", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Constant], _current_pos()))
-    
-    Debug("Rule typeargliteral: Looking for required rule(s) 'type argument'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_literal("type argument")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type argument"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type argument", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typeargconst(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typeargconst", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Constant], _current_pos()))
-    
-    Debug("Rule typeargconst: Looking for required rule(s) 'formal argument value'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_const_expr("formal argument value")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "formal argument value"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "formal argument value", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typearg(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typearg", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    Debug("Rule typearg: Looking for required rule(s) 'type argument'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_type("type argument")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type argument"
-          break _handle_found(state, tree, build)
-        end
-        
-        match _parse_typeargliteral("type argument")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type argument"
-          break _handle_found(state, tree, build)
-        end
-        
-        match _parse_typeargconst("type argument")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type argument"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type argument", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typeparam(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typeparam", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[TypeParam], _current_pos()))
-    
-    Debug("Rule typeparam: Looking for required rule(s) '" + "name" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Id] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "name"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "name", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule typeparam: Looking for optional rule(s) '" + Tk[Colon].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Colon] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Colon].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Colon].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule typeparam: Looking for required rule(s) 'type constraint'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_type("type constraint")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "type constraint"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "type constraint", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule typeparam: Looking for optional rule(s) '" + Tk[Assign].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Assign] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Assign].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Assign].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule typeparam: Looking for required rule(s) 'default type argument'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_typearg("default type argument")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "default type argument"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "default type argument", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_params(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("params", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Params], _current_pos()))
-    
-    Debug("Rule params: Looking for required rule(s) 'parameter'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_param("parameter")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "parameter"
-          break _handle_found(state, tree, build)
-        end
-        
-        match _parse_ellipsis("parameter")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "parameter"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "parameter", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    while true do
-      
-      Debug("Rule params: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      while _current_tk() is Tk[NewLine] do _consume_token() end
-      res =
-        match _current_tk() | Tk[Comma] =>
-          Debug("Compatible")
-          found = true
-          last_matched = Tk[Comma].desc()
-          _handle_found(state, (_consume_token(); None), _BuildDefault)
-        else
-          Debug("Not compatible")
-          found = false
-          _handle_not_found(state, Tk[Comma].desc(), false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-      if not found then break end
-      
-      Debug("Rule params: Looking for required rule(s) 'parameter'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_param("parameter")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "parameter"
-            break _handle_found(state, tree, build)
-          end
-          
-          match _parse_ellipsis("parameter")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "parameter"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "parameter", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typeparams(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typeparams", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[TypeParams], _current_pos()))
-    
-    Debug("Rule typeparams: Looking for required rule(s) '" + Tk[LSquare].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LSquare] | Tk[LSquareNew] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[LSquare].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[LSquare].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule typeparams: Looking for required rule(s) 'type parameter'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_typeparam("type parameter")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type parameter"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type parameter", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    while true do
-      
-      Debug("Rule typeparams: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      while _current_tk() is Tk[NewLine] do _consume_token() end
-      res =
-        match _current_tk() | Tk[Comma] =>
-          Debug("Compatible")
-          found = true
-          last_matched = Tk[Comma].desc()
-          _handle_found(state, (_consume_token(); None), _BuildDefault)
-        else
-          Debug("Not compatible")
-          found = false
-          _handle_not_found(state, Tk[Comma].desc(), false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-      if not found then break end
-      
-      Debug("Rule typeparams: Looking for required rule(s) 'type parameter'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_typeparam("type parameter")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "type parameter"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "type parameter", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule typeparams: Looking for required rule(s) '" + "type parameters" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RSquare] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "type parameters"
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "type parameters", true)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_typeargs(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("typeargs", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[TypeArgs], _current_pos()))
-    
-    Debug("Rule typeargs: Looking for required rule(s) '" + Tk[LSquare].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LSquare] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[LSquare].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[LSquare].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule typeargs: Looking for required rule(s) 'type argument'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_typearg("type argument")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type argument"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type argument", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    while true do
-      
-      Debug("Rule typeargs: Looking for optional rule(s) '" + Tk[Comma].desc() + "'. Found " + _current_tk().string())
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      while _current_tk() is Tk[NewLine] do _consume_token() end
-      res =
-        match _current_tk() | Tk[Comma] =>
-          Debug("Compatible")
-          found = true
-          last_matched = Tk[Comma].desc()
-          _handle_found(state, (_consume_token(); None), _BuildDefault)
-        else
-          Debug("Not compatible")
-          found = false
-          _handle_not_found(state, Tk[Comma].desc(), false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-      if not found then break end
-      
-      Debug("Rule typeargs: Looking for required rule(s) 'type argument'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_typearg("type argument")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "type argument"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "type argument", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule typeargs: Looking for required rule(s) '" + "type arguments" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RSquare] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "type arguments"
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "type arguments", true)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -5196,7 +5168,7 @@ class PonyParser
     found = false
     res =
       while true do
-        match _parse_parampattern("expression")
+        match _parse_rhspattern("expression")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true
@@ -5240,7 +5212,7 @@ class PonyParser
     found = false
     res =
       while true do
-        match _parse_parampattern("expression")
+        match _parse_rhspattern("expression")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true
@@ -5255,12 +5227,12 @@ class PonyParser
     
     (_complete(state), _BuildDefault)
   
-  fun ref _parse_parampattern(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("parampattern", rule_desc)
+  fun ref _parse_rhspattern(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("rhspattern", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
     
-    Debug("Rule parampattern: Looking for required rule(s) 'pattern'")
+    Debug("Rule rhspattern: Looking for required rule(s) 'pattern'")
     
     state.default_tk = None
     found = false
@@ -5289,12 +5261,12 @@ class PonyParser
     
     (_complete(state), _BuildDefault)
   
-  fun ref _parse_nextparampattern(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("nextparampattern", rule_desc)
+  fun ref _parse_nextrhspattern(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("nextrhspattern", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
     
-    Debug("Rule nextparampattern: Looking for required rule(s) 'pattern'")
+    Debug("Rule nextrhspattern: Looking for required rule(s) 'pattern'")
     
     state.default_tk = None
     found = false
@@ -5342,7 +5314,7 @@ class PonyParser
           break _handle_found(state, tree, build)
         end
         
-        match _parse_parampattern("pattern")
+        match _parse_rhspattern("pattern")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true
@@ -5376,7 +5348,7 @@ class PonyParser
           break _handle_found(state, tree, build)
         end
         
-        match _parse_nextparampattern("pattern")
+        match _parse_nextrhspattern("pattern")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true

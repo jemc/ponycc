@@ -1651,9 +1651,9 @@ class MethodFun is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
+  var _guard: (RawExprSeq | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
-  var _guard: (RawExprSeq | None)
   
   new create(
     cap': (Cap | None) = None,
@@ -1662,9 +1662,9 @@ class MethodFun is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
+    guard': (RawExprSeq | None) = None,
     body': (RawExprSeq | None) = None,
-    docs': (LitString | None) = None,
-    guard': (RawExprSeq | None) = None)
+    docs': (LitString | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -1672,9 +1672,9 @@ class MethodFun is AST
     _params = params'
     _return_type = return_type'
     _partial = partial'
+    _guard = guard'
     _body = body'
     _docs = docs'
-    _guard = guard'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -1688,9 +1688,9 @@ class MethodFun is AST
     let params': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     let docs': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -1723,6 +1723,10 @@ class MethodFun is AST
       try partial' as (Question | None)
       else err("incompatible field: partial", partial'); error
       end
+    _guard =
+      try guard' as (RawExprSeq | None)
+      else err("incompatible field: guard", guard'); error
+      end
     _body =
       try body' as (RawExprSeq | None)
       else err("incompatible field: body", body'); error
@@ -1730,10 +1734,6 @@ class MethodFun is AST
     _docs =
       try docs' as (LitString | None)
       else err("incompatible field: docs", docs'); error
-      end
-    _guard =
-      try guard' as (RawExprSeq | None)
-      else err("incompatible field: guard", guard'); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1745,9 +1745,9 @@ class MethodFun is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
+  fun guard(): this->(RawExprSeq | None) => _guard
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
-  fun guard(): this->(RawExprSeq | None) => _guard
   
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
@@ -1755,9 +1755,9 @@ class MethodFun is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1769,9 +1769,9 @@ class MethodFun is AST
     s.>append(_params.string()).>push(',').push(' ')
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_guard.string()).>push(',').push(' ')
     s.>append(_body.string()).>push(',').push(' ')
-    s.>append(_docs.string()).>push(',').push(' ')
-    s.>append(_guard.string())
+    s.>append(_docs.string())
     s.push(')')
     consume s
 
@@ -1784,9 +1784,9 @@ class MethodNew is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
+  var _guard: (RawExprSeq | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
-  var _guard: (RawExprSeq | None)
   
   new create(
     cap': (Cap | None) = None,
@@ -1795,9 +1795,9 @@ class MethodNew is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
+    guard': (RawExprSeq | None) = None,
     body': (RawExprSeq | None) = None,
-    docs': (LitString | None) = None,
-    guard': (RawExprSeq | None) = None)
+    docs': (LitString | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -1805,9 +1805,9 @@ class MethodNew is AST
     _params = params'
     _return_type = return_type'
     _partial = partial'
+    _guard = guard'
     _body = body'
     _docs = docs'
-    _guard = guard'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -1821,9 +1821,9 @@ class MethodNew is AST
     let params': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     let docs': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -1856,6 +1856,10 @@ class MethodNew is AST
       try partial' as (Question | None)
       else err("incompatible field: partial", partial'); error
       end
+    _guard =
+      try guard' as (RawExprSeq | None)
+      else err("incompatible field: guard", guard'); error
+      end
     _body =
       try body' as (RawExprSeq | None)
       else err("incompatible field: body", body'); error
@@ -1863,10 +1867,6 @@ class MethodNew is AST
     _docs =
       try docs' as (LitString | None)
       else err("incompatible field: docs", docs'); error
-      end
-    _guard =
-      try guard' as (RawExprSeq | None)
-      else err("incompatible field: guard", guard'); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1878,9 +1878,9 @@ class MethodNew is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
+  fun guard(): this->(RawExprSeq | None) => _guard
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
-  fun guard(): this->(RawExprSeq | None) => _guard
   
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
@@ -1888,9 +1888,9 @@ class MethodNew is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1902,9 +1902,9 @@ class MethodNew is AST
     s.>append(_params.string()).>push(',').push(' ')
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_guard.string()).>push(',').push(' ')
     s.>append(_body.string()).>push(',').push(' ')
-    s.>append(_docs.string()).>push(',').push(' ')
-    s.>append(_guard.string())
+    s.>append(_docs.string())
     s.push(')')
     consume s
 
@@ -1917,9 +1917,9 @@ class MethodBe is AST
   var _params: (Params | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
+  var _guard: (RawExprSeq | None)
   var _body: (RawExprSeq | None)
   var _docs: (LitString | None)
-  var _guard: (RawExprSeq | None)
   
   new create(
     cap': (Cap | None) = None,
@@ -1928,9 +1928,9 @@ class MethodBe is AST
     params': (Params | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
+    guard': (RawExprSeq | None) = None,
     body': (RawExprSeq | None) = None,
-    docs': (LitString | None) = None,
-    guard': (RawExprSeq | None) = None)
+    docs': (LitString | None) = None)
   =>
     _cap = cap'
     _name = name'
@@ -1938,9 +1938,9 @@ class MethodBe is AST
     _params = params'
     _return_type = return_type'
     _partial = partial'
+    _guard = guard'
     _body = body'
     _docs = docs'
-    _guard = guard'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -1954,9 +1954,9 @@ class MethodBe is AST
     let params': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     let docs': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -1989,6 +1989,10 @@ class MethodBe is AST
       try partial' as (Question | None)
       else err("incompatible field: partial", partial'); error
       end
+    _guard =
+      try guard' as (RawExprSeq | None)
+      else err("incompatible field: guard", guard'); error
+      end
     _body =
       try body' as (RawExprSeq | None)
       else err("incompatible field: body", body'); error
@@ -1996,10 +2000,6 @@ class MethodBe is AST
     _docs =
       try docs' as (LitString | None)
       else err("incompatible field: docs", docs'); error
-      end
-    _guard =
-      try guard' as (RawExprSeq | None)
-      else err("incompatible field: guard", guard'); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2011,9 +2011,9 @@ class MethodBe is AST
   fun params(): this->(Params | None) => _params
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
+  fun guard(): this->(RawExprSeq | None) => _guard
   fun body(): this->(RawExprSeq | None) => _body
   fun docs(): this->(LitString | None) => _docs
-  fun guard(): this->(RawExprSeq | None) => _guard
   
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
   fun ref set_name(name': Id) => _name = consume name'
@@ -2021,9 +2021,9 @@ class MethodBe is AST
   fun ref set_params(params': (Params | None) = None) => _params = consume params'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   fun ref set_body(body': (RawExprSeq | None) = None) => _body = consume body'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
-  fun ref set_guard(guard': (RawExprSeq | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2035,9 +2035,9 @@ class MethodBe is AST
     s.>append(_params.string()).>push(',').push(' ')
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_guard.string()).>push(',').push(' ')
     s.>append(_body.string()).>push(',').push(' ')
-    s.>append(_docs.string()).>push(',').push(' ')
-    s.>append(_guard.string())
+    s.>append(_docs.string())
     s.push(')')
     consume s
 
