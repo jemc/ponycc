@@ -92,6 +92,7 @@ primitive ASTInfo
     elseiftype A <: NamedArgs then "NamedArgs"
     elseiftype A <: NamedArg then "NamedArg"
     elseiftype A <: IfDef then "IfDef"
+    elseiftype A <: IfType then "IfType"
     elseiftype A <: IfDefAnd then "IfDefAnd"
     elseiftype A <: IfDefOr then "IfDefOr"
     elseiftype A <: IfDefNot then "IfDefNot"
@@ -164,7 +165,6 @@ primitive ASTInfo
     elseiftype A <: LitString then "LitString"
     elseiftype A <: LitLocation then "LitLocation"
     elseiftype A <: EOF then "EOF"
-    elseiftype A <: LexError then "LexError"
     elseiftype A <: NewLine then "NewLine"
     elseiftype A <: Use then "Use"
     elseiftype A <: Colon then "Colon"
@@ -173,6 +173,7 @@ primitive ASTInfo
     elseiftype A <: Constant then "Constant"
     elseiftype A <: Pipe then "Pipe"
     elseiftype A <: Ampersand then "Ampersand"
+    elseiftype A <: SubType then "SubType"
     elseiftype A <: Arrow then "Arrow"
     elseiftype A <: DoubleArrow then "DoubleArrow"
     elseiftype A <: Backslash then "Backslash"
@@ -223,7 +224,7 @@ type Jump is (Continue | Error | Break | Return)
 
 type UseDecl is (UseFFIDecl | UsePackage)
 
-type Lexeme is (SubUnsafeNew | Where | LSquareNew | Let | Else | DoubleArrow | In | Use | Comma | LBrace | RParen | LBraceNew | Embed | Then | LParen | Arrow | Ampersand | Semicolon | EOF | Colon | LexError | Constant | Pipe | Until | LParenNew | NewLine | RBrace | Backslash | RSquare | End | LSquare | ElseIf | Do | Var | SubNew)
+type Lexeme is (SubUnsafeNew | Where | LSquareNew | Let | Else | DoubleArrow | SubType | Use | Comma | LBrace | RParen | LBraceNew | In | Then | LParen | Arrow | Ampersand | Semicolon | EOF | Colon | Constant | Pipe | LParenNew | Until | Embed | NewLine | RBrace | Backslash | RSquare | End | LSquare | ElseIf | Do | Var | SubNew)
 
 type TypeDecl is (Trait | Primitive | Struct | Actor | Class | Interface | TypeAlias)
 
@@ -231,7 +232,7 @@ type IfDefCond is (IfDefBinaryOp | IfDefNot | IfDefFlag)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | PackageRef | LitInteger | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
+type Expr is (RawExprSeq | Lambda | FFICall | Id | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | IfType | LitInteger | PackageRef | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
 
 type CapMod is (Aliased | Ephemeral)
 
@@ -2917,6 +2918,44 @@ class IfDef is AST
     s.push(')')
     consume s
 
+class IfType is AST
+  var _sub: TypeRef
+  var _super: TypeRef
+  var _then_body: ExprSeq
+  var _else_body: (Expr | IfType | None)
+  
+  new create(
+    sub': TypeRef,
+    super': TypeRef,
+    then_body': ExprSeq,
+    else_body': (Expr | IfType | None))
+  =>
+    _sub = sub'
+    _super = super'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  fun sub(): this->TypeRef => _sub
+  fun super(): this->TypeRef => _super
+  fun then_body(): this->ExprSeq => _then_body
+  fun else_body(): this->(Expr | IfType | None) => _else_body
+  
+  fun ref set_sub(sub': TypeRef) => _sub = consume sub'
+  fun ref set_super(super': TypeRef) => _super = consume super'
+  fun ref set_then_body(then_body': ExprSeq) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (Expr | IfType | None)) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("IfType")
+    s.push('(')
+    s.>append(_sub.string()).>push(',').push(' ')
+    s.>append(_super.string()).>push(',').push(' ')
+    s.>append(_then_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
 class IfDefAnd is AST
   var _left: IfDefCond
   var _right: IfDefCond
@@ -3306,7 +3345,7 @@ class Lambda is AST
   var _return_type: (Type | None)
   var _partial: (Question | None)
   var _body: (RawExprSeq)
-  var _object_cap: (Cap | None | Question)
+  var _object_cap: (Cap | None)
   
   new create(
     method_cap': (Cap | None) = None,
@@ -3317,7 +3356,7 @@ class Lambda is AST
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     body': (RawExprSeq),
-    object_cap': (Cap | None | Question) = None)
+    object_cap': (Cap | None) = None)
   =>
     _method_cap = method_cap'
     _name = name'
@@ -3337,7 +3376,7 @@ class Lambda is AST
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun body(): this->(RawExprSeq) => _body
-  fun object_cap(): this->(Cap | None | Question) => _object_cap
+  fun object_cap(): this->(Cap | None) => _object_cap
   
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
   fun ref set_name(name': (Id | None) = None) => _name = consume name'
@@ -3347,7 +3386,7 @@ class Lambda is AST
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_body(body': (RawExprSeq)) => _body = consume body'
-  fun ref set_object_cap(object_cap': (Cap | None | Question) = None) => _object_cap = consume object_cap'
+  fun ref set_object_cap(object_cap': (Cap | None) = None) => _object_cap = consume object_cap'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4322,13 +4361,6 @@ class EOF is AST
     s.append("EOF")
     consume s
 
-class LexError is AST
-  new create() => None
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LexError")
-    consume s
-
 class NewLine is AST
   new create() => None
   fun string(): String iso^ =>
@@ -4383,6 +4415,13 @@ class Ampersand is AST
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ampersand")
+    consume s
+
+class SubType is AST
+  new create() => None
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("SubType")
     consume s
 
 class Arrow is AST

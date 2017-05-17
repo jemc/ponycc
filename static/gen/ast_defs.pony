@@ -249,6 +249,15 @@ primitive ASTDefs
       .> has("else_body", "(Expr | IfDef | None)")
       .> has("else_expr", "(None | IfDefCond)")
     
+    g.def("IfType")
+      .> in_union("Expr")
+      .> with_scope()
+      .> with_type()
+      .> has("sub",       "TypeRef")
+      .> has("super",     "TypeRef")
+      .> has("then_body", "ExprSeq")
+      .> has("else_body", "(Expr | IfType | None)")
+    
     for name in ["IfDefAnd"; "IfDefOr"].values() do
       g.def(name)
         .> in_union("IfDefBinaryOp", "IfDefCond")
@@ -341,7 +350,7 @@ primitive ASTDefs
       .> has("return_type", "(Type | None)",           "None")
       .> has("partial",     "(Question | None)",       "None")
       .> has("body",        "(RawExprSeq)")
-      .> has("object_cap",  "(Cap | None | Question)", "None")
+      .> has("object_cap",  "(Cap | None)",            "None")
     
     g.def("LambdaCaptures")
       .> has("list", "Array[LambdaCapture]", "Array[LambdaCapture]")
@@ -528,7 +537,6 @@ primitive ASTDefs
     
     for name in [
       "EOF"
-      "LexError"
       "NewLine"
       "Use"
       "Colon"
@@ -537,6 +545,7 @@ primitive ASTDefs
       "Constant"
       "Pipe"
       "Ampersand"
+      "SubType"
       "Arrow"
       "DoubleArrow"
       "Backslash"

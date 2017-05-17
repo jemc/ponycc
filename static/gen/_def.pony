@@ -129,7 +129,7 @@ class _DefWrap is _Def
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name)
+    g.line("class " + _name + " is AST")
     g.push_indent()
     
     // Declare the value field.
