@@ -28,12 +28,6 @@ primitive ParserDefs
     g.def("root")
       .> rule("module", ["module"])
     
-    // type
-    g.def("provides")
-      .> print_inline()
-      .> tree("Tk[Provides]")
-      .> rule("provided type", ["type"])
-    
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
       .> tree("Tk[Param]")
@@ -238,7 +232,7 @@ primitive ParserDefs
       .> token("None", ["Tk[Object]"])
       .> annotate()
       .> opt_rule("capability", ["cap"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["provides"])
+      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
       .> rule("object member", ["members"])
       .> terminate("object literal", ["Tk[End]"])
     
@@ -857,7 +851,7 @@ primitive ParserDefs
       .> opt_rule("capability", ["cap"])
       .> token("name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["provides"])
+      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
       .> opt_token("docstring", ["Tk[LitString]"])
       .> rule("members", ["members"])
       // Order should be:

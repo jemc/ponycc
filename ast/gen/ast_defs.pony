@@ -43,14 +43,11 @@ primitive ASTDefs
         .> has("name",        "Id")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("cap",         "(Cap | None)",        "None")
-        .> has("provides",    "(Provides | None)",   "None")
+        .> has("provides",    "(Type | None)",       "None")
         .> has("members",     "(Members | None)",    "None")
         .> has("at",          "(At | None)",         "None")
         .> has("docs",        "(LitString | None)",  "None")
     end
-    
-    g.def("Provides")
-      .> has("types", "Array[Type]", "Array[Type]")
     
     g.def("Members")
       .> has("fields",  "Array[Field]",  "Array[Field]")
@@ -362,9 +359,9 @@ primitive ASTDefs
     
     g.def("Object")
       .> in_union("Expr")
-      .> has("cap",      "(Cap | None)",      "None")
-      .> has("provides", "(Provides | None)", "None")
-      .> has("members",  "(Members | None)",  "None")
+      .> has("cap",      "(Cap | None)",     "None")
+      .> has("provides", "(Type | None)",    "None")
+      .> has("members",  "(Members | None)", "None")
     
     g.def("LitArray")
       .> in_union("Expr")

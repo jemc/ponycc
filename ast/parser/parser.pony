@@ -186,33 +186,6 @@ class PonyParser
     
     (_complete(state), _BuildDefault)
   
-  fun ref _parse_provides(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("provides", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Provides], _current_pos()))
-    
-    Debug("Rule provides: Looking for required rule(s) 'provided type'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_type("provided type")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "provided type"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "provided type", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
   fun ref _parse_param(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("param", rule_desc)
     var res: _RuleResult = None
@@ -2231,7 +2204,7 @@ class PonyParser
       found = false
       res =
         while true do
-          match _parse_provides("provided type")
+          match _parse_type("provided type")
           | (_RuleParseError, _) => break _handle_error(state)
           | (let tree: (TkTree | None), let build: _Build) =>
             found = true
@@ -8223,7 +8196,7 @@ class PonyParser
       found = false
       res =
         while true do
-          match _parse_provides("provided type")
+          match _parse_type("provided type")
           | (_RuleParseError, _) => break _handle_error(state)
           | (let tree: (TkTree | None), let build: _Build) =>
             found = true

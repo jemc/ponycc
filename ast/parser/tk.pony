@@ -31,7 +31,6 @@ primitive ASTInfo
     elseiftype A <: Struct then "Struct"
     elseiftype A <: Class then "Class"
     elseiftype A <: Actor then "Actor"
-    elseiftype A <: Provides then "Provides"
     elseiftype A <: Members then "Members"
     elseiftype A <: FieldLet then "FieldLet"
     elseiftype A <: FieldVar then "FieldVar"
@@ -229,7 +228,6 @@ class Primitive is AST
 class Struct is AST
 class Class is AST
 class Actor is AST
-class Provides is AST
 class Members is AST
 class FieldLet is AST
 class FieldVar is AST

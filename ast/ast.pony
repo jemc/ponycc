@@ -20,7 +20,6 @@ primitive ASTInfo
     elseif A <: Struct then "Struct"
     elseif A <: Class then "Class"
     elseif A <: Actor then "Actor"
-    elseif A <: Provides then "Provides"
     elseif A <: Members then "Members"
     elseif A <: FieldLet then "FieldLet"
     elseif A <: FieldVar then "FieldVar"
@@ -655,7 +654,7 @@ class TypeAlias is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -664,7 +663,7 @@ class TypeAlias is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -711,7 +710,7 @@ class TypeAlias is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -733,7 +732,7 @@ class TypeAlias is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -741,7 +740,7 @@ class TypeAlias is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -766,7 +765,7 @@ class Interface is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -775,7 +774,7 @@ class Interface is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -822,7 +821,7 @@ class Interface is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -844,7 +843,7 @@ class Interface is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -852,7 +851,7 @@ class Interface is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -877,7 +876,7 @@ class Trait is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -886,7 +885,7 @@ class Trait is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -933,7 +932,7 @@ class Trait is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -955,7 +954,7 @@ class Trait is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -963,7 +962,7 @@ class Trait is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -988,7 +987,7 @@ class Primitive is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -997,7 +996,7 @@ class Primitive is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -1044,7 +1043,7 @@ class Primitive is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -1066,7 +1065,7 @@ class Primitive is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -1074,7 +1073,7 @@ class Primitive is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -1099,7 +1098,7 @@ class Struct is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -1108,7 +1107,7 @@ class Struct is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -1155,7 +1154,7 @@ class Struct is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -1177,7 +1176,7 @@ class Struct is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -1185,7 +1184,7 @@ class Struct is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -1210,7 +1209,7 @@ class Class is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -1219,7 +1218,7 @@ class Class is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -1266,7 +1265,7 @@ class Class is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -1288,7 +1287,7 @@ class Class is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -1296,7 +1295,7 @@ class Class is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -1321,7 +1320,7 @@ class Actor is AST
   var _name: Id
   var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
   var _docs: (LitString | None)
@@ -1330,7 +1329,7 @@ class Actor is AST
     name': Id,
     type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
@@ -1377,7 +1376,7 @@ class Actor is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -1399,7 +1398,7 @@ class Actor is AST
   fun name(): this->Id => _name
   fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
@@ -1407,7 +1406,7 @@ class Actor is AST
   fun ref set_name(name': Id) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
@@ -1423,53 +1422,6 @@ class Actor is AST
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
     s.>append(_docs.string())
-    s.push(')')
-    consume s
-
-class Provides is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _types: Array[Type]
-  
-  new create(
-    types': Array[Type] = Array[Type])
-  =>
-    _types = types'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let types' = Array[Type]
-    var types_next' = try iter.next() else None end
-    while true do
-      try types'.push(types_next' as Type) else break end
-      try types_next' = iter.next() else types_next' = None; break end
-    end
-    if types_next' isnt None then
-      let extra' = types_next'
-      err("unexpected extra field", extra'); error
-    end
-    
-    _types = types'
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun types(): this->Array[Type] => _types
-  
-  fun ref set_types(types': Array[Type] = Array[Type]) => _types = consume types'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Provides")
-    s.push('(')
-    let types_iter = _types.values()
-    for v in types_iter do
-      s.append(v.string())
-      if types_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
     s.push(')')
     consume s
 
@@ -7079,12 +7031,12 @@ class Object is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: (Cap | None)
-  var _provides: (Provides | None)
+  var _provides: (Type | None)
   var _members: (Members | None)
   
   new create(
     cap': (Cap | None) = None,
-    provides': (Provides | None) = None,
+    provides': (Type | None) = None,
     members': (Members | None) = None)
   =>
     _cap = cap'
@@ -7110,7 +7062,7 @@ class Object is AST
       else err("incompatible field: cap", cap'); error
       end
     _provides =
-      try provides' as (Provides | None)
+      try provides' as (Type | None)
       else err("incompatible field: provides", provides'); error
       end
     _members =
@@ -7122,11 +7074,11 @@ class Object is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Provides | None) => _provides
+  fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Provides | None) = None) => _provides = consume provides'
+  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   
   fun string(): String iso^ =>
