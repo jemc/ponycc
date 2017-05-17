@@ -1,11 +1,11 @@
 
 use "collections"
 
-trait _Def
+trait _ASTDef
   fun name(): String
   fun code_gen(g: CodeGen)
 
-class _DefFixed is _Def
+class _ASTDefFixed is _ASTDef
   let _gen: ASTGen
   let _name: String
   
@@ -113,7 +113,7 @@ class _DefFixed is _Def
     g.pop_indent()
     g.line()
 
-class _DefWrap is _Def
+class _ASTDefWrap is _ASTDef
   let _gen: ASTGen
   let _name: String
   let value_type: String
