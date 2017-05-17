@@ -67,6 +67,60 @@ primitive ParserDefs
       .> opt_token("None", ["Tk[Question]"])
       .> if_token_then_rule("Tk[If]", "use condition", ["infix"])
     
+    // (TYPE | INTERFACE | TRAIT | PRIMITIVE | STRUCT | CLASS | ACTOR) [annotations]
+    // [AT] ID [typeparams] [CAP] [IS type] [STRING] members
+    g.def("type_decl")
+      .> restart(["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
+      .> token("entity", ["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
+      .> annotate()
+      .> opt_token("None", ["Tk[At]"])
+      .> opt_rule("capability", ["cap"])
+      .> token("name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
+      .> opt_token("docstring", ["Tk[LitString]"])
+      .> rule("members", ["members"])
+      // Order should be:
+      // id cap type_params provides members c_api docstring
+      // TODO: REORDER(2, 1, 3, 4, 6, 0, 5)
+    
+    // {field} {method}
+    g.def("members")
+      .> tree("Tk[Members]")
+      .> seq("field", ["field"])
+      .> seq("method", ["method"])
+    
+    // (VAR | LET | EMBED) ID [COLON type] [ASSIGN infix]
+    g.def("field")
+      .> token("None", ["Tk[Var]"; "Tk[Let]"; "Tk[Embed]"])
+      // TODO: MAP_ID("Tk[Var]", "Tk[FieldVar]")
+      // TODO: MAP_ID("Tk[Let]", "Tk[FieldLet]")
+      // TODO: MAP_ID("Tk[Embed]", "Tk[FieldEmbed]")
+      .> token("field name", ["Tk[Id]"])
+      .> skip("mandatory type declaration on field", ["Tk[Colon]"])
+      .> rule("field type", ["type"])
+      .> if_token_then_rule("Tk[Assign]", "field value", ["infix"])
+    
+    // (FUN | BE | NEW) [annotations] [CAP] ID [typeparams] (LPAREN | LPAREN_NEW)
+    // [params] RPAREN [COLON type] [QUESTION] [ARROW rawseq]
+    g.def("method")
+      .> token("None", ["Tk[MethodFun]"; "Tk[MethodBe]"; "Tk[MethodNew]"])
+      .> annotate()
+      .> opt_rule("capability", ["cap"])
+      .> token("method name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("parameters", ["params"])
+      .> skip("None", ["Tk[RParen]"])
+      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> if_token_then_rule("Tk[If]", "guard expression", ["rawseq"])
+      .> opt_token("None", ["Tk[LitString]"])
+      .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["rawseq"])
+      // Order should be:
+      // cap id type_params params return_type error guard body docstring
+      // TODO: REORDER(0, 1, 2, 3, 4, 5, 6, 8, 7)
+    
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
       .> tree("Tk[Param]")
@@ -843,56 +897,3 @@ primitive ParserDefs
     // annotatedrawseq
     g.def("annotatedseq")
       .> rule("value", ["annotatedrawseq"])
-    
-    // (FUN | BE | NEW) [annotations] [CAP] ID [typeparams] (LPAREN | LPAREN_NEW)
-    // [params] RPAREN [COLON type] [QUESTION] [ARROW rawseq]
-    g.def("method")
-      .> token("None", ["Tk[MethodFun]"; "Tk[MethodBe]"; "Tk[MethodNew]"])
-      .> annotate()
-      .> opt_rule("capability", ["cap"])
-      .> token("method name", ["Tk[Id]"])
-      .> opt_rule("type parameters", ["typeparams"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["params"])
-      .> skip("None", ["Tk[RParen]"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
-      .> opt_token("None", ["Tk[Question]"])
-      .> opt_token("None", ["Tk[LitString]"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["rawseq"])
-      .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["rawseq"])
-      // Order should be:
-      // cap id type_params params return_type error body docstring guard
-      // TODO: REORDER(0, 1, 2, 3, 4, 5, 8, 6, 7)
-    
-    // (VAR | LET | EMBED) ID [COLON type] [ASSIGN infix]
-    g.def("field")
-      .> token("None", ["Tk[Var]"; "Tk[Let]"; "Tk[Embed]"])
-      // TODO: MAP_ID("Tk[Var]", "Tk[Fvar]")
-      // TODO: MAP_ID("Tk[Let]", "Tk[Flet]")
-      .> token("field name", ["Tk[Id]"])
-      .> skip("mandatory type declaration on field", ["Tk[Colon]"])
-      .> rule("field type", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "field value", ["infix"])
-    
-    // {field} {method}
-    g.def("members")
-      .> tree("Tk[Members]")
-      .> seq("field", ["field"])
-      .> seq("method", ["method"])
-    
-    // (TYPE | INTERFACE | TRAIT | PRIMITIVE | STRUCT | CLASS | ACTOR) [annotations]
-    // [AT] ID [typeparams] [CAP] [IS type] [STRING] members
-    g.def("type_decl")
-      .> restart(["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
-      .> token("entity", ["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
-      .> annotate()
-      .> opt_token("None", ["Tk[At]"])
-      .> opt_rule("capability", ["cap"])
-      .> token("name", ["Tk[Id]"])
-      .> opt_rule("type parameters", ["typeparams"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
-      .> opt_token("docstring", ["Tk[LitString]"])
-      .> rule("members", ["members"])
-      // Order should be:
-      // id type_params cap provides members c_api docstring
-      // TODO: REORDER(2, 3, 1, 4, 6, 0, 5)

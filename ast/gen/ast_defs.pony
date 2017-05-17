@@ -37,8 +37,8 @@ primitive ASTDefs
       g.def(name)
         .> in_union("TypeDecl")
         .> has("name",        "Id")
-        .> has("type_params", "(TypeParams | None)", "None")
         .> has("cap",         "(Cap | None)",        "None")
+        .> has("type_params", "(TypeParams | None)", "None")
         .> has("provides",    "(Type | None)",       "None")
         .> has("members",     "(Members | None)",    "None")
         .> has("at",          "(At | None)",         "None")
@@ -54,7 +54,7 @@ primitive ASTDefs
         .> in_union("Field")
         .> with_type()
         .> has("name",       "Id")
-        .> has("field_type", "(Type | None)", "None")
+        .> has("field_type", "Type")
         .> has("default",    "(Expr | None)", "None")
     end
     

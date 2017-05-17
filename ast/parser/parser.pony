@@ -589,6 +589,641 @@ class PonyParser
     
     (_complete(state), _BuildDefault)
   
+  fun ref _parse_type_decl(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("type_decl", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    Debug("Rule type_decl: Looking for required rule(s) '" + "entity" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[TypeAlias] | Tk[Interface] | Tk[Trait] | Tk[Primitive] | Tk[Struct] | Tk[Class] | Tk[Actor] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "entity"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "entity", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for optional rule(s) '" + Tk[At].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[At] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[At].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[At].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for optional rule(s) 'capability'")
+    
+    state.default_tk = Tk[None]
+    found = false
+    res =
+      while true do
+        match _parse_cap("capability")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "capability"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "capability", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for required rule(s) '" + "name" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Id] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "name", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for optional rule(s) 'type parameters'")
+    
+    state.default_tk = Tk[None]
+    found = false
+    res =
+      while true do
+        match _parse_typeparams("type parameters")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type parameters"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type parameters", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for optional rule(s) '" + Tk[Is].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Is] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Is].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Is].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule type_decl: Looking for required rule(s) 'provided type'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_type("provided type")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "provided type"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "provided type", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule type_decl: Looking for optional rule(s) '" + "docstring" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LitString] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "docstring"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "docstring", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule type_decl: Looking for required rule(s) 'members'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_members("members")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "members"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "members", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_members(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("members", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[Members], _current_pos()))
+    while true do
+      
+      Debug("Rule members: Looking for optional rule(s) 'field'")
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      res =
+        while true do
+          match _parse_field("field")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "field"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "field", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+    end
+    while true do
+      
+      Debug("Rule members: Looking for optional rule(s) 'method'")
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      res =
+        while true do
+          match _parse_method("method")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "method"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "method", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+    end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_field(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("field", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    Debug("Rule field: Looking for required rule(s) '" + Tk[Var].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Var] | Tk[Let] | Tk[Embed] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Var].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Var].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule field: Looking for required rule(s) '" + "field name" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Id] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "field name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "field name", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule field: Looking for required rule(s) '" + "mandatory type declaration on field" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Colon] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "mandatory type declaration on field"
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "mandatory type declaration on field", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule field: Looking for required rule(s) 'field type'")
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_type("field type")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "field type"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "field type", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule field: Looking for optional rule(s) '" + Tk[Assign].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Assign] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Assign].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Assign].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule field: Looking for required rule(s) 'field value'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_infix("field value")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "field value"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "field value", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_method(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("method", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    Debug("Rule method: Looking for required rule(s) '" + Tk[MethodFun].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[MethodFun] | Tk[MethodBe] | Tk[MethodNew] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[MethodFun].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[MethodFun].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) 'capability'")
+    
+    state.default_tk = Tk[None]
+    found = false
+    res =
+      while true do
+        match _parse_cap("capability")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "capability"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "capability", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for required rule(s) '" + "method name" + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Id] =>
+        Debug("Compatible")
+        found = true
+        last_matched = "method name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, "method name", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) 'type parameters'")
+    
+    state.default_tk = Tk[None]
+    found = false
+    res =
+      while true do
+        match _parse_typeparams("type parameters")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "type parameters"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "type parameters", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for required rule(s) '" + Tk[LParen].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[LParen].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[LParen].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) 'parameters'")
+    
+    state.default_tk = Tk[None]
+    found = false
+    res =
+      while true do
+        match _parse_params("parameters")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "parameters"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "parameters", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for required rule(s) '" + Tk[RParen].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[RParen] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[RParen].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[RParen].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) '" + Tk[Colon].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Colon] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Colon].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Colon].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule method: Looking for required rule(s) 'return type'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_type("return type")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "return type"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "return type", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule method: Looking for optional rule(s) '" + Tk[Question].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Question] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[Question].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[Question].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) '" + Tk[If].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[If] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[If].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[If].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule method: Looking for required rule(s) 'guard expression'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_rawseq("guard expression")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "guard expression"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "guard expression", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    Debug("Rule method: Looking for optional rule(s) '" + Tk[LitString].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LitString] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[LitString].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[LitString].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    Debug("Rule method: Looking for optional rule(s) '" + Tk[DoubleArrow].desc() + "'. Found " + _current_tk().string())
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[DoubleArrow] =>
+        Debug("Compatible")
+        found = true
+        last_matched = Tk[DoubleArrow].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        Debug("Not compatible")
+        found = false
+        _handle_not_found(state, Tk[DoubleArrow].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    if found then
+      
+      Debug("Rule method: Looking for required rule(s) 'method body'")
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_rawseq("method body")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "method body"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "method body", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    (_complete(state), _BuildDefault)
+  
   fun ref _parse_param(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("param", rule_desc)
     var res: _RuleResult = None
@@ -8012,641 +8647,6 @@ class PonyParser
         
         found = false
         break _handle_not_found(state, "value", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_method(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("method", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    Debug("Rule method: Looking for required rule(s) '" + Tk[MethodFun].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[MethodFun] | Tk[MethodBe] | Tk[MethodNew] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[MethodFun].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[MethodFun].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) 'capability'")
-    
-    state.default_tk = Tk[None]
-    found = false
-    res =
-      while true do
-        match _parse_cap("capability")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "capability"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "capability", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for required rule(s) '" + "method name" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Id] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "method name"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "method name", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) 'type parameters'")
-    
-    state.default_tk = Tk[None]
-    found = false
-    res =
-      while true do
-        match _parse_typeparams("type parameters")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type parameters"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for required rule(s) '" + Tk[LParen].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[LParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[LParen].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) 'parameters'")
-    
-    state.default_tk = Tk[None]
-    found = false
-    res =
-      while true do
-        match _parse_params("parameters")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "parameters"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for required rule(s) '" + Tk[RParen].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RParen] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[RParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[RParen].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) '" + Tk[Colon].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Colon] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Colon].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Colon].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule method: Looking for required rule(s) 'return type'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_type("return type")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "return type"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "return type", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule method: Looking for optional rule(s) '" + Tk[Question].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[None]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Question] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Question].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Question].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) '" + Tk[LitString].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[None]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LitString] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[LitString].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[LitString].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule method: Looking for optional rule(s) '" + Tk[If].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[If] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[If].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[If].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule method: Looking for required rule(s) 'guard expression'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_rawseq("guard expression")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "guard expression"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "guard expression", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule method: Looking for optional rule(s) '" + Tk[DoubleArrow].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[DoubleArrow] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[DoubleArrow].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[DoubleArrow].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule method: Looking for required rule(s) 'method body'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_rawseq("method body")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "method body"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "method body", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_field(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("field", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    Debug("Rule field: Looking for required rule(s) '" + Tk[Var].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Var] | Tk[Let] | Tk[Embed] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Var].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Var].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule field: Looking for required rule(s) '" + "field name" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Id] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "field name"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "field name", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule field: Looking for required rule(s) '" + "mandatory type declaration on field" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Colon] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "mandatory type declaration on field"
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "mandatory type declaration on field", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule field: Looking for required rule(s) 'field type'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_type("field type")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "field type"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "field type", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule field: Looking for optional rule(s) '" + Tk[Assign].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Assign] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Assign].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Assign].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule field: Looking for required rule(s) 'field value'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_infix("field value")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "field value"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "field value", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_members(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("members", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Members], _current_pos()))
-    while true do
-      
-      Debug("Rule members: Looking for optional rule(s) 'field'")
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      res =
-        while true do
-          match _parse_field("field")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "field"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "field", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-      if not found then break end
-    end
-    while true do
-      
-      Debug("Rule members: Looking for optional rule(s) 'method'")
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      res =
-        while true do
-          match _parse_method("method")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "method"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "method", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-      if not found then break end
-    end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_type_decl(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("type_decl", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    Debug("Rule type_decl: Looking for required rule(s) '" + "entity" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[TypeAlias] | Tk[Interface] | Tk[Trait] | Tk[Primitive] | Tk[Struct] | Tk[Class] | Tk[Actor] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "entity"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "entity", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for optional rule(s) '" + Tk[At].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[None]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[At] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[At].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[At].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for optional rule(s) 'capability'")
-    
-    state.default_tk = Tk[None]
-    found = false
-    res =
-      while true do
-        match _parse_cap("capability")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "capability"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "capability", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for required rule(s) '" + "name" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Id] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "name"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "name", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for optional rule(s) 'type parameters'")
-    
-    state.default_tk = Tk[None]
-    found = false
-    res =
-      while true do
-        match _parse_typeparams("type parameters")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type parameters"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for optional rule(s) '" + Tk[Is].desc() + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Is] =>
-        Debug("Compatible")
-        found = true
-        last_matched = Tk[Is].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, Tk[Is].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    if found then
-      
-      Debug("Rule type_decl: Looking for required rule(s) 'provided type'")
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_type("provided type")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "provided type"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "provided type", false)
-        end
-      if res isnt None then return (res, _BuildDefault) end
-    end
-    
-    Debug("Rule type_decl: Looking for optional rule(s) '" + "docstring" + "'. Found " + _current_tk().string())
-    
-    state.default_tk = Tk[None]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LitString] =>
-        Debug("Compatible")
-        found = true
-        last_matched = "docstring"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        Debug("Not compatible")
-        found = false
-        _handle_not_found(state, "docstring", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    Debug("Rule type_decl: Looking for required rule(s) 'members'")
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_members("members")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "members"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "members", false)
       end
     if res isnt None then return (res, _BuildDefault) end
     

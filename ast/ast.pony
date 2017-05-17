@@ -592,8 +592,8 @@ class TypeAlias is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -601,16 +601,16 @@ class TypeAlias is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -623,8 +623,8 @@ class TypeAlias is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -641,13 +641,13 @@ class TypeAlias is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -670,16 +670,16 @@ class TypeAlias is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -690,8 +690,8 @@ class TypeAlias is AST
     s.append("TypeAlias")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -703,8 +703,8 @@ class Interface is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -712,16 +712,16 @@ class Interface is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -734,8 +734,8 @@ class Interface is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -752,13 +752,13 @@ class Interface is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -781,16 +781,16 @@ class Interface is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -801,8 +801,8 @@ class Interface is AST
     s.append("Interface")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -814,8 +814,8 @@ class Trait is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -823,16 +823,16 @@ class Trait is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -845,8 +845,8 @@ class Trait is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -863,13 +863,13 @@ class Trait is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -892,16 +892,16 @@ class Trait is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -912,8 +912,8 @@ class Trait is AST
     s.append("Trait")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -925,8 +925,8 @@ class Primitive is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -934,16 +934,16 @@ class Primitive is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -956,8 +956,8 @@ class Primitive is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -974,13 +974,13 @@ class Primitive is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -1003,16 +1003,16 @@ class Primitive is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -1023,8 +1023,8 @@ class Primitive is AST
     s.append("Primitive")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -1036,8 +1036,8 @@ class Struct is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -1045,16 +1045,16 @@ class Struct is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -1067,8 +1067,8 @@ class Struct is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -1085,13 +1085,13 @@ class Struct is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -1114,16 +1114,16 @@ class Struct is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -1134,8 +1134,8 @@ class Struct is AST
     s.append("Struct")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -1147,8 +1147,8 @@ class Class is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -1156,16 +1156,16 @@ class Class is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -1178,8 +1178,8 @@ class Class is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -1196,13 +1196,13 @@ class Class is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -1225,16 +1225,16 @@ class Class is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -1245,8 +1245,8 @@ class Class is AST
     s.append("Class")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -1258,8 +1258,8 @@ class Actor is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _type_params: (TypeParams | None)
   var _cap: (Cap | None)
+  var _type_params: (TypeParams | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   var _at: (At | None)
@@ -1267,16 +1267,16 @@ class Actor is AST
   
   new create(
     name': Id,
-    type_params': (TypeParams | None) = None,
     cap': (Cap | None) = None,
+    type_params': (TypeParams | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None,
     at': (At | None) = None,
     docs': (LitString | None) = None)
   =>
     _name = name'
-    _type_params = type_params'
     _cap = cap'
+    _type_params = type_params'
     _provides = provides'
     _members = members'
     _at = at'
@@ -1289,8 +1289,8 @@ class Actor is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
     let cap': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
     let at': (AST | None) = try iter.next() else None end
@@ -1307,13 +1307,13 @@ class Actor is AST
       try name' as Id
       else err("incompatible field: name", name'); error
       end
-    _type_params =
-      try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", type_params'); error
-      end
     _cap =
       try cap' as (Cap | None)
       else err("incompatible field: cap", cap'); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else err("incompatible field: type_params", type_params'); error
       end
     _provides =
       try provides' as (Type | None)
@@ -1336,16 +1336,16 @@ class Actor is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
   fun cap(): this->(Cap | None) => _cap
+  fun type_params(): this->(TypeParams | None) => _type_params
   fun provides(): this->(Type | None) => _provides
   fun members(): this->(Members | None) => _members
   fun at(): this->(At | None) => _at
   fun docs(): this->(LitString | None) => _docs
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
+  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
   fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
   fun ref set_members(members': (Members | None) = None) => _members = consume members'
   fun ref set_at(at': (At | None) = None) => _at = consume at'
@@ -1356,8 +1356,8 @@ class Actor is AST
     s.append("Actor")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
     s.>append(_provides.string()).>push(',').push(' ')
     s.>append(_members.string()).>push(',').push(' ')
     s.>append(_at.string()).>push(',').push(' ')
@@ -1436,12 +1436,12 @@ class FieldLet is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _field_type: (Type | None)
+  var _field_type: Type
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (Type | None) = None,
+    field_type': Type,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -1455,7 +1455,10 @@ class FieldLet is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let field_type': (AST | None) = try iter.next() else None end
+    let field_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: field_type", None); error
+      end
     let default': (AST | None) = try iter.next() else None end
     if
       try
@@ -1470,7 +1473,7 @@ class FieldLet is AST
       else err("incompatible field: name", name'); error
       end
     _field_type =
-      try field_type' as (Type | None)
+      try field_type' as Type
       else err("incompatible field: field_type", field_type'); error
       end
     _default =
@@ -1482,11 +1485,11 @@ class FieldLet is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(Type | None) => _field_type
+  fun field_type(): this->Type => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
   
   fun string(): String iso^ =>
@@ -1503,12 +1506,12 @@ class FieldVar is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _field_type: (Type | None)
+  var _field_type: Type
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (Type | None) = None,
+    field_type': Type,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -1522,7 +1525,10 @@ class FieldVar is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let field_type': (AST | None) = try iter.next() else None end
+    let field_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: field_type", None); error
+      end
     let default': (AST | None) = try iter.next() else None end
     if
       try
@@ -1537,7 +1543,7 @@ class FieldVar is AST
       else err("incompatible field: name", name'); error
       end
     _field_type =
-      try field_type' as (Type | None)
+      try field_type' as Type
       else err("incompatible field: field_type", field_type'); error
       end
     _default =
@@ -1549,11 +1555,11 @@ class FieldVar is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(Type | None) => _field_type
+  fun field_type(): this->Type => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
   
   fun string(): String iso^ =>
@@ -1570,12 +1576,12 @@ class FieldEmbed is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
-  var _field_type: (Type | None)
+  var _field_type: Type
   var _default: (Expr | None)
   
   new create(
     name': Id,
-    field_type': (Type | None) = None,
+    field_type': Type,
     default': (Expr | None) = None)
   =>
     _name = name'
@@ -1589,7 +1595,10 @@ class FieldEmbed is AST
       try iter.next()
       else err("missing required field: name", None); error
       end
-    let field_type': (AST | None) = try iter.next() else None end
+    let field_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: field_type", None); error
+      end
     let default': (AST | None) = try iter.next() else None end
     if
       try
@@ -1604,7 +1613,7 @@ class FieldEmbed is AST
       else err("incompatible field: name", name'); error
       end
     _field_type =
-      try field_type' as (Type | None)
+      try field_type' as Type
       else err("incompatible field: field_type", field_type'); error
       end
     _default =
@@ -1616,11 +1625,11 @@ class FieldEmbed is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun name(): this->Id => _name
-  fun field_type(): this->(Type | None) => _field_type
+  fun field_type(): this->Type => _field_type
   fun default(): this->(Expr | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': (Type | None) = None) => _field_type = consume field_type'
+  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
   fun ref set_default(default': (Expr | None) = None) => _default = consume default'
   
   fun string(): String iso^ =>
