@@ -40,7 +40,7 @@ primitive ASTDefs
         .> has("cap",         "(Cap | None)",        "None")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("provides",    "(Type | None)",       "None")
-        .> has("members",     "(Members | None)",    "None")
+        .> has("members",     "Members",             "Members")
         .> has("at",          "(At | None)",         "None")
         .> has("docs",        "(LitString | None)",  "None")
     end
@@ -62,8 +62,8 @@ primitive ASTDefs
       g.def(name)
         .> in_union("Method")
         .> with_scope()
-        .> has("cap",         "(Cap | None)",        "None")
         .> has("name",        "Id")
+        .> has("cap",         "(Cap | None)",        "None")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("params",      "(Params | None)",     "None")
         .> has("return_type", "(Type | None)",       "None")

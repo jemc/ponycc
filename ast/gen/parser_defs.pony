@@ -119,7 +119,7 @@ primitive ParserDefs
       .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["rawseq"])
       // Order should be:
       // cap id type_params params return_type error guard body docstring
-      // TODO: REORDER(0, 1, 2, 3, 4, 5, 6, 8, 7)
+      // TODO: REORDER(1, 0, 2, 3, 4, 5, 6, 8, 7)
     
     // LSQUARE typeparam {COMMA typeparam} RSQUARE
     g.def("typeparams")
