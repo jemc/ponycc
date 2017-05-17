@@ -23,7 +23,6 @@ primitive ASTInfo
     elseif A <: Module then "Module"
     elseif A <: UsePackage then "UsePackage"
     elseif A <: UseFFIDecl then "UseFFIDecl"
-    elseif A <: FFIDecl then "FFIDecl"
     elseif A <: TypeAlias then "TypeAlias"
     elseif A <: Interface then "Interface"
     elseif A <: Trait then "Trait"
@@ -220,7 +219,6 @@ class Package is AST
 class Module is AST
 class UsePackage is AST
 class UseFFIDecl is AST
-class FFIDecl is AST
 class TypeAlias is AST
 class Interface is AST
 class Trait is AST

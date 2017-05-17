@@ -28,6 +28,45 @@ primitive ParserDefs
     g.def("root")
       .> rule("module", ["module"])
     
+    // {use} {class}
+    g.def("module")
+      .> tree("Tk[Module]")
+      .> opt_token("package docstring", ["Tk[LitString]"])
+      .> seq("use command", ["use"])
+      .> seq("type, interface, trait, primitive, class or actor definition", ["type_decl"])
+      .> skip("type, interface, trait, primitive, class, actor, member or method", ["Tk[EOF]"])
+      // TODO: REORDER so that docstring is the final child
+    
+    // USE (use_package | use_ffi_decl)
+    g.def("use")
+      .> restart(["Tk[Use]"; "Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
+      .> skip("None", ["Tk[Use]"])
+      .> rule("package or ffi declaration", ["use_package"; "use_ffi_decl"])
+    
+    // [ID ASSIGN] STRING
+    g.def("use_package")
+      .> tree("Tk[UsePackage]")
+      .> opt_rule("package name assignment", ["use_package_name"])
+      .> token("package path", ["Tk[LitString]"])
+    
+    // ID ASSIGN
+    g.def("use_package_name")
+      .> print_inline()
+      .> token("None", ["Tk[Id]"])
+      .> skip("None", ["Tk[Assign]"])
+    
+    // AT (ID | STRING) typeparams (LPAREN | LPAREN_NEW) [params] RPAREN [QUESTION] [IF infix]
+    g.def("use_ffi_decl")
+      .> tree("Tk[UseFFIDecl]")
+      .> skip("None", ["Tk[At]"])
+      .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
+      .> rule("return type", ["typeargs"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("ffi parameters", ["params"])
+      .> skip("None", ["Tk[RParen]"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> if_token_then_rule("Tk[If]", "use condition", ["infix"])
+    
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
       .> tree("Tk[Param]")
@@ -843,7 +882,7 @@ primitive ParserDefs
     
     // (TYPE | INTERFACE | TRAIT | PRIMITIVE | STRUCT | CLASS | ACTOR) [annotations]
     // [AT] ID [typeparams] [CAP] [IS type] [STRING] members
-    g.def("class_def")
+    g.def("type_decl")
       .> restart(["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
       .> token("entity", ["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
       .> annotate()
@@ -857,42 +896,3 @@ primitive ParserDefs
       // Order should be:
       // id type_params cap provides members c_api docstring
       // TODO: REORDER(2, 3, 1, 4, 6, 0, 5)
-    
-    // STRING
-    g.def("use_uri")
-      .> print_inline()
-      .> token("None", ["Tk[LitString]"])
-    
-    // AT (ID | STRING) typeparams (LPAREN | LPAREN_NEW) [params] RPAREN [QUESTION]
-    g.def("use_ffi")
-      .> token("None", ["Tk[At]"])
-      // TODO: MAP_ID("Tk[At]", "Tk[Ffidecl]")
-      .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
-      .> rule("return type", ["typeargs"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("ffi parameters", ["params"])
-      .> tree("Tk[None]")  // Named parameters
-      .> skip("None", ["Tk[RParen]"])
-      .> opt_token("None", ["Tk[Question]"])
-    
-    // ID ASSIGN
-    g.def("use_name")
-      .> print_inline()
-      .> token("None", ["Tk[Id]"])
-      .> skip("None", ["Tk[Assign]"])
-    
-    // USE [ID ASSIGN] (STRING | USE_FFI) [IF infix]
-    g.def("use")
-      .> restart(["Tk[Use]"; "Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
-      .> token("None", ["Tk[Use]"])
-      .> opt_rule("name", ["use_name"])
-      .> rule("specifier", ["use_uri"; "use_ffi"])
-      .> if_token_then_rule("Tk[If]", "use condition", ["infix"])
-    
-    // {use} {class}
-    g.def("module")
-      .> tree("Tk[Module]")
-      .> opt_no_dflt_token("package docstring", ["Tk[LitString]"])
-      .> seq("use command", ["use"])
-      .> seq("type, interface, trait, primitive, class or actor definition", ["class_def"])
-      .> skip("type, interface, trait, primitive, class, actor, member or method", ["Tk[EOF]"])

@@ -12,7 +12,6 @@ primitive ASTInfo
     elseif A <: Module then "Module"
     elseif A <: UsePackage then "UsePackage"
     elseif A <: UseFFIDecl then "UseFFIDecl"
-    elseif A <: FFIDecl then "FFIDecl"
     elseif A <: TypeAlias then "TypeAlias"
     elseif A <: Interface then "Interface"
     elseif A <: Trait then "Trait"
@@ -494,80 +493,24 @@ class UsePackage is AST
 class UseFFIDecl is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _body: FFIDecl
-  var _guard: (Expr | IfDefCond | None)
-  
-  new create(
-    body': FFIDecl,
-    guard': (Expr | IfDefCond | None) = None)
-  =>
-    _body = body'
-    _guard = guard'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let body': (AST | None) =
-      try iter.next()
-      else err("missing required field: body", None); error
-      end
-    let guard': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _body =
-      try body' as FFIDecl
-      else err("incompatible field: body", body'); error
-      end
-    _guard =
-      try guard' as (Expr | IfDefCond | None)
-      else err("incompatible field: guard", guard'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun body(): this->FFIDecl => _body
-  fun guard(): this->(Expr | IfDefCond | None) => _guard
-  
-  fun ref set_body(body': FFIDecl) => _body = consume body'
-  fun ref set_guard(guard': (Expr | IfDefCond | None) = None) => _guard = consume guard'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("UseFFIDecl")
-    s.push('(')
-    s.>append(_body.string()).>push(',').push(' ')
-    s.>append(_guard.string())
-    s.push(')')
-    consume s
-
-class FFIDecl is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
   var _name: (Id | LitString)
   var _return_type: TypeArgs
   var _params: (Params | None)
-  var _named_params: None
   var _partial: (Question | None)
+  var _guard: (Expr | IfDefCond | None)
   
   new create(
     name': (Id | LitString),
     return_type': TypeArgs,
     params': (Params | None),
-    named_params': None,
-    partial': (Question | None))
+    partial': (Question | None),
+    guard': (Expr | IfDefCond | None) = None)
   =>
     _name = name'
     _return_type = return_type'
     _params = params'
-    _named_params = named_params'
     _partial = partial'
+    _guard = guard'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -584,14 +527,11 @@ class FFIDecl is AST
       try iter.next()
       else err("missing required field: params", None); error
       end
-    let named_params': (AST | None) =
-      try iter.next()
-      else err("missing required field: named_params", None); error
-      end
     let partial': (AST | None) =
       try iter.next()
       else err("missing required field: partial", None); error
       end
+    let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -612,13 +552,13 @@ class FFIDecl is AST
       try params' as (Params | None)
       else err("incompatible field: params", params'); error
       end
-    _named_params =
-      try named_params' as None
-      else err("incompatible field: named_params", named_params'); error
-      end
     _partial =
       try partial' as (Question | None)
       else err("incompatible field: partial", partial'); error
+      end
+    _guard =
+      try guard' as (Expr | IfDefCond | None)
+      else err("incompatible field: guard", guard'); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -627,24 +567,24 @@ class FFIDecl is AST
   fun name(): this->(Id | LitString) => _name
   fun return_type(): this->TypeArgs => _return_type
   fun params(): this->(Params | None) => _params
-  fun named_params(): this->None => _named_params
   fun partial(): this->(Question | None) => _partial
+  fun guard(): this->(Expr | IfDefCond | None) => _guard
   
   fun ref set_name(name': (Id | LitString)) => _name = consume name'
   fun ref set_return_type(return_type': TypeArgs) => _return_type = consume return_type'
   fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_named_params(named_params': None) => _named_params = consume named_params'
   fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
+  fun ref set_guard(guard': (Expr | IfDefCond | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("FFIDecl")
+    s.append("UseFFIDecl")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_params.string()).>push(',').push(' ')
-    s.>append(_named_params.string()).>push(',').push(' ')
-    s.>append(_partial.string())
+    s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_guard.string())
     s.push(')')
     consume s
 

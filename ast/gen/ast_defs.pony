@@ -25,15 +25,11 @@ primitive ASTDefs
     
     g.def("UseFFIDecl")
       .> in_union("UseDecl")
-      .> has("body",  "FFIDecl")
-      .> has("guard", "(Expr | IfDefCond | None)", "None")
-    
-    g.def("FFIDecl")
-      .> has("name",         "(Id | LitString)")
-      .> has("return_type",  "TypeArgs")
-      .> has("params",       "(Params | None)")
-      .> has("named_params", "None") // TODO: why?
-      .> has("partial",      "(Question | None)")
+      .> has("name",        "(Id | LitString)")
+      .> has("return_type", "TypeArgs")
+      .> has("params",      "(Params | None)")
+      .> has("partial",     "(Question | None)")
+      .> has("guard",       "(Expr | IfDefCond | None)", "None") // TODO: get rid of Expr option, here and in corresponding changes to the parser to go ahead and create an IfDefCond
     
     for name in [
       "TypeAlias"; "Interface"; "Trait"; "Primitive"; "Struct"; "Class"; "Actor"
