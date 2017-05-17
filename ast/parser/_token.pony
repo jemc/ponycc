@@ -1,2 +1,2 @@
 
-type _Token is (TkAny, SourcePos)
+type _Token is (TkAny, SourcePosAny)

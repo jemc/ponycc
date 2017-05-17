@@ -12,7 +12,7 @@ class PonyParser
     tokens = tokens'
     token =
       try tokens.next()
-      else (Tk[EOF], SourcePos(Source))
+      else (Tk[EOF], SourcePosNone)
       end
   
   fun ref parse(): (TkTree | None) =>
@@ -26,7 +26,7 @@ class PonyParser
   fun _current_tk(): TkAny =>
     try token._1 as TkAny else Tk[EOF] end
   
-  fun _current_pos(): SourcePos =>
+  fun _current_pos(): SourcePosAny =>
     token._2
   
   fun ref _consume_token(): _Token =>
@@ -141,10 +141,10 @@ class PonyParser
     failed = true
     _ditch_restart(state)
   
-  fun ref _error(str: String, pos: (SourcePos | None) = None) =>
+  fun ref _error(str: String, pos: (SourcePosAny | None) = None) =>
     Debug("ERROR: " + str) // TODO: show token loc
   
-  fun ref _error_continue(str: String, pos: (SourcePos | None) = None) =>
+  fun ref _error_continue(str: String, pos: (SourcePosAny | None) = None) =>
     Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
   
   fun ref _syntax_error(expected: String, tree: (TkTree | None), terminating: String) =>
