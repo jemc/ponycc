@@ -337,6 +337,12 @@ class ParserGenDef
   fun ref opt_no_dflt_token(desc: String, array: Array[String]) =>
     _token_set(desc, array, "Tk[EOF]")
   
+  fun ref not_token(desc: String, array: Array[String]) =>
+    _token_set("None", array, "Tk[EOF]" where make_ast = false)
+    _pieces.push({(g: CodeGen) =>
+      g.line("if found then return (_RuleNotFound, " + _builder + ") end")
+    } ref)
+  
   fun ref if_token_then_rule(tk: String, desc: String, array: Array[String]) =>
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
     _pieces.push({(g: CodeGen) => g.line("if found then"); g.push_indent() } ref)
