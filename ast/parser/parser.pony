@@ -570,21 +570,6 @@ class PonyParser
     
     state.default_tk = Tk[None]
     found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[At] =>
-        found = true
-        last_matched = Tk[At].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[At].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = Tk[None]
-    found = false
     res =
       while true do
         match _parse_cap("capability")
@@ -597,6 +582,21 @@ class PonyParser
         
         found = false
         break _handle_not_found(state, "capability", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[At] =>
+        found = true
+        last_matched = Tk[At].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, Tk[At].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -700,6 +700,22 @@ class PonyParser
         break _handle_not_found(state, "members", false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      let child_0 = try tree.children.shift() else TkTree(token) end
+      let child_1 = try tree.children.shift() else TkTree(token) end
+      let child_2 = try tree.children.shift() else TkTree(token) end
+      let child_3 = try tree.children.shift() else TkTree(token) end
+      let child_4 = try tree.children.shift() else TkTree(token) end
+      let child_5 = try tree.children.shift() else TkTree(token) end
+      let child_6 = try tree.children.shift() else TkTree(token) end
+      tree.children.push(child_2)
+      tree.children.push(child_0)
+      tree.children.push(child_3)
+      tree.children.push(child_4)
+      tree.children.push(child_6)
+      tree.children.push(child_1)
+      tree.children.push(child_5)
+    end
     
     (_complete(state), _BuildDefault)
   
@@ -1035,6 +1051,21 @@ class PonyParser
     if res isnt None then return (res, _BuildDefault) end
     
     
+    state.default_tk = Tk[None]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LitString] =>
+        found = true
+        last_matched = Tk[LitString].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, Tk[LitString].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    
     state.default_tk = Tk[EOF]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
@@ -1070,21 +1101,6 @@ class PonyParser
     end
     
     
-    state.default_tk = Tk[None]
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LitString] =>
-        found = true
-        last_matched = Tk[LitString].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[LitString].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
     state.default_tk = Tk[EOF]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
@@ -1117,6 +1133,26 @@ class PonyParser
           break _handle_not_found(state, "method body", false)
         end
       if res isnt None then return (res, _BuildDefault) end
+    end
+    match state.tree | let tree: TkTree =>
+      let child_0 = try tree.children.shift() else TkTree(token) end
+      let child_1 = try tree.children.shift() else TkTree(token) end
+      let child_2 = try tree.children.shift() else TkTree(token) end
+      let child_3 = try tree.children.shift() else TkTree(token) end
+      let child_4 = try tree.children.shift() else TkTree(token) end
+      let child_5 = try tree.children.shift() else TkTree(token) end
+      let child_6 = try tree.children.shift() else TkTree(token) end
+      let child_7 = try tree.children.shift() else TkTree(token) end
+      let child_8 = try tree.children.shift() else TkTree(token) end
+      tree.children.push(child_1)
+      tree.children.push(child_0)
+      tree.children.push(child_2)
+      tree.children.push(child_3)
+      tree.children.push(child_4)
+      tree.children.push(child_5)
+      tree.children.push(child_7)
+      tree.children.push(child_8)
+      tree.children.push(child_6)
     end
     
     (_complete(state), _BuildDefault)

@@ -1,4 +1,6 @@
 
+use "collections"
+
 class ParserGen
   embed defs: Array[ParserGenDef] = Array[ParserGenDef]
   let debug: Bool = true
@@ -386,6 +388,21 @@ class ParserGenDef
         g.line("| " + src + " => tree.tk = " + dest)
       end
       g.line("end")
+      g.pop_indent()
+      g.line("end")
+    } ref)
+  
+  fun ref reorder_children(array: Array[USize]) =>
+    _pieces.push({(g: CodeGen) =>
+      g.line("match state.tree | let tree: TkTree =>")
+      g.push_indent()
+      for i in Range(0, array.size()) do
+        g.line("let child_" + i.string())
+        g.add(" = try tree.children.shift() else TkTree(token) end")
+      end
+      for i in array.values() do
+        g.line("tree.children.push(child_" + i.string() + ")")
+      end
       g.pop_indent()
       g.line("end")
     } ref)

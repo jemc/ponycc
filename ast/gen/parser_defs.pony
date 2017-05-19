@@ -73,8 +73,8 @@ primitive ParserDefs
       .> restart(["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
       .> token("entity", ["Tk[TypeAlias]"; "Tk[Interface]"; "Tk[Trait]"; "Tk[Primitive]"; "Tk[Struct]"; "Tk[Class]"; "Tk[Actor]"])
       .> annotate()
-      .> opt_token("None", ["Tk[At]"])
       .> opt_rule("capability", ["cap"])
+      .> opt_token("None", ["Tk[At]"])
       .> token("name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
       .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
@@ -82,7 +82,7 @@ primitive ParserDefs
       .> rule("members", ["members"])
       // Order should be:
       // id cap type_params provides members c_api docstring
-      // TODO: REORDER(2, 1, 3, 4, 6, 0, 5)
+      .> reorder_children([2; 0; 3; 4; 6; 1; 5])
     
     // {field} {method}
     g.def("members")
@@ -116,12 +116,12 @@ primitive ParserDefs
       .> skip("None", ["Tk[RParen]"])
       .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
       .> opt_token("None", ["Tk[LitString]"])
+      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
       .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["seq"])
       // Order should be:
-      // cap id type_params params return_type error guard body docstring
-      // TODO: REORDER(1, 0, 2, 3, 4, 5, 6, 8, 7)
+      // id cap type_params params return_type error guard body docstring
+      .> reorder_children([1; 0; 2; 3; 4; 5; 7; 8; 6])
     
     // LSQUARE typeparam {COMMA typeparam} RSQUARE
     g.def("typeparams")
