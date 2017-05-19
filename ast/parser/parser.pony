@@ -1687,57 +1687,6 @@ class PonyParser
     found = false
     res =
       while true do
-        match _parse_exprseq("value")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "value"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "value", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_annotatedseq(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("annotatedseq", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
-    
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_exprseq("value")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "value"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "value", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    (_complete(state), _BuildDefault)
-  
-  fun ref _parse_exprseq(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("exprseq", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
         match _parse_assignment("value")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
@@ -1757,10 +1706,7 @@ class PonyParser
         found = false
         break _handle_not_found(state, "value", false)
       end
-    if res isnt None then return (res, _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]) end
+    if res isnt None then return (res, _BuildDefault) end
     while true do
       
       
@@ -1795,43 +1741,17 @@ class PonyParser
           found = false
           break _handle_not_found(state, "value", false)
         end
-      if res isnt None then return (res, _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]) end
+      if res isnt None then return (res, _BuildDefault) end
       if not found then break end
     end
     
-    (_complete(state), _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])])
+    (_complete(state), _BuildDefault)
   
-  fun ref _parse_semiexpr(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("semiexpr", rule_desc)
+  fun ref _parse_annotatedseq(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("annotatedseq", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_semi("semicolon")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "semicolon"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "semicolon", false)
-      end
-    if res isnt None then return (res, _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]) end
+    state.add_deferrable_ast((Tk[Sequence], _current_pos()))
     
     
     state.default_tk = None
@@ -1857,15 +1777,97 @@ class PonyParser
         found = false
         break _handle_not_found(state, "value", false)
       end
-    if res isnt None then return (res, _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]) end
+    if res isnt None then return (res, _BuildDefault) end
+    while true do
+      
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      res =
+        while true do
+          match _parse_semiexpr("value")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "value"
+            break _handle_found(state, tree, build)
+          end
+          
+          match _parse_nextassignment("value")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "value"
+            break _handle_found(state, tree, build)
+          end
+          
+          match _parse_jump("value")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "value"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "value", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+    end
     
-    (_complete(state), _BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])])
+    (_complete(state), _BuildDefault)
+  
+  fun ref _parse_semiexpr(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("semiexpr", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_semi("semicolon")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "semicolon"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "semicolon", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    
+    state.default_tk = None
+    found = false
+    res =
+      while true do
+        match _parse_assignment("value")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "value"
+          break _handle_found(state, tree, build)
+        end
+        
+        match _parse_jump("value")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "value"
+          break _handle_found(state, tree, build)
+        end
+        
+        found = false
+        break _handle_not_found(state, "value", false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    (_complete(state), _BuildDefault)
   
   fun ref _parse_semi(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("semi", rule_desc)

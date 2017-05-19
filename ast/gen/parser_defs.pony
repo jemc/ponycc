@@ -175,37 +175,28 @@ primitive ParserDefs
       .> if_token_then_rule("Tk[Colon]", "parameter type", ["type"])
       .> if_token_then_rule("Tk[Assign]", "default value", ["infix"])
     
-    // exprseq
+    // (assignment | jump) {semiexpr | assignment | jump}
     g.def("seq")
       .> tree("Tk[Sequence]")
-      .> rule("value", ["exprseq"])
-    
-    // [annotations] exprseq
-    g.def("annotatedseq")
-      .> tree("Tk[Sequence]")
-      .> annotate()
-      .> rule("value", ["exprseq"])
-    
-    // (assignment | jump) {semiexpr | assignment | jump}
-    g.def("exprseq") // TODO: find a cleaner solution
-      .> builder("_BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]")
       .> rule("value", ["assignment"; "jump"])
       .> seq("value", ["semiexpr"; "nextassignment"; "jump"])
     
-    // semi (exprseq | jump)
-    g.def("semiexpr") // TODO: find a cleaner solution
-      .> builder("_BuildFlattenExcept[(
-        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
-        Tk[CompileIntrinsic] | Tk[CompileError
-      ])]")
+    // [annotations] (assignment | jump) {semiexpr | assignment | jump}
+    g.def("annotatedseq")
+      .> tree("Tk[Sequence]")
+      .> annotate()
+      .> rule("value", ["assignment"; "jump"])
+      .> seq("value", ["semiexpr"; "nextassignment"; "jump"])
+    
+    // semi (assignment | jump)
+    g.def("semiexpr")
       .> rule("semicolon", ["semi"])
       .> rule("value", ["assignment"; "jump"])
     
     // SEMICOLON
     g.def("semi")
+      // This rule produces a TkTree *only if* the Tk[Semicolon]
+      // is followed by a Tk[NewLine], indicating an illegal semicolon.
       .> skip("None", ["Tk[Semicolon]"])
       .> opt_no_dflt_token("None", ["Tk[NewLine]"])
       .> map_tk([("Tk[NewLine]", "Tk[Semicolon]")])
