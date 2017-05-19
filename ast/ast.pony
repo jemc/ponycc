@@ -38,18 +38,26 @@ primitive ASTInfo
     elseif A <: Error then "Error"
     elseif A <: CompileIntrinsic then "CompileIntrinsic"
     elseif A <: CompileError then "CompileError"
-    elseif A <: LocalLet then "LocalLet"
-    elseif A <: LocalVar then "LocalVar"
-    elseif A <: MatchCapture then "MatchCapture"
-    elseif A <: As then "As"
-    elseif A <: Tuple then "Tuple"
+    elseif A <: IfDefFlag then "IfDefFlag"
+    elseif A <: IfDefNot then "IfDefNot"
+    elseif A <: IfDefAnd then "IfDefAnd"
+    elseif A <: IfDefOr then "IfDefOr"
+    elseif A <: IfDef then "IfDef"
+    elseif A <: IfType then "IfType"
+    elseif A <: If then "If"
+    elseif A <: While then "While"
+    elseif A <: Repeat then "Repeat"
+    elseif A <: For then "For"
+    elseif A <: With then "With"
+    elseif A <: IdTuple then "IdTuple"
+    elseif A <: AssignTuple then "AssignTuple"
+    elseif A <: Match then "Match"
+    elseif A <: Cases then "Cases"
+    elseif A <: Case then "Case"
+    elseif A <: Try then "Try"
     elseif A <: Consume then "Consume"
     elseif A <: Recover then "Recover"
-    elseif A <: Not then "Not"
-    elseif A <: Neg then "Neg"
-    elseif A <: NegUnsafe then "NegUnsafe"
-    elseif A <: AddressOf then "AddressOf"
-    elseif A <: DigestOf then "DigestOf"
+    elseif A <: As then "As"
     elseif A <: Add then "Add"
     elseif A <: AddUnsafe then "AddUnsafe"
     elseif A <: Sub then "Sub"
@@ -81,36 +89,37 @@ primitive ASTInfo
     elseif A <: And then "And"
     elseif A <: Or then "Or"
     elseif A <: XOr then "XOr"
+    elseif A <: Not then "Not"
+    elseif A <: Neg then "Neg"
+    elseif A <: NegUnsafe then "NegUnsafe"
+    elseif A <: AddressOf then "AddressOf"
+    elseif A <: DigestOf then "DigestOf"
+    elseif A <: LocalLet then "LocalLet"
+    elseif A <: LocalVar then "LocalVar"
     elseif A <: Assign then "Assign"
     elseif A <: Dot then "Dot"
     elseif A <: Chain then "Chain"
     elseif A <: Tilde then "Tilde"
     elseif A <: Qualify then "Qualify"
     elseif A <: Call then "Call"
-    elseif A <: FFICall then "FFICall"
+    elseif A <: CallFFI then "CallFFI"
     elseif A <: Args then "Args"
     elseif A <: NamedArgs then "NamedArgs"
     elseif A <: NamedArg then "NamedArg"
-    elseif A <: IfDef then "IfDef"
-    elseif A <: IfType then "IfType"
-    elseif A <: IfDefAnd then "IfDefAnd"
-    elseif A <: IfDefOr then "IfDefOr"
-    elseif A <: IfDefNot then "IfDefNot"
-    elseif A <: IfDefFlag then "IfDefFlag"
-    elseif A <: If then "If"
-    elseif A <: While then "While"
-    elseif A <: Repeat then "Repeat"
-    elseif A <: For then "For"
-    elseif A <: With then "With"
-    elseif A <: Match then "Match"
-    elseif A <: Cases then "Cases"
-    elseif A <: Case then "Case"
-    elseif A <: Try then "Try"
     elseif A <: Lambda then "Lambda"
     elseif A <: LambdaCaptures then "LambdaCaptures"
     elseif A <: LambdaCapture then "LambdaCapture"
     elseif A <: Object then "Object"
     elseif A <: LitArray then "LitArray"
+    elseif A <: Tuple then "Tuple"
+    elseif A <: This then "This"
+    elseif A <: LitTrue then "LitTrue"
+    elseif A <: LitFalse then "LitFalse"
+    elseif A <: LitInteger then "LitInteger"
+    elseif A <: LitFloat then "LitFloat"
+    elseif A <: LitString then "LitString"
+    elseif A <: LitCharacter then "LitCharacter"
+    elseif A <: LitLocation then "LitLocation"
     elseif A <: Reference then "Reference"
     elseif A <: DontCare then "DontCare"
     elseif A <: PackageRef then "PackageRef"
@@ -125,13 +134,13 @@ primitive ASTInfo
     elseif A <: LocalLetRef then "LocalLetRef"
     elseif A <: LocalVarRef then "LocalVarRef"
     elseif A <: ParamRef then "ParamRef"
+    elseif A <: ViewpointType then "ViewpointType"
     elseif A <: UnionType then "UnionType"
     elseif A <: IsectType then "IsectType"
     elseif A <: TupleType then "TupleType"
-    elseif A <: ArrowType then "ArrowType"
+    elseif A <: NominalType then "NominalType"
     elseif A <: FunType then "FunType"
     elseif A <: LambdaType then "LambdaType"
-    elseif A <: NominalType then "NominalType"
     elseif A <: TypeParamRef then "TypeParamRef"
     elseif A <: ThisType then "ThisType"
     elseif A <: DontCareType then "DontCareType"
@@ -156,14 +165,6 @@ primitive ASTInfo
     elseif A <: Question then "Question"
     elseif A <: Ellipsis then "Ellipsis"
     elseif A <: Id then "Id"
-    elseif A <: This then "This"
-    elseif A <: LitTrue then "LitTrue"
-    elseif A <: LitFalse then "LitFalse"
-    elseif A <: LitFloat then "LitFloat"
-    elseif A <: LitInteger then "LitInteger"
-    elseif A <: LitCharacter then "LitCharacter"
-    elseif A <: LitString then "LitString"
-    elseif A <: LitLocation then "LitLocation"
     elseif A <: EOF then "EOF"
     elseif A <: NewLine then "NewLine"
     elseif A <: Use then "Use"
@@ -208,7 +209,7 @@ type Cap is (Ref | Val | Tag | Box | Trn | Iso)
 
 type LitBool is (LitTrue | LitFalse)
 
-type Type is (LiteralTypeBranch | LambdaType | FunType | OpLiteralType | IsectType | TypeParamRef | ErrorType | NominalType | DontCareType | LiteralType | TupleType | ArrowType | ThisType | UnionType)
+type Type is (Cap | LiteralTypeBranch | LambdaType | FunType | OpLiteralType | IsectType | TypeParamRef | ErrorType | GenCap | NominalType | DontCareType | LiteralType | TupleType | ViewpointType | ThisType | UnionType)
 
 type Field is (FieldVar | FieldLet | FieldEmbed)
 
@@ -218,23 +219,23 @@ type GenCap is (CapAlias | CapAny | CapRead | CapSend | CapShare)
 
 type Local is (LocalVar | LocalLet)
 
-type MethodRef is (MethodNewRef | MethodFunRef | MethodBeRef)
-
-type Jump is (Continue | Error | Break | Return)
-
 type UseDecl is (UseFFIDecl | UsePackage)
 
-type Lexeme is (SubUnsafeNew | Where | LSquareNew | Let | Else | DoubleArrow | SubType | Use | Comma | LBrace | RParen | LBraceNew | In | Then | LParen | Arrow | Ampersand | Semicolon | EOF | Colon | Constant | Pipe | LParenNew | Until | Embed | NewLine | RBrace | Backslash | RSquare | End | LSquare | ElseIf | Do | Var | SubNew)
+type Jump is (Continue | Error | CompileIntrinsic | Break | Return | CompileError)
+
+type CapMod is (Aliased | Ephemeral)
+
+type MethodRef is (MethodNewRef | MethodFunRef | MethodBeRef)
 
 type TypeDecl is (Trait | Primitive | Struct | Actor | Class | Interface | TypeAlias)
 
-type IfDefCond is (IfDefBinaryOp | IfDefNot | IfDefFlag)
+type IfDefCond is (IfDefFlag | IfDefNot | IfDefBinaryOp)
+
+type Lexeme is (SubUnsafeNew | Where | LSquareNew | Let | Else | DoubleArrow | SubType | Use | Comma | LBrace | RParen | LBraceNew | In | Then | LParen | Arrow | Ampersand | Semicolon | EOF | Colon | Constant | Pipe | LParenNew | Until | Embed | NewLine | RBrace | Backslash | RSquare | End | LSquare | ElseIf | Do | Var | SubNew)
 
 type Method is (MethodFun | MethodNew | MethodBe)
 
-type Expr is (Id | Lambda | FFICall | This | For | Qualify | DontCare | Chain | MatchCapture | TypeRef | Jump | TupleElementRef | As | Consume | If | LitBool | CompileIntrinsic | Dot | Repeat | Match | While | LitLocation | IfDef | Object | With | Try | LitCharacter | BinaryOp | Reference | IfType | LitInteger | PackageRef | LocalRef | Assign | Tilde | Local | MethodRef | CompileError | LitString | LitFloat | Tuple | Call | LitArray | FieldRef | Recover | UnaryOp)
-
-type CapMod is (Aliased | Ephemeral)
+type Expr is (Recover | This | For | Qualify | LitBool | Chain | DontCare | TypeRef | Jump | TupleElementRef | As | Consume | If | LitLocation | Dot | Repeat | Match | While | IfDef | Object | Try | With | LitCharacter | BinaryOp | Reference | IfType | LitInteger | PackageRef | LitFloat | CallFFI | Sequence | Assign | LocalRef | Tilde | Local | LitString | MethodRef | Tuple | Call | LitArray | FieldRef | Lambda | UnaryOp)
 
 type FieldRef is (FieldVarRef | FieldLetRef | FieldEmbedRef)
 
@@ -2386,10 +2387,10 @@ class Sequence is AST
 class Return is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: Sequence
+  var _value: (Expr | None)
   
   new create(
-    value': Sequence)
+    value': (Expr | None))
   =>
     _value = value'
   
@@ -2409,16 +2410,16 @@ class Return is AST
     then error end
     
     _value =
-      try value' as Sequence
+      try value' as (Expr | None)
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->Sequence => _value
+  fun value(): this->(Expr | None) => _value
   
-  fun ref set_value(value': Sequence) => _value = consume value'
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2431,10 +2432,10 @@ class Return is AST
 class Break is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: Sequence
+  var _value: (Expr | None)
   
   new create(
-    value': Sequence)
+    value': (Expr | None))
   =>
     _value = value'
   
@@ -2454,16 +2455,16 @@ class Break is AST
     then error end
     
     _value =
-      try value' as Sequence
+      try value' as (Expr | None)
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->Sequence => _value
+  fun value(): this->(Expr | None) => _value
   
-  fun ref set_value(value': Sequence) => _value = consume value'
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2476,10 +2477,10 @@ class Break is AST
 class Continue is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: Sequence
+  var _value: (Expr | None)
   
   new create(
-    value': Sequence)
+    value': (Expr | None))
   =>
     _value = value'
   
@@ -2499,16 +2500,16 @@ class Continue is AST
     then error end
     
     _value =
-      try value' as Sequence
+      try value' as (Expr | None)
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->Sequence => _value
+  fun value(): this->(Expr | None) => _value
   
-  fun ref set_value(value': Sequence) => _value = consume value'
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2521,10 +2522,10 @@ class Continue is AST
 class Error is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _value: Sequence
+  var _value: (Expr | None)
   
   new create(
-    value': Sequence)
+    value': (Expr | None))
   =>
     _value = value'
   
@@ -2544,16 +2545,16 @@ class Error is AST
     then error end
     
     _value =
-      try value' as Sequence
+      try value' as (Expr | None)
       else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun value(): this->Sequence => _value
+  fun value(): this->(Expr | None) => _value
   
-  fun ref set_value(value': Sequence) => _value = consume value'
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2566,10 +2567,20 @@ class Error is AST
 class CompileIntrinsic is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  var _value: (Expr | None)
+  
+  new create(
+    value': (Expr | None))
+  =>
+    _value = value'
+  
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
+    let value': (AST | None) =
+      try iter.next()
+      else err("missing required field: value", None); error
+      end
     if
       try
         let extra' = iter.next()
@@ -2577,31 +2588,43 @@ class CompileIntrinsic is AST
       else false
       end
     then error end
+    
+    _value =
+      try value' as (Expr | None)
+      else err("incompatible field: value", value'); error
+      end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
+  fun value(): this->(Expr | None) => _value
+  
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
+    s.push('(')
+    s.>append(_value.string())
+    s.push(')')
     consume s
 
 class CompileError is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _message: Sequence
+  var _value: (Expr | None)
   
   new create(
-    message': Sequence)
+    value': (Expr | None))
   =>
-    _message = message'
+    _value = value'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let message': (AST | None) =
+    let value': (AST | None) =
       try iter.next()
-      else err("missing required field: message", None); error
+      else err("missing required field: value", None); error
       end
     if
       try
@@ -2611,38 +2634,35 @@ class CompileError is AST
       end
     then error end
     
-    _message =
-      try message' as Sequence
-      else err("incompatible field: message", message'); error
+    _value =
+      try value' as (Expr | None)
+      else err("incompatible field: value", value'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun message(): this->Sequence => _message
+  fun value(): this->(Expr | None) => _value
   
-  fun ref set_message(message': Sequence) => _message = consume message'
+  fun ref set_value(value': (Expr | None)) => _value = consume value'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileError")
     s.push('(')
-    s.>append(_message.string())
+    s.>append(_value.string())
     s.push(')')
     consume s
 
-class LocalLet is AST
+class IfDefFlag is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _name: Id
-  var _local_type: (Type | None)
+  var _name: (Id | LitString)
   
   new create(
-    name': Id,
-    local_type': (Type | None))
+    name': (Id | LitString))
   =>
     _name = name'
-    _local_type = local_type'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -2650,10 +2670,6 @@ class LocalLet is AST
     let name': (AST | None) =
       try iter.next()
       else err("missing required field: name", None); error
-      end
-    let local_type': (AST | None) =
-      try iter.next()
-      else err("missing required field: local_type", None); error
       end
     if
       try
@@ -2664,162 +2680,34 @@ class LocalLet is AST
     then error end
     
     _name =
-      try name' as Id
+      try name' as (Id | LitString)
       else err("incompatible field: name", name'); error
-      end
-    _local_type =
-      try local_type' as (Type | None)
-      else err("incompatible field: local_type", local_type'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun name(): this->Id => _name
-  fun local_type(): this->(Type | None) => _local_type
+  fun name(): this->(Id | LitString) => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
+  fun ref set_name(name': (Id | LitString)) => _name = consume name'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("LocalLet")
+    s.append("IfDefFlag")
     s.push('(')
-    s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_local_type.string())
+    s.>append(_name.string())
     s.push(')')
     consume s
 
-class LocalVar is AST
+class IfDefNot is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _name: Id
-  var _local_type: (Type | None)
+  var _expr: IfDefCond
   
   new create(
-    name': Id,
-    local_type': (Type | None))
-  =>
-    _name = name'
-    _local_type = local_type'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let name': (AST | None) =
-      try iter.next()
-      else err("missing required field: name", None); error
-      end
-    let local_type': (AST | None) =
-      try iter.next()
-      else err("missing required field: local_type", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _name =
-      try name' as Id
-      else err("incompatible field: name", name'); error
-      end
-    _local_type =
-      try local_type' as (Type | None)
-      else err("incompatible field: local_type", local_type'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun name(): this->Id => _name
-  fun local_type(): this->(Type | None) => _local_type
-  
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LocalVar")
-    s.push('(')
-    s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_local_type.string())
-    s.push(')')
-    consume s
-
-class MatchCapture is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _name: Id
-  var _local_type: Type
-  
-  new create(
-    name': Id,
-    local_type': Type)
-  =>
-    _name = name'
-    _local_type = local_type'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let name': (AST | None) =
-      try iter.next()
-      else err("missing required field: name", None); error
-      end
-    let local_type': (AST | None) =
-      try iter.next()
-      else err("missing required field: local_type", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _name =
-      try name' as Id
-      else err("incompatible field: name", name'); error
-      end
-    _local_type =
-      try local_type' as Type
-      else err("incompatible field: local_type", local_type'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun name(): this->Id => _name
-  fun local_type(): this->Type => _local_type
-  
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': Type) => _local_type = consume local_type'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("MatchCapture")
-    s.push('(')
-    s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_local_type.string())
-    s.push(')')
-    consume s
-
-class As is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Expr
-  var _as_type: Type
-  
-  new create(
-    expr': Expr,
-    as_type': Type)
+    expr': IfDefCond)
   =>
     _expr = expr'
-    _as_type = as_type'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -2827,10 +2715,6 @@ class As is AST
     let expr': (AST | None) =
       try iter.next()
       else err("missing required field: expr", None); error
-      end
-    let as_type': (AST | None) =
-      try iter.next()
-      else err("missing required field: as_type", None); error
       end
     if
       try
@@ -2841,49 +2725,681 @@ class As is AST
     then error end
     
     _expr =
-      try expr' as Expr
+      try expr' as IfDefCond
       else err("incompatible field: expr", expr'); error
-      end
-    _as_type =
-      try as_type' as Type
-      else err("incompatible field: as_type", as_type'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun expr(): this->Expr => _expr
-  fun as_type(): this->Type => _as_type
+  fun expr(): this->IfDefCond => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  fun ref set_as_type(as_type': Type) => _as_type = consume as_type'
+  fun ref set_expr(expr': IfDefCond) => _expr = consume expr'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("As")
+    s.append("IfDefNot")
     s.push('(')
-    s.>append(_expr.string()).>push(',').push(' ')
-    s.>append(_as_type.string())
+    s.>append(_expr.string())
     s.push(')')
     consume s
 
-class Tuple is AST
+class IfDefAnd is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _elements: Array[Sequence]
+  var _left: IfDefCond
+  var _right: IfDefCond
   
   new create(
-    elements': Array[Sequence] = Array[Sequence])
+    left': IfDefCond,
+    right': IfDefCond)
+  =>
+    _left = left'
+    _right = right'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let left': (AST | None) =
+      try iter.next()
+      else err("missing required field: left", None); error
+      end
+    let right': (AST | None) =
+      try iter.next()
+      else err("missing required field: right", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _left =
+      try left' as IfDefCond
+      else err("incompatible field: left", left'); error
+      end
+    _right =
+      try right' as IfDefCond
+      else err("incompatible field: right", right'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun left(): this->IfDefCond => _left
+  fun right(): this->IfDefCond => _right
+  
+  fun ref set_left(left': IfDefCond) => _left = consume left'
+  fun ref set_right(right': IfDefCond) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("IfDefAnd")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class IfDefOr is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _left: IfDefCond
+  var _right: IfDefCond
+  
+  new create(
+    left': IfDefCond,
+    right': IfDefCond)
+  =>
+    _left = left'
+    _right = right'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let left': (AST | None) =
+      try iter.next()
+      else err("missing required field: left", None); error
+      end
+    let right': (AST | None) =
+      try iter.next()
+      else err("missing required field: right", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _left =
+      try left' as IfDefCond
+      else err("incompatible field: left", left'); error
+      end
+    _right =
+      try right' as IfDefCond
+      else err("incompatible field: right", right'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun left(): this->IfDefCond => _left
+  fun right(): this->IfDefCond => _right
+  
+  fun ref set_left(left': IfDefCond) => _left = consume left'
+  fun ref set_right(right': IfDefCond) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("IfDefOr")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
+class IfDef is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _then_expr: IfDefCond
+  var _then_body: Sequence
+  var _else_body: (Sequence | IfDef | None) = None
+  
+  new create(
+    then_expr': IfDefCond,
+    then_body': Sequence,
+    else_body': (Sequence | IfDef | None) = None)
+  =>
+    _then_expr = then_expr'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let then_expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: then_expr", None); error
+      end
+    let then_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: then_body", None); error
+      end
+    let else_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: else_body", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _then_expr =
+      try then_expr' as IfDefCond
+      else err("incompatible field: then_expr", then_expr'); error
+      end
+    _then_body =
+      try then_body' as Sequence
+      else err("incompatible field: then_body", then_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | IfDef | None) = None
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun then_expr(): this->IfDefCond => _then_expr
+  fun then_body(): this->Sequence => _then_body
+  fun else_body(): this->(Sequence | IfDef | None) = None => _else_body
+  
+  fun ref set_then_expr(then_expr': IfDefCond) => _then_expr = consume then_expr'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (Sequence | IfDef | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("IfDef")
+    s.push('(')
+    s.>append(_then_expr.string()).>push(',').push(' ')
+    s.>append(_then_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class IfType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _sub: TypeRef
+  var _super: TypeRef
+  var _then_body: Sequence
+  var _else_body: (Sequence | IfType | None)
+  
+  new create(
+    sub': TypeRef,
+    super': TypeRef,
+    then_body': Sequence,
+    else_body': (Sequence | IfType | None) = None)
+  =>
+    _sub = sub'
+    _super = super'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let sub': (AST | None) =
+      try iter.next()
+      else err("missing required field: sub", None); error
+      end
+    let super': (AST | None) =
+      try iter.next()
+      else err("missing required field: super", None); error
+      end
+    let then_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: then_body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _sub =
+      try sub' as TypeRef
+      else err("incompatible field: sub", sub'); error
+      end
+    _super =
+      try super' as TypeRef
+      else err("incompatible field: super", super'); error
+      end
+    _then_body =
+      try then_body' as Sequence
+      else err("incompatible field: then_body", then_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | IfType | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun sub(): this->TypeRef => _sub
+  fun super(): this->TypeRef => _super
+  fun then_body(): this->Sequence => _then_body
+  fun else_body(): this->(Sequence | IfType | None) => _else_body
+  
+  fun ref set_sub(sub': TypeRef) => _sub = consume sub'
+  fun ref set_super(super': TypeRef) => _super = consume super'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (Sequence | IfType | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("IfType")
+    s.push('(')
+    s.>append(_sub.string()).>push(',').push(' ')
+    s.>append(_super.string()).>push(',').push(' ')
+    s.>append(_then_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class If is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _condition: Sequence
+  var _then_body: Sequence
+  var _else_body: (Sequence | If | None)
+  
+  new create(
+    condition': Sequence,
+    then_body': Sequence,
+    else_body': (Sequence | If | None) = None)
+  =>
+    _condition = condition'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let condition': (AST | None) =
+      try iter.next()
+      else err("missing required field: condition", None); error
+      end
+    let then_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: then_body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _condition =
+      try condition' as Sequence
+      else err("incompatible field: condition", condition'); error
+      end
+    _then_body =
+      try then_body' as Sequence
+      else err("incompatible field: then_body", then_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | If | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun condition(): this->Sequence => _condition
+  fun then_body(): this->Sequence => _then_body
+  fun else_body(): this->(Sequence | If | None) => _else_body
+  
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
+  fun ref set_else_body(else_body': (Sequence | If | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("If")
+    s.push('(')
+    s.>append(_condition.string()).>push(',').push(' ')
+    s.>append(_then_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class While is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _condition: Sequence
+  var _loop_body: Sequence
+  var _else_body: (Sequence | None)
+  
+  new create(
+    condition': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None) = None)
+  =>
+    _condition = condition'
+    _loop_body = loop_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let condition': (AST | None) =
+      try iter.next()
+      else err("missing required field: condition", None); error
+      end
+    let loop_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: loop_body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _condition =
+      try condition' as Sequence
+      else err("incompatible field: condition", condition'); error
+      end
+    _loop_body =
+      try loop_body' as Sequence
+      else err("incompatible field: loop_body", loop_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun condition(): this->Sequence => _condition
+  fun loop_body(): this->Sequence => _loop_body
+  fun else_body(): this->(Sequence | None) => _else_body
+  
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("While")
+    s.push('(')
+    s.>append(_condition.string()).>push(',').push(' ')
+    s.>append(_loop_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class Repeat is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _loop_body: Sequence
+  var _condition: Sequence
+  var _else_body: (Sequence | None)
+  
+  new create(
+    loop_body': Sequence,
+    condition': Sequence,
+    else_body': (Sequence | None) = None)
+  =>
+    _loop_body = loop_body'
+    _condition = condition'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let loop_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: loop_body", None); error
+      end
+    let condition': (AST | None) =
+      try iter.next()
+      else err("missing required field: condition", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _loop_body =
+      try loop_body' as Sequence
+      else err("incompatible field: loop_body", loop_body'); error
+      end
+    _condition =
+      try condition' as Sequence
+      else err("incompatible field: condition", condition'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun loop_body(): this->Sequence => _loop_body
+  fun condition(): this->Sequence => _condition
+  fun else_body(): this->(Sequence | None) => _else_body
+  
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_condition(condition': Sequence) => _condition = consume condition'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Repeat")
+    s.push('(')
+    s.>append(_loop_body.string()).>push(',').push(' ')
+    s.>append(_condition.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class For is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _refs: (Id | IdTuple)
+  var _iterator: Sequence
+  var _loop_body: Sequence
+  var _else_body: (Sequence | None)
+  
+  new create(
+    refs': (Id | IdTuple),
+    iterator': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None) = None)
+  =>
+    _refs = refs'
+    _iterator = iterator'
+    _loop_body = loop_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let refs': (AST | None) =
+      try iter.next()
+      else err("missing required field: refs", None); error
+      end
+    let iterator': (AST | None) =
+      try iter.next()
+      else err("missing required field: iterator", None); error
+      end
+    let loop_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: loop_body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _refs =
+      try refs' as (Id | IdTuple)
+      else err("incompatible field: refs", refs'); error
+      end
+    _iterator =
+      try iterator' as Sequence
+      else err("incompatible field: iterator", iterator'); error
+      end
+    _loop_body =
+      try loop_body' as Sequence
+      else err("incompatible field: loop_body", loop_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun refs(): this->(Id | IdTuple) => _refs
+  fun iterator(): this->Sequence => _iterator
+  fun loop_body(): this->Sequence => _loop_body
+  fun else_body(): this->(Sequence | None) => _else_body
+  
+  fun ref set_refs(refs': (Id | IdTuple)) => _refs = consume refs'
+  fun ref set_iterator(iterator': Sequence) => _iterator = consume iterator'
+  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("For")
+    s.push('(')
+    s.>append(_refs.string()).>push(',').push(' ')
+    s.>append(_iterator.string()).>push(',').push(' ')
+    s.>append(_loop_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class With is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _assigns: AssignTuple
+  var _with_body: Sequence
+  var _else_body: (Sequence | None)
+  
+  new create(
+    assigns': AssignTuple,
+    with_body': Sequence,
+    else_body': (Sequence | None) = None)
+  =>
+    _assigns = assigns'
+    _with_body = with_body'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let assigns': (AST | None) =
+      try iter.next()
+      else err("missing required field: assigns", None); error
+      end
+    let with_body': (AST | None) =
+      try iter.next()
+      else err("missing required field: with_body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _assigns =
+      try assigns' as AssignTuple
+      else err("incompatible field: assigns", assigns'); error
+      end
+    _with_body =
+      try with_body' as Sequence
+      else err("incompatible field: with_body", with_body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun assigns(): this->AssignTuple => _assigns
+  fun with_body(): this->Sequence => _with_body
+  fun else_body(): this->(Sequence | None) => _else_body
+  
+  fun ref set_assigns(assigns': AssignTuple) => _assigns = consume assigns'
+  fun ref set_with_body(with_body': Sequence) => _with_body = consume with_body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("With")
+    s.push('(')
+    s.>append(_assigns.string()).>push(',').push(' ')
+    s.>append(_with_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class IdTuple is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _elements: Array[(Id | IdTuple)]
+  
+  new create(
+    elements': Array[(Id | IdTuple)] = Array[(Id | IdTuple)])
   =>
     _elements = elements'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let elements' = Array[Sequence]
+    let elements' = Array[(Id | IdTuple)]
     var elements_next' = try iter.next() else None end
     while true do
-      try elements'.push(elements_next' as Sequence) else break end
+      try elements'.push(elements_next' as (Id | IdTuple)) else break end
       try elements_next' = iter.next() else elements_next' = None; break end
     end
     if elements_next' isnt None then
@@ -2896,13 +3412,13 @@ class Tuple is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun elements(): this->Array[Sequence] => _elements
+  fun elements(): this->Array[(Id | IdTuple)] => _elements
   
-  fun ref set_elements(elements': Array[Sequence] = Array[Sequence]) => _elements = consume elements'
+  fun ref set_elements(elements': Array[(Id | IdTuple)] = Array[(Id | IdTuple)]) => _elements = consume elements'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("Tuple")
+    s.append("IdTuple")
     s.push('(')
     let elements_iter = _elements.values()
     for v in elements_iter do
@@ -2911,6 +3427,298 @@ class Tuple is AST
         s.>push(',').push(' ')
       end
     end
+    s.push(')')
+    consume s
+
+class AssignTuple is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _elements: Array[Assign]
+  
+  new create(
+    elements': Array[Assign] = Array[Assign])
+  =>
+    _elements = elements'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let elements' = Array[Assign]
+    var elements_next' = try iter.next() else None end
+    while true do
+      try elements'.push(elements_next' as Assign) else break end
+      try elements_next' = iter.next() else elements_next' = None; break end
+    end
+    if elements_next' isnt None then
+      let extra' = elements_next'
+      err("unexpected extra field", extra'); error
+    end
+    
+    _elements = elements'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun elements(): this->Array[Assign] => _elements
+  
+  fun ref set_elements(elements': Array[Assign] = Array[Assign]) => _elements = consume elements'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("AssignTuple")
+    s.push('(')
+    let elements_iter = _elements.values()
+    for v in elements_iter do
+      s.append(v.string())
+      if elements_iter.has_next() then
+        s.>push(',').push(' ')
+      end
+    end
+    s.push(')')
+    consume s
+
+class Match is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Sequence
+  var _cases: Cases
+  var _else_body: (Sequence | None)
+  
+  new create(
+    expr': Sequence,
+    cases': Cases = Cases,
+    else_body': (Sequence | None) = None)
+  =>
+    _expr = expr'
+    _cases = cases'
+    _else_body = else_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    let cases': (AST | None) = try iter.next() else Cases end
+    let else_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Sequence
+      else err("incompatible field: expr", expr'); error
+      end
+    _cases =
+      try cases' as Cases
+      else err("incompatible field: cases", cases'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Sequence => _expr
+  fun cases(): this->Cases => _cases
+  fun else_body(): this->(Sequence | None) => _else_body
+  
+  fun ref set_expr(expr': Sequence) => _expr = consume expr'
+  fun ref set_cases(cases': Cases = Cases) => _cases = consume cases'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Match")
+    s.push('(')
+    s.>append(_expr.string()).>push(',').push(' ')
+    s.>append(_cases.string()).>push(',').push(' ')
+    s.>append(_else_body.string())
+    s.push(')')
+    consume s
+
+class Cases is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _list: Array[Case]
+  
+  new create(
+    list': Array[Case] = Array[Case])
+  =>
+    _list = list'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let list' = Array[Case]
+    var list_next' = try iter.next() else None end
+    while true do
+      try list'.push(list_next' as Case) else break end
+      try list_next' = iter.next() else list_next' = None; break end
+    end
+    if list_next' isnt None then
+      let extra' = list_next'
+      err("unexpected extra field", extra'); error
+    end
+    
+    _list = list'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun list(): this->Array[Case] => _list
+  
+  fun ref set_list(list': Array[Case] = Array[Case]) => _list = consume list'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Cases")
+    s.push('(')
+    let list_iter = _list.values()
+    for v in list_iter do
+      s.append(v.string())
+      if list_iter.has_next() then
+        s.>push(',').push(' ')
+      end
+    end
+    s.push(')')
+    consume s
+
+class Case is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  var _guard: (Sequence | None)
+  var _body: (Sequence | None)
+  
+  new create(
+    expr': Expr = None,
+    guard': (Sequence | None) = None,
+    body': (Sequence | None) = None)
+  =>
+    _expr = expr'
+    _guard = guard'
+    _body = body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next() else None end
+    let body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+    _guard =
+      try guard' as (Sequence | None)
+      else err("incompatible field: guard", guard'); error
+      end
+    _body =
+      try body' as (Sequence | None)
+      else err("incompatible field: body", body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  fun guard(): this->(Sequence | None) => _guard
+  fun body(): this->(Sequence | None) => _body
+  
+  fun ref set_expr(expr': Expr = None) => _expr = consume expr'
+  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
+  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Case")
+    s.push('(')
+    s.>append(_expr.string()).>push(',').push(' ')
+    s.>append(_guard.string()).>push(',').push(' ')
+    s.>append(_body.string())
+    s.push(')')
+    consume s
+
+class Try is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _body: Sequence
+  var _else_body: (Sequence | None)
+  var _then_body: (Sequence | None)
+  
+  new create(
+    body': Sequence,
+    else_body': (Sequence | None) = None,
+    then_body': (Sequence | None) = None)
+  =>
+    _body = body'
+    _else_body = else_body'
+    _then_body = then_body'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let body': (AST | None) =
+      try iter.next()
+      else err("missing required field: body", None); error
+      end
+    let else_body': (AST | None) = try iter.next() else None end
+    let then_body': (AST | None) = try iter.next() else None end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _body =
+      try body' as Sequence
+      else err("incompatible field: body", body'); error
+      end
+    _else_body =
+      try else_body' as (Sequence | None)
+      else err("incompatible field: else_body", else_body'); error
+      end
+    _then_body =
+      try then_body' as (Sequence | None)
+      else err("incompatible field: then_body", then_body'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun body(): this->Sequence => _body
+  fun else_body(): this->(Sequence | None) => _else_body
+  fun then_body(): this->(Sequence | None) => _then_body
+  
+  fun ref set_body(body': Sequence) => _body = consume body'
+  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun ref set_then_body(then_body': (Sequence | None) = None) => _then_body = consume then_body'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Try")
+    s.push('(')
+    s.>append(_body.string()).>push(',').push(' ')
+    s.>append(_else_body.string()).>push(',').push(' ')
+    s.>append(_then_body.string())
     s.push(')')
     consume s
 
@@ -2977,11 +3785,11 @@ class Recover is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: (Cap | None)
-  var _expr: Expr
+  var _expr: Sequence
   
   new create(
     cap': (Cap | None),
-    expr': Expr)
+    expr': Sequence)
   =>
     _cap = cap'
     _expr = expr'
@@ -3010,7 +3818,7 @@ class Recover is AST
       else err("incompatible field: cap", cap'); error
       end
     _expr =
-      try expr' as Expr
+      try expr' as Sequence
       else err("incompatible field: expr", expr'); error
       end
   
@@ -3018,10 +3826,10 @@ class Recover is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun cap(): this->(Cap | None) => _cap
-  fun expr(): this->Expr => _expr
+  fun expr(): this->Sequence => _expr
   
   fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun ref set_expr(expr': Sequence) => _expr = consume expr'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3032,15 +3840,18 @@ class Recover is AST
     s.push(')')
     consume s
 
-class Not is AST
+class As is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
+  var _as_type: Type
   
   new create(
-    expr': Expr)
+    expr': Expr,
+    as_type': Type)
   =>
     _expr = expr'
+    _as_type = as_type'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
@@ -3048,6 +3859,10 @@ class Not is AST
     let expr': (AST | None) =
       try iter.next()
       else err("missing required field: expr", None); error
+      end
+    let as_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: as_type", None); error
       end
     if
       try
@@ -3061,199 +3876,26 @@ class Not is AST
       try expr' as Expr
       else err("incompatible field: expr", expr'); error
       end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Expr => _expr
-  
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Not")
-    s.push('(')
-    s.>append(_expr.string())
-    s.push(')')
-    consume s
-
-class Neg is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Expr
-  
-  new create(
-    expr': Expr)
-  =>
-    _expr = expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Expr
-      else err("incompatible field: expr", expr'); error
+    _as_type =
+      try as_type' as Type
+      else err("incompatible field: as_type", as_type'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun expr(): this->Expr => _expr
+  fun as_type(): this->Type => _as_type
   
   fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun ref set_as_type(as_type': Type) => _as_type = consume as_type'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("Neg")
+    s.append("As")
     s.push('(')
-    s.>append(_expr.string())
-    s.push(')')
-    consume s
-
-class NegUnsafe is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Expr
-  
-  new create(
-    expr': Expr)
-  =>
-    _expr = expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Expr
-      else err("incompatible field: expr", expr'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Expr => _expr
-  
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("NegUnsafe")
-    s.push('(')
-    s.>append(_expr.string())
-    s.push(')')
-    consume s
-
-class AddressOf is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Expr
-  
-  new create(
-    expr': Expr)
-  =>
-    _expr = expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Expr
-      else err("incompatible field: expr", expr'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Expr => _expr
-  
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("AddressOf")
-    s.push('(')
-    s.>append(_expr.string())
-    s.push(')')
-    consume s
-
-class DigestOf is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Expr
-  
-  new create(
-    expr': Expr)
-  =>
-    _expr = expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Expr
-      else err("incompatible field: expr", expr'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Expr => _expr
-  
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("DigestOf")
-    s.push('(')
-    s.>append(_expr.string())
+    s.>append(_expr.string()).>push(',').push(' ')
+    s.>append(_as_type.string())
     s.push(')')
     consume s
 
@@ -5086,6 +5728,349 @@ class XOr is AST
     s.push(')')
     consume s
 
+class Not is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  
+  new create(
+    expr': Expr)
+  =>
+    _expr = expr'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Not")
+    s.push('(')
+    s.>append(_expr.string())
+    s.push(')')
+    consume s
+
+class Neg is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  
+  new create(
+    expr': Expr)
+  =>
+    _expr = expr'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Neg")
+    s.push('(')
+    s.>append(_expr.string())
+    s.push(')')
+    consume s
+
+class NegUnsafe is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  
+  new create(
+    expr': Expr)
+  =>
+    _expr = expr'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("NegUnsafe")
+    s.push('(')
+    s.>append(_expr.string())
+    s.push(')')
+    consume s
+
+class AddressOf is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  
+  new create(
+    expr': Expr)
+  =>
+    _expr = expr'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("AddressOf")
+    s.push('(')
+    s.>append(_expr.string())
+    s.push(')')
+    consume s
+
+class DigestOf is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _expr: Expr
+  
+  new create(
+    expr': Expr)
+  =>
+    _expr = expr'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _expr =
+      try expr' as Expr
+      else err("incompatible field: expr", expr'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun expr(): this->Expr => _expr
+  
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("DigestOf")
+    s.push('(')
+    s.>append(_expr.string())
+    s.push(')')
+    consume s
+
+class LocalLet is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _name: Id
+  var _local_type: (Type | None)
+  
+  new create(
+    name': Id,
+    local_type': (Type | None))
+  =>
+    _name = name'
+    _local_type = local_type'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let name': (AST | None) =
+      try iter.next()
+      else err("missing required field: name", None); error
+      end
+    let local_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: local_type", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _name =
+      try name' as Id
+      else err("incompatible field: name", name'); error
+      end
+    _local_type =
+      try local_type' as (Type | None)
+      else err("incompatible field: local_type", local_type'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun name(): this->Id => _name
+  fun local_type(): this->(Type | None) => _local_type
+  
+  fun ref set_name(name': Id) => _name = consume name'
+  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LocalLet")
+    s.push('(')
+    s.>append(_name.string()).>push(',').push(' ')
+    s.>append(_local_type.string())
+    s.push(')')
+    consume s
+
+class LocalVar is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _name: Id
+  var _local_type: (Type | None)
+  
+  new create(
+    name': Id,
+    local_type': (Type | None))
+  =>
+    _name = name'
+    _local_type = local_type'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let name': (AST | None) =
+      try iter.next()
+      else err("missing required field: name", None); error
+      end
+    let local_type': (AST | None) =
+      try iter.next()
+      else err("missing required field: local_type", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _name =
+      try name' as Id
+      else err("incompatible field: name", name'); error
+      end
+    _local_type =
+      try local_type' as (Type | None)
+      else err("incompatible field: local_type", local_type'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun name(): this->Id => _name
+  fun local_type(): this->(Type | None) => _local_type
+  
+  fun ref set_name(name': Id) => _name = consume name'
+  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LocalVar")
+    s.push('(')
+    s.>append(_name.string()).>push(',').push(' ')
+    s.>append(_local_type.string())
+    s.push(')')
+    consume s
+
 class Assign is AST
   var _pos: SourcePosAny = SourcePosNone
   
@@ -5149,11 +6134,11 @@ class Dot is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
-  var _right: (Id | LitInteger | TypeArgs)
+  var _right: Id
   
   new create(
     left': Expr,
-    right': (Id | LitInteger | TypeArgs))
+    right': Id)
   =>
     _left = left'
     _right = right'
@@ -5182,7 +6167,7 @@ class Dot is AST
       else err("incompatible field: left", left'); error
       end
     _right =
-      try right' as (Id | LitInteger | TypeArgs)
+      try right' as Id
       else err("incompatible field: right", right'); error
       end
   
@@ -5190,10 +6175,10 @@ class Dot is AST
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun left(): this->Expr => _left
-  fun right(): this->(Id | LitInteger | TypeArgs) => _right
+  fun right(): this->Id => _right
   
   fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': (Id | LitInteger | TypeArgs)) => _right = consume right'
+  fun ref set_right(right': Id) => _right = consume right'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5384,28 +6369,28 @@ class Qualify is AST
 class Call is AST
   var _pos: SourcePosAny = SourcePosNone
   
+  var _receiver: Expr
   var _args: (Args | None)
   var _named_args: (NamedArgs | None)
-  var _receiver: Expr
   
   new create(
+    receiver': Expr,
     args': (Args | None) = None,
-    named_args': (NamedArgs | None) = None,
-    receiver': Expr)
+    named_args': (NamedArgs | None) = None)
   =>
+    _receiver = receiver'
     _args = args'
     _named_args = named_args'
-    _receiver = receiver'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let args': (AST | None) = try iter.next() else None end
-    let named_args': (AST | None) = try iter.next() else None end
     let receiver': (AST | None) =
       try iter.next()
       else err("missing required field: receiver", None); error
       end
+    let args': (AST | None) = try iter.next() else None end
+    let named_args': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -5414,6 +6399,10 @@ class Call is AST
       end
     then error end
     
+    _receiver =
+      try receiver' as Expr
+      else err("incompatible field: receiver", receiver'); error
+      end
     _args =
       try args' as (Args | None)
       else err("incompatible field: args", args'); error
@@ -5422,33 +6411,29 @@ class Call is AST
       try named_args' as (NamedArgs | None)
       else err("incompatible field: named_args", named_args'); error
       end
-    _receiver =
-      try receiver' as Expr
-      else err("incompatible field: receiver", receiver'); error
-      end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
+  fun receiver(): this->Expr => _receiver
   fun args(): this->(Args | None) => _args
   fun named_args(): this->(NamedArgs | None) => _named_args
-  fun receiver(): this->Expr => _receiver
   
+  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
   fun ref set_args(args': (Args | None) = None) => _args = consume args'
   fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Call")
     s.push('(')
+    s.>append(_receiver.string()).>push(',').push(' ')
     s.>append(_args.string()).>push(',').push(' ')
-    s.>append(_named_args.string()).>push(',').push(' ')
-    s.>append(_receiver.string())
+    s.>append(_named_args.string())
     s.push(')')
     consume s
 
-class FFICall is AST
+class CallFFI is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: (Id | LitString)
@@ -5527,7 +6512,7 @@ class FFICall is AST
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("FFICall")
+    s.append("CallFFI")
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
     s.>append(_type_args.string()).>push(',').push(' ')
@@ -5687,997 +6672,6 @@ class NamedArg is AST
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
     s.>append(_value.string())
-    s.push(')')
-    consume s
-
-class IfDef is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _then_expr: (Expr | IfDefCond)
-  var _then_body: Sequence
-  var _else_body: (Expr | IfDef | None)
-  var _else_expr: (None | IfDefCond)
-  
-  new create(
-    then_expr': (Expr | IfDefCond),
-    then_body': Sequence,
-    else_body': (Expr | IfDef | None),
-    else_expr': (None | IfDefCond))
-  =>
-    _then_expr = then_expr'
-    _then_body = then_body'
-    _else_body = else_body'
-    _else_expr = else_expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let then_expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: then_expr", None); error
-      end
-    let then_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: then_body", None); error
-      end
-    let else_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: else_body", None); error
-      end
-    let else_expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: else_expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _then_expr =
-      try then_expr' as (Expr | IfDefCond)
-      else err("incompatible field: then_expr", then_expr'); error
-      end
-    _then_body =
-      try then_body' as Sequence
-      else err("incompatible field: then_body", then_body'); error
-      end
-    _else_body =
-      try else_body' as (Expr | IfDef | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-    _else_expr =
-      try else_expr' as (None | IfDefCond)
-      else err("incompatible field: else_expr", else_expr'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun then_expr(): this->(Expr | IfDefCond) => _then_expr
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Expr | IfDef | None) => _else_body
-  fun else_expr(): this->(None | IfDefCond) => _else_expr
-  
-  fun ref set_then_expr(then_expr': (Expr | IfDefCond)) => _then_expr = consume then_expr'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Expr | IfDef | None)) => _else_body = consume else_body'
-  fun ref set_else_expr(else_expr': (None | IfDefCond)) => _else_expr = consume else_expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfDef")
-    s.push('(')
-    s.>append(_then_expr.string()).>push(',').push(' ')
-    s.>append(_then_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string()).>push(',').push(' ')
-    s.>append(_else_expr.string())
-    s.push(')')
-    consume s
-
-class IfType is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _sub: TypeRef
-  var _super: TypeRef
-  var _then_body: Sequence
-  var _else_body: (Expr | IfType | None)
-  
-  new create(
-    sub': TypeRef,
-    super': TypeRef,
-    then_body': Sequence,
-    else_body': (Expr | IfType | None))
-  =>
-    _sub = sub'
-    _super = super'
-    _then_body = then_body'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let sub': (AST | None) =
-      try iter.next()
-      else err("missing required field: sub", None); error
-      end
-    let super': (AST | None) =
-      try iter.next()
-      else err("missing required field: super", None); error
-      end
-    let then_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: then_body", None); error
-      end
-    let else_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: else_body", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _sub =
-      try sub' as TypeRef
-      else err("incompatible field: sub", sub'); error
-      end
-    _super =
-      try super' as TypeRef
-      else err("incompatible field: super", super'); error
-      end
-    _then_body =
-      try then_body' as Sequence
-      else err("incompatible field: then_body", then_body'); error
-      end
-    _else_body =
-      try else_body' as (Expr | IfType | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun sub(): this->TypeRef => _sub
-  fun super(): this->TypeRef => _super
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Expr | IfType | None) => _else_body
-  
-  fun ref set_sub(sub': TypeRef) => _sub = consume sub'
-  fun ref set_super(super': TypeRef) => _super = consume super'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Expr | IfType | None)) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfType")
-    s.push('(')
-    s.>append(_sub.string()).>push(',').push(' ')
-    s.>append(_super.string()).>push(',').push(' ')
-    s.>append(_then_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class IfDefAnd is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _left: IfDefCond
-  var _right: IfDefCond
-  
-  new create(
-    left': IfDefCond,
-    right': IfDefCond)
-  =>
-    _left = left'
-    _right = right'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let left': (AST | None) =
-      try iter.next()
-      else err("missing required field: left", None); error
-      end
-    let right': (AST | None) =
-      try iter.next()
-      else err("missing required field: right", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _left =
-      try left' as IfDefCond
-      else err("incompatible field: left", left'); error
-      end
-    _right =
-      try right' as IfDefCond
-      else err("incompatible field: right", right'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun left(): this->IfDefCond => _left
-  fun right(): this->IfDefCond => _right
-  
-  fun ref set_left(left': IfDefCond) => _left = consume left'
-  fun ref set_right(right': IfDefCond) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfDefAnd")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class IfDefOr is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _left: IfDefCond
-  var _right: IfDefCond
-  
-  new create(
-    left': IfDefCond,
-    right': IfDefCond)
-  =>
-    _left = left'
-    _right = right'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let left': (AST | None) =
-      try iter.next()
-      else err("missing required field: left", None); error
-      end
-    let right': (AST | None) =
-      try iter.next()
-      else err("missing required field: right", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _left =
-      try left' as IfDefCond
-      else err("incompatible field: left", left'); error
-      end
-    _right =
-      try right' as IfDefCond
-      else err("incompatible field: right", right'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun left(): this->IfDefCond => _left
-  fun right(): this->IfDefCond => _right
-  
-  fun ref set_left(left': IfDefCond) => _left = consume left'
-  fun ref set_right(right': IfDefCond) => _right = consume right'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfDefOr")
-    s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
-    s.push(')')
-    consume s
-
-class IfDefNot is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: IfDefCond
-  
-  new create(
-    expr': IfDefCond)
-  =>
-    _expr = expr'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as IfDefCond
-      else err("incompatible field: expr", expr'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->IfDefCond => _expr
-  
-  fun ref set_expr(expr': IfDefCond) => _expr = consume expr'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfDefNot")
-    s.push('(')
-    s.>append(_expr.string())
-    s.push(')')
-    consume s
-
-class IfDefFlag is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _name: Id
-  
-  new create(
-    name': Id)
-  =>
-    _name = name'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let name': (AST | None) =
-      try iter.next()
-      else err("missing required field: name", None); error
-      end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _name =
-      try name' as Id
-      else err("incompatible field: name", name'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun name(): this->Id => _name
-  
-  fun ref set_name(name': Id) => _name = consume name'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("IfDefFlag")
-    s.push('(')
-    s.>append(_name.string())
-    s.push(')')
-    consume s
-
-class If is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _condition: Sequence
-  var _then_body: Sequence
-  var _else_body: (Sequence | If | None)
-  
-  new create(
-    condition': Sequence,
-    then_body': Sequence,
-    else_body': (Sequence | If | None) = None)
-  =>
-    _condition = condition'
-    _then_body = then_body'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let condition': (AST | None) =
-      try iter.next()
-      else err("missing required field: condition", None); error
-      end
-    let then_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: then_body", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _condition =
-      try condition' as Sequence
-      else err("incompatible field: condition", condition'); error
-      end
-    _then_body =
-      try then_body' as Sequence
-      else err("incompatible field: then_body", then_body'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | If | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun condition(): this->Sequence => _condition
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Sequence | If | None) => _else_body
-  
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Sequence | If | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("If")
-    s.push('(')
-    s.>append(_condition.string()).>push(',').push(' ')
-    s.>append(_then_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class While is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _condition: Sequence
-  var _loop_body: Sequence
-  var _else_body: (Sequence | None)
-  
-  new create(
-    condition': Sequence,
-    loop_body': Sequence,
-    else_body': (Sequence | None) = None)
-  =>
-    _condition = condition'
-    _loop_body = loop_body'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let condition': (AST | None) =
-      try iter.next()
-      else err("missing required field: condition", None); error
-      end
-    let loop_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: loop_body", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _condition =
-      try condition' as Sequence
-      else err("incompatible field: condition", condition'); error
-      end
-    _loop_body =
-      try loop_body' as Sequence
-      else err("incompatible field: loop_body", loop_body'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun condition(): this->Sequence => _condition
-  fun loop_body(): this->Sequence => _loop_body
-  fun else_body(): this->(Sequence | None) => _else_body
-  
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("While")
-    s.push('(')
-    s.>append(_condition.string()).>push(',').push(' ')
-    s.>append(_loop_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class Repeat is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _loop_body: Sequence
-  var _condition: Sequence
-  var _else_body: (Sequence | None)
-  
-  new create(
-    loop_body': Sequence,
-    condition': Sequence,
-    else_body': (Sequence | None) = None)
-  =>
-    _loop_body = loop_body'
-    _condition = condition'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let loop_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: loop_body", None); error
-      end
-    let condition': (AST | None) =
-      try iter.next()
-      else err("missing required field: condition", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _loop_body =
-      try loop_body' as Sequence
-      else err("incompatible field: loop_body", loop_body'); error
-      end
-    _condition =
-      try condition' as Sequence
-      else err("incompatible field: condition", condition'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun loop_body(): this->Sequence => _loop_body
-  fun condition(): this->Sequence => _condition
-  fun else_body(): this->(Sequence | None) => _else_body
-  
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Repeat")
-    s.push('(')
-    s.>append(_loop_body.string()).>push(',').push(' ')
-    s.>append(_condition.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class For is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Sequence
-  var _iterator: Sequence
-  var _loop_body: Sequence
-  var _else_body: (Sequence | None)
-  
-  new create(
-    expr': Sequence,
-    iterator': Sequence,
-    loop_body': Sequence,
-    else_body': (Sequence | None) = None)
-  =>
-    _expr = expr'
-    _iterator = iterator'
-    _loop_body = loop_body'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    let iterator': (AST | None) =
-      try iter.next()
-      else err("missing required field: iterator", None); error
-      end
-    let loop_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: loop_body", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Sequence
-      else err("incompatible field: expr", expr'); error
-      end
-    _iterator =
-      try iterator' as Sequence
-      else err("incompatible field: iterator", iterator'); error
-      end
-    _loop_body =
-      try loop_body' as Sequence
-      else err("incompatible field: loop_body", loop_body'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Sequence => _expr
-  fun iterator(): this->Sequence => _iterator
-  fun loop_body(): this->Sequence => _loop_body
-  fun else_body(): this->(Sequence | None) => _else_body
-  
-  fun ref set_expr(expr': Sequence) => _expr = consume expr'
-  fun ref set_iterator(iterator': Sequence) => _iterator = consume iterator'
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("For")
-    s.push('(')
-    s.>append(_expr.string()).>push(',').push(' ')
-    s.>append(_iterator.string()).>push(',').push(' ')
-    s.>append(_loop_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class With is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _refs: Expr
-  var _with_body: Sequence
-  var _else_body: (Sequence | None)
-  
-  new create(
-    refs': Expr,
-    with_body': Sequence,
-    else_body': (Sequence | None) = None)
-  =>
-    _refs = refs'
-    _with_body = with_body'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let refs': (AST | None) =
-      try iter.next()
-      else err("missing required field: refs", None); error
-      end
-    let with_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: with_body", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _refs =
-      try refs' as Expr
-      else err("incompatible field: refs", refs'); error
-      end
-    _with_body =
-      try with_body' as Sequence
-      else err("incompatible field: with_body", with_body'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun refs(): this->Expr => _refs
-  fun with_body(): this->Sequence => _with_body
-  fun else_body(): this->(Sequence | None) => _else_body
-  
-  fun ref set_refs(refs': Expr) => _refs = consume refs'
-  fun ref set_with_body(with_body': Sequence) => _with_body = consume with_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("With")
-    s.push('(')
-    s.>append(_refs.string()).>push(',').push(' ')
-    s.>append(_with_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class Match is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: Sequence
-  var _cases: (Cases | None)
-  var _else_body: (Sequence | None)
-  
-  new create(
-    expr': Sequence,
-    cases': (Cases | None) = None,
-    else_body': (Sequence | None) = None)
-  =>
-    _expr = expr'
-    _cases = cases'
-    _else_body = else_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) =
-      try iter.next()
-      else err("missing required field: expr", None); error
-      end
-    let cases': (AST | None) = try iter.next() else None end
-    let else_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as Sequence
-      else err("incompatible field: expr", expr'); error
-      end
-    _cases =
-      try cases' as (Cases | None)
-      else err("incompatible field: cases", cases'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->Sequence => _expr
-  fun cases(): this->(Cases | None) => _cases
-  fun else_body(): this->(Sequence | None) => _else_body
-  
-  fun ref set_expr(expr': Sequence) => _expr = consume expr'
-  fun ref set_cases(cases': (Cases | None) = None) => _cases = consume cases'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Match")
-    s.push('(')
-    s.>append(_expr.string()).>push(',').push(' ')
-    s.>append(_cases.string()).>push(',').push(' ')
-    s.>append(_else_body.string())
-    s.push(')')
-    consume s
-
-class Cases is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _list: Array[Case]
-  
-  new create(
-    list': Array[Case] = Array[Case])
-  =>
-    _list = list'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let list' = Array[Case]
-    var list_next' = try iter.next() else None end
-    while true do
-      try list'.push(list_next' as Case) else break end
-      try list_next' = iter.next() else list_next' = None; break end
-    end
-    if list_next' isnt None then
-      let extra' = list_next'
-      err("unexpected extra field", extra'); error
-    end
-    
-    _list = list'
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun list(): this->Array[Case] => _list
-  
-  fun ref set_list(list': Array[Case] = Array[Case]) => _list = consume list'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Cases")
-    s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
-      s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
-    s.push(')')
-    consume s
-
-class Case is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _expr: (Expr | None)
-  var _guard: (Sequence | None)
-  var _body: (Sequence | None)
-  
-  new create(
-    expr': (Expr | None) = None,
-    guard': (Sequence | None) = None,
-    body': (Sequence | None) = None)
-  =>
-    _expr = expr'
-    _guard = guard'
-    _body = body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let expr': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _expr =
-      try expr' as (Expr | None)
-      else err("incompatible field: expr", expr'); error
-      end
-    _guard =
-      try guard' as (Sequence | None)
-      else err("incompatible field: guard", guard'); error
-      end
-    _body =
-      try body' as (Sequence | None)
-      else err("incompatible field: body", body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun expr(): this->(Expr | None) => _expr
-  fun guard(): this->(Sequence | None) => _guard
-  fun body(): this->(Sequence | None) => _body
-  
-  fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
-  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Case")
-    s.push('(')
-    s.>append(_expr.string()).>push(',').push(' ')
-    s.>append(_guard.string()).>push(',').push(' ')
-    s.>append(_body.string())
-    s.push(')')
-    consume s
-
-class Try is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _body: Sequence
-  var _else_body: (Sequence | None)
-  var _then_body: (Sequence | None)
-  
-  new create(
-    body': Sequence,
-    else_body': (Sequence | None) = None,
-    then_body': (Sequence | None) = None)
-  =>
-    _body = body'
-    _else_body = else_body'
-    _then_body = then_body'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let body': (AST | None) =
-      try iter.next()
-      else err("missing required field: body", None); error
-      end
-    let else_body': (AST | None) = try iter.next() else None end
-    let then_body': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _body =
-      try body' as Sequence
-      else err("incompatible field: body", body'); error
-      end
-    _else_body =
-      try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", else_body'); error
-      end
-    _then_body =
-      try then_body' as (Sequence | None)
-      else err("incompatible field: then_body", then_body'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun body(): this->Sequence => _body
-  fun else_body(): this->(Sequence | None) => _else_body
-  fun then_body(): this->(Sequence | None) => _then_body
-  
-  fun ref set_body(body': Sequence) => _body = consume body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  fun ref set_then_body(then_body': (Sequence | None) = None) => _then_body = consume then_body'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Try")
-    s.push('(')
-    s.>append(_body.string()).>push(',').push(' ')
-    s.>append(_else_body.string()).>push(',').push(' ')
-    s.>append(_then_body.string())
     s.push(')')
     consume s
 
@@ -6995,48 +6989,297 @@ class Object is AST
 class LitArray is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Sequence]
+  var _elem_type: (Type | None)
+  var _sequence: Sequence
   
   new create(
-    list': Array[Sequence] = Array[Sequence])
+    elem_type': (Type | None) = None,
+    sequence': Sequence = Sequence)
   =>
-    _list = list'
+    _elem_type = elem_type'
+    _sequence = sequence'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let list' = Array[Sequence]
-    var list_next' = try iter.next() else None end
-    while true do
-      try list'.push(list_next' as Sequence) else break end
-      try list_next' = iter.next() else list_next' = None; break end
-    end
-    if list_next' isnt None then
-      let extra' = list_next'
-      err("unexpected extra field", extra'); error
-    end
+    let elem_type': (AST | None) = try iter.next() else None end
+    let sequence': (AST | None) = try iter.next() else Sequence end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
     
-    _list = list'
+    _elem_type =
+      try elem_type' as (Type | None)
+      else err("incompatible field: elem_type", elem_type'); error
+      end
+    _sequence =
+      try sequence' as Sequence
+      else err("incompatible field: sequence", sequence'); error
+      end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Sequence] => _list
+  fun elem_type(): this->(Type | None) => _elem_type
+  fun sequence(): this->Sequence => _sequence
   
-  fun ref set_list(list': Array[Sequence] = Array[Sequence]) => _list = consume list'
+  fun ref set_elem_type(elem_type': (Type | None) = None) => _elem_type = consume elem_type'
+  fun ref set_sequence(sequence': Sequence = Sequence) => _sequence = consume sequence'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitArray")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.>append(_elem_type.string()).>push(',').push(' ')
+    s.>append(_sequence.string())
+    s.push(')')
+    consume s
+
+class Tuple is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _elements: Array[Sequence]
+  
+  new create(
+    elements': Array[Sequence] = Array[Sequence])
+  =>
+    _elements = elements'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let elements' = Array[Sequence]
+    var elements_next' = try iter.next() else None end
+    while true do
+      try elements'.push(elements_next' as Sequence) else break end
+      try elements_next' = iter.next() else elements_next' = None; break end
+    end
+    if elements_next' isnt None then
+      let extra' = elements_next'
+      err("unexpected extra field", extra'); error
+    end
+    
+    _elements = elements'
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun elements(): this->Array[Sequence] => _elements
+  
+  fun ref set_elements(elements': Array[Sequence] = Array[Sequence]) => _elements = consume elements'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Tuple")
+    s.push('(')
+    let elements_iter = _elements.values()
+    for v in elements_iter do
       s.append(v.string())
-      if list_iter.has_next() then
+      if elements_iter.has_next() then
         s.>push(',').push(' ')
       end
     end
     s.push(')')
+    consume s
+
+class This is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  new create() => None
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("This")
+    consume s
+
+class LitTrue is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  new create() => None
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitTrue")
+    consume s
+
+class LitFalse is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  new create() => None
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitFalse")
+    consume s
+
+class LitInteger is AST
+  var _pos: SourcePosAny = SourcePosNone
+  var _value: I128
+  new create(value': I128) => _value = value'
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    _value = 88 // TODO: parse from _pos?
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun value(): I128 => _value
+  fun ref set_value(value': I128) => _value = value'
+  fun string(): String iso^ =>
+    recover
+      String.>append("LitInteger(").>append(_value.string()).>push(')')
+    end
+
+class LitFloat is AST
+  var _pos: SourcePosAny = SourcePosNone
+  var _value: F64
+  new create(value': F64) => _value = value'
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    _value = 88 // TODO: parse from _pos?
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun value(): F64 => _value
+  fun ref set_value(value': F64) => _value = value'
+  fun string(): String iso^ =>
+    recover
+      String.>append("LitFloat(").>append(_value.string()).>push(')')
+    end
+
+class LitString is AST
+  var _pos: SourcePosAny = SourcePosNone
+  var _value: String
+  new create(value': String) => _value = value'
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    _value = "foo" // TODO: parse from _pos?
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun value(): String => _value
+  fun ref set_value(value': String) => _value = value'
+  fun string(): String iso^ =>
+    recover
+      String.>append("LitString(").>append(_value.string()).>push(')')
+    end
+
+class LitCharacter is AST
+  var _pos: SourcePosAny = SourcePosNone
+  var _value: U8
+  new create(value': U8) => _value = value'
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    _value = 88 // TODO: parse from _pos?
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun value(): U8 => _value
+  fun ref set_value(value': U8) => _value = value'
+  fun string(): String iso^ =>
+    recover
+      String.>append("LitCharacter(").>append(_value.string()).>push(')')
+    end
+
+class LitLocation is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  new create() => None
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("LitLocation")
     consume s
 
 class Reference is AST
@@ -7759,6 +8002,65 @@ class ParamRef is AST
     s.push(')')
     consume s
 
+class ViewpointType is AST
+  var _pos: SourcePosAny = SourcePosNone
+  
+  var _left: Type
+  var _right: Type
+  
+  new create(
+    left': Type,
+    right': Type)
+  =>
+    _left = left'
+    _right = right'
+  
+  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
+    _pos = pos'
+    
+    let left': (AST | None) =
+      try iter.next()
+      else err("missing required field: left", None); error
+      end
+    let right': (AST | None) =
+      try iter.next()
+      else err("missing required field: right", None); error
+      end
+    if
+      try
+        let extra' = iter.next()
+        err("unexpected extra field", extra'); true
+      else false
+      end
+    then error end
+    
+    _left =
+      try left' as Type
+      else err("incompatible field: left", left'); error
+      end
+    _right =
+      try right' as Type
+      else err("incompatible field: right", right'); error
+      end
+  
+  fun pos(): SourcePosAny => _pos
+  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  
+  fun left(): this->Type => _left
+  fun right(): this->Type => _right
+  
+  fun ref set_left(left': Type) => _left = consume left'
+  fun ref set_right(right': Type) => _right = consume right'
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("ViewpointType")
+    s.push('(')
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
+    s.push(')')
+    consume s
+
 class UnionType is AST
   var _pos: SourcePosAny = SourcePosNone
   
@@ -7900,30 +8202,39 @@ class TupleType is AST
     s.push(')')
     consume s
 
-class ArrowType is AST
+class NominalType is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _left: Type
-  var _right: Type
+  var _name: Id
+  var _package: (Id | None)
+  var _type_args: (TypeArgs | None)
+  var _cap: (Cap | GenCap | None)
+  var _cap_mod: (CapMod | None)
   
   new create(
-    left': Type,
-    right': Type)
+    name': Id,
+    package': (Id | None) = None,
+    type_args': (TypeArgs | None) = None,
+    cap': (Cap | GenCap | None) = None,
+    cap_mod': (CapMod | None) = None)
   =>
-    _left = left'
-    _right = right'
+    _name = name'
+    _package = package'
+    _type_args = type_args'
+    _cap = cap'
+    _cap_mod = cap_mod'
   
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let left': (AST | None) =
+    let name': (AST | None) =
       try iter.next()
-      else err("missing required field: left", None); error
+      else err("missing required field: name", None); error
       end
-    let right': (AST | None) =
-      try iter.next()
-      else err("missing required field: right", None); error
-      end
+    let package': (AST | None) = try iter.next() else None end
+    let type_args': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next() else None end
+    let cap_mod': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -7932,30 +8243,51 @@ class ArrowType is AST
       end
     then error end
     
-    _left =
-      try left' as Type
-      else err("incompatible field: left", left'); error
+    _name =
+      try name' as Id
+      else err("incompatible field: name", name'); error
       end
-    _right =
-      try right' as Type
-      else err("incompatible field: right", right'); error
+    _package =
+      try package' as (Id | None)
+      else err("incompatible field: package", package'); error
+      end
+    _type_args =
+      try type_args' as (TypeArgs | None)
+      else err("incompatible field: type_args", type_args'); error
+      end
+    _cap =
+      try cap' as (Cap | GenCap | None)
+      else err("incompatible field: cap", cap'); error
+      end
+    _cap_mod =
+      try cap_mod' as (CapMod | None)
+      else err("incompatible field: cap_mod", cap_mod'); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun left(): this->Type => _left
-  fun right(): this->Type => _right
+  fun name(): this->Id => _name
+  fun package(): this->(Id | None) => _package
+  fun type_args(): this->(TypeArgs | None) => _type_args
+  fun cap(): this->(Cap | GenCap | None) => _cap
+  fun cap_mod(): this->(CapMod | None) => _cap_mod
   
-  fun ref set_left(left': Type) => _left = consume left'
-  fun ref set_right(right': Type) => _right = consume right'
+  fun ref set_name(name': Id) => _name = consume name'
+  fun ref set_package(package': (Id | None) = None) => _package = consume package'
+  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
+  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
+  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
   
   fun string(): String iso^ =>
     let s = recover iso String end
-    s.append("ArrowType")
+    s.append("NominalType")
     s.push('(')
-    s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_name.string()).>push(',').push(' ')
+    s.>append(_package.string()).>push(',').push(' ')
+    s.>append(_type_args.string()).>push(',').push(' ')
+    s.>append(_cap.string()).>push(',').push(' ')
+    s.>append(_cap_mod.string())
     s.push(')')
     consume s
 
@@ -8043,7 +8375,7 @@ class LambdaType is AST
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
-  var _param_types: TupleType
+  var _param_types: (TupleType | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
   var _object_cap: (Cap | GenCap | None)
@@ -8053,7 +8385,7 @@ class LambdaType is AST
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
-    param_types': TupleType = TupleType,
+    param_types': (TupleType | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
@@ -8074,7 +8406,7 @@ class LambdaType is AST
     let method_cap': (AST | None) = try iter.next() else None end
     let name': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let param_types': (AST | None) = try iter.next() else TupleType end
+    let param_types': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
     let object_cap': (AST | None) = try iter.next() else None end
@@ -8100,7 +8432,7 @@ class LambdaType is AST
       else err("incompatible field: type_params", type_params'); error
       end
     _param_types =
-      try param_types' as TupleType
+      try param_types' as (TupleType | None)
       else err("incompatible field: param_types", param_types'); error
       end
     _return_type =
@@ -8126,7 +8458,7 @@ class LambdaType is AST
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
   fun type_params(): this->(TypeParams | None) => _type_params
-  fun param_types(): this->TupleType => _param_types
+  fun param_types(): this->(TupleType | None) => _param_types
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun object_cap(): this->(Cap | GenCap | None) => _object_cap
@@ -8135,7 +8467,7 @@ class LambdaType is AST
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
   fun ref set_name(name': (Id | None) = None) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_param_types(param_types': TupleType = TupleType) => _param_types = consume param_types'
+  fun ref set_param_types(param_types': (TupleType | None) = None) => _param_types = consume param_types'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'
@@ -8152,95 +8484,6 @@ class LambdaType is AST
     s.>append(_return_type.string()).>push(',').push(' ')
     s.>append(_partial.string()).>push(',').push(' ')
     s.>append(_object_cap.string()).>push(',').push(' ')
-    s.>append(_cap_mod.string())
-    s.push(')')
-    consume s
-
-class NominalType is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _package: (Id | None)
-  var _name: Id
-  var _type_args: (TypeArgs | None)
-  var _cap: (Cap | GenCap | None)
-  var _cap_mod: (CapMod | None)
-  
-  new create(
-    package': (Id | None) = None,
-    name': Id,
-    type_args': (TypeArgs | None) = None,
-    cap': (Cap | GenCap | None) = None,
-    cap_mod': (CapMod | None) = None)
-  =>
-    _package = package'
-    _name = name'
-    _type_args = type_args'
-    _cap = cap'
-    _cap_mod = cap_mod'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let package': (AST | None) = try iter.next() else None end
-    let name': (AST | None) =
-      try iter.next()
-      else err("missing required field: name", None); error
-      end
-    let type_args': (AST | None) = try iter.next() else None end
-    let cap': (AST | None) = try iter.next() else None end
-    let cap_mod': (AST | None) = try iter.next() else None end
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _package =
-      try package' as (Id | None)
-      else err("incompatible field: package", package'); error
-      end
-    _name =
-      try name' as Id
-      else err("incompatible field: name", name'); error
-      end
-    _type_args =
-      try type_args' as (TypeArgs | None)
-      else err("incompatible field: type_args", type_args'); error
-      end
-    _cap =
-      try cap' as (Cap | GenCap | None)
-      else err("incompatible field: cap", cap'); error
-      end
-    _cap_mod =
-      try cap_mod' as (CapMod | None)
-      else err("incompatible field: cap_mod", cap_mod'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun package(): this->(Id | None) => _package
-  fun name(): this->Id => _name
-  fun type_args(): this->(TypeArgs | None) => _type_args
-  fun cap(): this->(Cap | GenCap | None) => _cap
-  fun cap_mod(): this->(CapMod | None) => _cap_mod
-  
-  fun ref set_package(package': (Id | None) = None) => _package = consume package'
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
-  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("NominalType")
-    s.push('(')
-    s.>append(_package.string()).>push(',').push(' ')
-    s.>append(_name.string()).>push(',').push(' ')
-    s.>append(_type_args.string()).>push(',').push(' ')
-    s.>append(_cap.string()).>push(',').push(' ')
     s.>append(_cap_mod.string())
     s.push(')')
     consume s
@@ -8843,202 +9086,6 @@ class Id is AST
     recover
       String.>append("Id(").>append(_value.string()).>push(')')
     end
-
-class This is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  new create() => None
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("This")
-    consume s
-
-class LitTrue is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  new create() => None
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LitTrue")
-    consume s
-
-class LitFalse is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  new create() => None
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LitFalse")
-    consume s
-
-class LitFloat is AST
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: F64
-  new create(value': F64) => _value = value'
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    _value = 88 // TODO: parse from _pos?
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun value(): F64 => _value
-  fun ref set_value(value': F64) => _value = value'
-  fun string(): String iso^ =>
-    recover
-      String.>append("LitFloat(").>append(_value.string()).>push(')')
-    end
-
-class LitInteger is AST
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: I128
-  new create(value': I128) => _value = value'
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    _value = 88 // TODO: parse from _pos?
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun value(): I128 => _value
-  fun ref set_value(value': I128) => _value = value'
-  fun string(): String iso^ =>
-    recover
-      String.>append("LitInteger(").>append(_value.string()).>push(')')
-    end
-
-class LitCharacter is AST
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: U8
-  new create(value': U8) => _value = value'
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    _value = 88 // TODO: parse from _pos?
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun value(): U8 => _value
-  fun ref set_value(value': U8) => _value = value'
-  fun string(): String iso^ =>
-    recover
-      String.>append("LitCharacter(").>append(_value.string()).>push(')')
-    end
-
-class LitString is AST
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: String
-  new create(value': String) => _value = value'
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    _value = "foo" // TODO: parse from _pos?
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun value(): String => _value
-  fun ref set_value(value': String) => _value = value'
-  fun string(): String iso^ =>
-    recover
-      String.>append("LitString(").>append(_value.string()).>push(')')
-    end
-
-class LitLocation is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  new create() => None
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("LitLocation")
-    consume s
 
 class EOF is AST
   var _pos: SourcePosAny = SourcePosNone

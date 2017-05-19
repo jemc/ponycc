@@ -102,7 +102,7 @@ primitive ParserDefs
       .> if_token_then_rule("Tk[Assign]", "field value", ["infix"])
     
     // (FUN | BE | NEW) [annotations] [CAP] ID [typeparams] (LPAREN | LPAREN_NEW)
-    // [params] RPAREN [COLON type] [QUESTION] [ARROW rawseq]
+    // [params] RPAREN [COLON type] [QUESTION] [ARROW seq]
     g.def("method")
       .> token("None", ["Tk[MethodFun]"; "Tk[MethodBe]"; "Tk[MethodNew]"])
       .> annotate()
@@ -114,9 +114,9 @@ primitive ParserDefs
       .> skip("None", ["Tk[RParen]"])
       .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["rawseq"])
+      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
       .> opt_token("None", ["Tk[LitString]"])
-      .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["rawseq"])
+      .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["seq"])
       // Order should be:
       // cap id type_params params return_type error guard body docstring
       // TODO: REORDER(1, 0, 2, 3, 4, 5, 6, 8, 7)
@@ -173,345 +173,363 @@ primitive ParserDefs
       .> if_token_then_rule("Tk[Colon]", "parameter type", ["type"])
       .> if_token_then_rule("Tk[Assign]", "default value", ["infix"])
     
-    // ELLIPSIS
-    g.def("ellipsis")
-      .> token("None", ["Tk[Ellipsis]"])
+    // exprseq
+    g.def("seq")
+      .> tree("Tk[Sequence]")
+      .> rule("value", ["exprseq"])
     
-    // TRUE | FALSE | INT | FLOAT | STRING
-    g.def("literal")
-      .> token("literal", ["Tk[LitTrue]"; "Tk[LitFalse]"; "Tk[LitInteger]"; "Tk[LitFloat]"; "Tk[LitString]"; "Tk[LitCharacter]"])
-    
-    // CAP
-    g.def("cap")
-      .> token("capability", ["Tk[Iso]"; "Tk[Trn]"; "Tk[Ref]"; "Tk[Val]"; "Tk[Box]"; "Tk[Tag]"])
-    
-    // GENCAP
-    g.def("gencap")
-      .> token("generic capability", ["Tk[CapRead]"; "Tk[CapSend]"; "Tk[CapShare]"; "Tk[CapAlias]"; "Tk[CapAny]"])
-    
-    // ID [DOT ID] [typeargs] [CAP] [EPHEMERAL | ALIASED]
-    g.def("nominal")
-      .> tree("Tk[NominalType]")
-      .> token("name", ["Tk[Id]"])
-      // TODO: IFELSE("Tk[Dot]",
-      //   TOKEN("name", "Tk[Id]"),
-      //   .> tree("Tk[None]")
-      //   REORDER(1, 0)
-      // )
-      .> opt_rule("type arguments", ["typeargs"])
-      .> opt_rule("capability", ["cap"; "gencap"])
-      .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
-    
-    // PIPE type
-    g.def("uniontype")
-      .> builder("_BuildInfix")
-      .> tree("Tk[UnionType]")
-      .> skip("None", ["Tk[Pipe]"])
-      .> rule("type", ["type"])
-    
-    // AMP type
-    g.def("isecttype")
-      .> builder("_BuildInfix")
-      .> tree("Tk[IsectType]")
-      .> skip("None", ["Tk[Ampersand]"])
-      .> rule("type", ["type"])
-    
-    // type {uniontype | isecttype}
-    g.def("infixtype")
-      .> rule("type", ["type"])
-      .> seq("type", ["uniontype"; "isecttype"])
-    
-    // COMMA infixtype {COMMA infixtype}
-    g.def("tupletype")
-      .> builder("_BuildInfix")
-      .> token("None", ["Tk[Comma]"])
-      // TODO: MAP_ID("Tk[Comma]", "Tk[TupleType]")
-      .> rule("type", ["infixtype"])
-      .> while_token_do_rule("Tk[Comma]", "type", ["infixtype"])
-    
-    // (LPAREN | LPAREN_NEW) infixtype [tupletype] RPAREN
-    g.def("groupedtype")
-      .> print_inline()
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> rule("type", ["infixtype"])
-      .> opt_no_dflt_rule("type", ["tupletype"])
-      .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
-    
-    // THIS
-    g.def("thistype")
-      .> print_inline()
-      .> tree("Tk[ThisType]")
-      .> skip("None", ["Tk[This]"])
-    
-    // type (COMMA type)*
-    g.def("typelist")
-      .> print_inline()
-      .> tree("Tk[Params]")
-      .> rule("parameter type", ["type"])
-      .> while_token_do_rule("Tk[Comma]", "parameter type", ["type"])
-    
-    // LBRACE [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [typelist] RPAREN
-    // [COLON type] [QUESTION] RBRACE [CAP] [EPHEMERAL | ALIASED]
-    g.def("lambdatype")
-      .> tree("Tk[LambdaType]")
-      .> skip("None", ["Tk[LBrace]"])
-      .> opt_rule("capability", ["cap"])
-      .> opt_token("function name", ["Tk[Id]"])
-      .> opt_rule("type parameters", ["typeparams"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["typelist"])
-      .> skip("None", ["Tk[RParen]"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
-      .> opt_token("None", ["Tk[Question]"])
-      .> skip("None", ["Tk[RBrace]"])
-      .> opt_rule("capability", ["cap"; "gencap"])
-      .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
-    
-    // (thistype | cap | typeexpr | nominal | lambdatype)
-    g.def("atomtype")
-      .> rule("type", ["thistype"; "cap"; "groupedtype"; "nominal"; "lambdatype"])
-    
-    // ARROW type
-    g.def("viewpoint")
-      .> print_inline()
-      .> builder("_BuildInfix")
-      .> token("None", ["Tk[Arrow]"])
-      .> rule("viewpoint", ["type"])
-    
-    // atomtype [viewpoint]
-    g.def("type")
-      .> rule("type", ["atomtype"])
-      .> opt_no_dflt_rule("viewpoint", ["viewpoint"])
-    
-    // ID [$updatearg] ASSIGN rawseq
-    g.def("namedarg")
-      .> tree("Tk[NamedArg]")
-      .> token("argument name", ["Tk[Id]"])
-      .> skip("None", ["Tk[Assign]"])
-      .> rule("argument value", ["rawseq"])
-    
-    // WHERE namedarg {COMMA namedarg}
-    g.def("named")
-      .> tree("Tk[NamedArgs]")
-      .> skip("None", ["Tk[Where]"])
-      .> rule("named argument", ["namedarg"])
-      .> while_token_do_rule("Tk[Comma]", "named argument", ["namedarg"])
-    
-    // rawseq {COMMA rawseq}
-    g.def("positional")
-      .> tree("Tk[Args]")
-      .> rule("argument", ["rawseq"])
-      .> while_token_do_rule("Tk[Comma]", "argument", ["rawseq"])
-    
-    // '\' ID {COMMA ID} '\'
-    g.def("annotations")
-      .> print_inline()
-      .> token("None", ["Tk[Backslash]"])
-      .> token("annotation", ["Tk[Id]"])
-      .> while_token_do_token("Tk[Comma]", "annotation", ["Tk[Id]"])
-      .> terminate("annotations", ["Tk[Backslash]"])
-    
-    // OBJECT [annotations] [CAP] [IS type] members END
-    g.def("object")
-      .> print_inline()
-      .> token("None", ["Tk[Object]"])
+    // [annotations] exprseq
+    g.def("annotatedseq")
+      .> tree("Tk[Sequence]")
       .> annotate()
-      .> opt_rule("capability", ["cap"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
-      .> rule("object member", ["members"])
-      .> terminate("object literal", ["Tk[End]"])
+      .> rule("value", ["exprseq"])
     
-    // ID [COLON type] [ASSIGN infix]
-    g.def("lambdacapture")
-      .> tree("Tk[LambdaCapture]")
-      .> token("name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "capture type", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "capture value", ["infix"])
+    // (assignment | jump) {semiexpr | assignment | jump}
+    g.def("exprseq") // TODO: find a cleaner solution
+      .> builder("_BuildFlattenExcept[(
+        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
+        Tk[CompileIntrinsic] | Tk[CompileError
+      ])]")
+      .> rule("value", ["assignment"; "jump"])
+      .> seq("value", ["semiexpr"; "nextassignment"; "jump"])
     
-    // (LPAREN | LPAREN_NEW) (lambdacapture | thisliteral)
-    // {COMMA (lambdacapture | thisliteral)} RPAREN
-    g.def("lambdacaptures")
-      .> tree("Tk[LambdaCaptures]")
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> rule("capture", ["lambdacapture"; "thisliteral"])
-      .> while_token_do_rule("Tk[Comma]", "capture", ["lambdacapture"; "thisliteral"])
-      .> skip("None", ["Tk[RParen]"])
+    // semi (exprseq | jump)
+    g.def("semiexpr") // TODO: find a cleaner solution
+      .> builder("_BuildFlattenExcept[(
+        Tk[Return] | Tk[Break] | Tk[Continue] | Tk[Error] |
+        Tk[CompileIntrinsic] | Tk[CompileError
+      ])]")
+      .> rule("semicolon", ["semi"])
+      .> rule("value", ["assignment"; "jump"])
     
-    // LBRACE [annotations] [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [params]
-    // RPAREN [lambdacaptures] [COLON type] [QUESTION] ARROW rawseq RBRACE [CAP]
-    g.def("lambda")
+    // SEMICOLON
+    g.def("semi")
+      .> skip("None", ["Tk[Semicolon]"])
+      .> opt_no_dflt_token("None", ["Tk[NewLine]"])
+      // TODO: MAP_ID("Tk[NewLine]", "Tk[Semicolon]")
+    
+    // (RETURN | BREAK | CONTINUE | ERROR | COMPILE_INTRINSIC | COMPILE_ERROR)
+    // [jumpvalue]
+    g.def("jump")
+      .> token("statement", [
+        "Tk[Return]"; "Tk[Break]"; "Tk[Continue]"; "Tk[Error]"
+        "Tk[CompileIntrinsic]"; "Tk[CompileError]"
+      ])
+      .> opt_rule("return value", ["jumpvalue"])
+    
+    // assignment
+    g.def("jumpvalue")
+      .> not_token("None", ["Tk[NewLine]"]) // value can't be on the next line
+      .> rule("return value", ["assignment"])
+    
+    // term [assignop]
+    g.def("assignment")
+      .> rule("value", ["infix"])
+      .> opt_no_dflt_rule("value", ["assignop"])
+    
+    // term [assignop]
+    g.def("nextassignment")
+      .> rule("value", ["nextinfix"])
+      .> opt_no_dflt_rule("value", ["assignop"])
+    
+    // term {binop | asop}
+    g.def("infix")
+      .> rule("value", ["term"])
+      .> seq("value", ["binop"; "asop"])
+    
+    // term {binop | asop}
+    g.def("nextinfix")
+      .> rule("value", ["nextterm"])
+      .> seq("value", ["binop"; "asop"])
+    
+    // ifdef | iftype | if | while | repeat | for | with | match | 
+    // try | consume | recover | pattern | const_expr
+    g.def("term")
+      .> rule("value", [
+        "ifdef"; "iftype"; "if"; "while"; "repeat"; "for"; "with"; "match"
+        "try"; "recover"; "consume"; "pattern"; "const_expr"
+      ])
+    
+    // ifdef | iftype | if | while | repeat | for | with | match | 
+    // try | consume | recover | pattern | const_expr
+    g.def("nextterm")
+      .> rule("value", [
+        "ifdef"; "iftype"; "if"; "while"; "repeat"; "for"; "with"; "match"
+        "try"; "recover"; "consume"; "nextpattern"; "const_expr"
+      ])
+    
+    // ifdefterm {ifdefbinop}
+    g.def("ifdefinfix")
+      .> rule("ifdef condition", ["ifdefterm"])
+      .> seq("ifdef binary operator", ["ifdefbinop"])
+    
+    // ifdefflag | ifdefnot
+    g.def("ifdefterm")
+      .> rule("ifdef condition", ["ifdefflag"; "ifdefnot"])
+    
+    // ID | STRING
+    g.def("ifdefflag")
+      .> tree("Tk[IfDefFlag]")
+      .> token("ifdef condition", ["Tk[Id]"; "Tk[LitString]"])
+    
+    // NOT ifdefterm
+    g.def("ifdefnot")
       .> print_inline()
-      .> tree("Tk[Lambda]")
-      .> skip("None", ["Tk[LBrace]"])
-      .> annotate()
-      .> opt_rule("receiver capability", ["cap"])
-      .> opt_token("function name", ["Tk[Id]"])
-      .> opt_rule("type parameters", ["typeparams"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["params"])
-      .> skip("None", ["Tk[RParen]"])
-      .> opt_rule("captures", ["lambdacaptures"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
-      .> opt_token("None", ["Tk[Question]"])
-      .> skip("None", ["Tk[DoubleArrow]"])
-      .> rule("lambda body", ["rawseq"])
-      .> terminate("lambda expression", ["Tk[RBrace]"])
-      .> opt_rule("reference capability", ["cap"])
+      .> token("None", ["Tk[Not]"])
+      // TODO: MAP_ID("Tk[Not]", "Tk[IfDefNot]")
+      .> rule("ifdef condition", ["ifdefterm"])
     
-    // AS type ':'
-    g.def("arraytype")
-      .> print_inline()
-      .> skip("None", ["Tk[As]"])
-      .> rule("type", ["type"])
-      .> skip("None", ["Tk[Colon]"])
-    
-    // (LSQUARE | LSQUARE_NEW) rawseq {COMMA rawseq} RSQUARE
-    g.def("array")
-      .> print_inline()
-      .> tree("Tk[LitArray]")
-      .> skip("None", ["Tk[LSquare]"; "Tk[LSquareNew]"])
-      .> opt_rule("element type", ["arraytype"])
-      .> rule("array elements", ["rawseq"])
-      .> terminate("array literal", ["Tk[RSquare]"])
-    
-    // LSQUARE_NEW rawseq {COMMA rawseq} RSQUARE
-    g.def("nextarray")
-      .> print_inline()
-      .> tree("Tk[LitArray]")
-      .> skip("None", ["Tk[LSquareNew]"])
-      .> opt_rule("element type", ["arraytype"])
-      .> rule("array elements", ["rawseq"])
-      .> terminate("array literal", ["Tk[RSquare]"])
-    
-    // COMMA rawseq {COMMA rawseq}
-    g.def("tuple")
+    // (AND | OR) ifdefterm
+    g.def("ifdefbinop")
       .> builder("_BuildInfix")
-      .> token("None", ["Tk[Comma]"])
-      // TODO: MAP_ID("Tk[Comma]", "Tk[Tuple]")
-      .> rule("value", ["rawseq"])
-      .> while_token_do_rule("Tk[Comma]", "value", ["rawseq"])
+      .> token("ifdef binary operator", ["Tk[And]"; "Tk[Or]"])
+      // TODO: MAP_ID("Tk[And]", "Tk[IfDefAnd]")
+      // TODO: MAP_ID("Tk[Or]",  "Tk[IfDefOr]")
+      .> rule("ifdef condition", ["ifdefterm"])
     
-    // (LPAREN | LPAREN_NEW) rawseq [tuple] RPAREN
-    g.def("groupedexpr")
+    // IFDEF [annotations] ifdefinfix THEN seq [elseifdef | elseclause] END
+    g.def("ifdef")
       .> print_inline()
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> rule("value", ["rawseq"])
-      .> opt_no_dflt_rule("value", ["tuple"])
-      .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
+      .> token("None", ["Tk[IfDef]"])
+      .> annotate()
+      .> rule("condition expression", ["ifdefinfix"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseifdef"; "elseclause"])
+      .> terminate("ifdef expression", ["Tk[End]"])
     
-    // LPAREN_NEW rawseq [tuple] RPAREN
-    g.def("nextgroupedexpr")
+    // ELSEIF [annotations] ifdefinfix THEN seq [elseifdef | elseclause]
+    g.def("elseifdef")
+      .> tree("Tk[IfDef]")
+      .> skip("None", ["Tk[ElseIf]"])
+      .> annotate()
+      .> rule("condition expression", ["ifdefinfix"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseifdef"; "elseclause"])
+    
+    // IFTYPE [annotations] type <: type THEN seq [elseiftype | (ELSE seq)] END
+    g.def("iftype")
       .> print_inline()
-      .> skip("None", ["Tk[LParenNew]"])
-      .> rule("value", ["rawseq"])
-      .> opt_no_dflt_rule("value", ["tuple"])
-      .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
+      .> token("None", ["Tk[IfType]"])
+      .> annotate()
+      .> rule("type", ["type"])
+      .> skip("None", ["Tk[SubType]"])
+      .> rule("type", ["type"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseiftype"; "elseclause"])
+      .> terminate("iftype expression", ["Tk[End]"])
     
-    // THIS
-    g.def("thisliteral")
-      .> token("None", ["Tk[This]"])
+    // ELSEIFTYPE [annotations] type <: type THEN seq [elseiftype | (ELSE seq)]
+    g.def("elseiftype")
+      .> tree("Tk[IfType]")
+      .> skip("None", ["Tk[ElseIf]"])
+      .> annotate()
+      .> rule("type", ["type"])
+      .> skip("None", ["Tk[SubType]"])
+      .> rule("type", ["type"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseiftype"; "elseclause"])
+    
+    // IF [annotations] seq THEN seq [elseif | elseclause] END
+    g.def("if")
+      .> print_inline()
+      .> token("None", ["Tk[If]"])
+      .> annotate()
+      .> rule("condition expression", ["seq"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseif"; "elseclause"])
+      .> terminate("if expression", ["Tk[End]"])
+    
+    // ELSEIF [annotations] seq THEN seq [elseif | (ELSE seq)]
+    g.def("elseif")
+      .> tree("Tk[If]")
+      .> skip("None", ["Tk[ElseIf]"])
+      .> annotate()
+      .> rule("condition expression", ["seq"])
+      .> skip("None", ["Tk[Then]"])
+      .> rule("then value", ["seq"])
+      .> opt_rule("else clause", ["elseif"; "elseclause"])
+    
+    // ELSE annotatedseq
+    g.def("elseclause")
+      .> print_inline()
+      .> skip("None", ["Tk[Else]"])
+      .> rule("else value", ["annotatedseq"])
+    
+    // WHILE [annotations] seq DO seq [ELSE annotatedseq] END
+    g.def("while")
+      .> print_inline()
+      .> token("None", ["Tk[While]"])
+      .> annotate()
+      .> rule("condition expression", ["seq"])
+      .> skip("None", ["Tk[Do]"])
+      .> rule("while body", ["seq"])
+      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
+      .> terminate("while loop", ["Tk[End]"])
+    
+    // REPEAT [annotations] seq UNTIL annotatedseq [ELSE annotatedseq] END
+    g.def("repeat")
+      .> print_inline()
+      .> token("None", ["Tk[Repeat]"])
+      .> annotate()
+      .> rule("repeat body", ["seq"])
+      .> skip("None", ["Tk[Until]"])
+      .> rule("condition expression", ["annotatedseq"])
+      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
+      .> terminate("repeat loop", ["Tk[End]"])
+    
+    // FOR [annotations] idseq IN seq DO seq [ELSE annotatedseq] END
+    g.def("for")
+      .> print_inline()
+      .> token("None", ["Tk[For]"])
+      .> annotate()
+      .> rule("iterator name", ["idseq"])
+      .> skip("None", ["Tk[In]"])
+      .> rule("iterator", ["seq"])
+      .> skip("None", ["Tk[Do]"])
+      .> rule("for body", ["seq"])
+      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
+      .> terminate("for loop", ["Tk[End]"])
+    
+    // WITH [annotations] withexpr DO seq [ELSE annotatedseq] END
+    g.def("with")
+      .> print_inline()
+      .> token("None", ["Tk[With]"])
+      .> annotate()
+      .> rule("with expression", ["withexpr"])
+      .> skip("None", ["Tk[Do]"])
+      .> rule("with body", ["seq"])
+      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
+      .> terminate("with expression", ["Tk[End]"])
+    
+    // ID | (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
+    g.def("idseq")
+      .> rule("variable name", ["idseqsingle"; "idseqmulti"])
     
     // ID
-    g.def("ref")
+    g.def("idseqsingle")
       .> print_inline()
-      .> tree("Tk[Reference]")
-      .> token("name", ["Tk[Id]"])
-    
-    // __LOC
-    g.def("location")
-      .> print_inline()
-      .> token("None", ["Tk[LitLocation]"])
-    
-    // AT (ID | STRING) typeargs (LPAREN | LPAREN_NEW) [positional] RPAREN
-    // [QUESTION]
-    g.def("ffi")
-      .> print_inline()
-      .> token("None", ["Tk[At]"])
-      // TODO: MAP_ID("Tk[At]", "Tk[Fficall]")
-      .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
-      .> opt_rule("return type", ["typeargs"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("ffi arguments", ["positional"])
-      .> opt_rule("ffi arguments", ["named"])
-      .> terminate("ffi arguments", ["Tk[RParen]"])
-      .> opt_token("None", ["Tk[Question]"])
-    
-    // ref | this | literal | tuple | array | object | lambda | ffi | location
-    g.def("atom")
-      .> rule("value", ["ref"; "thisliteral"; "literal"; "groupedexpr"; "array"; "object"; "lambda"; "ffi"; "location"])
-    
-    // ref | this | literal | tuple | array | object | lambda | ffi | location
-    g.def("nextatom")
-      .> rule("value", ["ref"; "thisliteral"; "literal"; "nextgroupedexpr"; "nextarray"; "object"; "lambda"; "ffi"; "location"])
-    
-    // DOT ID
-    g.def("dot")
-      .> builder("_BuildInfix")
-      .> token("None", ["Tk[Dot]"])
-      .> token("member name", ["Tk[Id]"])
-    
-    // TILDE ID
-    g.def("tilde")
-      .> builder("_BuildInfix")
-      .> token("None", ["Tk[Tilde]"])
-      .> token("method name", ["Tk[Id]"])
-    
-    // CHAIN ID
-    g.def("chain")
-      .> builder("_BuildInfix")
-      .> token("None", ["Tk[Chain]"])
-      .> token("method name", ["Tk[Id]"])
-    
-    // typeargs
-    g.def("qualify")
-      .> builder("_BuildInfix")
-      .> tree("Tk[Qualify]")
-      .> rule("type arguments", ["typeargs"])
-    
-    // LPAREN [positional] [named] RPAREN
-    g.def("call")
-      // TODO: INFIX_REVERSE()
-      .> tree("Tk[Call]")
-      .> skip("None", ["Tk[LParen]"])
-      .> opt_rule("argument", ["positional"])
-      .> opt_rule("argument", ["named"])
-      .> terminate("call arguments", ["Tk[RParen]"])
-    
-    // atom {dot | tilde | chain | qualify | call}
-    g.def("postfix")
-      .> rule("value", ["atom"])
-      .> seq("postfix expression", ["dot"; "tilde"; "chain"; "qualify"; "call"])
-    
-    // atom {dot | tilde | chain | qualify | call}
-    g.def("nextpostfix")
-      .> rule("value", ["nextatom"])
-      .> seq("postfix expression", ["dot"; "tilde"; "chain"; "qualify"; "call"])
-    
-    // (VAR | LET | EMBED) ID [COLON type]
-    g.def("local")
-      .> print_inline()
-      .> token("None", ["Tk[Var]"; "Tk[Let]"; "Tk[Embed]"])
       .> token("variable name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "variable type", ["type"])
     
-    // (NOT | AMP | MINUS | MINUS_TILDE | MINUS_NEW | MINUS_TILDE_NEW | DIGESTOF)
+    // (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
+    g.def("idseqmulti")
+      .> print_inline()
+      .> tree("Tk[Tuple]")
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> rule("variable name", ["idseq"])
+      .> while_token_do_rule("Tk[Comma]", "variable name", ["idseq"])
+      .> skip("None", ["Tk[RParen]"])
+    
+    // infix = assignment
+    g.def("withelem")
+      .> rule("with name", ["infix"])
+      .> skip("None", ["Tk[Assign]"])
+      .> rule("initialiser", ["assignment"])
+    
+    // withelem {COMMA withelem}
+    g.def("withexpr")
+      .> print_inline()
+      .> tree("Tk[AssignTuple]")
+      .> rule("with expression", ["withelem"])
+      .> while_token_do_rule("Tk[Comma]", "with expression", ["withelem"])
+    
+    // MATCH [annotations] seq cases [ELSE annotatedseq] END
+    g.def("match")
+      .> print_inline()
+      .> token("None", ["Tk[Match]"])
+      .> annotate()
+      .> rule("match expression", ["seq"])
+      .> rule("cases", ["cases"])
+      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
+      .> terminate("match expression", ["Tk[End]"])
+    
+    // {caseexpr}
+    g.def("cases")
+      .> print_inline()
+      .> tree("Tk[Cases]")
+      .> seq("cases", ["caseexpr"])
+    
+    // PIPE [annotations] [infix] [WHERE seq] [ARROW seq]
+    g.def("caseexpr")
+      .> tree("Tk[Case]")
+      .> skip("None", ["Tk[Pipe]"])
+      .> annotate()
+      .> opt_rule("case pattern", ["pattern"])
+      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
+      .> if_token_then_rule("Tk[DoubleArrow]", "case body", ["seq"])
+    
+    // TRY [annotations] seq [ELSE annotatedseq] [THEN annotatedseq] END
+    g.def("try")
+      .> print_inline()
+      .> token("None", ["Tk[Try]"])
+      .> annotate()
+      .> rule("try body", ["seq"])
+      .> if_token_then_rule("Tk[Else]", "try else body", ["annotatedseq"])
+      .> if_token_then_rule("Tk[Then]", "try then body", ["annotatedseq"])
+      .> terminate("try expression", ["Tk[End]"])
+    
+    // CONSUME [cap] term
+    g.def("consume")
+      .> print_inline()
+      .> token("consume", ["Tk[Consume]"])
+      .> opt_rule("capability", ["cap"])
+      .> rule("expression", ["term"])
+    
+    // RECOVER [annotations] [CAP] seq END
+    g.def("recover")
+      .> print_inline()
+      .> token("None", ["Tk[Recover]"])
+      .> annotate()
+      .> opt_rule("capability", ["cap"])
+      .> rule("recover body", ["seq"])
+      .> terminate("recover expression", ["Tk[End]"])
+    
+    // AS type
+    g.def("asop")
+      .> print_inline()
+      .> builder("_BuildInfix")
+      .> token("as", ["Tk[As]"])
+      .> rule("type", ["type"])
+    
+    // BINOP term
+    g.def("binop")
+      .> builder("_BuildInfix")
+      .> token("binary operator", [
+        "Tk[Add]"; "Tk[AddUnsafe]"; "Tk[Sub]"; "Tk[SubUnsafe]"; "Tk[Mul]"
+        "Tk[MulUnsafe]"; "Tk[Div]"; "Tk[DivUnsafe]"; "Tk[Mod]"; "Tk[ModUnsafe]"
+        "Tk[LShift]"; "Tk[RShift]"; "Tk[LShiftUnsafe]"; "Tk[RShiftUnsafe]"
+        "Tk[Eq]"; "Tk[EqUnsafe]"; "Tk[NE]"; "Tk[NEUnsafe]"
+        "Tk[LT]"; "Tk[LTUnsafe]"; "Tk[LE]"; "Tk[LEUnsafe]"
+        "Tk[GE]"; "Tk[GEUnsafe]"; "Tk[GT]"; "Tk[GTUnsafe]"
+        "Tk[Is]"; "Tk[Isnt]"; "Tk[And]"; "Tk[Or]"; "Tk[XOr]"
+      ])
+      .> rule("value", ["term"])
+    
+    // (NOT | ADDRESSOF | DIGESTOF | SUB | SUB_TILDE | SUB_NEW | SUB_TILDE_NEW)
     // pattern
     g.def("prefix")
       .> print_inline()
-      .> token("prefix", ["Tk[Not]"; "Tk[AddressOf]"; "Tk[Sub]"; "Tk[SubUnsafe]"; "Tk[SubNew]"; "Tk[SubUnsafeNew]"; "Tk[DigestOf]"])
+      .> token("prefix", [
+        "Tk[Not]"; "Tk[AddressOf]"; "Tk[DigestOf]"
+        "Tk[Sub]"; "Tk[SubUnsafe]"; "Tk[SubNew]"; "Tk[SubUnsafeNew]"
+      ])
       // TODO: MAP_ID("Tk[Sub]", "Tk[UnarySub]")
       // TODO: MAP_ID("Tk[SubUnsafe]", "Tk[UnarySubUnsafe]")
       // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
       // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
       .> rule("expression", ["rhspattern"])
     
-    // (NOT | AMP | MINUS_NEW | MINUS_TILDE_NEW | DIGESTOF) pattern
+    // (NOT | ADDRESSOF | DIGESTOF | SUB_NEW | SUB_TILDE_NEW) pattern
     g.def("nextprefix")
       .> print_inline()
-      .> token("prefix", ["Tk[Not]"; "Tk[AddressOf]"; "Tk[SubNew]"; "Tk[SubUnsafeNew]"; "Tk[DigestOf]"])
+      .> token("prefix", [
+        "Tk[Not]"; "Tk[AddressOf]"; "Tk[DigestOf]"
+        "Tk[SubNew]"; "Tk[SubUnsafeNew]"
+      ])
       // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
       // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
       .> rule("expression", ["rhspattern"])
@@ -532,361 +550,339 @@ primitive ParserDefs
     g.def("nextpattern")
       .> rule("pattern", ["local"; "nextrhspattern"])
     
-    // (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
-    g.def("idseqmulti")
+    // (VAR | LET) ID [COLON type]
+    g.def("local")
       .> print_inline()
-      .> tree("Tk[Tuple]")
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> rule("variable name", ["idseq_in_seq"])
-      .> while_token_do_rule("Tk[Comma]", "variable name", ["idseq_in_seq"])
-      .> skip("None", ["Tk[RParen]"])
-    
-    // ID
-    g.def("idseqsingle")
-      .> print_inline()
-      .> tree("Tk[Let]")
+      .> token("None", ["Tk[Var]"; "Tk[Let]"])
+      // TODO: MAP_ID("Tk[Var]", "Tk[LocalVar]")
+      // TODO: MAP_ID("Tk[Let]", "Tk[LocalLet]")
       .> token("variable name", ["Tk[Id]"])
-      .> tree("Tk[None]")  // Type
-    
-    // idseq
-    g.def("idseq_in_seq")
-      .> tree("Tk[Sequence]")
-      .> rule("variable name", ["idseqsingle"; "idseqmulti"])
-    
-    // ID | (LPAREN | LPAREN_NEW) idseq {COMMA idseq} RPAREN
-    g.def("idseq")
-      .> rule("variable name", ["idseqsingle"; "idseqmulti"])
-    
-    // ELSE annotatedseq
-    g.def("elseclause")
-      .> print_inline()
-      .> skip("None", ["Tk[Else]"])
-      .> rule("else value", ["annotatedseq"])
-    
-    // ELSEIF [annotations] rawseq THEN seq [elseif | (ELSE seq)]
-    g.def("elseif")
-      .> tree("Tk[If]")
-      .> skip("None", ["Tk[ElseIf]"])
-      .> annotate()
-      .> rule("condition expression", ["rawseq"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseif"; "elseclause"])
-    
-    // IF [annotations] rawseq THEN seq [elseif | elseclause] END
-    g.def("cond")
-      .> print_inline()
-      .> token("None", ["Tk[If]"])
-      .> annotate()
-      .> rule("condition expression", ["rawseq"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseif"; "elseclause"])
-      .> terminate("if expression", ["Tk[End]"])
-    
-    // ELSEIF [annotations] infix [$EXTRA infix] THEN seq [elseifdef | elseclause]
-    g.def("elseifdef")
-      .> tree("Tk[IfDef]")
-      .> skip("None", ["Tk[ElseIf]"])
-      .> annotate()
-      .> rule("condition expression", ["infix"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseifdef"; "elseclause"])
-      // Order should be:
-      // condition then_clause else_clause else_condition
-      // TODO: REORDER(0, 2, 3, 1)
-    
-    // IFDEF [annotations] infix [$EXTRA infix] THEN seq [elseifdef | elseclause]
-    // END
-    g.def("ifdef")
-      .> print_inline()
-      .> token("None", ["Tk[IfDef]"])
-      .> annotate()
-      .> rule("condition expression", ["infix"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseifdef"; "elseclause"])
-      .> terminate("ifdef expression", ["Tk[End]"])
-      // Order should be:
-      // condition then_clause else_clause else_condition
-      // TODO: REORDER(0, 2, 3, 1)
-    
-    // ELSEIFTYPE [annotations] type <: type THEN seq [elseiftype | (ELSE seq)]
-    g.def("elseiftype")
-      .> tree("Tk[IfType]")
-      .> skip("None", ["Tk[ElseIf]"])
-      .> annotate()
-      .> rule("type", ["type"])
-      .> skip("None", ["Tk[SubType]"])
-      .> rule("type", ["type"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseiftype"; "elseclause"])
-    
-    // IFTYPE [annotations] type <: type THEN seq [elseiftype | (ELSE seq)] END
-    g.def("iftype")
-      .> print_inline()
-      .> token("None", ["Tk[IfType]"])
-      .> annotate()
-      .> rule("type", ["type"])
-      .> skip("None", ["Tk[SubType]"])
-      .> rule("type", ["type"])
-      .> skip("None", ["Tk[Then]"])
-      .> rule("then value", ["seq"])
-      .> opt_rule("else clause", ["elseiftype"; "elseclause"])
-      .> terminate("iftype expression", ["Tk[End]"])
-    
-    // PIPE [annotations] [infix] [WHERE rawseq] [ARROW rawseq]
-    g.def("caseexpr")
-      .> tree("Tk[Case]")
-      .> skip("None", ["Tk[Pipe]"])
-      .> annotate()
-      .> opt_rule("case pattern", ["pattern"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["rawseq"])
-      .> if_token_then_rule("Tk[DoubleArrow]", "case body", ["rawseq"])
-    
-    // {caseexpr}
-    g.def("cases")
-      .> print_inline()
-      .> tree("Tk[Cases]")
-      .> seq("cases", ["caseexpr"])
-    
-    // MATCH [annotations] rawseq cases [ELSE annotatedseq] END
-    g.def("match")
-      .> print_inline()
-      .> token("None", ["Tk[Match]"])
-      .> annotate()
-      .> rule("match expression", ["rawseq"])
-      .> rule("cases", ["cases"])
-      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
-      .> terminate("match expression", ["Tk[End]"])
-    
-    // WHILE [annotations] rawseq DO seq [ELSE annotatedseq] END
-    g.def("whileloop")
-      .> print_inline()
-      .> token("None", ["Tk[While]"])
-      .> annotate()
-      .> rule("condition expression", ["rawseq"])
-      .> skip("None", ["Tk[Do]"])
-      .> rule("while body", ["seq"])
-      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
-      .> terminate("while loop", ["Tk[End]"])
-    
-    // REPEAT [annotations] seq UNTIL annotatedrawseq [ELSE annotatedseq] END
-    g.def("repeat")
-      .> print_inline()
-      .> token("None", ["Tk[Repeat]"])
-      .> annotate()
-      .> rule("repeat body", ["seq"])
-      .> skip("None", ["Tk[Until]"])
-      .> rule("condition expression", ["annotatedrawseq"])
-      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
-      .> terminate("repeat loop", ["Tk[End]"])
-    
-    // FOR [annotations] idseq IN rawseq DO rawseq [ELSE annotatedseq] END
-    // =>
-    // (SEQ
-    //   (ASSIGN (LET $1) iterator)
-    //   (WHILE $1.has_next()
-    //     (SEQ (ASSIGN idseq $1.next()) body) else))
-    // The body is not a scope since the sugar wraps it in a seq for us.
-    g.def("forloop")
-      .> print_inline()
-      .> token("None", ["Tk[For]"])
-      .> annotate()
-      .> rule("iterator name", ["idseq"])
-      .> skip("None", ["Tk[In]"])
-      .> rule("iterator", ["rawseq"])
-      .> skip("None", ["Tk[Do]"])
-      .> rule("for body", ["rawseq"])
-      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedseq"])
-      .> terminate("for loop", ["Tk[End]"])
-    
-    // idseq = rawseq
-    g.def("withelem")
-      .> tree("Tk[Sequence]")
-      .> rule("with name", ["idseq"])
-      .> skip("None", ["Tk[Assign]"])
-      .> rule("initialiser", ["rawseq"])
-    
-    // withelem {COMMA withelem}
-    g.def("withexpr")
-      .> print_inline()
-      .> tree("Tk[Sequence]")
-      .> rule("with expression", ["withelem"])
-      .> while_token_do_rule("Tk[Comma]", "with expression", ["withelem"])
-    
-    // WITH [annotations] withexpr DO rawseq [ELSE annotatedrawseq] END
-    // =>
-    // (SEQ
-    //   (ASSIGN (LET $1 initialiser))*
-    //   (TRY_NO_CHECK
-    //     (SEQ (ASSIGN idseq $1)* body)
-    //     (SEQ (ASSIGN idseq $1)* else)
-    //     (SEQ $1.dispose()*)))
-    // The body and else clause aren't scopes since the sugar wraps them in seqs
-    // for us.
-    g.def("with")
-      .> print_inline()
-      .> token("None", ["Tk[With]"])
-      .> annotate()
-      .> rule("with expression", ["withexpr"])
-      .> skip("None", ["Tk[Do]"])
-      .> rule("with body", ["rawseq"])
-      .> if_token_then_rule("Tk[Else]", "else clause", ["annotatedrawseq"])
-      .> terminate("with expression", ["Tk[End]"])
-    
-    // TRY [annotations] seq [ELSE annotatedseq] [THEN annotatedseq] END
-    g.def("try_block")
-      .> print_inline()
-      .> token("None", ["Tk[Try]"])
-      .> annotate()
-      .> rule("try body", ["seq"])
-      .> if_token_then_rule("Tk[Else]", "try else body", ["annotatedseq"])
-      .> if_token_then_rule("Tk[Then]", "try then body", ["annotatedseq"])
-      .> terminate("try expression", ["Tk[End]"])
-    
-    // RECOVER [annotations] [CAP] rawseq END
-    g.def("recover")
-      .> print_inline()
-      .> token("None", ["Tk[Recover]"])
-      .> annotate()
-      .> opt_rule("capability", ["cap"])
-      .> rule("recover body", ["seq"])
-      .> terminate("recover expression", ["Tk[End]"])
-    
-    // CONSUME [cap] term
-    g.def("consume")
-      .> print_inline()
-      .> token("consume", ["Tk[Consume]"])
-      .> opt_rule("capability", ["cap"])
-      .> rule("expression", ["term"])
-    
-    // cond | ifdef | iftype | match | whileloop | repeat | forloop |
-    // with | try | recover | consume | pattern | const_expr
-    g.def("term")
-      .> rule("value", [
-        "cond"; "ifdef"; "iftype"; "match"; "whileloop"; "repeat"; "forloop"
-        "with"; "try_block"; "recover"; "consume"; "pattern"; "const_expr"
-      ])
-    
-    // cond | ifdef | iftype | match | whileloop | repeat | forloop |
-    // with | try | recover | consume | pattern | const_expr
-    g.def("nextterm")
-      .> rule("value", [
-        "cond"; "ifdef"; "iftype"; "match"; "whileloop"; "repeat"; "forloop"
-        "with"; "try_block"; "recover"; "consume"; "nextpattern"; "const_expr"
-      ])
-    
-    // AS type
-    // For tuple types, use multiple matches.
-    // (AS expr type) =>
-    // (MATCH expr
-    //   (CASES
-    //     (CASE
-    //       (LET $1 type)
-    //       NONE
-    //       (SEQ (CONSUME ALIASED $1))))
-    //   (SEQ ERROR))
-    g.def("asop")
-      .> print_inline()
-      .> builder("_BuildInfix")
-      .> token("as", ["Tk[As]"])
-      .> rule("type", ["type"])
-    
-    // BINOP term
-    g.def("binop")
-      .> builder("_BuildInfix")
-      .> token("binary operator", [
-        "Tk[And]"; "Tk[Or]"; "Tk[XOr]"
-        "Tk[Add]"; "Tk[Sub]"; "Tk[Mul]"; "Tk[Div]"; "Tk[Mod]"
-        "Tk[LShift]"; "Tk[RShift]"; "Tk[LShiftUnsafe]"; "Tk[RShiftUnsafe]"
-        "Tk[Is]"; "Tk[Isnt]"; "Tk[Eq]"; "Tk[NE]"; "Tk[LT]"; "Tk[LE]"; "Tk[GE]"; "Tk[GT]"
-        "Tk[AddUnsafe]"; "Tk[SubUnsafe]"; "Tk[MulUnsafe]"; "Tk[DivUnsafe]"
-        "Tk[ModUnsafe]"; "Tk[EqUnsafe]"; "Tk[NEUnsafe]"
-        "Tk[LTUnsafe]"; "Tk[LEUnsafe]"; "Tk[GEUnsafe]"; "Tk[GTUnsafe]"
-      ])
-      .> rule("value", ["term"])
-    
-    // term {binop | asop}
-    g.def("infix")
-      .> rule("value", ["term"])
-      .> seq("value", ["binop"; "asop"])
-    
-    // term {binop | asop}
-    g.def("nextinfix")
-      .> rule("value", ["nextterm"])
-      .> seq("value", ["binop"; "asop"])
+      .> if_token_then_rule("Tk[Colon]", "variable type", ["type"])
     
     // ASSIGNOP assignment
     g.def("assignop")
       .> print_inline()
-      // TODO: INFIX_REVERSE()
       .> token("assign operator", ["Tk[Assign]"])
       .> rule("assign rhs", ["assignment"])
     
-    // term [assignop]
-    g.def("assignment")
-      .> rule("value", ["infix"])
-      .> opt_no_dflt_rule("value", ["assignop"])
+    // atom {dot | tilde | chain | qualify | call}
+    g.def("postfix")
+      .> rule("value", ["atom"])
+      .> seq("postfix expression", ["dot"; "chain"; "tilde"; "qualify"; "call"])
     
-    // term [assignop]
-    g.def("nextassignment")
-      .> rule("value", ["nextinfix"])
-      .> opt_no_dflt_rule("value", ["assignop"])
+    // atom {dot | tilde | chain | qualify | call}
+    g.def("nextpostfix")
+      .> rule("value", ["nextatom"])
+      .> seq("postfix expression", ["dot"; "chain"; "tilde"; "qualify"; "call"])
     
-    // RETURN | BREAK | CONTINUE | ERROR | COMPILE_INTRINSIC | COMPILE_ERROR
-    g.def("jump")
-      .> token("statement", ["Tk[Return]"; "Tk[Break]"; "Tk[Continue]"; "Tk[Error]"; "Tk[CompileIntrinsic]"; "Tk[CompileError]"])
-      .> opt_rule("return value", ["rawseq"])
+    // DOT ID
+    g.def("dot")
+      .> builder("_BuildInfix")
+      .> token("None", ["Tk[Dot]"])
+      .> token("member name", ["Tk[Id]"])
     
-    // SEMI
-    g.def("semi")
-      // TODO: IFELSE("Tk[Newline]", NEXT_FLAGS(AST_FLAG_BAD_SEMI), NEXT_FLAGS(0))
-      .> token("None", ["Tk[Semicolon]"])
-      // TODO: deal with IF("Tk[Newline]", SET_FLAG(AST_FLAG_BAD_SEMI))
+    // CHAIN ID
+    g.def("chain")
+      .> builder("_BuildInfix")
+      .> token("None", ["Tk[Chain]"])
+      .> token("method name", ["Tk[Id]"])
     
-    // semi (exprseq | jump)
-    g.def("semiexpr")
-      .> builder("_BuildFlatten")
-      .> rule("semicolon", ["semi"])
-      .> rule("value", ["exprseq"; "jump"])
+    // TILDE ID
+    g.def("tilde")
+      .> builder("_BuildInfix")
+      .> token("None", ["Tk[Tilde]"])
+      .> token("method name", ["Tk[Id]"])
     
-    // nextexprseq | jump
-    g.def("nosemi")
-      // TODO: IFELSE("Tk[Newline]", NEXT_FLAGS(0), NEXT_FLAGS(AST_FLAG_MISSING_SEMI))
-      .> rule("value", ["nextexprseq"; "jump"])
+    // typeargs
+    g.def("qualify")
+      .> builder("_BuildInfix")
+      .> tree("Tk[Qualify]")
+      .> rule("type arguments", ["typeargs"])
     
-    // nextassignment (semiexpr | nosemi)
-    g.def("nextexprseq")
-      .> builder("_BuildFlatten")
-      .> rule("value", ["nextassignment"])
-      .> opt_no_dflt_rule("value", ["semiexpr"; "nosemi"])
-      // TODO: NEXT_FLAGS(0)
+    // LPAREN [args] [namedargs] RPAREN
+    g.def("call")
+      .> tree("Tk[Call]")
+      .> skip("None", ["Tk[LParen]"])
+      .> opt_rule("argument", ["args"])
+      .> opt_rule("argument", ["namedargs"])
+      .> terminate("call arguments", ["Tk[RParen]"])
     
-    // assignment (semiexpr | nosemi)
-    g.def("exprseq")
-      .> builder("_BuildFlatten")
-      .> rule("value", ["assignment"])
-      .> opt_no_dflt_rule("value", ["semiexpr"; "nosemi"])
-      // TODO: NEXT_FLAGS(0)
+    // AT (ID | STRING) typeargs (LPAREN | LPAREN_NEW) [args] RPAREN [QUESTION]
+    g.def("callffi")
+      .> print_inline()
+      .> tree("Tk[CallFFI]")
+      .> skip("None", ["Tk[At]"])
+      .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
+      .> opt_rule("return type", ["typeargs"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("ffi arguments", ["args"])
+      .> opt_rule("ffi arguments", ["namedargs"])
+      .> terminate("ffi arguments", ["Tk[RParen]"])
+      .> opt_token("None", ["Tk[Question]"])
     
-    // (exprseq | jump)
-    g.def("rawseq")
-      .> tree("Tk[Sequence]")
-      .> rule("value", ["exprseq"; "jump"])
+    // seq {COMMA seq}
+    g.def("args")
+      .> tree("Tk[Args]")
+      .> rule("argument", ["seq"])
+      .> while_token_do_rule("Tk[Comma]", "argument", ["seq"])
     
-    // rawseq
-    g.def("seq")
-      .> rule("value", ["rawseq"])
+    // WHERE namedarg {COMMA namedarg}
+    g.def("namedargs")
+      .> tree("Tk[NamedArgs]")
+      .> skip("None", ["Tk[Where]"])
+      .> rule("named argument", ["namedarg"])
+      .> while_token_do_rule("Tk[Comma]", "named argument", ["namedarg"])
     
-    // [annotations] (exprseq | jump)
-    g.def("annotatedrawseq")
-      .> tree("Tk[Sequence]")
+    // ID ASSIGN seq
+    g.def("namedarg")
+      .> tree("Tk[NamedArg]")
+      .> token("argument name", ["Tk[Id]"])
+      .> skip("None", ["Tk[Assign]"])
+      .> rule("argument value", ["seq"])
+    
+    // callffi | lambda | object | array | tuple | this |
+    // literal | location | reference | dontcare
+    g.def("atom")
+      .> rule("value", [
+        "callffi"; "lambda"; "object"; "array"; "groupedexpr"; "this"
+        "literal"; "location"; "reference"; "dontcare"
+      ])
+    
+    // callffi | lambda | object | array | tuple | this |
+    // literal | location | reference | dontcare
+    g.def("nextatom")
+      .> rule("value", [
+        "callffi"; "lambda"; "object"; "nextarray"; "nextgroupedexpr"; "this"
+        "literal"; "location"; "reference"; "dontcare"
+      ])
+    
+    // LBRACE [annotations] [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [params]
+    // RPAREN [lambdacaptures] [COLON type] [QUESTION] ARROW seq RBRACE [CAP]
+    g.def("lambda")
+      .> print_inline()
+      .> tree("Tk[Lambda]")
+      .> skip("None", ["Tk[LBrace]"])
       .> annotate()
-      .> rule("value", ["exprseq"; "jump"])
+      .> opt_rule("receiver capability", ["cap"])
+      .> opt_token("function name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("parameters", ["params"])
+      .> skip("None", ["Tk[RParen]"])
+      .> opt_rule("captures", ["lambdacaptures"])
+      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> skip("None", ["Tk[DoubleArrow]"])
+      .> rule("lambda body", ["seq"])
+      .> terminate("lambda expression", ["Tk[RBrace]"])
+      .> opt_rule("reference capability", ["cap"])
     
-    // annotatedrawseq
-    g.def("annotatedseq")
-      .> rule("value", ["annotatedrawseq"])
+    // (LPAREN | LPAREN_NEW) (lambdacapture | this)
+    // {COMMA (lambdacapture | this)} RPAREN
+    g.def("lambdacaptures")
+      .> tree("Tk[LambdaCaptures]")
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> rule("capture", ["lambdacapture"; "this"])
+      .> while_token_do_rule("Tk[Comma]", "capture", ["lambdacapture"; "this"])
+      .> skip("None", ["Tk[RParen]"])
+    
+    // ID [COLON type] [ASSIGN infix]
+    g.def("lambdacapture")
+      .> tree("Tk[LambdaCapture]")
+      .> token("name", ["Tk[Id]"])
+      .> if_token_then_rule("Tk[Colon]", "capture type", ["type"])
+      .> if_token_then_rule("Tk[Assign]", "capture value", ["infix"])
+    
+    // OBJECT [annotations] [CAP] [IS type] members END
+    g.def("object")
+      .> print_inline()
+      .> token("None", ["Tk[Object]"])
+      .> annotate()
+      .> opt_rule("capability", ["cap"])
+      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
+      .> rule("object member", ["members"])
+      .> terminate("object literal", ["Tk[End]"])
+    
+    // (LSQUARE | LSQUARE_NEW) seq {COMMA seq} RSQUARE
+    g.def("array")
+      .> print_inline()
+      .> tree("Tk[LitArray]")
+      .> skip("None", ["Tk[LSquare]"; "Tk[LSquareNew]"])
+      .> opt_rule("element type", ["arraytype"])
+      .> rule("array elements", ["seq"])
+      .> terminate("array literal", ["Tk[RSquare]"])
+    
+    // LSQUARE_NEW seq {COMMA seq} RSQUARE
+    g.def("nextarray")
+      .> print_inline()
+      .> tree("Tk[LitArray]")
+      .> skip("None", ["Tk[LSquareNew]"])
+      .> opt_rule("element type", ["arraytype"])
+      .> rule("array elements", ["seq"])
+      .> terminate("array literal", ["Tk[RSquare]"])
+    
+    // AS type ':'
+    g.def("arraytype")
+      .> print_inline()
+      .> skip("None", ["Tk[As]"])
+      .> rule("type", ["type"])
+      .> skip("None", ["Tk[Colon]"])
+    
+    // (LPAREN | LPAREN_NEW) seq [tuple] RPAREN
+    g.def("groupedexpr")
+      .> print_inline()
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> rule("value", ["seq"])
+      .> opt_no_dflt_rule("value", ["tuple"])
+      .> skip("None", ["Tk[RParen]"])
+      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
+    
+    // LPAREN_NEW seq [tuple] RPAREN
+    g.def("nextgroupedexpr")
+      .> print_inline()
+      .> skip("None", ["Tk[LParenNew]"])
+      .> rule("value", ["seq"])
+      .> opt_no_dflt_rule("value", ["tuple"])
+      .> skip("None", ["Tk[RParen]"])
+      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
+    
+    // COMMA seq {COMMA seq}
+    g.def("tuple")
+      .> builder("_BuildInfix")
+      .> token("None", ["Tk[Comma]"])
+      // TODO: MAP_ID("Tk[Comma]", "Tk[Tuple]")
+      .> rule("value", ["seq"])
+      .> while_token_do_rule("Tk[Comma]", "value", ["seq"])
+    
+    // THIS
+    g.def("this")
+      .> token("None", ["Tk[This]"])
+    
+    // TRUE | FALSE | INT | FLOAT | STRING
+    g.def("literal")
+      .> token("literal", ["Tk[LitTrue]"; "Tk[LitFalse]"; "Tk[LitInteger]"; "Tk[LitFloat]"; "Tk[LitString]"; "Tk[LitCharacter]"])
+    
+    // __LOC
+    g.def("location")
+      .> print_inline()
+      .> token("None", ["Tk[LitLocation]"])
+    
+    // ID
+    g.def("reference")
+      .> print_inline()
+      .> tree("Tk[Reference]")
+      .> token("name", ["Tk[Id]"])
+    
+    // ID
+    g.def("dontcare")
+      .> print_inline()
+      .> token("None", ["Tk[DontCare]"])
+    
+    // atomtype [viewpoint]
+    g.def("type")
+      .> rule("type", ["atomtype"])
+      .> opt_no_dflt_rule("viewpoint", ["viewpoint"])
+    
+    // (groupedtype | nominal | lambdatype | thistype | cap | gencap)
+    g.def("atomtype")
+      .> rule("type", ["groupedtype"; "nominal"; "lambdatype"; "thistype"; "cap"; "gencap"])
+    
+    // ARROW type
+    g.def("viewpoint")
+      .> print_inline()
+      .> builder("_BuildInfix")
+      .> tree("Tk[ViewpointType]")
+      .> skip("None", ["Tk[Arrow]"])
+      .> rule("viewpoint", ["type"])
+    
+    // (LPAREN | LPAREN_NEW) infixtype [tupletype] RPAREN
+    g.def("groupedtype")
+      .> print_inline()
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> rule("type", ["infixtype"])
+      .> opt_no_dflt_rule("type", ["tupletype"])
+      .> skip("None", ["Tk[RParen]"])
+      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
+    
+    // type {uniontype | isecttype}
+    g.def("infixtype")
+      .> rule("type", ["type"])
+      .> seq("type", ["uniontype"; "isecttype"])
+    
+    // PIPE type
+    g.def("uniontype")
+      .> builder("_BuildInfix")
+      .> tree("Tk[UnionType]")
+      .> skip("None", ["Tk[Pipe]"])
+      .> rule("type", ["type"])
+    
+    // AMP type
+    g.def("isecttype")
+      .> builder("_BuildInfix")
+      .> tree("Tk[IsectType]")
+      .> skip("None", ["Tk[Ampersand]"])
+      .> rule("type", ["type"])
+    
+    // COMMA infixtype {COMMA infixtype}
+    g.def("tupletype")
+      .> builder("_BuildInfix")
+      .> token("None", ["Tk[Comma]"])
+      // TODO: MAP_ID("Tk[Comma]", "Tk[TupleType]")
+      .> rule("type", ["infixtype"])
+      .> while_token_do_rule("Tk[Comma]", "type", ["infixtype"])
+    
+    // ID [DOT ID] [typeargs] [CAP] [EPHEMERAL | ALIASED]
+    g.def("nominal")
+      .> tree("Tk[NominalType]")
+      .> token("name", ["Tk[Id]"])
+      // TODO: IFELSE("Tk[Dot]",
+      //   TOKEN("name", "Tk[Id]"),
+      //   .> tree("Tk[None]")
+      //   REORDER(1, 0)
+      // )
+      .> opt_rule("type arguments", ["typeargs"])
+      .> opt_rule("capability", ["cap"; "gencap"])
+      .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
+    
+    // LBRACE [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [typelist] RPAREN
+    // [COLON type] [QUESTION] RBRACE [CAP] [EPHEMERAL | ALIASED]
+    g.def("lambdatype")
+      .> tree("Tk[LambdaType]")
+      .> skip("None", ["Tk[LBrace]"])
+      .> opt_rule("capability", ["cap"])
+      .> opt_token("function name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("parameters", ["tupletype"])
+      .> skip("None", ["Tk[RParen]"])
+      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> skip("None", ["Tk[RBrace]"])
+      .> opt_rule("capability", ["cap"; "gencap"])
+      .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
+    
+    // THIS
+    g.def("thistype")
+      .> print_inline()
+      .> tree("Tk[ThisType]")
+      .> skip("None", ["Tk[This]"])
+    
+    // ELLIPSIS
+    g.def("ellipsis")
+      .> token("None", ["Tk[Ellipsis]"])
+    
+    // CAP
+    g.def("cap")
+      .> token("capability", ["Tk[Iso]"; "Tk[Trn]"; "Tk[Ref]"; "Tk[Val]"; "Tk[Box]"; "Tk[Tag]"])
+    
+    // GENCAP
+    g.def("gencap")
+      .> token("generic capability", ["Tk[CapRead]"; "Tk[CapSend]"; "Tk[CapShare]"; "Tk[CapAlias]"; "Tk[CapAny]"])
+    
+    // '\' ID {COMMA ID} '\'
+    g.def("annotations")
+      .> print_inline()
+      .> token("None", ["Tk[Backslash]"])
+      .> token("annotation", ["Tk[Id]"])
+      .> while_token_do_token("Tk[Comma]", "annotation", ["Tk[Id]"])
+      .> terminate("annotations", ["Tk[Backslash]"])

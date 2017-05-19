@@ -49,18 +49,26 @@ primitive ASTInfo
     elseif A <: Error then "Error"
     elseif A <: CompileIntrinsic then "CompileIntrinsic"
     elseif A <: CompileError then "CompileError"
-    elseif A <: LocalLet then "LocalLet"
-    elseif A <: LocalVar then "LocalVar"
-    elseif A <: MatchCapture then "MatchCapture"
-    elseif A <: As then "As"
-    elseif A <: Tuple then "Tuple"
+    elseif A <: IfDefFlag then "IfDefFlag"
+    elseif A <: IfDefNot then "IfDefNot"
+    elseif A <: IfDefAnd then "IfDefAnd"
+    elseif A <: IfDefOr then "IfDefOr"
+    elseif A <: IfDef then "IfDef"
+    elseif A <: IfType then "IfType"
+    elseif A <: If then "If"
+    elseif A <: While then "While"
+    elseif A <: Repeat then "Repeat"
+    elseif A <: For then "For"
+    elseif A <: With then "With"
+    elseif A <: IdTuple then "IdTuple"
+    elseif A <: AssignTuple then "AssignTuple"
+    elseif A <: Match then "Match"
+    elseif A <: Cases then "Cases"
+    elseif A <: Case then "Case"
+    elseif A <: Try then "Try"
     elseif A <: Consume then "Consume"
     elseif A <: Recover then "Recover"
-    elseif A <: Not then "Not"
-    elseif A <: Neg then "Neg"
-    elseif A <: NegUnsafe then "NegUnsafe"
-    elseif A <: AddressOf then "AddressOf"
-    elseif A <: DigestOf then "DigestOf"
+    elseif A <: As then "As"
     elseif A <: Add then "Add"
     elseif A <: AddUnsafe then "AddUnsafe"
     elseif A <: Sub then "Sub"
@@ -92,36 +100,37 @@ primitive ASTInfo
     elseif A <: And then "And"
     elseif A <: Or then "Or"
     elseif A <: XOr then "XOr"
+    elseif A <: Not then "Not"
+    elseif A <: Neg then "Neg"
+    elseif A <: NegUnsafe then "NegUnsafe"
+    elseif A <: AddressOf then "AddressOf"
+    elseif A <: DigestOf then "DigestOf"
+    elseif A <: LocalLet then "LocalLet"
+    elseif A <: LocalVar then "LocalVar"
     elseif A <: Assign then "Assign"
     elseif A <: Dot then "Dot"
     elseif A <: Chain then "Chain"
     elseif A <: Tilde then "Tilde"
     elseif A <: Qualify then "Qualify"
     elseif A <: Call then "Call"
-    elseif A <: FFICall then "FFICall"
+    elseif A <: CallFFI then "CallFFI"
     elseif A <: Args then "Args"
     elseif A <: NamedArgs then "NamedArgs"
     elseif A <: NamedArg then "NamedArg"
-    elseif A <: IfDef then "IfDef"
-    elseif A <: IfType then "IfType"
-    elseif A <: IfDefAnd then "IfDefAnd"
-    elseif A <: IfDefOr then "IfDefOr"
-    elseif A <: IfDefNot then "IfDefNot"
-    elseif A <: IfDefFlag then "IfDefFlag"
-    elseif A <: If then "If"
-    elseif A <: While then "While"
-    elseif A <: Repeat then "Repeat"
-    elseif A <: For then "For"
-    elseif A <: With then "With"
-    elseif A <: Match then "Match"
-    elseif A <: Cases then "Cases"
-    elseif A <: Case then "Case"
-    elseif A <: Try then "Try"
     elseif A <: Lambda then "Lambda"
     elseif A <: LambdaCaptures then "LambdaCaptures"
     elseif A <: LambdaCapture then "LambdaCapture"
     elseif A <: Object then "Object"
     elseif A <: LitArray then "LitArray"
+    elseif A <: Tuple then "Tuple"
+    elseif A <: This then "This"
+    elseif A <: LitTrue then "LitTrue"
+    elseif A <: LitFalse then "LitFalse"
+    elseif A <: LitInteger then "LitInteger"
+    elseif A <: LitFloat then "LitFloat"
+    elseif A <: LitString then "LitString"
+    elseif A <: LitCharacter then "LitCharacter"
+    elseif A <: LitLocation then "LitLocation"
     elseif A <: Reference then "Reference"
     elseif A <: DontCare then "DontCare"
     elseif A <: PackageRef then "PackageRef"
@@ -136,13 +145,13 @@ primitive ASTInfo
     elseif A <: LocalLetRef then "LocalLetRef"
     elseif A <: LocalVarRef then "LocalVarRef"
     elseif A <: ParamRef then "ParamRef"
+    elseif A <: ViewpointType then "ViewpointType"
     elseif A <: UnionType then "UnionType"
     elseif A <: IsectType then "IsectType"
     elseif A <: TupleType then "TupleType"
-    elseif A <: ArrowType then "ArrowType"
+    elseif A <: NominalType then "NominalType"
     elseif A <: FunType then "FunType"
     elseif A <: LambdaType then "LambdaType"
-    elseif A <: NominalType then "NominalType"
     elseif A <: TypeParamRef then "TypeParamRef"
     elseif A <: ThisType then "ThisType"
     elseif A <: DontCareType then "DontCareType"
@@ -167,14 +176,6 @@ primitive ASTInfo
     elseif A <: Question then "Question"
     elseif A <: Ellipsis then "Ellipsis"
     elseif A <: Id then "Id"
-    elseif A <: This then "This"
-    elseif A <: LitTrue then "LitTrue"
-    elseif A <: LitFalse then "LitFalse"
-    elseif A <: LitFloat then "LitFloat"
-    elseif A <: LitInteger then "LitInteger"
-    elseif A <: LitCharacter then "LitCharacter"
-    elseif A <: LitString then "LitString"
-    elseif A <: LitLocation then "LitLocation"
     elseif A <: EOF then "EOF"
     elseif A <: NewLine then "NewLine"
     elseif A <: Use then "Use"
@@ -244,18 +245,26 @@ class Continue is AST
 class Error is AST
 class CompileIntrinsic is AST
 class CompileError is AST
-class LocalLet is AST
-class LocalVar is AST
-class MatchCapture is AST
-class As is AST
-class Tuple is AST
+class IfDefFlag is AST
+class IfDefNot is AST
+class IfDefAnd is AST
+class IfDefOr is AST
+class IfDef is AST
+class IfType is AST
+class If is AST
+class While is AST
+class Repeat is AST
+class For is AST
+class With is AST
+class IdTuple is AST
+class AssignTuple is AST
+class Match is AST
+class Cases is AST
+class Case is AST
+class Try is AST
 class Consume is AST
 class Recover is AST
-class Not is AST
-class Neg is AST
-class NegUnsafe is AST
-class AddressOf is AST
-class DigestOf is AST
+class As is AST
 class Add is AST
 class AddUnsafe is AST
 class Sub is AST
@@ -287,36 +296,37 @@ class Isnt is AST
 class And is AST
 class Or is AST
 class XOr is AST
+class Not is AST
+class Neg is AST
+class NegUnsafe is AST
+class AddressOf is AST
+class DigestOf is AST
+class LocalLet is AST
+class LocalVar is AST
 class Assign is AST
 class Dot is AST
 class Chain is AST
 class Tilde is AST
 class Qualify is AST
 class Call is AST
-class FFICall is AST
+class CallFFI is AST
 class Args is AST
 class NamedArgs is AST
 class NamedArg is AST
-class IfDef is AST
-class IfType is AST
-class IfDefAnd is AST
-class IfDefOr is AST
-class IfDefNot is AST
-class IfDefFlag is AST
-class If is AST
-class While is AST
-class Repeat is AST
-class For is AST
-class With is AST
-class Match is AST
-class Cases is AST
-class Case is AST
-class Try is AST
 class Lambda is AST
 class LambdaCaptures is AST
 class LambdaCapture is AST
 class Object is AST
 class LitArray is AST
+class Tuple is AST
+class This is AST
+class LitTrue is AST
+class LitFalse is AST
+class LitInteger is AST
+class LitFloat is AST
+class LitString is AST
+class LitCharacter is AST
+class LitLocation is AST
 class Reference is AST
 class DontCare is AST
 class PackageRef is AST
@@ -331,13 +341,13 @@ class TupleElementRef is AST
 class LocalLetRef is AST
 class LocalVarRef is AST
 class ParamRef is AST
+class ViewpointType is AST
 class UnionType is AST
 class IsectType is AST
 class TupleType is AST
-class ArrowType is AST
+class NominalType is AST
 class FunType is AST
 class LambdaType is AST
-class NominalType is AST
 class TypeParamRef is AST
 class ThisType is AST
 class DontCareType is AST
@@ -362,14 +372,6 @@ class At is AST
 class Question is AST
 class Ellipsis is AST
 class Id is AST
-class This is AST
-class LitTrue is AST
-class LitFalse is AST
-class LitFloat is AST
-class LitInteger is AST
-class LitCharacter is AST
-class LitString is AST
-class LitLocation is AST
 class EOF is AST
 class NewLine is AST
 class Use is AST

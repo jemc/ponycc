@@ -55,19 +55,19 @@ class ParserGen
         token = new_token
       
       fun ref _ditch_restart(state: _RuleState): _RuleResult =>
-        Debug("Rule " + state.fn_name + ": Attempting recovery") // TODO: conditional compile
+        // Debug("Rule " + state.fn_name + ": Attempting recovery") // TODO: conditional compile
         
         while true do
           let tk = _current_tk()
           
           for restart_tk in state.restart.values() do
             if tk is restart_tk then
-              Debug("  recovered with " + tk.string()) // TODO: conditional compile
+              // Debug("  recovered with " + tk.string()) // TODO: conditional compile
               return _RuleRestart
             end
           end
           
-          Debug("  ignoring " + tk.string()) // TODO: conditional compile
+          // Debug("  ignoring " + tk.string()) // TODO: conditional compile
           
           _consume_token()
         end
@@ -79,7 +79,7 @@ class ParserGen
         failed = true
         
         if state.restart.size() == 0 then
-          Debug("Rule " + state.fn_name + ": Propagate failure") // TODO: conditional compile
+          // Debug("Rule " + state.fn_name + ": Propagate failure") // TODO: conditional compile
           return _RuleParseError
         end
         
@@ -87,7 +87,7 @@ class ParserGen
       
       fun _handle_found(state: _RuleState, tree: (TkTree | None), build: _Build): _RuleResult =>
         if not state.matched then
-          Debug("Rule " + state.fn_name + ": Matched") // TODO: conditional compile
+          // Debug("Rule " + state.fn_name + ": Matched") // TODO: conditional compile
           
           state.matched = true
         end
@@ -112,14 +112,14 @@ class ParserGen
         // Required token / sub rule not found
         
         if not state.matched then
-          Debug("Rule " + state.fn_name + ": Not matched") // TODO: conditional compile
+          // Debug("Rule " + state.fn_name + ": Not matched") // TODO: conditional compile
           
           state.tree = None
           return _RuleNotFound
         end
         
         // Rule partially matched, error
-        Debug("Rule " + state.fn_name + ": Error") // TODO: conditional compile
+        // Debug("Rule " + state.fn_name + ": Error") // TODO: conditional compile
         
         _syntax_error(desc, state.tree, if terminating then desc else "" end)
         failed = true
@@ -134,24 +134,24 @@ class ParserGen
       fun ref _complete(state: _RuleState): _RuleResult =>
         state.process_deferred_tree()
         
-        Debug("Rule " + state.fn_name + ": Complete") // TODO: conditional compile
+        // Debug("Rule " + state.fn_name + ": Complete") // TODO: conditional compile
         
         if state.restart.size() == 0 then return state.tree end
         
         // We have a restart point, check next token is legal
         let tk = _current_tk()
         
-        Debug("Rule " + state.fn_name + ": Check restart set for next token " + tk.string()) // TODO: conditional compile
+        // Debug("Rule " + state.fn_name + ": Check restart set for next token " + tk.string()) // TODO: conditional compile
         
         for restart_tk in state.restart.values() do
           if tk is restart_tk then
-            Debug("Rule " + state.fn_name + ": Restart check successful") // TODO: conditional compile
+            // Debug("Rule " + state.fn_name + ": Restart check successful") // TODO: conditional compile
             return state.tree
           end
         end
         
         // Next token is not in restart set, error
-        Debug("Rule " + state.fn_name + ": Restart check error") // TODO: conditional compile
+        // Debug("Rule " + state.fn_name + ": Restart check error") // TODO: conditional compile
         
         _error("syntax error: unexpected token " + _current_tk().desc() + " after " + state.desc)
         
@@ -159,10 +159,12 @@ class ParserGen
         _ditch_restart(state)
       
       fun ref _error(str: String, pos: (SourcePosAny | None) = None) =>
-        Debug("ERROR: " + str) // TODO: show token loc
+        // Debug("ERROR: " + str) // TODO: show token loc
+        None
       
       fun ref _error_continue(str: String, pos: (SourcePosAny | None) = None) =>
-        Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
+        // Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
+        None
       
       fun ref _syntax_error(expected: String, tree: (TkTree | None), terminating: String) =>
         if last_matched.size() == 0 then
@@ -232,7 +234,7 @@ class ParserGenDef
       if _gen.debug then
         g.line()
         let opt = if default_tk is "None" then "required" else "optional" end
-        g.line("Debug(\"Rule " + _name + ": Looking for " + opt + " rule(s) '" + desc + "'\")")
+        // g.line("Debug(\"Rule " + _name + ": Looking for " + opt + " rule(s) '" + desc + "'\")")
       end
       g.line()
       g.line("state.default_tk = " + default_tk)
@@ -288,7 +290,7 @@ class ParserGenDef
       if _gen.debug then
         g.line()
         let opt = if default_tk is "None" then "required" else "optional" end
-        g.line("Debug(\"Rule " + _name + ": Looking for " + opt + " rule(s) '\" + " + desc + " + \"'. Found \" + _current_tk().string())")
+        // g.line("Debug(\"Rule " + _name + ": Looking for " + opt + " rule(s) '\" + " + desc + " + \"'. Found \" + _current_tk().string())")
       end
       g.line()
       g.line("state.default_tk = " + default_tk)
@@ -308,7 +310,7 @@ class ParserGenDef
       end
       g.add(" =>")
       g.push_indent()
-      if _gen.debug then g.line("Debug(\"Compatible\")") end
+      // if _gen.debug then g.line("Debug(\"Compatible\")") end
       g.line("found = true")
       g.line("last_matched = " + desc)
       if make_ast then
@@ -319,7 +321,7 @@ class ParserGenDef
       g.pop_indent()
       g.line("else")
       g.push_indent()
-      if _gen.debug then g.line("Debug(\"Not compatible\")") end
+      // if _gen.debug then g.line("Debug(\"Not compatible\")") end
       g.line("found = false")
       g.line("_handle_not_found(state, " + desc + ", " + terminating.string() + ")")
       g.pop_indent()
