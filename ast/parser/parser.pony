@@ -772,6 +772,13 @@ class PonyParser
         _handle_not_found(state, Tk[Var].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[Var] => tree.tk = Tk[FieldVar]
+      | Tk[Let] => tree.tk = Tk[FieldLet]
+      | Tk[Embed] => tree.tk = Tk[FieldEmbed]
+      end
+    end
     
     
     state.default_tk = None
@@ -1893,6 +1900,11 @@ class PonyParser
         _handle_not_found(state, Tk[NewLine].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[NewLine] => tree.tk = Tk[Semicolon]
+      end
+    end
     
     (_complete(state), _BuildDefault)
   
@@ -2518,6 +2530,7 @@ class PonyParser
     let state = _RuleState("ifdefnot", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
+    state.add_deferrable_ast((Tk[IfDefNot], _current_pos()))
     
     
     state.default_tk = None
@@ -2527,7 +2540,7 @@ class PonyParser
       match _current_tk() | Tk[Not] =>
         found = true
         last_matched = Tk[Not].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
       else
         found = false
         _handle_not_found(state, Tk[Not].desc(), false)
@@ -2573,6 +2586,12 @@ class PonyParser
         _handle_not_found(state, "ifdef binary operator", false)
       end
     if res isnt None then return (res, _BuildInfix) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[And] => tree.tk = Tk[IfDefAnd]
+      | Tk[Or] => tree.tk = Tk[IfDefOr]
+      end
+    end
     
     
     state.default_tk = None
@@ -4737,6 +4756,14 @@ class PonyParser
         _handle_not_found(state, "prefix", false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[Sub] => tree.tk = Tk[Neg]
+      | Tk[SubUnsafe] => tree.tk = Tk[NegUnsafe]
+      | Tk[SubNew] => tree.tk = Tk[Neg]
+      | Tk[SubUnsafeNew] => tree.tk = Tk[NegUnsafe]
+      end
+    end
     
     
     state.default_tk = None
@@ -4777,6 +4804,12 @@ class PonyParser
         _handle_not_found(state, "prefix", false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[SubNew] => tree.tk = Tk[Neg]
+      | Tk[SubUnsafeNew] => tree.tk = Tk[NegUnsafe]
+      end
+    end
     
     
     state.default_tk = None
@@ -4949,6 +4982,12 @@ class PonyParser
         _handle_not_found(state, Tk[Var].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[Var] => tree.tk = Tk[LocalVar]
+      | Tk[Let] => tree.tk = Tk[LocalLet]
+      end
+    end
     
     
     state.default_tk = None
@@ -6853,6 +6892,7 @@ class PonyParser
     let state = _RuleState("tuple", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
+    state.add_deferrable_ast((Tk[Tuple], _current_pos()))
     
     
     state.default_tk = None
@@ -6862,7 +6902,7 @@ class PonyParser
       match _current_tk() | Tk[Comma] =>
         found = true
         last_matched = Tk[Comma].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
       else
         found = false
         _handle_not_found(state, Tk[Comma].desc(), false)
@@ -7398,6 +7438,7 @@ class PonyParser
     let state = _RuleState("tupletype", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
+    state.add_deferrable_ast((Tk[TupleType], _current_pos()))
     
     
     state.default_tk = None
@@ -7407,7 +7448,7 @@ class PonyParser
       match _current_tk() | Tk[Comma] =>
         found = true
         last_matched = Tk[Comma].desc()
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
       else
         found = false
         _handle_not_found(state, Tk[Comma].desc(), false)

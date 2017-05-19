@@ -376,3 +376,16 @@ class ParserGenDef
   
   fun ref terminate(desc: String, array: Array[String]) =>
     _token_set(desc, array where make_ast = false, terminating = true)
+  
+  fun ref map_tk(array: Array[(String, String)]) =>
+    _pieces.push({(g: CodeGen) =>
+      g.line("match state.tree | let tree: TkTree =>")
+      g.push_indent()
+      g.line("match tree.tk")
+      for (src, dest) in array.values() do
+        g.line("| " + src + " => tree.tk = " + dest)
+      end
+      g.line("end")
+      g.pop_indent()
+      g.line("end")
+    } ref)

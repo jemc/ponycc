@@ -93,9 +93,11 @@ primitive ParserDefs
     // (VAR | LET | EMBED) ID [COLON type] [ASSIGN infix]
     g.def("field")
       .> token("None", ["Tk[Var]"; "Tk[Let]"; "Tk[Embed]"])
-      // TODO: MAP_ID("Tk[Var]", "Tk[FieldVar]")
-      // TODO: MAP_ID("Tk[Let]", "Tk[FieldLet]")
-      // TODO: MAP_ID("Tk[Embed]", "Tk[FieldEmbed]")
+      .> map_tk([
+        ("Tk[Var]", "Tk[FieldVar]")
+        ("Tk[Let]", "Tk[FieldLet]")
+        ("Tk[Embed]", "Tk[FieldEmbed]")
+      ])
       .> token("field name", ["Tk[Id]"])
       .> skip("mandatory type declaration on field", ["Tk[Colon]"])
       .> rule("field type", ["type"])
@@ -206,7 +208,7 @@ primitive ParserDefs
     g.def("semi")
       .> skip("None", ["Tk[Semicolon]"])
       .> opt_no_dflt_token("None", ["Tk[NewLine]"])
-      // TODO: MAP_ID("Tk[NewLine]", "Tk[Semicolon]")
+      .> map_tk([("Tk[NewLine]", "Tk[Semicolon]")])
     
     // (RETURN | BREAK | CONTINUE | ERROR | COMPILE_INTRINSIC | COMPILE_ERROR)
     // [jumpvalue]
@@ -275,16 +277,18 @@ primitive ParserDefs
     // NOT ifdefterm
     g.def("ifdefnot")
       .> print_inline()
-      .> token("None", ["Tk[Not]"])
-      // TODO: MAP_ID("Tk[Not]", "Tk[IfDefNot]")
+      .> tree("Tk[IfDefNot]")
+      .> skip("None", ["Tk[Not]"])
       .> rule("ifdef condition", ["ifdefterm"])
     
     // (AND | OR) ifdefterm
     g.def("ifdefbinop")
       .> builder("_BuildInfix")
       .> token("ifdef binary operator", ["Tk[And]"; "Tk[Or]"])
-      // TODO: MAP_ID("Tk[And]", "Tk[IfDefAnd]")
-      // TODO: MAP_ID("Tk[Or]",  "Tk[IfDefOr]")
+      .> map_tk([
+        ("Tk[And]", "Tk[IfDefAnd]")
+        ("Tk[Or]",  "Tk[IfDefOr]")
+      ])
       .> rule("ifdef condition", ["ifdefterm"])
     
     // IFDEF [annotations] ifdefinfix THEN seq [elseifdef | elseclause] END
@@ -517,10 +521,12 @@ primitive ParserDefs
         "Tk[Not]"; "Tk[AddressOf]"; "Tk[DigestOf]"
         "Tk[Sub]"; "Tk[SubUnsafe]"; "Tk[SubNew]"; "Tk[SubUnsafeNew]"
       ])
-      // TODO: MAP_ID("Tk[Sub]", "Tk[UnarySub]")
-      // TODO: MAP_ID("Tk[SubUnsafe]", "Tk[UnarySubUnsafe]")
-      // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
-      // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
+      .> map_tk([
+        ("Tk[Sub]",          "Tk[Neg]")
+        ("Tk[SubUnsafe]",    "Tk[NegUnsafe]")
+        ("Tk[SubNew]",       "Tk[Neg]")
+        ("Tk[SubUnsafeNew]", "Tk[NegUnsafe]")
+      ])
       .> rule("expression", ["rhspattern"])
     
     // (NOT | ADDRESSOF | DIGESTOF | SUB_NEW | SUB_TILDE_NEW) pattern
@@ -530,8 +536,10 @@ primitive ParserDefs
         "Tk[Not]"; "Tk[AddressOf]"; "Tk[DigestOf]"
         "Tk[SubNew]"; "Tk[SubUnsafeNew]"
       ])
-      // TODO: MAP_ID("Tk[SubNew]", "Tk[UnarySub]")
-      // TODO: MAP_ID("Tk[SubUnsafeNew]", "Tk[UnarySubUnsafe]")
+      .> map_tk([
+        ("Tk[SubNew]",       "Tk[Neg]")
+        ("Tk[SubUnsafeNew]", "Tk[NegUnsafe]")
+      ])
       .> rule("expression", ["rhspattern"])
     
     // (prefix | postfix)
@@ -554,8 +562,10 @@ primitive ParserDefs
     g.def("local")
       .> print_inline()
       .> token("None", ["Tk[Var]"; "Tk[Let]"])
-      // TODO: MAP_ID("Tk[Var]", "Tk[LocalVar]")
-      // TODO: MAP_ID("Tk[Let]", "Tk[LocalLet]")
+      .> map_tk([
+        ("Tk[Var]", "Tk[LocalVar]")
+        ("Tk[Let]", "Tk[LocalLet]")
+      ])
       .> token("variable name", ["Tk[Id]"])
       .> if_token_then_rule("Tk[Colon]", "variable type", ["type"])
     
@@ -749,8 +759,8 @@ primitive ParserDefs
     // COMMA seq {COMMA seq}
     g.def("tuple")
       .> builder("_BuildInfix")
-      .> token("None", ["Tk[Comma]"])
-      // TODO: MAP_ID("Tk[Comma]", "Tk[Tuple]")
+      .> tree("Tk[Tuple]")
+      .> skip("None", ["Tk[Comma]"])
       .> rule("value", ["seq"])
       .> while_token_do_rule("Tk[Comma]", "value", ["seq"])
     
@@ -826,8 +836,8 @@ primitive ParserDefs
     // COMMA infixtype {COMMA infixtype}
     g.def("tupletype")
       .> builder("_BuildInfix")
-      .> token("None", ["Tk[Comma]"])
-      // TODO: MAP_ID("Tk[Comma]", "Tk[TupleType]")
+      .> tree("Tk[TupleType]")
+      .> skip("None", ["Tk[Comma]"])
       .> rule("type", ["infixtype"])
       .> while_token_do_rule("Tk[Comma]", "type", ["infixtype"])
     

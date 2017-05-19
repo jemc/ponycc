@@ -2,8 +2,8 @@
 use peg = "peg"
 
 class TkTree
-  let tk: TkAny
-  let pos: SourcePosAny
+  var tk: TkAny
+  var pos: SourcePosAny
   embed children: Array[TkTree] = Array[TkTree]
   // TODO: annotations
   
