@@ -406,3 +406,14 @@ class ParserGenDef
       g.pop_indent()
       g.line("end")
     } ref)
+  
+  fun ref rotate_left_children(count: USize) =>
+    _pieces.push({(g: CodeGen) =>
+      g.line("match state.tree | let tree: TkTree =>")
+      g.push_indent()
+      for i in Range(0, count) do
+        g.line("try tree.children.push(tree.children.shift()) end")
+      end
+      g.pop_indent()
+      g.line("end")
+    } ref)

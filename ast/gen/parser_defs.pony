@@ -31,11 +31,11 @@ primitive ParserDefs
     // {use} {class}
     g.def("module")
       .> tree("Tk[Module]")
-      .> opt_token("package docstring", ["Tk[LitString]"])
+      .> opt_no_dflt_token("package docstring", ["Tk[LitString]"])
       .> seq("use command", ["use"])
       .> seq("type, interface, trait, primitive, class or actor definition", ["type_decl"])
       .> skip("type, interface, trait, primitive, class, actor, member or method", ["Tk[EOF]"])
-      // TODO: REORDER so that docstring is the final child
+      .> rotate_left_children(1)
     
     // USE (use_package | use_ffi_decl)
     g.def("use")

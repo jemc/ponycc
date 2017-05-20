@@ -194,7 +194,7 @@ class PonyParser
     state.add_deferrable_ast((Tk[Module], _current_pos()))
     
     
-    state.default_tk = Tk[None]
+    state.default_tk = Tk[EOF]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -264,6 +264,9 @@ class PonyParser
         _handle_not_found(state, "type, interface, trait, primitive, class, actor, member or method", false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      try tree.children.push(tree.children.shift()) end
+    end
     
     (_complete(state), _BuildDefault)
   
