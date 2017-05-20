@@ -77,7 +77,7 @@ primitive ParserDefs
       .> opt_token("None", ["Tk[At]"])
       .> token("name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Is]", "provided type", ["type"])
       .> opt_token("docstring", ["Tk[LitString]"])
       .> rule("members", ["members"])
       // Order should be:
@@ -114,11 +114,11 @@ primitive ParserDefs
       .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
       .> opt_rule("parameters", ["params"])
       .> skip("None", ["Tk[RParen]"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
       .> opt_token("None", ["Tk[LitString]"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
-      .> if_token_then_rule("Tk[DoubleArrow]", "method body", ["seq"])
+      .> if_token_then_rule_else_none("Tk[If]", "guard expression", ["seq"])
+      .> if_token_then_rule_else_none("Tk[DoubleArrow]", "method body", ["seq"])
       // Order should be:
       // id cap type_params params return_type error guard body docstring
       .> reorder_children([1; 0; 2; 3; 4; 5; 7; 8; 6])

@@ -637,7 +637,7 @@ class PonyParser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1004,7 +1004,7 @@ class PonyParser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1069,7 +1069,7 @@ class PonyParser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1104,7 +1104,7 @@ class PonyParser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =

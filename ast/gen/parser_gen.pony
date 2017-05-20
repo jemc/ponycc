@@ -353,6 +353,14 @@ class ParserGenDef
     _rule_set(desc, array)
     _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
   
+  fun ref if_token_then_rule_else_none(tk: String, desc: String,
+    array: Array[String])
+  =>
+    _token_set("None", [tk], "Tk[None]" where make_ast = false)
+    _pieces.push({(g: CodeGen) => g.line("if found then"); g.push_indent() } ref)
+    _rule_set(desc, array)
+    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+  
   fun ref while_token_do_rule(tk: String, desc: String, array: Array[String]) =>
     _pieces.push({(g: CodeGen) => g.line("while true do"); g.push_indent() } ref)
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
