@@ -1,4 +1,5 @@
 use peg = "peg"
+use "../ast"
 use "debug"
 
 class PonyParser

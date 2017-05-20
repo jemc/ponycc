@@ -1,5 +1,6 @@
 
 use peg = "peg"
+use "../ast"
 
 class TkTree
   var tk: TkAny
