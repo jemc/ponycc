@@ -55,14 +55,14 @@ class TkTree
     if nonterminal then buf.push(')') end
     buf
   
-  fun _to_ast(
+  fun to_ast(
     err: {(TkAny, String, (AST | None))} =
       {(tk: TkAny, s: String, a: (AST | None)) => None } ref)
     : AST ?
   =>
     let ast_children = Array[(AST | None)]
     for child in children.values() do
-      ast_children.push(try child._to_ast(err) else None end)
+      ast_children.push(try child.to_ast(err) else None end)
     end
     tk._from_iter(ast_children.values(), pos,
       {(s: String, a: (AST | None)) => err(tk, s, a) })

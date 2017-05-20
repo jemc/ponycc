@@ -1,4 +1,3 @@
 .deps
 ast/gen/gen
-ast/test/test
-parser/parser
+test/test

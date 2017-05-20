@@ -1,8 +1,10 @@
 
 use peg = "peg"
 use "files"
-use "../ast"
 use "inspect"
+
+use "../ast"
+use "../parser"
 
 actor Main
   new create(env: Env) =>
@@ -17,7 +19,7 @@ actor Main
       
       let lexer = PonyLexer
       match lexer(content, path)
-      | let tokens: Array[_Token] val =>
+      | let tokens: Array[(TkAny, SourcePosAny)] val =>
         // env.out.print(tokens.size().string())
         // for token in tokens.values() do
         //   env.out.print(token.label().text())
@@ -27,7 +29,7 @@ actor Main
         match PonyParser(tokens.values()).parse()
         | let tree: TkTree =>
           try
-            Inspect.out(tree._to_ast(
+            Inspect.out(tree.to_ast(
               {(tk: TkAny, s: String, a: (AST | None)) =>
                 env.out.print("Failed to build " + tk.string())
                 env.out.print("  " + s)
