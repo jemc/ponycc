@@ -8,6 +8,7 @@ trait _ASTDef
 class _ASTDefFixed is _ASTDef
   let _gen: ASTGen
   let _name: String
+  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
   
   let fields: List[(String, String, String)] = fields.create()
   
@@ -26,13 +27,22 @@ class _ASTDefFixed is _ASTDef
   fun ref with_type()  => _with_type  = true
   
   fun ref in_union(n: String, n2: String = "") =>
+    _traits.push(n)
+    if n2.size() > 0 then _traits.push(n2) end
     _gen._add_to_union(n, _name)
     if n2.size() > 0 then _gen._add_to_union(n2, n) end
   
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is AST")
+    g.line("class " + _name + " is ")
+    if _traits.size() == 0 then
+      g.add("AST")
+    else
+      g.add("(AST")
+      for t in _traits.values() do g.add(" & " + t) end
+      g.add(")")
+    end
     if _todo then g.add(" // TODO") end
     g.push_indent()
     
@@ -214,19 +224,29 @@ class _ASTDefWrap is _ASTDef
   let _gen: ASTGen
   let _name: String
   let value_type: String
+  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
   
   new create(g: ASTGen, n: String, t: String) =>
     (_gen, _name, value_type) = (g, n, t)
     _gen.defs.push(this)
   
   fun ref in_union(n: String, n2: String = "") =>
+    _traits.push(n)
+    if n2.size() > 0 then _traits.push(n2) end
     _gen._add_to_union(n, _name)
     if n2.size() > 0 then _gen._add_to_union(n2, n) end
   
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is AST")
+    g.line("class " + _name + " is ")
+    if _traits.size() == 0 then
+      g.add("AST")
+    else
+      g.add("(AST")
+      for t in _traits.values() do g.add(" & " + t) end
+      g.add(")")
+    end
     g.push_indent()
     
     // Declare common fields.
@@ -292,19 +312,29 @@ class _ASTDefWrap is _ASTDef
 class _ASTDefLexeme is _ASTDef
   let _gen: ASTGen
   let _name: String
+  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
   
   new create(g: ASTGen, n: String) =>
     (_gen, _name) = (g, n)
     _gen.defs.push(this)
   
   fun ref in_union(n: String, n2: String = "") =>
+    _traits.push(n)
+    if n2.size() > 0 then _traits.push(n2) end
     _gen._add_to_union(n, _name)
     if n2.size() > 0 then _gen._add_to_union(n2, n) end
   
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is AST")
+    g.line("class " + _name + " is ")
+    if _traits.size() == 0 then
+      g.add("AST")
+    else
+      g.add("(AST")
+      for t in _traits.values() do g.add(" & " + t) end
+      g.add(")")
+    end
     g.push_indent()
     
     // Declare common fields.

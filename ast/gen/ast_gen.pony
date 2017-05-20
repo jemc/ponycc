@@ -49,13 +49,14 @@ class ASTGen
     
     // Declare each type union.
     for (name, types) in unions.pairs() do
-      g.line("type " + name + " is (")
-      let iter = types.values()
-      for t in iter do
-        g.add(t)
-        if iter.has_next() then g.add(" | ") end
-      end
-      g.add(")")
+    //   g.line("type " + name + " is (")
+    //   let iter = types.values()
+    //   for t in iter do
+    //     g.add(t)
+    //     if iter.has_next() then g.add(" | ") end
+    //   end
+    //   g.add(")")
+      g.line("trait " + name + " is AST") // TODO: use union instead
       g.line()
     end
     
