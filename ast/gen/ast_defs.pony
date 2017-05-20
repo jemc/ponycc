@@ -128,7 +128,7 @@ primitive ASTDefs
       .> with_type()
       .> has("then_expr", "IfDefCond")
       .> has("then_body", "Sequence")
-      .> has("else_body", "(Sequence | IfDef | None) = None")
+      .> has("else_body", "(Sequence | IfDef | None)", "None")
     
     g.def("IfType")
       .> in_union("Expr")
@@ -203,7 +203,7 @@ primitive ASTDefs
     
     g.def("Case")
       .> with_scope()
-      .> has("expr",  "Expr",              "None")
+      .> has("expr",  "Expr")
       .> has("guard", "(Sequence | None)", "None")
       .> has("body",  "(Sequence | None)", "None")
     

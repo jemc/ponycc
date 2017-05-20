@@ -2867,7 +2867,7 @@ class IfDef is AST
   
   var _then_expr: IfDefCond
   var _then_body: Sequence
-  var _else_body: (Sequence | IfDef | None) = None
+  var _else_body: (Sequence | IfDef | None)
   
   new create(
     then_expr': IfDefCond,
@@ -2889,10 +2889,7 @@ class IfDef is AST
       try iter.next()
       else err("missing required field: then_body", None); error
       end
-    let else_body': (AST | None) =
-      try iter.next()
-      else err("missing required field: else_body", None); error
-      end
+    let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -2910,7 +2907,7 @@ class IfDef is AST
       else err("incompatible field: then_body", then_body'); error
       end
     _else_body =
-      try else_body' as (Sequence | IfDef | None) = None
+      try else_body' as (Sequence | IfDef | None)
       else err("incompatible field: else_body", else_body'); error
       end
   
@@ -2919,7 +2916,7 @@ class IfDef is AST
   
   fun then_expr(): this->IfDefCond => _then_expr
   fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Sequence | IfDef | None) = None => _else_body
+  fun else_body(): this->(Sequence | IfDef | None) => _else_body
   
   fun ref set_then_expr(then_expr': IfDefCond) => _then_expr = consume then_expr'
   fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
@@ -3599,7 +3596,7 @@ class Case is AST
   var _body: (Sequence | None)
   
   new create(
-    expr': Expr = None,
+    expr': Expr,
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None)
   =>
@@ -3610,7 +3607,10 @@ class Case is AST
   new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
     _pos = pos'
     
-    let expr': (AST | None) = try iter.next() else None end
+    let expr': (AST | None) =
+      try iter.next()
+      else err("missing required field: expr", None); error
+      end
     let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     if
@@ -3641,7 +3641,7 @@ class Case is AST
   fun guard(): this->(Sequence | None) => _guard
   fun body(): this->(Sequence | None) => _body
   
-  fun ref set_expr(expr': Expr = None) => _expr = consume expr'
+  fun ref set_expr(expr': Expr) => _expr = consume expr'
   fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
   fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
   
