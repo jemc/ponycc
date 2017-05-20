@@ -7633,15 +7633,18 @@ class PonyParser
     
     state.default_tk = None
     found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
-      match _current_tk() | Tk[Id] =>
-        found = true
-        last_matched = "name"
-        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
-      else
+      while true do
+        match _parse_nominaldot("name")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "name"
+          break _handle_found(state, tree, build)
+        end
+        
         found = false
-        _handle_not_found(state, "name", false)
+        break _handle_not_found(state, "name", false)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -7705,6 +7708,64 @@ class PonyParser
     if res isnt None then return (res, _BuildDefault) end
     
     (_complete(state), _BuildDefault)
+  
+  fun ref _parse_nominaldot(rule_desc: String): (_RuleResult, _Build) =>
+    let state = _RuleState("nominaldot", rule_desc)
+    var res: _RuleResult = None
+    var found: Bool = false
+    state.add_deferrable_ast((Tk[Dot], _current_pos()))
+    
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Id] =>
+        found = true
+        last_matched = "name"
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, "name", false)
+      end
+    if res isnt None then return (res, _BuildUnwrap[Tk[Dot]]) end
+    
+    
+    state.default_tk = Tk[EOF]
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[Dot] =>
+        found = true
+        last_matched = Tk[Dot].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, Tk[Dot].desc(), false)
+      end
+    if res isnt None then return (res, _BuildUnwrap[Tk[Dot]]) end
+    if found then
+      
+      
+      state.default_tk = None
+      found = false
+      while _current_tk() is Tk[NewLine] do _consume_token() end
+      res =
+        match _current_tk() | Tk[Id] =>
+          found = true
+          last_matched = Tk[Id].desc()
+          _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+        else
+          found = false
+          _handle_not_found(state, Tk[Id].desc(), false)
+        end
+      if res isnt None then return (res, _BuildUnwrap[Tk[Dot]]) end
+    end
+    match state.tree | let tree: TkTree =>
+      try tree.children.push(tree.children.shift()) end
+    end
+    
+    (_complete(state), _BuildUnwrap[Tk[Dot]])
   
   fun ref _parse_lambdatype(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("lambdatype", rule_desc)

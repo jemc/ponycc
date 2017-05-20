@@ -834,15 +834,19 @@ primitive ParserDefs
     // ID [DOT ID] [typeargs] [CAP] [EPHEMERAL | ALIASED]
     g.def("nominal")
       .> tree("Tk[NominalType]")
-      .> token("name", ["Tk[Id]"])
-      // TODO: IFELSE("Tk[Dot]",
-      //   TOKEN("name", "Tk[Id]"),
-      //   .> tree("Tk[None]")
-      //   REORDER(1, 0)
-      // )
+      .> rule("name", ["nominaldot"])
       .> opt_rule("type arguments", ["typeargs"])
       .> opt_rule("capability", ["cap"; "gencap"])
       .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
+    
+    // ID [DOT ID]
+    g.def("nominaldot")
+      .> builder("_BuildUnwrap[Tk[Dot]]")
+      .> print_inline()
+      .> tree("Tk[Dot]")
+      .> token("name", ["Tk[Id]"])
+      .> if_token_then_token("Tk[Dot]", "None", ["Tk[Id]"])
+      .> rotate_left_children(1)
     
     // LBRACE [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [typelist] RPAREN
     // [COLON type] [QUESTION] RBRACE [CAP] [EPHEMERAL | ALIASED]
