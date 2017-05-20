@@ -5,6 +5,7 @@ use "inspect"
 
 use "../ast"
 use "../parser"
+use "../printer"
 
 actor Main
   new create(env: Env) =>
@@ -21,7 +22,13 @@ actor Main
       let parser = Parser
       
       try
-        Inspect.out(parser(source))
+        let module = parser(source)
+        
+        env.out.print("")
+        env.out.print(Inspect(module))
+        
+        env.out.print("")
+        env.out.print(Printer(module))
       else
         env.out.print("A parser error occurred.")
       end

@@ -19,5 +19,6 @@ parser/_parser.pony: ast/gen/gen
 test/test: ast/ast.pony parser/_parser.pony \
 	$(shell find ast/*.pony) \
 	$(shell find parser/*.pony) \
+	$(shell find printer/*.pony) \
 	$(shell find test/*.pony)
 	stable env ponyc --debug -o test test
