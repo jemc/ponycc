@@ -143,11 +143,11 @@ class PonyParser
     _ditch_restart(state)
   
   fun ref _error(str: String, pos: (SourcePosAny | None) = None) =>
-    // Debug("ERROR: " + str) // TODO: show token loc
+    Debug("ERROR: " + str) // TODO: show token loc
     None
   
   fun ref _error_continue(str: String, pos: (SourcePosAny | None) = None) =>
-    // Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
+    Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
     None
   
   fun ref _syntax_error(expected: String, tree: (TkTree | None), terminating: String) =>
