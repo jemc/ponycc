@@ -27,12 +27,12 @@ actor Main
         match PonyParser(tokens.values()).parse()
         | let tree: TkTree =>
           try
-            Inspect.out(tree._to_ast(),
+            Inspect.out(tree._to_ast(
               {(tk: TkAny, s: String, a: (AST | None)) =>
                 env.out.print("Failed to build " + tk.string())
                 env.out.print("  " + s)
                 env.out.print("  > " + a.string())
-              } ref)
+              } ref))
           else
             env.out.print("Failed to build TkTree into an AST")
           end
