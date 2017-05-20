@@ -199,13 +199,14 @@ class _ASTDefFixed is _ASTDef
       iter = fields.values()
       for (field_name, field_type, _) in iter do
         if field_type.at("Array[", 0) then
-          g.line("let " + field_name + "_iter = _" + field_name + ".values()")
-          g.line("for v in " + field_name + "_iter do")
-          g.line("  s.append(v.string())")
-          g.line("  if " + field_name + "_iter.has_next() then")
-          g.line("    s.>push(',').push(' ')")
-          g.line("  end")
+          g.line("s.push('[')")
+          g.line("for (i, v) in _" + field_name + ".pairs() do")
+          g.push_indent()
+          g.line("if i > 0 then s.>push(';').push(' ') end")
+          g.line("s.append(v.string())")
+          g.pop_indent()
           g.line("end")
+          g.line("s.push(']')")
           if iter.has_next() then g.line("s.>push(',').push(' ')") end
         else
           g.line("s.>append(_" + field_name + ".string())")

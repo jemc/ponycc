@@ -303,21 +303,19 @@ class Module is AST
     let s = recover iso String end
     s.append("Module")
     s.push('(')
-    let use_decls_iter = _use_decls.values()
-    for v in use_decls_iter do
+    s.push('[')
+    for (i, v) in _use_decls.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if use_decls_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.>push(',').push(' ')
-    let type_decls_iter = _type_decls.values()
-    for v in type_decls_iter do
+    s.push('[')
+    for (i, v) in _type_decls.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if type_decls_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.>push(',').push(' ')
     s.>append(_docs.string())
     s.push(')')
@@ -1303,21 +1301,19 @@ class Members is AST
     let s = recover iso String end
     s.append("Members")
     s.push('(')
-    let fields_iter = _fields.values()
-    for v in fields_iter do
+    s.push('[')
+    for (i, v) in _fields.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if fields_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.>push(',').push(' ')
-    let methods_iter = _methods.values()
-    for v in methods_iter do
+    s.push('[')
+    for (i, v) in _methods.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if methods_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -1967,13 +1963,12 @@ class TypeParams is AST
     let s = recover iso String end
     s.append("TypeParams")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -2087,13 +2082,12 @@ class TypeArgs is AST
     let s = recover iso String end
     s.append("TypeArgs")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -2147,13 +2141,12 @@ class Params is AST
     let s = recover iso String end
     s.append("Params")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.>push(',').push(' ')
     s.>append(_ellipsis.string())
     s.push(')')
@@ -2263,13 +2256,12 @@ class Sequence is (AST & Expr)
     let s = recover iso String end
     s.append("Sequence")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -3306,13 +3298,12 @@ class IdTuple is AST
     let s = recover iso String end
     s.append("IdTuple")
     s.push('(')
-    let elements_iter = _elements.values()
-    for v in elements_iter do
+    s.push('[')
+    for (i, v) in _elements.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if elements_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -3353,13 +3344,12 @@ class AssignTuple is AST
     let s = recover iso String end
     s.append("AssignTuple")
     s.push('(')
-    let elements_iter = _elements.values()
-    for v in elements_iter do
+    s.push('[')
+    for (i, v) in _elements.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if elements_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -3467,13 +3457,12 @@ class Cases is AST
     let s = recover iso String end
     s.append("Cases")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -6448,13 +6437,12 @@ class Args is AST
     let s = recover iso String end
     s.append("Args")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -6495,13 +6483,12 @@ class NamedArgs is AST
     let s = recover iso String end
     s.append("NamedArgs")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -6734,13 +6721,12 @@ class LambdaCaptures is AST
     let s = recover iso String end
     s.append("LambdaCaptures")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -6965,13 +6951,12 @@ class Tuple is (AST & Expr)
     let s = recover iso String end
     s.append("Tuple")
     s.push('(')
-    let elements_iter = _elements.values()
-    for v in elements_iter do
+    s.push('[')
+    for (i, v) in _elements.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if elements_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -7987,13 +7972,12 @@ class UnionType is (AST & Type)
     let s = recover iso String end
     s.append("UnionType")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -8034,13 +8018,12 @@ class IsectType is (AST & Type)
     let s = recover iso String end
     s.append("IsectType")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
@@ -8081,13 +8064,12 @@ class TupleType is (AST & Type)
     let s = recover iso String end
     s.append("TupleType")
     s.push('(')
-    let list_iter = _list.values()
-    for v in list_iter do
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
       s.append(v.string())
-      if list_iter.has_next() then
-        s.>push(',').push(' ')
-      end
     end
+    s.push(']')
     s.push(')')
     consume s
 
