@@ -736,7 +736,6 @@ primitive ParserDefs
       .> rule("value", ["seq"])
       .> opt_no_dflt_rule("value", ["tuple"])
       .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
     
     // LPAREN_NEW seq [tuple] RPAREN
     g.def("nextgroupedexpr")
@@ -745,7 +744,6 @@ primitive ParserDefs
       .> rule("value", ["seq"])
       .> opt_no_dflt_rule("value", ["tuple"])
       .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
     
     // COMMA seq {COMMA seq}
     g.def("tuple")
@@ -784,9 +782,9 @@ primitive ParserDefs
       .> rule("type", ["atomtype"])
       .> opt_no_dflt_rule("viewpoint", ["viewpoint"])
     
-    // (groupedtype | nominal | lambdatype | thistype | cap | gencap)
+    // (tupletype | nominal | lambdatype | thistype | cap | gencap)
     g.def("atomtype")
-      .> rule("type", ["groupedtype"; "nominal"; "lambdatype"; "thistype"; "cap"; "gencap"])
+      .> rule("type", ["tupletype"; "nominal"; "lambdatype"; "thistype"; "cap"; "gencap"])
     
     // ARROW type
     g.def("viewpoint")
@@ -796,14 +794,14 @@ primitive ParserDefs
       .> skip("None", ["Tk[Arrow]"])
       .> rule("viewpoint", ["type"])
     
-    // (LPAREN | LPAREN_NEW) infixtype [tupletype] RPAREN
-    g.def("groupedtype")
+    // (LPAREN | LPAREN_NEW) infixtype [commatype] RPAREN
+    g.def("tupletype")
       .> print_inline()
+      .> tree("Tk[TupleType]") // TODO: In the parser, unwrap single-element TupleTypes, using the TupleType to ensure that parens gave explicit operator precedence.
       .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
       .> rule("type", ["infixtype"])
-      .> opt_no_dflt_rule("type", ["tupletype"])
+      .> opt_no_dflt_rule("type", ["commatype"])
       .> skip("None", ["Tk[RParen]"])
-      // TODO: deal with SET_FLAG(AST_FLAG_IN_PARENS)
     
     // type {uniontype | isecttype}
     g.def("infixtype")
@@ -816,6 +814,7 @@ primitive ParserDefs
       .> tree("Tk[UnionType]")
       .> skip("None", ["Tk[Pipe]"])
       .> rule("type", ["type"])
+      .> while_token_do_rule("Tk[Pipe]", "type", ["type"])
     
     // AMP type
     g.def("isecttype")
@@ -823,11 +822,11 @@ primitive ParserDefs
       .> tree("Tk[IsectType]")
       .> skip("None", ["Tk[Ampersand]"])
       .> rule("type", ["type"])
+      .> while_token_do_rule("Tk[Ampersand]", "type", ["type"])
     
     // COMMA infixtype {COMMA infixtype}
-    g.def("tupletype")
+    g.def("commatype")
       .> builder("_BuildInfix")
-      .> tree("Tk[TupleType]")
       .> skip("None", ["Tk[Comma]"])
       .> rule("type", ["infixtype"])
       .> while_token_do_rule("Tk[Comma]", "type", ["infixtype"])
