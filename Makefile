@@ -1,6 +1,13 @@
 .PHONY: all
 all: ast/test/test
 
+clean:
+	rm -f ast/gen/gen
+	rm -f ast/ast.pony
+	rm -f parser/parser.pony
+	rm -f parser/parser
+	rm -f ast/test/test
+
 ast/gen/gen: $(shell find ast/gen/*.pony)
 	stable env ponyc --debug -o ast/gen ast/gen
 
