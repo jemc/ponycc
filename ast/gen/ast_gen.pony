@@ -22,13 +22,16 @@ class ASTGen
     // Declare the AST trait
     g.line("trait AST")
     g.push_indent()
-    g.line("new from_iter(iter: Iterator[(AST | None)]")
-    g.add(", pos': SourcePosAny = SourcePosNone")
-    g.add(", err: {(String, (AST | None))}")
-    g.add(" = {(s: String, a: (AST | None)) => None } ref)?")
     g.line("fun pos(): SourcePosAny")
     g.line("fun ref set_pos(pos': SourcePosAny)")
     g.line("fun string(): String iso^")
+    g.block(
+      """
+      new from_iter(
+        iter: Iterator[(AST | None)],
+        pos': SourcePosAny = SourcePosNone,
+        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+      """)
     g.pop_indent()
     g.line()
     

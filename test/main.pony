@@ -17,32 +17,13 @@ actor Main
       env.out.print(path)
       env.out.print(content)
       
-      let lexer = PonyLexer
-      match lexer(content, path)
-      | let tokens: Array[(TkAny, SourcePosAny)] val =>
-        // env.out.print(tokens.size().string())
-        // for token in tokens.values() do
-        //   env.out.print(token.label().text())
-        // end
-        // env.out.print("...")
-        
-        match PonyParser(tokens.values()).parse()
-        | let tree: TkTree =>
-          try
-            Inspect.out(tree.to_ast(
-              {(tk: TkAny, s: String, a: (AST | None)) =>
-                env.out.print("Failed to build " + tk.string())
-                env.out.print("  " + s)
-                env.out.print("  > " + a.string())
-              } ref))
-          else
-            env.out.print("Failed to build TkTree into an AST")
-          end
-        else
-          env.out.print("Failed to parse tokens into a TkTree")
-        end
-      | let idx: USize =>
-        env.out.print("Syntax error at idx: " + idx.string())
+      let source = Source(content, path)
+      let parser = Parser
+      
+      try
+        Inspect.out(parser(source))
+      else
+        env.out.print("A parser error occurred.")
       end
     else
       env.out.print("An error occurred opening the example file for parsing.")

@@ -4,7 +4,7 @@ use "../ast"
 type _L is peg.L
 type _R is peg.R
 
-class PonyLexer
+class _Lexer
   let parser: peg.Parser val = recover
     let digit = _R('0', '9')
     let digits = digit * digit.many()
@@ -83,11 +83,15 @@ class PonyLexer
     (line * _L("\n").term(Tk[NewLine])).many() * line
   end
   
-  fun apply(string: String, path: String = ""): (Array[_Token] iso^ | USize) =>
-    (let i, let p) = parser.parse(peg.Source.from_string(string, path))
+  fun apply(source: SourceAny): (Array[_Token] iso^ | USize) =>
+    let source' = peg.Source.from_string(source.content(), source.path())
+    (let i, let p) = parser.parse(source')
     
-    match p
-    | let ast: peg.AST => if i == string.size() then _flatten(ast) else i end
+    match p | let ast: peg.AST =>
+      if i == source.content().size()
+      then _flatten(ast)
+      else i
+      end
     else i
     end
   

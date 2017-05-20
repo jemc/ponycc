@@ -80,10 +80,14 @@ class _ASTDefFixed is _ASTDef
     if fields.size() > 0 then g.line() end
     
     // Declare a constructor that initializes all fields from an iterator.
-    g.line("new from_iter(iter: Iterator[(AST | None)]")
-    g.add(", pos': SourcePosAny = SourcePosNone")
-    g.add(", err: {(String, (AST | None))}")
-    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.block(
+      """
+      new from_iter(
+        iter: Iterator[(AST | None)],
+        pos': SourcePosAny = SourcePosNone,
+        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+      =>
+      """)
     g.push_indent()
     g.line("_pos = pos'")
     g.line()
@@ -119,7 +123,7 @@ class _ASTDefFixed is _ASTDef
             g.push_indent()
             g.line("try iter.next()")
             g.line("else err(\"missing required field: " + field_name + "\"")
-            g.add(", None); error")
+            g.add(", pos'); error")
             g.line("end")
             g.pop_indent()
           end
@@ -132,7 +136,7 @@ class _ASTDefFixed is _ASTDef
       g.line("if " + iter_next + " isnt None then")
       g.push_indent()
       g.line("let extra' = " + iter_next)
-      g.line("err(\"unexpected extra field\", extra'); error")
+      g.line("err(\"unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); error")
       g.pop_indent()
       g.line("end")
     else
@@ -141,7 +145,7 @@ class _ASTDefFixed is _ASTDef
       g.line("try")
       g.push_indent()
       g.line("let extra' = " + iter_next)
-      g.line("err(\"unexpected extra field\", extra'); true")
+      g.line("err(\"unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); true")
       g.pop_indent()
       g.line("else false")
       g.line("end")
@@ -158,7 +162,7 @@ class _ASTDefFixed is _ASTDef
         g.push_indent()
         g.line("try " + field_name + "' as " + field_type)
         g.line("else err(\"incompatible field: " + field_name)
-        g.add("\", " + field_name + "'); error")
+        g.add("\", try (" + field_name + "' as AST).pos() else SourcePosNone end); error")
         g.line("end")
         g.pop_indent()
       end
@@ -259,10 +263,14 @@ class _ASTDefWrap is _ASTDef
     // Declare a constructor that initializes the value field from a parameter.
     g.line("new create(value': " + value_type + ") => _value = value'")
     
-    g.line("new from_iter(iter: Iterator[(AST | None)]")
-    g.add(", pos': SourcePosAny = SourcePosNone")
-    g.add(", err: {(String, (AST | None))}")
-    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.block(
+      """
+      new from_iter(
+        iter: Iterator[(AST | None)],
+        pos': SourcePosAny = SourcePosNone,
+        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+      =>
+      """)
     g.push_indent()
     g.line("_pos = pos'")
     if value_type == "String" then
@@ -276,7 +284,7 @@ class _ASTDefWrap is _ASTDef
     g.line("try")
     g.push_indent()
     g.line("let extra' = iter.next()")
-    g.line("err(\"unexpected extra field\", extra'); true")
+    g.line("err(\"unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); true")
     g.pop_indent()
     g.line("else false")
     g.line("end")
@@ -345,12 +353,16 @@ class _ASTDefLexeme is _ASTDef
     g.line("new create() => None")
     
     // Declare a constructor that accepts an iterator but always errors.
-    g.line("new from_iter(iter: Iterator[(AST | None)]")
-    g.add(", pos': SourcePosAny = SourcePosNone")
-    g.add(", err: {(String, (AST | None))}")
-    g.add(" = {(s: String, a: (AST | None)) => None } ref)? =>")
+    g.block(
+      """
+      new from_iter(
+        iter: Iterator[(AST | None)],
+        pos': SourcePosAny = SourcePosNone,
+        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+      =>
+      """)
     g.push_indent()
-    g.line("err(\"this lexeme-only type should never be built\", None); error")
+    g.line("err(\"this lexeme-only type should never be built\", pos'); error")
     g.pop_indent()
     g.line()
     

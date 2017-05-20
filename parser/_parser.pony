@@ -2,7 +2,7 @@ use peg = "peg"
 use "../ast"
 use "debug"
 
-class PonyParser
+class _Parser
   let tokens: Iterator[_Token]
   var token: _Token
   let errors: Array[String] = Array[String]

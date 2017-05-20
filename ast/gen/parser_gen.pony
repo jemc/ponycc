@@ -16,7 +16,7 @@ class ParserGen
     g.line("use \"../ast\"")
     if debug then g.line("use \"debug\"") end
     g.line()
-    g.line("class PonyParser")
+    g.line("class _Parser")
     g.push_indent()
     
     // Declare parser state fields.

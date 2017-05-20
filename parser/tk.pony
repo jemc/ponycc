@@ -10,7 +10,7 @@ trait val TkAny is peg.Label
   fun _from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)
+    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
     : AST ?
 
 primitive Tk[A: (AST | None)] is TkAny
@@ -19,7 +19,7 @@ primitive Tk[A: (AST | None)] is TkAny
   fun _from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)
+    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
     : AST ?
   =>
     if false then error end // TODO: fix ponyc, then remove this
@@ -56,13 +56,11 @@ class TkTree
     buf
   
   fun to_ast(
-    err: {(TkAny, String, (AST | None))} =
-      {(tk: TkAny, s: String, a: (AST | None)) => None } ref)
+    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
     : AST ?
   =>
     let ast_children = Array[(AST | None)]
     for child in children.values() do
       ast_children.push(try child.to_ast(err) else None end)
     end
-    tk._from_iter(ast_children.values(), pos,
-      {(s: String, a: (AST | None)) => err(tk, s, a) })
+    tk._from_iter(ast_children.values(), pos, err)
