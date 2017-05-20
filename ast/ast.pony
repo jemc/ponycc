@@ -7,8 +7,6 @@ trait AST
 primitive ASTInfo
   fun name[A: (AST | None)](): String =>
     iftype A <: None then "x"
-    elseif A <: Program then "Program"
-    elseif A <: Package then "Package"
     elseif A <: Module then "Module"
     elseif A <: UsePackage then "UsePackage"
     elseif A <: UseFFIDecl then "UseFFIDecl"
@@ -242,115 +240,6 @@ trait FieldRef is AST
 trait LocalRef is AST
 
 trait UnaryOp is AST
-
-class Program is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _packages: Array[Package]
-  
-  new create(
-    packages': Array[Package])
-  =>
-    _packages = packages'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let packages' = Array[Package]
-    var packages_next' = try iter.next() else None end
-    while true do
-      try packages'.push(packages_next' as Package) else break end
-      try packages_next' = iter.next() else packages_next' = None; break end
-    end
-    if packages_next' isnt None then
-      let extra' = packages_next'
-      err("unexpected extra field", extra'); error
-    end
-    
-    _packages = packages'
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun packages(): this->Array[Package] => _packages
-  
-  fun ref set_packages(packages': Array[Package]) => _packages = consume packages'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Program")
-    s.push('(')
-    let packages_iter = _packages.values()
-    for v in packages_iter do
-      s.append(v.string())
-      if packages_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
-    s.push(')')
-    consume s
-
-class Package is AST
-  var _pos: SourcePosAny = SourcePosNone
-  
-  var _modules: Array[Module]
-  var _docs: (LitString | None)
-  
-  new create(
-    modules': Array[Module] = Array[Module],
-    docs': (LitString | None) = None)
-  =>
-    _modules = modules'
-    _docs = docs'
-  
-  new from_iter(iter: Iterator[(AST | None)], pos': SourcePosAny = SourcePosNone, err: {(String, (AST | None))} = {(s: String, a: (AST | None)) => None } ref)? =>
-    _pos = pos'
-    
-    let modules' = Array[Module]
-    var modules_next' = try iter.next() else None end
-    while true do
-      try modules'.push(modules_next' as Module) else break end
-      try modules_next' = iter.next() else modules_next' = None; break end
-    end
-    let docs': (AST | None) = modules_next'
-    if
-      try
-        let extra' = iter.next()
-        err("unexpected extra field", extra'); true
-      else false
-      end
-    then error end
-    
-    _modules = modules'
-    _docs =
-      try docs' as (LitString | None)
-      else err("incompatible field: docs", docs'); error
-      end
-  
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
-  
-  fun modules(): this->Array[Module] => _modules
-  fun docs(): this->(LitString | None) => _docs
-  
-  fun ref set_modules(modules': Array[Module] = Array[Module]) => _modules = consume modules'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
-  
-  fun string(): String iso^ =>
-    let s = recover iso String end
-    s.append("Package")
-    s.push('(')
-    let modules_iter = _modules.values()
-    for v in modules_iter do
-      s.append(v.string())
-      if modules_iter.has_next() then
-        s.>push(',').push(' ')
-      end
-    end
-    s.>push(',').push(' ')
-    s.>append(_docs.string())
-    s.push(')')
-    consume s
 
 class Module is AST
   var _pos: SourcePosAny = SourcePosNone

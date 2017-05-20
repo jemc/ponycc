@@ -1,17 +1,6 @@
 
 primitive ASTDefs
   fun apply(g: ASTGen) =>
-    // Based on treecheckdef.h (at commit: a7babdf2)
-    
-    g.def("Program")
-      .> with_scope()
-      .> has("packages", "Array[Package]")
-    
-    g.def("Package")
-      .> with_scope()
-      .> has("modules", "Array[Module]",      "Array[Module]")
-      .> has("docs",    "(LitString | None)", "None")
-    
     g.def("Module")
       .> with_scope()
       .> has("use_decls",  "Array[UseDecl]",     "Array[UseDecl]")
