@@ -61,7 +61,7 @@ primitive Printer
   
   fun _show(g: _Gen, x: Module) =>
     try
-      g.string_triple((x.docs() as LitString).value())
+      g.write((x.docs() as LitString).pos().string()) // TODO: less cheating...
       g.line()
     end
     for u in x.use_decls().values() do _show(g, u) end
@@ -105,7 +105,7 @@ primitive Printer
     try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
     try let p = x.provides() as Type; g.write("is "); _show(g, p) end
     g.push_indent()
-    try g.string_triple((x.docs() as LitString).value()) end
+    try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
     try _show(g, x.members() as Members) end
     g.pop_indent()
   
@@ -149,7 +149,7 @@ primitive Printer
     try _show(g, x.guard() as Sequence) end
     g.write(" =>")
     g.push_indent()
-    try g.string_triple((x.docs() as LitString).value()) end
+    try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
     try _show_bare(g, x.body() as Sequence) end
     g.pop_indent()
   
@@ -448,15 +448,15 @@ primitive Printer
   fun _show(g: _Gen, x: Question)  => g.write("?")
   fun _show(g: _Gen, x: Ellipsis)  => g.write("...")
   
-  fun _show(g: _Gen, x: Id)   => g.write(x.value())
+  fun _show(g: _Gen, x: Id)   => g.write(x.pos().string()) // TODO: less cheating, here and below...
   fun _show(g: _Gen, x: This) => g.write("this")
   
   fun _show(g: _Gen, x: LitTrue)      => g.write("true")
   fun _show(g: _Gen, x: LitFalse)     => g.write("false")
-  fun _show(g: _Gen, x: LitFloat)     => g.write(x.value().string())
-  fun _show(g: _Gen, x: LitInteger)   => g.write(x.value().string())
-  fun _show(g: _Gen, x: LitCharacter) => g.write(x.value().string()) // TODO: single-quote
-  fun _show(g: _Gen, x: LitString)    => g.string_triple(x.value())  // TODO: normal quote
+  fun _show(g: _Gen, x: LitFloat)     => g.write(x.pos().string())
+  fun _show(g: _Gen, x: LitInteger)   => g.write(x.pos().string())
+  fun _show(g: _Gen, x: LitCharacter) => g.write(x.pos().string()) // TODO: single-quote
+  fun _show(g: _Gen, x: LitString)    => g.write(x.pos().string()) // TODO: normal quote
   fun _show(g: _Gen, x: LitLocation)  => g.write("__loc")
   
   // TODO: remove these defaults when everything is implemented:

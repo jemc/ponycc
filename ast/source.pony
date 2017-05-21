@@ -21,6 +21,7 @@ interface val SourcePosAny
   fun source(): SourceAny
   fun offset(): USize
   fun length(): USize
+  fun string(): String => source().content().trim(offset(), offset() + length())
 
 primitive SourcePosNone is SourcePosAny
   fun source(): SourceAny => SourceNone
