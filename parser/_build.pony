@@ -12,12 +12,13 @@ primitive _BuildInfix
     try tree.children.unshift(state.tree as TkTree) end
     state.tree = tree
 
-primitive _BuildUnwrap[A: TkAny]
+primitive _BuildCustomNominalType
   fun apply(state: _RuleState, tree: TkTree) =>
-    match tree.tk | let _: A =>
-      for child in tree.children.values() do
-        _BuildDefault(state, child)
+    _BuildDefault(state, TkTree((tree.tk, tree.pos)))
+    
+    for (i, child) in tree.children.pairs() do
+      if (tree.children.size() == 3) and (i == 0)
+      then _BuildDefault(state, TkTree((Tk[None], child.pos)))
       end
-    else
-      _BuildDefault(state, tree)
+      _BuildDefault(state, child)
     end
