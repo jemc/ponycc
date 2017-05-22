@@ -22,7 +22,9 @@ actor Main
       let parser = Parser
       
       try
-        let module = parser(source)
+        let module = parser(source, {(s: String, p: SourcePosAny) =>
+          env.out.print(s + ": " + p.string())
+        })
         
         env.out.print("")
         env.out.print(Inspect(module))
