@@ -11,7 +11,7 @@ trait val TkAny is peg.Label
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
-    : AST ?
+    : (AST | None) ?
 
 primitive Tk[A: (AST | None)] is TkAny
   fun string(): String => ASTInfo.name[A]()
@@ -20,12 +20,12 @@ primitive Tk[A: (AST | None)] is TkAny
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
-    : AST ?
+    : (AST | None) ?
   =>
     if false then error end // TODO: fix ponyc, then remove this
     iftype A <: AST
     then A.from_iter(iter, pos', err)
-    else error
+    else None
     end
 
 type _Token is (TkAny, SourcePosAny)
@@ -57,10 +57,10 @@ class TkTree
   
   fun to_ast(
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
-    : AST ?
+    : (AST | None) ?
   =>
     let ast_children = Array[(AST | None)]
     for child in children.values() do
-      ast_children.push(try child.to_ast(err) else None end)
+      ast_children.push(child.to_ast(err))
     end
     tk._from_iter(ast_children.values(), pos, err)
