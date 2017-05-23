@@ -62,10 +62,16 @@ primitive Printer
   fun _show(g: _Gen, x: Module) =>
     try
       g.write((x.docs() as LitString).pos().string()) // TODO: less cheating...
-      g.line()
+      if (x.use_decls().size() + x.type_decls().size()) > 0 then
+        g.line()
+        g.line()
+      end
     end
     for u in x.use_decls().values() do _show(g, u) end
-    for t in x.type_decls().values() do g.line(); _show(g, t) end
+    for (i, t) in x.type_decls().pairs() do
+      if (x.use_decls().size() > 0) or (i > 0) then g.line() end
+      _show(g, t)
+    end
   
   fun _show(g: _Gen, x: UsePackage) =>
     g.line_start()
