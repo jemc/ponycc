@@ -1,6 +1,7 @@
 
 use "collections"
 use "../ast"
+use "inspect"
 
 primitive _GenNewline
 primitive _GenIndentPush
@@ -77,9 +78,7 @@ primitive Printer
     g.line_start()
     g.write("use ")
     try _show(g, x.prefix() as Id); g.write(" = ") end
-    g.write("\"")
-    g.write(x.package().string())
-    g.write("\"")
+    _show(g, x.package())
   
   fun _show(g: _Gen, x: UseFFIDecl) =>
     g.line_start()
@@ -88,7 +87,7 @@ primitive Printer
     _show(g, x.return_type())
     try _show(g, x.params() as Params) else g.write("()") end
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
-    try let e = x.guard() as (Expr | IfDefCond); g.write(" "); _show(g, e) end
+    try let e = x.guard() as IfDefCond; g.write(" if "); _show(g, e) end
   
   fun _show(g: _Gen,
     x: (TypeAlias | Interface | Class | Actor | Struct | Primitive | Trait))
@@ -158,8 +157,6 @@ primitive Printer
     try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
     try _show_bare(g, x.body() as Sequence) end
     g.pop_indent()
-  
-  fun _show(g: _Gen, x: IfDefCond) => None // TODO
   
   fun _show(g: _Gen, x: TypeParams) =>
     g.write("[")
@@ -348,9 +345,24 @@ primitive Printer
   fun _show(g: _Gen, x: NamedArg) => None // TODO
   
   fun _show(g: _Gen, x: IfDef) => None // TODO
-  fun _show(g: _Gen, x: IfDefBinaryOp) => None // TODO
-  fun _show(g: _Gen, x: IfDefNot) => None // TODO
-  fun _show(g: _Gen, x: IfDefFlag) => None // TODO
+  
+  fun _show(g: _Gen, x: (IfDefAnd | IfDefOr)) =>
+    _show(g, x.left())
+    
+    g.write(
+      match x
+      | let _: IfDefAnd => " and "
+      | let _: IfDefOr  => " or "
+      end)
+    
+    _show(g, x.right())
+  
+  fun _show(g: _Gen, x: IfDefNot) =>
+    g.write("not ")
+    _show(g, x.expr())
+  
+  fun _show(g: _Gen, x: IfDefFlag) =>
+    _show(g, x.name())
   
   fun _show(g: _Gen, x: If) => None // TODO
   fun _show(g: _Gen, x: While) => None // TODO
@@ -369,8 +381,8 @@ primitive Printer
   fun _show(g: _Gen, x: Object) => None // TODO
   fun _show(g: _Gen, x: LitArray) => None // TODO
   
-  fun _show(g: _Gen, x: Reference) => None // TODO
-  fun _show(g: _Gen, x: DontCare) => None // TODO
+  fun _show(g: _Gen, x: Reference) => _show(g, x.name())
+  fun _show(g: _Gen, x: DontCare) => g.write("_")
   fun _show(g: _Gen, x: PackageRef) => None // TODO
   fun _show(g: _Gen, x: MethodRef) => None // TODO
   fun _show(g: _Gen, x: TypeRef) => None // TODO

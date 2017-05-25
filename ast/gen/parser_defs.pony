@@ -65,7 +65,7 @@ primitive ParserDefs
       .> opt_rule("ffi parameters", ["params"])
       .> skip("None", ["Tk[RParen]"])
       .> opt_token("None", ["Tk[Question]"])
-      .> if_token_then_rule("Tk[If]", "use condition", ["infix"])
+      .> if_token_then_rule("Tk[If]", "use condition", ["ifdefinfix"])
     
     // (TYPE | INTERFACE | TRAIT | PRIMITIVE | STRUCT | CLASS | ACTOR) [annotations]
     // [AT] ID [typeparams] [CAP] [IS type] [STRING] members

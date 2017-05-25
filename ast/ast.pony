@@ -398,14 +398,14 @@ class UseFFIDecl is (AST & UseDecl)
   var _return_type: TypeArgs
   var _params: (Params | None)
   var _partial: (Question | None)
-  var _guard: (Expr | IfDefCond | None)
+  var _guard: (IfDefCond | None)
   
   new create(
     name': (Id | LitString),
     return_type': TypeArgs,
     params': (Params | None),
     partial': (Question | None),
-    guard': (Expr | IfDefCond | None) = None)
+    guard': (IfDefCond | None) = None)
   =>
     _name = name'
     _return_type = return_type'
@@ -463,7 +463,7 @@ class UseFFIDecl is (AST & UseDecl)
       else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _guard =
-      try guard' as (Expr | IfDefCond | None)
+      try guard' as (IfDefCond | None)
       else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
   
@@ -474,13 +474,13 @@ class UseFFIDecl is (AST & UseDecl)
   fun return_type(): this->TypeArgs => _return_type
   fun params(): this->(Params | None) => _params
   fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(Expr | IfDefCond | None) => _guard
+  fun guard(): this->(IfDefCond | None) => _guard
   
   fun ref set_name(name': (Id | LitString)) => _name = consume name'
   fun ref set_return_type(return_type': TypeArgs) => _return_type = consume return_type'
   fun ref set_params(params': (Params | None)) => _params = consume params'
   fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_guard(guard': (Expr | IfDefCond | None) = None) => _guard = consume guard'
+  fun ref set_guard(guard': (IfDefCond | None) = None) => _guard = consume guard'
   
   fun string(): String iso^ =>
     let s = recover iso String end

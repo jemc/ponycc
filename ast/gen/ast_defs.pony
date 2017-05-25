@@ -18,7 +18,7 @@ primitive ASTDefs
       .> has("return_type", "TypeArgs")
       .> has("params",      "(Params | None)")
       .> has("partial",     "(Question | None)")
-      .> has("guard",       "(Expr | IfDefCond | None)", "None") // TODO: get rid of Expr option, here and in corresponding changes to the parser to go ahead and create an IfDefCond
+      .> has("guard",       "(IfDefCond | None)", "None")
     
     for name in [
       "TypeAlias"; "Interface"; "Trait"; "Primitive"; "Struct"; "Class"; "Actor"
