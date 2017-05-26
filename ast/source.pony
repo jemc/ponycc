@@ -1,4 +1,6 @@
 
+use "collections"
+
 interface val SourceAny
   fun content(): String
   fun path():    String
@@ -21,7 +23,29 @@ interface val SourcePosAny
   fun source(): SourceAny
   fun offset(): USize
   fun length(): USize
-  fun string(): String => source().content().trim(offset(), offset() + length())
+  
+  fun string(): String =>
+    source().content().trim(offset(), offset() + length())
+  
+  fun entire_line(): SourcePosAny =>
+    let str = source().content()
+    
+    let i = try (str.rfind("\n", offset().isize()) + 1).usize() else 0 end
+    let j = try str.find("\n", offset().isize()).usize() else str.size() end
+    
+    SourcePos(source(), i, j - i)
+  
+  fun show_in_line(): (String, String) =>
+    let l = entire_line()
+    
+    let arrow = recover String(l.length()) end
+    for i in Range(0, offset() - l.offset()) do arrow.push(' ') end
+    arrow.push('^')
+    if length() >= 1 then
+      for i in Range(0, length() - 1) do arrow.push('~') end
+    end
+    
+    (l.string(), consume arrow)
 
 primitive SourcePosNone is SourcePosAny
   fun source(): SourceAny => SourceNone

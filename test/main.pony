@@ -84,8 +84,12 @@ class TestCommandPrint is TestCommand
     let parser = Parser
     let module =
       try
-        parser(source,
-          {(s: String, p: SourcePosAny) => h.fail(s + ": " + p.string()) })
+        parser(source, {(s: String, p: SourcePosAny) =>
+          h.fail(s + ": " + p.string())
+          let shown = p.show_in_line()
+          h.fail(shown._1)
+          h.fail(shown._2)
+        })
       else
         return h.fail("An unexpected parser error occurred.")
       end
