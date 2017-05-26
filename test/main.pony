@@ -1,6 +1,7 @@
 
 use peg = "peg"
 use "files"
+use "glob"
 use "inspect"
 use "ponytest"
 
@@ -15,12 +16,15 @@ actor Main is TestList
   be tests(test: PonyTest) =>
     try
       let auth = _env.root as AmbientAuth
-      let root = FilePath(auth, Path.join(Path.dir(__loc.file()), "fixtures"))
-      let path = FilePath(root, "example.pony")
-      let file = OpenFile(path) as File
-      let source = Source(file.read_string(file.size()), path.path)
+      let test_root = FilePath(auth, Path.dir(__loc.file()))
+      let fixtures = Glob.glob(test_root, "fixtures/*.pony")
       
-      test(TestFixture(source))
+      for path in fixtures.values() do
+        let file = OpenFile(path) as File
+        let source = Source(file.read_string(file.size()), path.path)
+        
+        test(TestFixture(source))
+      end
     else
       _env.out.print("An error occurred opening the test fixture files.")
     end
