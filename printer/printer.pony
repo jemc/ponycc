@@ -73,6 +73,7 @@ primitive Printer
       if (x.use_decls().size() > 0) or (i > 0) then g.line() end
       _show(g, t)
     end
+    g.line()
   
   fun _show(g: _Gen, x: UsePackage) =>
     g.line_start()
