@@ -152,7 +152,7 @@ primitive Print
     try _show(g, x.params() as Params) else g.write("()") end
     try let t = x.return_type() as Type; g.write(": "); _show(g, t) end
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
-    try _show(g, x.guard() as Sequence) end
+    try let s = x.guard() as Sequence; g.write(" if "); _show(g, s) end
     if x.body() isnt None then g.write(" =>") end
     g.push_indent()
     g.line_start()
@@ -197,14 +197,18 @@ primitive Print
     try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
   
   fun _show(g: _Gen, x: Sequence) =>
-    g.write("(")
+    if x.list().size() == 0 then return g.write("None") end
+    
+    if x.list().size() > 1 then g.write("(") end
     for (i, expr) in x.list().pairs() do
       if i > 0 then g.write("; ") end
       _show(g, expr)
     end
-    g.write(")")
+    if x.list().size() > 1 then g.write(")") end
   
   fun _show_bare(g: _Gen, x: Sequence) =>
+    if x.list().size() == 0 then return g.write("None") end
+    
     for (i, expr) in x.list().pairs() do
       g.line_start()
       _show(g, expr)
@@ -215,15 +219,15 @@ primitive Print
   =>
     g.write(
       match x
-      | let _: Return           => "return "
-      | let _: Break            => "break "
-      | let _: Continue         => "continue "
-      | let _: Error            => "error "
-      | let _: CompileIntrinsic => "compile_intrinsic "
-      | let _: CompileError     => "compile_error "
+      | let _: Return           => "return"
+      | let _: Break            => "break"
+      | let _: Continue         => "continue"
+      | let _: Error            => "error"
+      | let _: CompileIntrinsic => "compile_intrinsic"
+      | let _: CompileError     => "compile_error"
       end)
     
-    try _show(g, x.value() as AST) end
+    try let v = x.value() as AST; g.write(" "); _show(g, v) end
   
   fun _show(g: _Gen, x: (LocalLet | LocalVar)) =>
     g.write(

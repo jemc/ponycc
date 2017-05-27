@@ -5,7 +5,7 @@ $PRINT
 type PCI is P[C[I]]
 
 interface val I
-  fun apply(a: I32, b: I32): I32
+  fun apply(a: I32, b: I32): I32 ?
     """
     This is the docstring for a method that has no body, in a test fixture.
     """
@@ -36,5 +36,11 @@ actor Main
   be awesome() =>
     None
   
-  fun tag name[A: T = C[I]](a: A): String =>
-    "NAME"
+  fun tag name[A: T = C[I]](i: I32): String if i == 0 =>
+    "ZERO"
+  
+  fun tag name[A: T = C[I]](i: I32): String =>
+    "NONZERO"
+  
+  fun fail() ? =>
+    error
