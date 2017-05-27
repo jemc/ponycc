@@ -515,7 +515,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -849,7 +849,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1275,7 +1275,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1310,7 +1310,7 @@ class _Parser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1645,7 +1645,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -1680,7 +1680,7 @@ class _Parser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -4372,7 +4372,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -4407,7 +4407,7 @@ class _Parser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -4482,7 +4482,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -4517,7 +4517,7 @@ class _Parser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -5047,7 +5047,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -6155,7 +6155,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -6402,7 +6402,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -6437,7 +6437,7 @@ class _Parser
     end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -6512,7 +6512,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =
@@ -7885,7 +7885,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[EOF]
+    state.default_tk = Tk[None]
     found = false
     while _current_tk() is Tk[NewLine] do _consume_token() end
     res =

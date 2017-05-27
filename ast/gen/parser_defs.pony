@@ -65,7 +65,7 @@ primitive ParserDefs
       .> opt_rule("ffi parameters", ["params"])
       .> skip("None", ["Tk[RParen]"])
       .> opt_token("None", ["Tk[Question]"])
-      .> if_token_then_rule("Tk[If]", "use condition", ["ifdefinfix"])
+      .> if_token_then_rule_else_none("Tk[If]", "use condition", ["ifdefinfix"])
     
     // (TYPE | INTERFACE | TRAIT | PRIMITIVE | STRUCT | CLASS | ACTOR) [annotations]
     // [AT] ID [typeparams] [CAP] [IS type] [STRING] members
@@ -101,7 +101,7 @@ primitive ParserDefs
       .> token("field name", ["Tk[Id]"])
       .> skip("mandatory type declaration on field", ["Tk[Colon]"])
       .> rule("field type", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "field value", ["infix"])
+      .> if_token_then_rule_else_none("Tk[Assign]", "field value", ["infix"])
     
     // (FUN | BE | NEW) [annotations] [CAP] ID [typeparams] (LPAREN | LPAREN_NEW)
     // [params] RPAREN [COLON type] [QUESTION] [ARROW seq]
@@ -135,8 +135,8 @@ primitive ParserDefs
     g.def("typeparam")
       .> tree("Tk[TypeParam]")
       .> token("name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "type constraint", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "default type argument", ["typearg"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "type constraint", ["type"])
+      .> if_token_then_rule_else_none("Tk[Assign]", "default type argument", ["typearg"])
     
     // LSQUARE type {COMMA type} RSQUARE
     g.def("typeargs")
@@ -172,8 +172,8 @@ primitive ParserDefs
     g.def("param")
       .> tree("Tk[Param]")
       .> token("parameter name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "parameter type", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "default value", ["infix"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "parameter type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Assign]", "default value", ["infix"])
     
     // (assignment | jump) {semiexpr | assignment | jump}
     g.def("seq")
@@ -454,8 +454,8 @@ primitive ParserDefs
       .> skip("None", ["Tk[Pipe]"])
       .> annotate()
       .> opt_rule("case pattern", ["pattern"])
-      .> if_token_then_rule("Tk[If]", "guard expression", ["seq"])
-      .> if_token_then_rule("Tk[DoubleArrow]", "case body", ["seq"])
+      .> if_token_then_rule_else_none("Tk[If]", "guard expression", ["seq"])
+      .> if_token_then_rule_else_none("Tk[DoubleArrow]", "case body", ["seq"])
     
     // TRY [annotations] seq [ELSE annotatedseq] [THEN annotatedseq] END
     g.def("try")
@@ -463,8 +463,8 @@ primitive ParserDefs
       .> token("None", ["Tk[Try]"])
       .> annotate()
       .> rule("try body", ["seq"])
-      .> if_token_then_rule("Tk[Else]", "try else body", ["annotatedseq"])
-      .> if_token_then_rule("Tk[Then]", "try then body", ["annotatedseq"])
+      .> if_token_then_rule_else_none("Tk[Else]", "try else body", ["annotatedseq"])
+      .> if_token_then_rule_else_none("Tk[Then]", "try then body", ["annotatedseq"])
       .> terminate("try expression", ["Tk[End]"])
     
     // CONSUME [cap] term
@@ -558,7 +558,7 @@ primitive ParserDefs
         ("Tk[Let]", "Tk[LocalLet]")
       ])
       .> token("variable name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "variable type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "variable type", ["type"])
     
     // ASSIGNOP assignment
     g.def("assignop")
@@ -672,7 +672,7 @@ primitive ParserDefs
       .> opt_rule("parameters", ["params"])
       .> skip("None", ["Tk[RParen]"])
       .> opt_rule("captures", ["lambdacaptures"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
       .> skip("None", ["Tk[DoubleArrow]"])
       .> rule("lambda body", ["seq"])
@@ -692,8 +692,8 @@ primitive ParserDefs
     g.def("lambdacapture")
       .> tree("Tk[LambdaCapture]")
       .> token("name", ["Tk[Id]"])
-      .> if_token_then_rule("Tk[Colon]", "capture type", ["type"])
-      .> if_token_then_rule("Tk[Assign]", "capture value", ["infix"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "capture type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Assign]", "capture value", ["infix"])
     
     // OBJECT [annotations] [CAP] [IS type] members END
     g.def("object")
@@ -701,7 +701,7 @@ primitive ParserDefs
       .> token("None", ["Tk[Object]"])
       .> annotate()
       .> opt_rule("capability", ["cap"])
-      .> if_token_then_rule("Tk[Is]", "provided type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Is]", "provided type", ["type"])
       .> rule("object member", ["members"])
       .> terminate("object literal", ["Tk[End]"])
     
@@ -857,7 +857,7 @@ primitive ParserDefs
       .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
       .> opt_rule("parameters", ["tupletype"])
       .> skip("None", ["Tk[RParen]"])
-      .> if_token_then_rule("Tk[Colon]", "return type", ["type"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
       .> skip("None", ["Tk[RBrace]"])
       .> opt_rule("capability", ["cap"; "gencap"])

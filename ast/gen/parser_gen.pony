@@ -13,7 +13,7 @@ class ParserGen
     let g: CodeGen = CodeGen
     
     g.line("use peg = \"peg\"")
-    g.line("use \"../ast\"")
+    g.line("use \"..\"")
     if debug then g.line("use \"debug\"") end
     g.line()
     g.line("class _Parser")

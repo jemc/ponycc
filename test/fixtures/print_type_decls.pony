@@ -2,7 +2,7 @@
 $PRINT
 """
 
-type PCI is P[C[I]]
+type PCII is P[C[I, I]]
 
 interface val I
   fun apply(a: I32, b: I32): I32 ?
@@ -21,7 +21,7 @@ struct S
   var a: I32 = 0
   var b: I32 = 0
 
-class C[A] is (T & I)
+class C[A, B = I] is (T & I)
   """
   This is the docstring for a class that is used in a test fixture.
   """
