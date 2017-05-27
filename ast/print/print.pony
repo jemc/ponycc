@@ -1,6 +1,6 @@
 
 use "collections"
-use "../ast"
+use ".."
 use "inspect"
 
 primitive _GenNewline
@@ -54,7 +54,7 @@ class _Gen
     write(s) // TODO: split on newline and add indent to each line.
     line(); write("\"\"\"")
 
-primitive Printer
+primitive Print
   fun apply(x: Module): String iso^ =>
     let g = _Gen
     _show(g, x)

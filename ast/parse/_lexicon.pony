@@ -1,6 +1,6 @@
 
 use peg = "peg"
-use "../ast"
+use ".."
 
 class val _Lexicon
   // Note that for keywords where one keyword starts with another,

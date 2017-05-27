@@ -1,7 +1,7 @@
 
-use "../ast"
+use ".."
 
-class val Parser
+class val Parse
   let _lexer: _Lexer = _Lexer
   
   new val create() => None

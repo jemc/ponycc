@@ -1,5 +1,5 @@
 use peg = "peg"
-use "../ast"
+use ".."
 
 type _L is peg.L
 type _R is peg.R

@@ -1,6 +1,6 @@
 
 use peg = "peg"
-use "../ast"
+use ".."
 use "debug"
 
 trait val TkAny is peg.Label

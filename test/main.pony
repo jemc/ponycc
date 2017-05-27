@@ -7,8 +7,8 @@ use "inspect"
 use "ponytest"
 
 use "../ast"
-use "../parser"
-use "../printer"
+use "../ast/parse"
+use "../ast/print"
 
 actor Main
   new create(env: Env) =>
@@ -81,10 +81,9 @@ trait TestCommand
 
 class TestCommandPrint is TestCommand
   fun apply(h: TestHelper, source: Source) =>
-    let parser = Parser
     let module =
       try
-        parser(source, {(s: String, p: SourcePosAny) =>
+        Parse(source, {(s: String, p: SourcePosAny) =>
           h.fail(s + ": " + p.string())
           let shown = p.show_in_line()
           h.fail(shown._1)
@@ -94,4 +93,4 @@ class TestCommandPrint is TestCommand
         return h.fail("An unexpected parser error occurred.")
       end
     
-    h.assert_eq[String](source.content(), Printer(module))
+    h.assert_eq[String](source.content(), Print(module))
