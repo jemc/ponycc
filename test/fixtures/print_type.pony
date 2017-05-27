@@ -16,8 +16,8 @@ struct S
   """
   This is the docstring for a struct that is used in a test fixture.
   """
-  let a: I32 = 0
-  let b: I32 = 0
+  var a: I32 = 0
+  var b: I32 = 0
 
 class C[A] is (T & I)
   """
@@ -26,7 +26,7 @@ class C[A] is (T & I)
 
 actor Main
   let _env: Env
-  var index: USize = 0
+  embed array: Array[String] = Array[String]
   
   new create(env: Env) =>
     _env = env
