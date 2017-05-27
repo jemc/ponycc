@@ -9,6 +9,8 @@ interface val I
 trait ref T
 
 primitive P[A: T]
+  fun apply(a: I32, b: I32): I32 =>
+    a + b
 
 struct S
   """

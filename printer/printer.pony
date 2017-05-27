@@ -119,9 +119,8 @@ primitive Printer
     for f in x.fields().values() do
       _show(g, f)
     end
-    for m in x.methods().values() do
-      g.line()
-      g.line()
+    for (i, m) in x.methods().pairs() do
+      if (x.fields().size() > 0) or (i > 0) then g.line(); g.line() end
       _show(g, m)
     end
   
