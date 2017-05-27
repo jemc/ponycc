@@ -67,8 +67,8 @@ primitive ASTDefs
     
     g.def("TypeParam")
       .> has("name",       "Id")
-      .> has("constraint", "(Type | None)")
-      .> has("default",    "(Type | None)")
+      .> has("constraint", "(Type | None)", "None")
+      .> has("default",    "(Type | None)", "None")
     
     g.def("TypeArgs")
       .> has("list", "Array[Type]", "Array[Type]")
@@ -257,8 +257,8 @@ primitive ASTDefs
     g.def("Assign")
       .> in_union("Expr")
       .> with_type()
-      .> has("right", "Expr")
       .> has("left",  "Expr")
+      .> has("right", "Expr")
     
     g.def("Dot")
       .> in_union("Expr")

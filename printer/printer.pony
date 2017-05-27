@@ -70,7 +70,7 @@ primitive Printer
     end
     for u in x.use_decls().values() do _show(g, u) end
     for (i, t) in x.type_decls().pairs() do
-      if (x.use_decls().size() > 0) or (i > 0) then g.line() end
+      if (x.use_decls().size() > 0) or (i > 0) then g.line(); g.line() end
       _show(g, t)
     end
     g.line()
@@ -106,12 +106,12 @@ primitive Printer
       end)
     
     try _show(g, x.at() as At) end
+    try let c = x.cap() as Cap; _show(g, c); g.write(" ") end
     _show(g, x.name())
     try _show(g, x.type_params() as TypeParams) end
-    try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
-    try let p = x.provides() as Type; g.write("is "); _show(g, p) end
+    try let p = x.provides() as Type; g.write(" is "); _show(g, p) end
     g.push_indent()
-    try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
+    try let d = x.docs() as LitString; g.line(); g.write(d.pos().string()) end // TODO: less cheating...
     try _show(g, x.members() as Members) end
     g.pop_indent()
   
@@ -119,8 +119,9 @@ primitive Printer
     for f in x.fields().values() do
       _show(g, f)
     end
-    if (x.fields().size() + x.methods().size()) > 0 then g.line() end
     for m in x.methods().values() do
+      g.line()
+      g.line()
       _show(g, m)
     end
   
@@ -207,7 +208,6 @@ primitive Printer
     for (i, expr) in x.list().pairs() do
       g.line_start()
       _show(g, expr)
-      g.line_start()
     end
   
   fun _show(g: _Gen,

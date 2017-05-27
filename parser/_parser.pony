@@ -5101,7 +5101,7 @@ class _Parser
         found = false
         _handle_not_found(state, "assign operator", false)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
     
     state.default_tk = None
@@ -5119,9 +5119,9 @@ class _Parser
         found = false
         break _handle_not_found(state, "assign rhs", false)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
-    (_complete(state), _BuildDefault)
+    (_complete(state), _BuildInfix)
   
   fun ref _parse_postfix(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("postfix", rule_desc)

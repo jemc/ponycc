@@ -563,6 +563,7 @@ primitive ParserDefs
     // ASSIGNOP assignment
     g.def("assignop")
       .> print_inline()
+      .> builder("_BuildInfix")
       .> token("assign operator", ["Tk[Assign]"])
       .> rule("assign rhs", ["assignment"])
     

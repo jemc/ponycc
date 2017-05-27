@@ -2075,8 +2075,8 @@ class TypeParam is AST
   
   new create(
     name': Id,
-    constraint': (Type | None),
-    default': (Type | None))
+    constraint': (Type | None) = None,
+    default': (Type | None) = None)
   =>
     _name = name'
     _constraint = constraint'
@@ -2094,14 +2094,8 @@ class TypeParam is AST
       try iter.next()
       else err("missing required field: name", pos'); error
       end
-    let constraint': (AST | None) =
-      try iter.next()
-      else err("missing required field: constraint", pos'); error
-      end
-    let default': (AST | None) =
-      try iter.next()
-      else err("missing required field: default", pos'); error
-      end
+    let constraint': (AST | None) = try iter.next() else None end
+    let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -2131,8 +2125,8 @@ class TypeParam is AST
   fun default(): this->(Type | None) => _default
   
   fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_constraint(constraint': (Type | None)) => _constraint = consume constraint'
-  fun ref set_default(default': (Type | None)) => _default = consume default'
+  fun ref set_constraint(constraint': (Type | None) = None) => _constraint = consume constraint'
+  fun ref set_default(default': (Type | None) = None) => _default = consume default'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6391,15 +6385,15 @@ class LocalVar is (AST & Local & Expr)
 class Assign is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _right: Expr
   var _left: Expr
+  var _right: Expr
   
   new create(
-    right': Expr,
-    left': Expr)
+    left': Expr,
+    right': Expr)
   =>
-    _right = right'
     _left = left'
+    _right = right'
   
   new from_iter(
     iter: Iterator[(AST | None)],
@@ -6409,13 +6403,13 @@ class Assign is (AST & Expr)
   
     _pos = pos'
     
-    let right': (AST | None) =
-      try iter.next()
-      else err("missing required field: right", pos'); error
-      end
     let left': (AST | None) =
       try iter.next()
       else err("missing required field: left", pos'); error
+      end
+    let right': (AST | None) =
+      try iter.next()
+      else err("missing required field: right", pos'); error
       end
     if
       try
@@ -6425,30 +6419,30 @@ class Assign is (AST & Expr)
       end
     then error end
     
-    _right =
-      try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
-      end
     _left =
       try left' as Expr
       else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      end
+    _right =
+      try right' as Expr
+      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun right(): this->Expr => _right
   fun left(): this->Expr => _left
+  fun right(): this->Expr => _right
   
-  fun ref set_right(right': Expr) => _right = consume right'
   fun ref set_left(left': Expr) => _left = consume left'
+  fun ref set_right(right': Expr) => _right = consume right'
   
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Assign")
     s.push('(')
-    s.>append(_right.string()).>push(',').push(' ')
-    s.>append(_left.string())
+    s.>append(_left.string()).>push(',').push(' ')
+    s.>append(_right.string())
     s.push(')')
     consume s
 
