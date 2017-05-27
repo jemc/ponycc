@@ -1,7 +1,6 @@
 
 use "collections"
 use ".."
-use "inspect"
 
 primitive _GenNewline
 primitive _GenIndentPush
