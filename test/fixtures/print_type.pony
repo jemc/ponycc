@@ -5,12 +5,14 @@ $PRINT
 type PCI is P[C[I]]
 
 interface val I
+  fun apply(a: I32, b: I32): I32
+    """
+    This is the docstring for a method that has no body, in a test fixture.
+    """
 
 trait ref T
 
 primitive P[A: T]
-  fun apply(a: I32, b: I32): I32 =>
-    a + b
 
 struct S
   """

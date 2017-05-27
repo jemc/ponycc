@@ -153,8 +153,9 @@ primitive Printer
     try let t = x.return_type() as Type; g.write(": "); _show(g, t) end
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
     try _show(g, x.guard() as Sequence) end
-    g.write(" =>")
+    if x.body() isnt None then g.write(" =>") end
     g.push_indent()
+    g.line_start()
     try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
     try _show_bare(g, x.body() as Sequence) end
     g.pop_indent()
