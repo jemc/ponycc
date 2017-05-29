@@ -424,8 +424,46 @@ primitive Print
       g.write("end")
     end
   
-  fun _show(g: _Gen, x: While) => None // TODO
-  fun _show(g: _Gen, x: Repeat) => None // TODO
+  fun _show(g: _Gen, x: While) =>
+    g.line_start()
+    g.write("while ")
+    _show(g, x.condition())
+    g.write(" do")
+    g.push_indent()
+    g.line_start()
+    _show_bare(g, x.loop_body())
+    g.pop_indent()
+    g.line_start()
+    match x.else_body() | let s: Sequence =>
+      g.write("else")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+    g.write("end")
+  
+  fun _show(g: _Gen, x: Repeat) =>
+    g.line_start()
+    g.write("repeat")
+    g.push_indent()
+    g.line_start()
+    _show_bare(g, x.loop_body())
+    g.pop_indent()
+    g.line_start()
+    g.write("until ")
+    _show(g, x.condition())
+    match x.else_body() | let s: Sequence =>
+      g.write(" else")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+    g.line_start()
+    g.write("end")
   
   fun _show(g: _Gen, x: For) => None // TODO
   fun _show(g: _Gen, x: With) => None // TODO
