@@ -285,7 +285,7 @@ class Module is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Module got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -294,7 +294,7 @@ class Module is AST
     _type_decls = type_decls'
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Module got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -354,23 +354,23 @@ class UsePackage is (AST & UseDecl)
     let prefix': (AST | None) = try iter.next() else None end
     let package': (AST | None) =
       try iter.next()
-      else err("missing required field: package", pos'); error
+      else err("UsePackage missing required field: package", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("UsePackage got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _prefix =
       try prefix' as (Id | None)
-      else err("incompatible field: prefix", try (prefix' as AST).pos() else SourcePosNone end); error
+      else err("UsePackage got incompatible field: prefix", try (prefix' as AST).pos() else SourcePosNone end); error
       end
     _package =
       try package' as LitString
-      else err("incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else err("UsePackage got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -423,48 +423,48 @@ class UseFFIDecl is (AST & UseDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("UseFFIDecl missing required field: name", pos'); error
       end
     let return_type': (AST | None) =
       try iter.next()
-      else err("missing required field: return_type", pos'); error
+      else err("UseFFIDecl missing required field: return_type", pos'); error
       end
     let params': (AST | None) =
       try iter.next()
-      else err("missing required field: params", pos'); error
+      else err("UseFFIDecl missing required field: params", pos'); error
       end
     let partial': (AST | None) =
       try iter.next()
-      else err("missing required field: partial", pos'); error
+      else err("UseFFIDecl missing required field: partial", pos'); error
       end
     let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("UseFFIDecl got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("UseFFIDecl got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as TypeArgs
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("UseFFIDecl got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("UseFFIDecl got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("UseFFIDecl got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _guard =
       try guard' as (IfDefCond | None)
-      else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else err("UseFFIDecl got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -532,7 +532,7 @@ class TypeAlias is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("TypeAlias missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -543,38 +543,38 @@ class TypeAlias is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("TypeAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("TypeAlias got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -648,7 +648,7 @@ class Interface is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Interface missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -659,38 +659,38 @@ class Interface is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Interface got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Interface got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -764,7 +764,7 @@ class Trait is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Trait missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -775,38 +775,38 @@ class Trait is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Trait got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Trait got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -880,7 +880,7 @@ class Primitive is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Primitive missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -891,38 +891,38 @@ class Primitive is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Primitive got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Primitive got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -996,7 +996,7 @@ class Struct is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Struct missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1007,38 +1007,38 @@ class Struct is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Struct got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Struct got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1112,7 +1112,7 @@ class Class is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Class missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1123,38 +1123,38 @@ class Class is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Class got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Class got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1228,7 +1228,7 @@ class Actor is (AST & TypeDecl)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Actor missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1239,38 +1239,38 @@ class Actor is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Actor got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as Members
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
     _at =
       try at' as (At | None)
-      else err("incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("Actor got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1341,7 +1341,7 @@ class Members is AST
     end
     if methods_next' isnt None then
       let extra' = methods_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("Members got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _fields = fields'
@@ -1402,32 +1402,32 @@ class FieldLet is (AST & Field)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldLet missing required field: name", pos'); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("missing required field: field_type", pos'); error
+      else err("FieldLet missing required field: field_type", pos'); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _field_type =
       try field_type' as Type
-      else err("incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else err("FieldLet got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
       end
     _default =
       try default' as (Expr | None)
-      else err("incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else err("FieldLet got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1477,32 +1477,32 @@ class FieldVar is (AST & Field)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldVar missing required field: name", pos'); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("missing required field: field_type", pos'); error
+      else err("FieldVar missing required field: field_type", pos'); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _field_type =
       try field_type' as Type
-      else err("incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else err("FieldVar got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
       end
     _default =
       try default' as (Expr | None)
-      else err("incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else err("FieldVar got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1552,32 +1552,32 @@ class FieldEmbed is (AST & Field)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldEmbed missing required field: name", pos'); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("missing required field: field_type", pos'); error
+      else err("FieldEmbed missing required field: field_type", pos'); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldEmbed got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldEmbed got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _field_type =
       try field_type' as Type
-      else err("incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else err("FieldEmbed got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
       end
     _default =
       try default' as (Expr | None)
-      else err("incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else err("FieldEmbed got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1645,7 +1645,7 @@ class MethodFun is (AST & Method)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodFun missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1658,46 +1658,46 @@ class MethodFun is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodFun got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("MethodFun got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1783,7 +1783,7 @@ class MethodNew is (AST & Method)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodNew missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1796,46 +1796,46 @@ class MethodNew is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodNew got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("MethodNew got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1921,7 +1921,7 @@ class MethodBe is (AST & Method)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodBe missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1934,46 +1934,46 @@ class MethodBe is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodBe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else err("MethodBe got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2041,7 +2041,7 @@ class TypeParams is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("TypeParams got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -2092,29 +2092,29 @@ class TypeParam is AST
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("TypeParam missing required field: name", pos'); error
       end
     let constraint': (AST | None) = try iter.next() else None end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("TypeParam got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("TypeParam got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _constraint =
       try constraint' as (Type | None)
-      else err("incompatible field: constraint", try (constraint' as AST).pos() else SourcePosNone end); error
+      else err("TypeParam got incompatible field: constraint", try (constraint' as AST).pos() else SourcePosNone end); error
       end
     _default =
       try default' as (Type | None)
-      else err("incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else err("TypeParam got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2164,7 +2164,7 @@ class TypeArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("TypeArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -2220,7 +2220,7 @@ class Params is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Params got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -2228,7 +2228,7 @@ class Params is AST
     _list = list'
     _ellipsis =
       try ellipsis' as (Ellipsis | None)
-      else err("incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end); error
+      else err("Params got incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2281,29 +2281,29 @@ class Param is AST
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Param missing required field: name", pos'); error
       end
     let param_type': (AST | None) = try iter.next() else None end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Param got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Param got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _param_type =
       try param_type' as (Type | None)
-      else err("incompatible field: param_type", try (param_type' as AST).pos() else SourcePosNone end); error
+      else err("Param got incompatible field: param_type", try (param_type' as AST).pos() else SourcePosNone end); error
       end
     _default =
       try default' as (Expr | None)
-      else err("incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else err("Param got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2353,7 +2353,7 @@ class Sequence is (AST & Expr)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("Sequence got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -2398,19 +2398,19 @@ class Return is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("Return missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Return got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("Return got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2448,19 +2448,19 @@ class Break is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("Break missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Break got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("Break got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2498,19 +2498,19 @@ class Continue is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("Continue missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Continue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("Continue got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2548,19 +2548,19 @@ class Error is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("Error missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Error got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("Error got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2598,19 +2598,19 @@ class CompileIntrinsic is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("CompileIntrinsic missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CompileIntrinsic got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("CompileIntrinsic got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2648,19 +2648,19 @@ class CompileError is (AST & Jump & Expr)
     
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("CompileError missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CompileError got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("CompileError got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2698,19 +2698,19 @@ class IfDefFlag is (AST & IfDefCond)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("IfDefFlag missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfDefFlag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("IfDefFlag got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2748,19 +2748,19 @@ class IfDefNot is (AST & IfDefCond)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("IfDefNot missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfDefNot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as IfDefCond
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("IfDefNot got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2801,27 +2801,27 @@ class IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("IfDefAnd missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("IfDefAnd missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfDefAnd got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as IfDefCond
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("IfDefAnd got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as IfDefCond
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("IfDefAnd got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2865,27 +2865,27 @@ class IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("IfDefOr missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("IfDefOr missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfDefOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as IfDefCond
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("IfDefOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as IfDefCond
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("IfDefOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2932,32 +2932,32 @@ class IfDef is (AST & Expr)
     
     let condition': (AST | None) =
       try iter.next()
-      else err("missing required field: condition", pos'); error
+      else err("IfDef missing required field: condition", pos'); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("missing required field: then_body", pos'); error
+      else err("IfDef missing required field: then_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfDef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _condition =
       try condition' as IfDefCond
-      else err("incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else err("IfDef got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else err("IfDef got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | IfDef | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("IfDef got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3010,40 +3010,40 @@ class IfType is (AST & Expr)
     
     let sub': (AST | None) =
       try iter.next()
-      else err("missing required field: sub", pos'); error
+      else err("IfType missing required field: sub", pos'); error
       end
     let super': (AST | None) =
       try iter.next()
-      else err("missing required field: super", pos'); error
+      else err("IfType missing required field: super", pos'); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("missing required field: then_body", pos'); error
+      else err("IfType missing required field: then_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("IfType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _sub =
       try sub' as Type
-      else err("incompatible field: sub", try (sub' as AST).pos() else SourcePosNone end); error
+      else err("IfType got incompatible field: sub", try (sub' as AST).pos() else SourcePosNone end); error
       end
     _super =
       try super' as Type
-      else err("incompatible field: super", try (super' as AST).pos() else SourcePosNone end); error
+      else err("IfType got incompatible field: super", try (super' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else err("IfType got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | IfType | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("IfType got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3096,32 +3096,32 @@ class If is (AST & Expr)
     
     let condition': (AST | None) =
       try iter.next()
-      else err("missing required field: condition", pos'); error
+      else err("If missing required field: condition", pos'); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("missing required field: then_body", pos'); error
+      else err("If missing required field: then_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("If got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _condition =
       try condition' as Sequence
-      else err("incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else err("If got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else err("If got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | If | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("If got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3171,32 +3171,32 @@ class While is (AST & Expr)
     
     let condition': (AST | None) =
       try iter.next()
-      else err("missing required field: condition", pos'); error
+      else err("While missing required field: condition", pos'); error
       end
     let loop_body': (AST | None) =
       try iter.next()
-      else err("missing required field: loop_body", pos'); error
+      else err("While missing required field: loop_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("While got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _condition =
       try condition' as Sequence
-      else err("incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else err("While got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
       end
     _loop_body =
       try loop_body' as Sequence
-      else err("incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else err("While got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("While got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3246,32 +3246,32 @@ class Repeat is (AST & Expr)
     
     let loop_body': (AST | None) =
       try iter.next()
-      else err("missing required field: loop_body", pos'); error
+      else err("Repeat missing required field: loop_body", pos'); error
       end
     let condition': (AST | None) =
       try iter.next()
-      else err("missing required field: condition", pos'); error
+      else err("Repeat missing required field: condition", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Repeat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _loop_body =
       try loop_body' as Sequence
-      else err("incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else err("Repeat got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
       end
     _condition =
       try condition' as Sequence
-      else err("incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else err("Repeat got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("Repeat got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3324,40 +3324,40 @@ class For is (AST & Expr)
     
     let refs': (AST | None) =
       try iter.next()
-      else err("missing required field: refs", pos'); error
+      else err("For missing required field: refs", pos'); error
       end
     let iterator': (AST | None) =
       try iter.next()
-      else err("missing required field: iterator", pos'); error
+      else err("For missing required field: iterator", pos'); error
       end
     let loop_body': (AST | None) =
       try iter.next()
-      else err("missing required field: loop_body", pos'); error
+      else err("For missing required field: loop_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("For got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _refs =
       try refs' as (Id | IdTuple)
-      else err("incompatible field: refs", try (refs' as AST).pos() else SourcePosNone end); error
+      else err("For got incompatible field: refs", try (refs' as AST).pos() else SourcePosNone end); error
       end
     _iterator =
       try iterator' as Sequence
-      else err("incompatible field: iterator", try (iterator' as AST).pos() else SourcePosNone end); error
+      else err("For got incompatible field: iterator", try (iterator' as AST).pos() else SourcePosNone end); error
       end
     _loop_body =
       try loop_body' as Sequence
-      else err("incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else err("For got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("For got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3410,32 +3410,32 @@ class With is (AST & Expr)
     
     let assigns': (AST | None) =
       try iter.next()
-      else err("missing required field: assigns", pos'); error
+      else err("With missing required field: assigns", pos'); error
       end
     let with_body': (AST | None) =
       try iter.next()
-      else err("missing required field: with_body", pos'); error
+      else err("With missing required field: with_body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("With got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _assigns =
       try assigns' as AssignTuple
-      else err("incompatible field: assigns", try (assigns' as AST).pos() else SourcePosNone end); error
+      else err("With got incompatible field: assigns", try (assigns' as AST).pos() else SourcePosNone end); error
       end
     _with_body =
       try with_body' as Sequence
-      else err("incompatible field: with_body", try (with_body' as AST).pos() else SourcePosNone end); error
+      else err("With got incompatible field: with_body", try (with_body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("With got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3485,7 +3485,7 @@ class IdTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("IdTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _elements = elements'
@@ -3536,7 +3536,7 @@ class AssignTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("AssignTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _elements = elements'
@@ -3587,29 +3587,29 @@ class Match is (AST & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Match missing required field: expr", pos'); error
       end
     let cases': (AST | None) = try iter.next() else Cases end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Match got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Sequence
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Match got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
     _cases =
       try cases' as Cases
-      else err("incompatible field: cases", try (cases' as AST).pos() else SourcePosNone end); error
+      else err("Match got incompatible field: cases", try (cases' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("Match got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3659,7 +3659,7 @@ class Cases is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("Cases got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -3710,29 +3710,29 @@ class Case is AST
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Case missing required field: expr", pos'); error
       end
     let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Case got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Case got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else err("Case got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("Case got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3782,29 +3782,29 @@ class Try is (AST & Expr)
     
     let body': (AST | None) =
       try iter.next()
-      else err("missing required field: body", pos'); error
+      else err("Try missing required field: body", pos'); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     let then_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Try got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _body =
       try body' as Sequence
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("Try got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else err("Try got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
       try then_body' as (Sequence | None)
-      else err("incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else err("Try got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3851,27 +3851,27 @@ class Consume is (AST & Expr)
     
     let cap': (AST | None) =
       try iter.next()
-      else err("missing required field: cap", pos'); error
+      else err("Consume missing required field: cap", pos'); error
       end
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Consume missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Consume got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Consume got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3915,27 +3915,27 @@ class Recover is (AST & Expr)
     
     let cap': (AST | None) =
       try iter.next()
-      else err("missing required field: cap", pos'); error
+      else err("Recover missing required field: cap", pos'); error
       end
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Recover missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Recover got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Recover got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _expr =
       try expr' as Sequence
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Recover got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3979,27 +3979,27 @@ class As is (AST & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("As missing required field: expr", pos'); error
       end
     let as_type': (AST | None) =
       try iter.next()
-      else err("missing required field: as_type", pos'); error
+      else err("As missing required field: as_type", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("As got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("As got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
     _as_type =
       try as_type' as Type
-      else err("incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end); error
+      else err("As got incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4043,27 +4043,27 @@ class Add is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Add missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Add missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Add got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Add got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4107,27 +4107,27 @@ class AddUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("AddUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("AddUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("AddUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("AddUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4171,27 +4171,27 @@ class Sub is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Sub missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Sub missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Sub got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Sub got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4235,27 +4235,27 @@ class SubUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("SubUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("SubUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("SubUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("SubUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4299,27 +4299,27 @@ class Mul is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Mul missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Mul missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Mul got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Mul got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4363,27 +4363,27 @@ class MulUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("MulUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("MulUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MulUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("MulUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4427,27 +4427,27 @@ class Div is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Div missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Div missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Div got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Div got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4491,27 +4491,27 @@ class DivUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("DivUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("DivUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("DivUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("DivUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4555,27 +4555,27 @@ class Mod is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Mod missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Mod missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Mod got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Mod got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4619,27 +4619,27 @@ class ModUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("ModUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("ModUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("ModUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("ModUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4683,27 +4683,27 @@ class LShift is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LShift missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LShift missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4747,27 +4747,27 @@ class LShiftUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LShiftUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LShiftUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4811,27 +4811,27 @@ class RShift is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("RShift missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("RShift missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("RShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("RShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4875,27 +4875,27 @@ class RShiftUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("RShiftUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("RShiftUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("RShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("RShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4939,27 +4939,27 @@ class Eq is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Eq missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Eq missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Eq got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Eq got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5003,27 +5003,27 @@ class EqUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("EqUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("EqUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("EqUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("EqUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5067,27 +5067,27 @@ class NE is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("NE missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("NE missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("NE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("NE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5131,27 +5131,27 @@ class NEUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("NEUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("NEUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("NEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("NEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5195,27 +5195,27 @@ class LT is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LT missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LT missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5259,27 +5259,27 @@ class LTUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LTUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LTUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5323,27 +5323,27 @@ class LE is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LE missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LE missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5387,27 +5387,27 @@ class LEUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("LEUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("LEUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("LEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5451,27 +5451,27 @@ class GE is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("GE missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("GE missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("GE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("GE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5515,27 +5515,27 @@ class GEUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("GEUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("GEUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("GEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("GEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5579,27 +5579,27 @@ class GT is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("GT missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("GT missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("GT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("GT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5643,27 +5643,27 @@ class GTUnsafe is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("GTUnsafe missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("GTUnsafe missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("GTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("GTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5707,27 +5707,27 @@ class Is is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Is missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Is missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Is got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Is got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5771,27 +5771,27 @@ class Isnt is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Isnt missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Isnt missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Isnt got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Isnt got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5835,27 +5835,27 @@ class And is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("And missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("And missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("And got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("And got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5899,27 +5899,27 @@ class Or is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Or missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Or missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Or got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Or got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5963,27 +5963,27 @@ class XOr is (AST & BinaryOp & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("XOr missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("XOr missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("XOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("XOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6024,19 +6024,19 @@ class Not is (AST & UnaryOp & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Not missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Not got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Not got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6074,19 +6074,19 @@ class Neg is (AST & UnaryOp & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("Neg missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Neg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("Neg got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6124,19 +6124,19 @@ class NegUnsafe is (AST & UnaryOp & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("NegUnsafe missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("NegUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("NegUnsafe got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6174,19 +6174,19 @@ class AddressOf is (AST & UnaryOp & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("AddressOf missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("AddressOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("AddressOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6224,19 +6224,19 @@ class DigestOf is (AST & UnaryOp & Expr)
     
     let expr': (AST | None) =
       try iter.next()
-      else err("missing required field: expr", pos'); error
+      else err("DigestOf missing required field: expr", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("DigestOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("DigestOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6277,27 +6277,27 @@ class LocalLet is (AST & Local & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("LocalLet missing required field: name", pos'); error
       end
     let local_type': (AST | None) =
       try iter.next()
-      else err("missing required field: local_type", pos'); error
+      else err("LocalLet missing required field: local_type", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LocalLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LocalLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else err("LocalLet got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6341,27 +6341,27 @@ class LocalVar is (AST & Local & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("LocalVar missing required field: name", pos'); error
       end
     let local_type': (AST | None) =
       try iter.next()
-      else err("missing required field: local_type", pos'); error
+      else err("LocalVar missing required field: local_type", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LocalVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LocalVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else err("LocalVar got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6405,27 +6405,27 @@ class Assign is (AST & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Assign missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Assign missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Assign got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Assign got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Expr
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Assign got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6469,27 +6469,27 @@ class Dot is (AST & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Dot missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Dot missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Dot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Dot got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Id
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Dot got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6533,27 +6533,27 @@ class Chain is (AST & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Chain missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Chain missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Chain got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Chain got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Id
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Chain got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6597,27 +6597,27 @@ class Tilde is (AST & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Tilde missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Tilde missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Tilde got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Tilde got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Id
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Tilde got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6661,27 +6661,27 @@ class Qualify is (AST & Expr)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("Qualify missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("Qualify missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Qualify got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("Qualify got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as TypeArgs
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("Qualify got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6728,29 +6728,29 @@ class Call is (AST & Expr)
     
     let callable': (AST | None) =
       try iter.next()
-      else err("missing required field: callable", pos'); error
+      else err("Call missing required field: callable", pos'); error
       end
     let args': (AST | None) = try iter.next() else Args end
     let named_args': (AST | None) = try iter.next() else NamedArgs end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Call got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _callable =
       try callable' as Expr
-      else err("incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end); error
+      else err("Call got incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end); error
       end
     _args =
       try args' as Args
-      else err("incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
+      else err("Call got incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
       end
     _named_args =
       try named_args' as NamedArgs
-      else err("incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
+      else err("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6806,7 +6806,7 @@ class CallFFI is (AST & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("CallFFI missing required field: name", pos'); error
       end
     let type_args': (AST | None) = try iter.next() else None end
     let args': (AST | None) = try iter.next() else Args end
@@ -6815,30 +6815,30 @@ class CallFFI is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CallFFI got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("CallFFI got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _type_args =
       try type_args' as (TypeArgs | None)
-      else err("incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
+      else err("CallFFI got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
       end
     _args =
       try args' as Args
-      else err("incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
+      else err("CallFFI got incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
       end
     _named_args =
       try named_args' as NamedArgs
-      else err("incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
+      else err("CallFFI got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("CallFFI got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6894,7 +6894,7 @@ class Args is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("Args got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -6945,7 +6945,7 @@ class NamedArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("NamedArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -6993,27 +6993,27 @@ class NamedArg is AST
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("NamedArg missing required field: name", pos'); error
       end
     let value': (AST | None) =
       try iter.next()
-      else err("missing required field: value", pos'); error
+      else err("NamedArg missing required field: value", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("NamedArg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("NamedArg got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _value =
       try value' as Sequence
-      else err("incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else err("NamedArg got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7085,52 +7085,52 @@ class Lambda is (AST & Expr)
     let partial': (AST | None) = try iter.next() else None end
     let body': (AST | None) =
       try iter.next()
-      else err("missing required field: body", pos'); error
+      else err("Lambda missing required field: body", pos'); error
       end
     let object_cap': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Lambda got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _method_cap =
       try method_cap' as (Cap | None)
-      else err("incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | None)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _captures =
       try captures' as (LambdaCaptures | None)
-      else err("incompatible field: captures", try (captures' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: captures", try (captures' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _body =
       try body' as (Sequence)
-      else err("incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _object_cap =
       try object_cap' as (Cap | None)
-      else err("incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
+      else err("Lambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7198,7 +7198,7 @@ class LambdaCaptures is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("LambdaCaptures got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -7249,29 +7249,29 @@ class LambdaCapture is AST
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("LambdaCapture missing required field: name", pos'); error
       end
     let local_type': (AST | None) = try iter.next() else None end
     let expr': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LambdaCapture got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LambdaCapture got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else err("LambdaCapture got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
       end
     _expr =
       try expr' as (Expr | None)
-      else err("incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else err("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7325,22 +7325,22 @@ class Object is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Object got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("Object got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else err("Object got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
       end
     _members =
       try members' as (Members | None)
-      else err("incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else err("Object got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7390,18 +7390,18 @@ class LitArray is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitArray got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _elem_type =
       try elem_type' as (Type | None)
-      else err("incompatible field: elem_type", try (elem_type' as AST).pos() else SourcePosNone end); error
+      else err("LitArray got incompatible field: elem_type", try (elem_type' as AST).pos() else SourcePosNone end); error
       end
     _sequence =
       try sequence' as Sequence
-      else err("incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end); error
+      else err("LitArray got incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7448,7 +7448,7 @@ class Tuple is (AST & Expr)
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("Tuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _elements = elements'
@@ -7488,7 +7488,7 @@ class This is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("This got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7516,7 +7516,7 @@ class LitTrue is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitTrue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7544,7 +7544,7 @@ class LitFalse is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitFalse got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7573,7 +7573,7 @@ class LitInteger is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitInteger got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7604,7 +7604,7 @@ class LitFloat is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitFloat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7635,7 +7635,7 @@ class LitString is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitString got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7666,7 +7666,7 @@ class LitCharacter is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitCharacter got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7696,7 +7696,7 @@ class LitLocation is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LitLocation got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7729,19 +7729,19 @@ class Reference is (AST & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("Reference missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Reference got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("Reference got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7774,7 +7774,7 @@ class DontCare is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("DontCare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -7807,19 +7807,19 @@ class PackageRef is (AST & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("PackageRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("PackageRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("PackageRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7860,27 +7860,27 @@ class MethodFunRef is (AST & MethodRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("MethodFunRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodFunRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodFunRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("MethodFunRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodFunRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7924,27 +7924,27 @@ class MethodNewRef is (AST & MethodRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("MethodNewRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodNewRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodNewRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("MethodNewRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodNewRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7988,27 +7988,27 @@ class MethodBeRef is (AST & MethodRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("MethodBeRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("MethodBeRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("MethodBeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("MethodBeRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("MethodBeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8052,27 +8052,27 @@ class TypeRef is (AST & Expr)
     
     let package': (AST | None) =
       try iter.next()
-      else err("missing required field: package", pos'); error
+      else err("TypeRef missing required field: package", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("TypeRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("TypeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _package =
       try package' as Expr
-      else err("incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else err("TypeRef got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("TypeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8116,27 +8116,27 @@ class FieldLetRef is (AST & FieldRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("FieldLetRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldLetRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("FieldLetRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8180,27 +8180,27 @@ class FieldVarRef is (AST & FieldRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("FieldVarRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldVarRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("FieldVarRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8244,27 +8244,27 @@ class FieldEmbedRef is (AST & FieldRef & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("FieldEmbedRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("FieldEmbedRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FieldEmbedRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("FieldEmbedRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("FieldEmbedRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8308,27 +8308,27 @@ class TupleElementRef is (AST & Expr)
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("TupleElementRef missing required field: receiver", pos'); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("TupleElementRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("TupleElementRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else err("TupleElementRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as LitInteger
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("TupleElementRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8369,19 +8369,19 @@ class LocalLetRef is (AST & LocalRef & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("LocalLetRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LocalLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LocalLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8419,19 +8419,19 @@ class LocalVarRef is (AST & LocalRef & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("LocalVarRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LocalVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LocalVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8469,19 +8469,19 @@ class ParamRef is (AST & LocalRef & Expr)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("ParamRef missing required field: name", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("ParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("ParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8522,27 +8522,27 @@ class ViewpointType is (AST & Type)
     
     let left': (AST | None) =
       try iter.next()
-      else err("missing required field: left", pos'); error
+      else err("ViewpointType missing required field: left", pos'); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("missing required field: right", pos'); error
+      else err("ViewpointType missing required field: right", pos'); error
       end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("ViewpointType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _left =
       try left' as Type
-      else err("incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else err("ViewpointType got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
       end
     _right =
       try right' as Type
-      else err("incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else err("ViewpointType got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8589,7 +8589,7 @@ class UnionType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("UnionType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -8640,7 +8640,7 @@ class IsectType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("IsectType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -8691,7 +8691,7 @@ class TupleType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      err("TupleType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
     end
     
     _list = list'
@@ -8748,7 +8748,7 @@ class NominalType is (AST & Type)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("NominalType missing required field: name", pos'); error
       end
     let package': (AST | None) = try iter.next() else None end
     let type_args': (AST | None) = try iter.next() else None end
@@ -8757,30 +8757,30 @@ class NominalType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("NominalType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("NominalType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _package =
       try package' as (Id | None)
-      else err("incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else err("NominalType got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
       end
     _type_args =
       try type_args' as (TypeArgs | None)
-      else err("incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
+      else err("NominalType got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | GenCap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("NominalType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else err("NominalType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8839,7 +8839,7 @@ class FunType is (AST & Type)
     
     let cap': (AST | None) =
       try iter.next()
-      else err("missing required field: cap", pos'); error
+      else err("FunType missing required field: cap", pos'); error
       end
     let type_params': (AST | None) = try iter.next() else None end
     let params': (AST | None) = try iter.next() else None end
@@ -8847,26 +8847,26 @@ class FunType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("FunType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _cap =
       try cap' as Cap
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("FunType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("FunType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _params =
       try params' as (Params | None)
-      else err("incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else err("FunType got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("FunType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8943,42 +8943,42 @@ class LambdaType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LambdaType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _method_cap =
       try method_cap' as (Cap | None)
-      else err("incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
       end
     _name =
       try name' as (Id | None)
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _param_types =
       try param_types' as (TupleType | None)
-      else err("incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _object_cap =
       try object_cap' as (Cap | GenCap | None)
-      else err("incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else err("LambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -9043,29 +9043,29 @@ class TypeParamRef is (AST & Type)
     
     let name': (AST | None) =
       try iter.next()
-      else err("missing required field: name", pos'); error
+      else err("TypeParamRef missing required field: name", pos'); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let cap_mod': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("TypeParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else err("TypeParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
       end
     _cap =
       try cap' as (Cap | GenCap | None)
-      else err("incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else err("TypeParamRef got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else err("TypeParamRef got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -9104,7 +9104,7 @@ class ThisType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("ThisType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9132,7 +9132,7 @@ class DontCareType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("DontCareType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9160,7 +9160,7 @@ class ErrorType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("ErrorType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9188,7 +9188,7 @@ class LiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9216,7 +9216,7 @@ class LiteralTypeBranch is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("LiteralTypeBranch got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9244,7 +9244,7 @@ class OpLiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("OpLiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9272,7 +9272,7 @@ class Iso is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Iso got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9300,7 +9300,7 @@ class Trn is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Trn got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9328,7 +9328,7 @@ class Ref is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Ref got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9356,7 +9356,7 @@ class Val is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Val got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9384,7 +9384,7 @@ class Box is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Box got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9412,7 +9412,7 @@ class Tag is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Tag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9440,7 +9440,7 @@ class CapRead is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CapRead got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9468,7 +9468,7 @@ class CapSend is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CapSend got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9496,7 +9496,7 @@ class CapShare is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CapShare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9524,7 +9524,7 @@ class CapAlias is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CapAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9552,7 +9552,7 @@ class CapAny is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("CapAny got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9580,7 +9580,7 @@ class Aliased is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Aliased got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9608,7 +9608,7 @@ class Ephemeral is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Ephemeral got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9636,7 +9636,7 @@ class At is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("At got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9664,7 +9664,7 @@ class Question is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Question got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9692,7 +9692,7 @@ class Ellipsis is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Ellipsis got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9721,7 +9721,7 @@ class Id is AST
     if
       try
         let extra' = iter.next()
-        err("unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        err("Id got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
       else false
       end
     then error end
@@ -9745,7 +9745,7 @@ class EOF is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("EOF is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9762,7 +9762,7 @@ class NewLine is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("NewLine is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9779,7 +9779,7 @@ class Use is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Use is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9796,7 +9796,7 @@ class Colon is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Colon is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9813,7 +9813,7 @@ class Semicolon is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Semicolon is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9830,7 +9830,7 @@ class Comma is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Comma is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9847,7 +9847,7 @@ class Constant is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Constant is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9864,7 +9864,7 @@ class Pipe is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Pipe is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9881,7 +9881,7 @@ class Ampersand is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Ampersand is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9898,7 +9898,7 @@ class SubType is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("SubType is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9915,7 +9915,7 @@ class Arrow is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Arrow is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9932,7 +9932,7 @@ class DoubleArrow is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("DoubleArrow is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9949,7 +9949,7 @@ class Backslash is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Backslash is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9966,7 +9966,7 @@ class LParen is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LParen is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9983,7 +9983,7 @@ class RParen is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("RParen is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10000,7 +10000,7 @@ class LBrace is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LBrace is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10017,7 +10017,7 @@ class RBrace is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("RBrace is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10034,7 +10034,7 @@ class LSquare is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LSquare is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10051,7 +10051,7 @@ class RSquare is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("RSquare is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10068,7 +10068,7 @@ class LParenNew is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LParenNew is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10085,7 +10085,7 @@ class LBraceNew is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LBraceNew is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10102,7 +10102,7 @@ class LSquareNew is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("LSquareNew is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10119,7 +10119,7 @@ class SubNew is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("SubNew is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10136,7 +10136,7 @@ class SubUnsafeNew is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("SubUnsafeNew is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10153,7 +10153,7 @@ class In is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("In is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10170,7 +10170,7 @@ class Until is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Until is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10187,7 +10187,7 @@ class Do is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Do is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10204,7 +10204,7 @@ class Else is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Else is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10221,7 +10221,7 @@ class ElseIf is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("ElseIf is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10238,7 +10238,7 @@ class Then is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Then is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10255,7 +10255,7 @@ class End is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("End is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10272,7 +10272,7 @@ class Var is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Var is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10289,7 +10289,7 @@ class Let is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Let is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10306,7 +10306,7 @@ class Embed is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Embed is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10323,7 +10323,7 @@ class Where is (AST & Lexeme)
     err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
   =>
   
-    err("this lexeme-only type should never be built", pos'); error
+    err("Where is a lexeme-only type append should never be built", pos'); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
