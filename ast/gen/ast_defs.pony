@@ -287,17 +287,17 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_type()
       .> has("callable",   "Expr")
-      .> has("args",       "(Args | None)",      "None") // TODO: tweak the parser to return empty Args when no args present, remove the None option here
-      .> has("named_args", "(NamedArgs | None)", "None") // TODO: tweak the parser to return empty NamedArgs when no named args present, remove the None option here
+      .> has("args",       "Args",      "Args")
+      .> has("named_args", "NamedArgs", "NamedArgs")
     
     g.def("CallFFI")
       .> in_union("Expr")
       .> with_type()
       .> has("name",       "(Id | LitString)")
-      .> has("type_args",  "(TypeArgs | None)",  "None")
-      .> has("args",       "(Args | None)",      "None") // TODO: tweak the parser to return empty Args when no args present, remove the None option here
-      .> has("named_args", "(NamedArgs | None)", "None") // TODO: tweak the parser to return empty NamedArgs when no named args present, remove the None option here
-      .> has("partial",    "(Question | None)",  "None")
+      .> has("type_args",  "(TypeArgs | None)", "None")
+      .> has("args",       "Args",              "Args")
+      .> has("named_args", "NamedArgs",         "NamedArgs")
+      .> has("partial",    "(Question | None)", "None")
     
     g.def("Args")
       .> has("list", "Array[Sequence]", "Array[Sequence]")

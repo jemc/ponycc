@@ -5443,7 +5443,7 @@ class _Parser
     if res isnt None then return (res, _BuildInfix) end
     
     
-    state.default_tk = Tk[None]
+    state.default_tk = Tk[Args]
     found = false
     res =
       while true do
@@ -5461,7 +5461,7 @@ class _Parser
     if res isnt None then return (res, _BuildInfix) end
     
     
-    state.default_tk = Tk[None]
+    state.default_tk = Tk[NamedArgs]
     found = false
     res =
       while true do
@@ -5565,7 +5565,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[None]
+    state.default_tk = Tk[Args]
     found = false
     res =
       while true do
@@ -5583,7 +5583,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = Tk[None]
+    state.default_tk = Tk[NamedArgs]
     found = false
     res =
       while true do

@@ -354,8 +354,11 @@ primitive Print
   fun _show(g: _Gen, x: Call) =>
     _show(g, x.callable())
     g.write("(")
-    try _show(g, x.args() as Args) end
-    try _show(g, x.named_args() as NamedArgs) end
+    _show(g, x.args())
+    if (x.args().list().size() > 0) and (x.named_args().list().size() > 0) then
+      g.write(" ")
+    end
+    _show(g, x.named_args())
     g.write(")")
   
   fun _show(g: _Gen, x: CallFFI) => None // TODO

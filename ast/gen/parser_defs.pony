@@ -607,8 +607,8 @@ primitive ParserDefs
       .> builder("_BuildInfix")
       .> tree("Tk[Call]")
       .> skip("None", ["Tk[LParen]"])
-      .> opt_rule("argument", ["args"])
-      .> opt_rule("argument", ["namedargs"])
+      .> opt_rule("argument", ["args"], "Tk[Args]")
+      .> opt_rule("argument", ["namedargs"], "Tk[NamedArgs]")
       .> terminate("call arguments", ["Tk[RParen]"])
     
     // AT (ID | STRING) typeargs (LPAREN | LPAREN_NEW) [args] RPAREN [QUESTION]
@@ -619,8 +619,8 @@ primitive ParserDefs
       .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
       .> opt_rule("return type", ["typeargs"])
       .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("ffi arguments", ["args"])
-      .> opt_rule("ffi arguments", ["namedargs"])
+      .> opt_rule("ffi arguments", ["args"], "Tk[Args]")
+      .> opt_rule("ffi arguments", ["namedargs"], "Tk[NamedArgs]")
       .> terminate("ffi arguments", ["Tk[RParen]"])
       .> opt_token("None", ["Tk[Question]"])
     

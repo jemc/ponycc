@@ -6706,13 +6706,13 @@ class Call is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _callable: Expr
-  var _args: (Args | None)
-  var _named_args: (NamedArgs | None)
+  var _args: Args
+  var _named_args: NamedArgs
   
   new create(
     callable': Expr,
-    args': (Args | None) = None,
-    named_args': (NamedArgs | None) = None)
+    args': Args = Args,
+    named_args': NamedArgs = NamedArgs)
   =>
     _callable = callable'
     _args = args'
@@ -6730,8 +6730,8 @@ class Call is (AST & Expr)
       try iter.next()
       else err("missing required field: callable", pos'); error
       end
-    let args': (AST | None) = try iter.next() else None end
-    let named_args': (AST | None) = try iter.next() else None end
+    let args': (AST | None) = try iter.next() else Args end
+    let named_args': (AST | None) = try iter.next() else NamedArgs end
     if
       try
         let extra' = iter.next()
@@ -6745,11 +6745,11 @@ class Call is (AST & Expr)
       else err("incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end); error
       end
     _args =
-      try args' as (Args | None)
+      try args' as Args
       else err("incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
       end
     _named_args =
-      try named_args' as (NamedArgs | None)
+      try named_args' as NamedArgs
       else err("incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
       end
   
@@ -6757,12 +6757,12 @@ class Call is (AST & Expr)
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
   fun callable(): this->Expr => _callable
-  fun args(): this->(Args | None) => _args
-  fun named_args(): this->(NamedArgs | None) => _named_args
+  fun args(): this->Args => _args
+  fun named_args(): this->NamedArgs => _named_args
   
   fun ref set_callable(callable': Expr) => _callable = consume callable'
-  fun ref set_args(args': (Args | None) = None) => _args = consume args'
-  fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
+  fun ref set_args(args': Args = Args) => _args = consume args'
+  fun ref set_named_args(named_args': NamedArgs = NamedArgs) => _named_args = consume named_args'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6779,15 +6779,15 @@ class CallFFI is (AST & Expr)
   
   var _name: (Id | LitString)
   var _type_args: (TypeArgs | None)
-  var _args: (Args | None)
-  var _named_args: (NamedArgs | None)
+  var _args: Args
+  var _named_args: NamedArgs
   var _partial: (Question | None)
   
   new create(
     name': (Id | LitString),
     type_args': (TypeArgs | None) = None,
-    args': (Args | None) = None,
-    named_args': (NamedArgs | None) = None,
+    args': Args = Args,
+    named_args': NamedArgs = NamedArgs,
     partial': (Question | None) = None)
   =>
     _name = name'
@@ -6809,8 +6809,8 @@ class CallFFI is (AST & Expr)
       else err("missing required field: name", pos'); error
       end
     let type_args': (AST | None) = try iter.next() else None end
-    let args': (AST | None) = try iter.next() else None end
-    let named_args': (AST | None) = try iter.next() else None end
+    let args': (AST | None) = try iter.next() else Args end
+    let named_args': (AST | None) = try iter.next() else NamedArgs end
     let partial': (AST | None) = try iter.next() else None end
     if
       try
@@ -6829,11 +6829,11 @@ class CallFFI is (AST & Expr)
       else err("incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
       end
     _args =
-      try args' as (Args | None)
+      try args' as Args
       else err("incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
       end
     _named_args =
-      try named_args' as (NamedArgs | None)
+      try named_args' as NamedArgs
       else err("incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
       end
     _partial =
@@ -6846,14 +6846,14 @@ class CallFFI is (AST & Expr)
   
   fun name(): this->(Id | LitString) => _name
   fun type_args(): this->(TypeArgs | None) => _type_args
-  fun args(): this->(Args | None) => _args
-  fun named_args(): this->(NamedArgs | None) => _named_args
+  fun args(): this->Args => _args
+  fun named_args(): this->NamedArgs => _named_args
   fun partial(): this->(Question | None) => _partial
   
   fun ref set_name(name': (Id | LitString)) => _name = consume name'
   fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
-  fun ref set_args(args': (Args | None) = None) => _args = consume args'
-  fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
+  fun ref set_args(args': Args = Args) => _args = consume args'
+  fun ref set_named_args(named_args': NamedArgs = NamedArgs) => _named_args = consume named_args'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   
   fun string(): String iso^ =>

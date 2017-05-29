@@ -269,8 +269,10 @@ class ParserGenDef
   fun ref rule(desc: String, array: Array[String]) =>
     _rule_set(desc, array)
   
-  fun ref opt_rule(desc: String, array: Array[String]) =>
-    _rule_set(desc, array, "Tk[None]")
+  fun ref opt_rule(desc: String, array: Array[String],
+    default: String = "Tk[None]")
+  =>
+    _rule_set(desc, array, default)
   
   fun ref opt_no_dflt_rule(desc: String, array: Array[String]) =>
     _rule_set(desc, array, "Tk[EOF]")
