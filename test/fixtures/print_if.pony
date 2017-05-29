@@ -45,8 +45,8 @@ primitive P
       A
       A
     else
-      None
-      None
+      compile_error
+      compile_error "message"
     end
     ifdef linux then
       A
@@ -65,8 +65,8 @@ primitive P
       B
       B
     else
-      None
-      None
+      compile_intrinsic
+      compile_intrinsic None
     end
   
   fun test_iftype[X: (A | B | C)]() =>
