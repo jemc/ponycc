@@ -393,7 +393,7 @@ primitive Print
     g.write(" then")
     g.push_indent()
     g.line_start()
-    _show(g, x.then_body())
+    _show_bare(g, x.then_body())
     
     g.pop_indent()
     g.line_start()
@@ -413,7 +413,7 @@ primitive Print
       g.write("else")
       g.push_indent()
       g.line_start()
-      _show(g, s)
+      _show_bare(g, s)
       g.pop_indent()
       g.line_start()
       g.write("end")
