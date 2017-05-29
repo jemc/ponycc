@@ -1,6 +1,7 @@
 
 use "collections"
 use ".."
+use "inspect"
 
 primitive _GenNewline
 primitive _GenIndentPush
@@ -348,8 +349,6 @@ primitive Print
   fun _show(g: _Gen, x: NamedArgs) => None // TODO
   fun _show(g: _Gen, x: NamedArg) => None // TODO
   
-  fun _show(g: _Gen, x: IfDef) => None // TODO
-  
   fun _show(g: _Gen, x: (IfDefAnd | IfDefOr)) =>
     _show(g, x.left())
     
@@ -368,9 +367,66 @@ primitive Print
   fun _show(g: _Gen, x: IfDefFlag) =>
     _show(g, x.name())
   
-  fun _show(g: _Gen, x: If) => None // TODO
+  fun _show(g: _Gen, x: (If | IfDef | IfType)) =>
+    match x
+    | let i: If =>
+      g.write("if ")
+      _show_if[If](g, i)
+    | let i: IfDef =>
+      g.write("ifdef ")
+      _show_if[IfDef](g, i)
+    | let i: IfType =>
+      g.write("iftype ")
+      _show_if[IfType](g, i)
+    end
+  
+  fun _show_if[A: (If ref | IfDef ref | IfType ref)](g: _Gen, x: A) =>
+    iftype A <: If ref then
+      _show(g, x.condition())
+    elseif A <: IfDef ref then
+      _show(g, x.condition())
+    elseif A <: IfType ref then
+      _show(g, x.sub())
+      g.write(" <: ")
+      _show(g, x.super())
+    end
+    g.write(" then")
+    g.push_indent()
+    g.line_start()
+    _show(g, x.then_body())
+    
+    g.pop_indent()
+    g.line_start()
+    iftype A <: If ref then
+      _show_ifelse[A](g, x.else_body())
+    elseif A <: IfDef ref then
+      _show_ifelse[A](g, x.else_body())
+    elseif A <: IfType ref then
+      _show_ifelse[A](g, x.else_body())
+    end
+  
+  fun _show_ifelse[A: (If ref | IfDef ref | IfType ref)](g: _Gen,
+    x: (Sequence | A | None))
+  =>
+    match x
+    | let s: Sequence =>
+      g.write("else")
+      g.push_indent()
+      g.line_start()
+      _show(g, s)
+      g.pop_indent()
+      g.line_start()
+      g.write("end")
+    | let i: A =>
+      g.write("elseif ")
+      _show_if[A](g, i)
+    else
+      g.write("end")
+    end
+  
   fun _show(g: _Gen, x: While) => None // TODO
   fun _show(g: _Gen, x: Repeat) => None // TODO
+  
   fun _show(g: _Gen, x: For) => None // TODO
   fun _show(g: _Gen, x: With) => None // TODO
   

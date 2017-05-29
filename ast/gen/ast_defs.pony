@@ -115,7 +115,7 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("then_expr", "IfDefCond")
+      .> has("condition", "IfDefCond")
       .> has("then_body", "Sequence")
       .> has("else_body", "(Sequence | IfDef | None)", "None")
     
@@ -123,8 +123,8 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_scope()
       .> with_type()
-      .> has("sub",       "TypeRef")
-      .> has("super",     "TypeRef")
+      .> has("sub",       "Type")
+      .> has("super",     "Type")
       .> has("then_body", "Sequence")
       .> has("else_body", "(Sequence | IfType | None)", "None")
     

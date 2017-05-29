@@ -2909,16 +2909,16 @@ class IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
 class IfDef is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _then_expr: IfDefCond
+  var _condition: IfDefCond
   var _then_body: Sequence
   var _else_body: (Sequence | IfDef | None)
   
   new create(
-    then_expr': IfDefCond,
+    condition': IfDefCond,
     then_body': Sequence,
     else_body': (Sequence | IfDef | None) = None)
   =>
-    _then_expr = then_expr'
+    _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
   
@@ -2930,9 +2930,9 @@ class IfDef is (AST & Expr)
   
     _pos = pos'
     
-    let then_expr': (AST | None) =
+    let condition': (AST | None) =
       try iter.next()
-      else err("missing required field: then_expr", pos'); error
+      else err("missing required field: condition", pos'); error
       end
     let then_body': (AST | None) =
       try iter.next()
@@ -2947,9 +2947,9 @@ class IfDef is (AST & Expr)
       end
     then error end
     
-    _then_expr =
-      try then_expr' as IfDefCond
-      else err("incompatible field: then_expr", try (then_expr' as AST).pos() else SourcePosNone end); error
+    _condition =
+      try condition' as IfDefCond
+      else err("incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
       try then_body' as Sequence
@@ -2963,11 +2963,11 @@ class IfDef is (AST & Expr)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun then_expr(): this->IfDefCond => _then_expr
+  fun condition(): this->IfDefCond => _condition
   fun then_body(): this->Sequence => _then_body
   fun else_body(): this->(Sequence | IfDef | None) => _else_body
   
-  fun ref set_then_expr(then_expr': IfDefCond) => _then_expr = consume then_expr'
+  fun ref set_condition(condition': IfDefCond) => _condition = consume condition'
   fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
   fun ref set_else_body(else_body': (Sequence | IfDef | None) = None) => _else_body = consume else_body'
   
@@ -2975,7 +2975,7 @@ class IfDef is (AST & Expr)
     let s = recover iso String end
     s.append("IfDef")
     s.push('(')
-    s.>append(_then_expr.string()).>push(',').push(' ')
+    s.>append(_condition.string()).>push(',').push(' ')
     s.>append(_then_body.string()).>push(',').push(' ')
     s.>append(_else_body.string())
     s.push(')')
@@ -2984,14 +2984,14 @@ class IfDef is (AST & Expr)
 class IfType is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _sub: TypeRef
-  var _super: TypeRef
+  var _sub: Type
+  var _super: Type
   var _then_body: Sequence
   var _else_body: (Sequence | IfType | None)
   
   new create(
-    sub': TypeRef,
-    super': TypeRef,
+    sub': Type,
+    super': Type,
     then_body': Sequence,
     else_body': (Sequence | IfType | None) = None)
   =>
@@ -3030,11 +3030,11 @@ class IfType is (AST & Expr)
     then error end
     
     _sub =
-      try sub' as TypeRef
+      try sub' as Type
       else err("incompatible field: sub", try (sub' as AST).pos() else SourcePosNone end); error
       end
     _super =
-      try super' as TypeRef
+      try super' as Type
       else err("incompatible field: super", try (super' as AST).pos() else SourcePosNone end); error
       end
     _then_body =
@@ -3049,13 +3049,13 @@ class IfType is (AST & Expr)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun sub(): this->TypeRef => _sub
-  fun super(): this->TypeRef => _super
+  fun sub(): this->Type => _sub
+  fun super(): this->Type => _super
   fun then_body(): this->Sequence => _then_body
   fun else_body(): this->(Sequence | IfType | None) => _else_body
   
-  fun ref set_sub(sub': TypeRef) => _sub = consume sub'
-  fun ref set_super(super': TypeRef) => _super = consume super'
+  fun ref set_sub(sub': Type) => _sub = consume sub'
+  fun ref set_super(super': Type) => _super = consume super'
   fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
   fun ref set_else_body(else_body': (Sequence | IfType | None) = None) => _else_body = consume else_body'
   
