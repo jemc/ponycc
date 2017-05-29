@@ -418,6 +418,7 @@ primitive ParserDefs
       .> rule("variable name", ["idseq"])
       .> while_token_do_rule("Tk[Comma]", "variable name", ["idseq"])
       .> skip("None", ["Tk[RParen]"])
+      .> map_tk([("Tk[Tuple]", "Tk[IdTuple]")])
     
     // infix = assignment
     g.def("withelem")
@@ -603,6 +604,7 @@ primitive ParserDefs
     
     // LPAREN [args] [namedargs] RPAREN
     g.def("call")
+      .> builder("_BuildInfix")
       .> tree("Tk[Call]")
       .> skip("None", ["Tk[LParen]"])
       .> opt_rule("argument", ["args"])

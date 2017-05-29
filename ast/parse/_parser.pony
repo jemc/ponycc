@@ -4072,6 +4072,11 @@ class _Parser
         _handle_not_found(state, Tk[RParen].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[Tuple] => tree.tk = Tk[IdTuple]
+      end
+    end
     
     (_complete(state), _BuildDefault)
   
@@ -5435,7 +5440,7 @@ class _Parser
         found = false
         _handle_not_found(state, Tk[LParen].desc(), false)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
     
     state.default_tk = Tk[None]
@@ -5453,7 +5458,7 @@ class _Parser
         found = false
         break _handle_not_found(state, "argument", false)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
     
     state.default_tk = Tk[None]
@@ -5471,7 +5476,7 @@ class _Parser
         found = false
         break _handle_not_found(state, "argument", false)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
     
     state.default_tk = None
@@ -5486,9 +5491,9 @@ class _Parser
         found = false
         _handle_not_found(state, "call arguments", true)
       end
-    if res isnt None then return (res, _BuildDefault) end
+    if res isnt None then return (res, _BuildInfix) end
     
-    (_complete(state), _BuildDefault)
+    (_complete(state), _BuildInfix)
   
   fun ref _parse_callffi(rule_desc: String): (_RuleResult, _Build) =>
     let state = _RuleState("callffi", rule_desc)

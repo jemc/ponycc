@@ -29,3 +29,16 @@ primitive P
       None
       None
     end
+  
+  fun test_for(array: Array[A]) =>
+    for a in array.values() do
+      A
+      A
+    end
+    for (i, a) in array.pairs() do
+      A
+      A
+    else
+      None
+      None
+    end

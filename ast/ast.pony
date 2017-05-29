@@ -6705,16 +6705,16 @@ class Qualify is (AST & Expr)
 class Call is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _receiver: Expr
+  var _callable: Expr
   var _args: (Args | None)
   var _named_args: (NamedArgs | None)
   
   new create(
-    receiver': Expr,
+    callable': Expr,
     args': (Args | None) = None,
     named_args': (NamedArgs | None) = None)
   =>
-    _receiver = receiver'
+    _callable = callable'
     _args = args'
     _named_args = named_args'
   
@@ -6726,9 +6726,9 @@ class Call is (AST & Expr)
   
     _pos = pos'
     
-    let receiver': (AST | None) =
+    let callable': (AST | None) =
       try iter.next()
-      else err("missing required field: receiver", pos'); error
+      else err("missing required field: callable", pos'); error
       end
     let args': (AST | None) = try iter.next() else None end
     let named_args': (AST | None) = try iter.next() else None end
@@ -6740,9 +6740,9 @@ class Call is (AST & Expr)
       end
     then error end
     
-    _receiver =
-      try receiver' as Expr
-      else err("incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+    _callable =
+      try callable' as Expr
+      else err("incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end); error
       end
     _args =
       try args' as (Args | None)
@@ -6756,11 +6756,11 @@ class Call is (AST & Expr)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun receiver(): this->Expr => _receiver
+  fun callable(): this->Expr => _callable
   fun args(): this->(Args | None) => _args
   fun named_args(): this->(NamedArgs | None) => _named_args
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
+  fun ref set_callable(callable': Expr) => _callable = consume callable'
   fun ref set_args(args': (Args | None) = None) => _args = consume args'
   fun ref set_named_args(named_args': (NamedArgs | None) = None) => _named_args = consume named_args'
   
@@ -6768,7 +6768,7 @@ class Call is (AST & Expr)
     let s = recover iso String end
     s.append("Call")
     s.push('(')
-    s.>append(_receiver.string()).>push(',').push(' ')
+    s.>append(_callable.string()).>push(',').push(' ')
     s.>append(_args.string()).>push(',').push(' ')
     s.>append(_named_args.string())
     s.push(')')

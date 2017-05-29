@@ -252,6 +252,14 @@ primitive Print
     end
     g.write(")")
   
+  fun _show(g: _Gen, x: IdTuple) =>
+    g.write("(")
+    for (i, e) in x.elements().pairs() do
+      if i > 0 then g.write(", ") end
+      _show(g, e)
+    end
+    g.write(")")
+  
   fun _show(g: _Gen, x: Consume) =>
     g.write("consume ")
     try _show(g, x.cap() as Cap); g.write(" ") end
@@ -343,11 +351,31 @@ primitive Print
     _show(g, x.left())
     _show(g, x.right())
   
-  fun _show(g: _Gen, x: Call) => None // TODO
+  fun _show(g: _Gen, x: Call) =>
+    _show(g, x.callable())
+    g.write("(")
+    try _show(g, x.args() as Args) end
+    try _show(g, x.named_args() as NamedArgs) end
+    g.write(")")
+  
   fun _show(g: _Gen, x: CallFFI) => None // TODO
-  fun _show(g: _Gen, x: Args) => None // TODO
-  fun _show(g: _Gen, x: NamedArgs) => None // TODO
-  fun _show(g: _Gen, x: NamedArg) => None // TODO
+  
+  fun _show(g: _Gen, x: Args) =>
+    for (i, a) in x.list().pairs() do
+      if i > 0 then g.write(", ") end
+      _show(g, a)
+    end
+  
+  fun _show(g: _Gen, x: NamedArgs) =>
+    for (i, a) in x.list().pairs() do
+      if i > 0 then g.write(", ") else g.write("where ") end
+      _show(g, a)
+    end
+  
+  fun _show(g: _Gen, x: NamedArg) =>
+    _show(g, x.name())
+    g.write(" = ")
+    _show(g, x.value())
   
   fun _show(g: _Gen, x: (IfDefAnd | IfDefOr)) =>
     _show(g, x.left())
@@ -465,7 +493,28 @@ primitive Print
     g.line_start()
     g.write("end")
   
-  fun _show(g: _Gen, x: For) => None // TODO
+  fun _show(g: _Gen, x: For) =>
+    g.line_start()
+    g.write("for ")
+    _show(g, x.refs())
+    g.write(" in ")
+    _show(g, x.iterator())
+    g.write(" do")
+    g.push_indent()
+    g.line_start()
+    _show_bare(g, x.loop_body())
+    g.pop_indent()
+    g.line_start()
+    match x.else_body() | let s: Sequence =>
+      g.write("else")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+    g.write("end")
+  
   fun _show(g: _Gen, x: With) => None // TODO
   
   fun _show(g: _Gen, x: Match) => None // TODO

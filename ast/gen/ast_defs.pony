@@ -286,7 +286,7 @@ primitive ASTDefs
     g.def("Call")
       .> in_union("Expr")
       .> with_type()
-      .> has("receiver",   "Expr")
+      .> has("callable",   "Expr")
       .> has("args",       "(Args | None)",      "None") // TODO: tweak the parser to return empty Args when no args present, remove the None option here
       .> has("named_args", "(NamedArgs | None)", "None") // TODO: tweak the parser to return empty NamedArgs when no named args present, remove the None option here
     
