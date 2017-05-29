@@ -422,6 +422,7 @@ primitive ParserDefs
     
     // infix = assignment
     g.def("withelem")
+      .> tree("Tk[Assign]")
       .> rule("with name", ["infix"])
       .> skip("None", ["Tk[Assign]"])
       .> rule("initialiser", ["assignment"])

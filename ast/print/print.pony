@@ -260,6 +260,12 @@ primitive Print
     end
     g.write(")")
   
+  fun _show(g: _Gen, x: AssignTuple) =>
+    for (i, e) in x.elements().pairs() do
+      if i > 0 then g.write(", ") end
+      _show(g, e)
+    end
+  
   fun _show(g: _Gen, x: Consume) =>
     g.write("consume ")
     try _show(g, x.cap() as Cap); g.write(" ") end
@@ -518,7 +524,25 @@ primitive Print
     end
     g.write("end")
   
-  fun _show(g: _Gen, x: With) => None // TODO
+  fun _show(g: _Gen, x: With) =>
+    g.line_start()
+    g.write("with ")
+    _show(g, x.assigns())
+    g.write(" do")
+    g.push_indent()
+    g.line_start()
+    _show_bare(g, x.with_body())
+    g.pop_indent()
+    g.line_start()
+    match x.else_body() | let s: Sequence =>
+      g.write("else")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+    g.write("end")
   
   fun _show(g: _Gen, x: Match) => None // TODO
   fun _show(g: _Gen, x: Cases) => None // TODO

@@ -4084,6 +4084,7 @@ class _Parser
     let state = _RuleState("withelem", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
+    state.add_deferrable_ast((Tk[Assign], _current_pos()))
     
     
     state.default_tk = None
