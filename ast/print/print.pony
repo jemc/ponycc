@@ -544,9 +544,49 @@ primitive Print
     end
     g.write("end")
   
-  fun _show(g: _Gen, x: Match) => None // TODO
-  fun _show(g: _Gen, x: Cases) => None // TODO
-  fun _show(g: _Gen, x: Case) => None // TODO
+  fun _show(g: _Gen, x: Match) =>
+    g.line_start()
+    g.write("match ")
+    _show(g, x.expr())
+    g.line_start()
+    _show(g, x.cases())
+    g.line_start()
+    match x.else_body() | let s: Sequence =>
+      g.write("else")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+    g.write("end")
+  
+  fun _show(g: _Gen, x: Cases) =>
+    var prev_body = true
+    for c in x.list().values() do
+      if prev_body then g.line_start() else g.write(" ") end
+      _show(g, c)
+      prev_body = try c.body() as Sequence; true else false end
+    end
+  
+  fun _show(g: _Gen, x: Case) =>
+    g.write("| ")
+    _show(g, x.expr())
+    try
+      let s = x.guard() as Sequence
+      g.write(" if ")
+      _show(g, s)
+    end
+    try
+      let s = x.body() as Sequence
+      g.write(" =>")
+      g.push_indent()
+      g.line_start()
+      _show_bare(g, s)
+      g.pop_indent()
+      g.line_start()
+    end
+  
   fun _show(g: _Gen, x: Try) => None // TODO
   
   fun _show(g: _Gen, x: Lambda) => None // TODO
