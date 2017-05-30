@@ -206,6 +206,16 @@ primitive Print
     end
     if x.list().size() > 1 then g.write(")") end
   
+  fun _show_subsequence(g: _Gen, x: Sequence) =>
+    if x.list().size() == 0 then return g.write("None") end
+    
+    g.write("(")
+    for (i, expr) in x.list().pairs() do
+      if i > 0 then g.write("; ") end
+      _show(g, expr)
+    end
+    g.write(")")
+  
   fun _show_bare(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
     
@@ -285,13 +295,17 @@ primitive Print
       match x
       | let _: Not       => "not "
       | let _: Neg       => "-"
-      | let _: NegUnsafe => "-~ "
+      | let _: NegUnsafe => "-~"
       | let _: AddressOf => "addressof "
       | let _: DigestOf  => "digestof "
       else "???"
       end)
     
-    _show(g, x.expr())
+      match x.expr() | let s: Sequence =>
+        _show_subsequence(g, s)
+      else
+        _show(g, x.expr())
+      end
   
   fun _show(g: _Gen, x:
     ( Add | AddUnsafe | Sub | SubUnsafe | Mul | MulUnsafe
@@ -301,7 +315,11 @@ primitive Print
     | LE | LEUnsafe | GE | GEUnsafe | GT | GTUnsafe
     | And | Or | XOr | Assign))
   =>
-    _show(g, x.left())
+    match x.left() | let s: Sequence =>
+      _show_subsequence(g, s)
+    else
+      _show(g, x.left())
+    end
     
     g.write(
       match x
@@ -339,7 +357,12 @@ primitive Print
       | let _: Assign       => " = "
       end)
     
-    _show(g, x.right())
+    
+      match x.right() | let s: Sequence =>
+        _show_subsequence(g, s)
+      else
+        _show(g, x.right())
+      end
   
   fun _show(g: _Gen, x: (Dot | Chain | Tilde)) =>
     _show(g, x.left())

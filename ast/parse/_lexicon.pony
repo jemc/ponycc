@@ -90,8 +90,8 @@ class val _Lexicon
   let symbols: peg.Parser val = recover
     peg.L("...").term(Tk[Ellipsis])
     
-    / peg.L("==~").term(Tk[Eq])
-    / peg.L("!=~").term(Tk[NE])
+    / peg.L("==~").term(Tk[EqUnsafe])
+    / peg.L("!=~").term(Tk[NEUnsafe])
     / peg.L("<=~").term(Tk[LEUnsafe])
     / peg.L(">=~").term(Tk[GEUnsafe])
     / peg.L("<<~").term(Tk[LShiftUnsafe])
