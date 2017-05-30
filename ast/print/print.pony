@@ -390,7 +390,18 @@ primitive Print
     _show(g, x.named_args())
     g.write(")")
   
-  fun _show(g: _Gen, x: CallFFI) => None // TODO
+  fun _show(g: _Gen, x: CallFFI) =>
+    g.write("@")
+    _show(g, x.name())
+    try _show(g, x.type_args() as TypeArgs) end
+    g.write("(")
+    _show(g, x.args())
+    if (x.args().list().size() > 0) and (x.named_args().list().size() > 0) then
+      g.write(" ")
+    end
+    _show(g, x.named_args())
+    g.write(")")
+    try _show(g, x.partial() as Question) end
   
   fun _show(g: _Gen, x: Args) =>
     for (i, a) in x.list().pairs() do
