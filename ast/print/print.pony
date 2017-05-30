@@ -678,7 +678,17 @@ primitive Print
     try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
     try let e = x.expr() as Expr; g.write(" = "); _show(g, e) end
   
-  fun _show(g: _Gen, x: Object) => None // TODO
+  fun _show(g: _Gen, x: Object) =>
+    g.line_start()
+    g.write("object")
+    try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
+    try let p = x.provides() as Type; g.write(" is "); _show(g, p) end
+    g.push_indent()
+    try _show(g, x.members() as Members) end
+    g.pop_indent()
+    g.line_start()
+    g.write("end")
+  
   fun _show(g: _Gen, x: LitArray) => None // TODO
   
   fun _show(g: _Gen, x: Reference) => _show(g, x.name())
@@ -746,6 +756,9 @@ primitive Print
     try _show(g, x.cap_mod() as CapMod) end
   
   fun _show(g: _Gen, x: TypeParamRef) => None // TODO
+  
+  fun _show(g: _Gen, x: ThisType) => g.write("this")
+  fun _show(g: _Gen, x: DontCareType) => g.write("_")
   
   fun _show(g: _Gen, x: Iso) => g.write("iso")
   fun _show(g: _Gen, x: Trn) => g.write("trn")
