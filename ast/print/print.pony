@@ -703,12 +703,12 @@ primitive Print
   
   fun _show(g: _Gen, x: Reference) => _show(g, x.name())
   fun _show(g: _Gen, x: DontCare) => g.write("_")
-  fun _show(g: _Gen, x: PackageRef) => None // TODO
+  fun _show(g: _Gen, x: PackageRef) => _show(g, x.name())
   fun _show(g: _Gen, x: MethodRef) => None // TODO
   fun _show(g: _Gen, x: TypeRef) => None // TODO
   fun _show(g: _Gen, x: FieldRef) => None // TODO
   fun _show(g: _Gen, x: TupleElementRef) => None // TODO
-  fun _show(g: _Gen, x: LocalRef) => None // TODO
+  fun _show(g: _Gen, x: LocalRef) => _show(g, x.name())
   
   fun _show(g: _Gen, x: UnionType) =>
     g.write("(")

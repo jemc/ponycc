@@ -388,14 +388,14 @@ primitive ASTDefs
         .> in_union("MethodRef", "Expr")
         .> with_scope()
         .> has("receiver", "Expr")
-        .> has("name",     "(Id | TypeArgs)")
+        .> has("name",     "(Id | TypeArgs)") // TODO: don't use this weird scheme
     end
     
     g.def("TypeRef")
       .> in_union("Expr")
       .> with_type()
       .> has("package", "Expr")
-      .> has("name",    "(Id | TypeArgs)") // TODO: Why??
+      .> has("name",    "(Id | TypeArgs)") // TODO: don't use this weird scheme
     
     for name in ["FieldLetRef"; "FieldVarRef"; "FieldEmbedRef"].values() do
       g.def(name)
