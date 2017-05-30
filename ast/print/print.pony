@@ -708,7 +708,9 @@ primitive Print
   fun _show(g: _Gen, x: TypeRef) => None // TODO
   fun _show(g: _Gen, x: FieldRef) => None // TODO
   fun _show(g: _Gen, x: TupleElementRef) => None // TODO
-  fun _show(g: _Gen, x: LocalRef) => _show(g, x.name())
+  fun _show(g: _Gen, x: LocalLetRef) => _show(g, x.name())
+  fun _show(g: _Gen, x: LocalVarRef) => _show(g, x.name())
+  fun _show(g: _Gen, x: ParamRef) => _show(g, x.name())
   
   fun _show(g: _Gen, x: UnionType) =>
     g.write("(")
