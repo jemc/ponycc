@@ -689,7 +689,17 @@ primitive Print
     g.line_start()
     g.write("end")
   
-  fun _show(g: _Gen, x: LitArray) => None // TODO
+  fun _show(g: _Gen, x: LitArray) =>
+    g.write("[")
+    try let t = x.elem_type() as Type; g.write("as "); _show(g, t); g.write(":") end
+    g.push_indent()
+    for e in x.sequence().list().values() do
+      g.line_start()
+      _show(g, e)
+    end
+    g.pop_indent()
+    g.line_start()
+    g.write("]")
   
   fun _show(g: _Gen, x: Reference) => _show(g, x.name())
   fun _show(g: _Gen, x: DontCare) => g.write("_")
