@@ -319,7 +319,7 @@ primitive ASTDefs
       .> has("captures",    "(LambdaCaptures | None)", "None")
       .> has("return_type", "(Type | None)",           "None")
       .> has("partial",     "(Question | None)",       "None")
-      .> has("body",        "(Sequence)")
+      .> has("body",        "Sequence",                "Sequence")
       .> has("object_cap",  "(Cap | None)",            "None")
     
     g.def("LambdaCaptures")
@@ -455,7 +455,7 @@ primitive ASTDefs
       .> has("method_cap",  "(Cap | None)",          "None")
       .> has("name",        "(Id | None)",           "None")
       .> has("type_params", "(TypeParams | None)",   "None")
-      .> has("param_types", "(TupleType | None)",    "None")
+      .> has("param_types", "TupleType",             "TupleType")
       .> has("return_type", "(Type | None)",         "None")
       .> has("partial",     "(Question | None)",     "None")
       .> has("object_cap",  "(Cap | GenCap | None)", "None")

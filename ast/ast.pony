@@ -7044,7 +7044,7 @@ class Lambda is (AST & Expr)
   var _captures: (LambdaCaptures | None)
   var _return_type: (Type | None)
   var _partial: (Question | None)
-  var _body: (Sequence)
+  var _body: Sequence
   var _object_cap: (Cap | None)
   
   new create(
@@ -7055,7 +7055,7 @@ class Lambda is (AST & Expr)
     captures': (LambdaCaptures | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
-    body': (Sequence),
+    body': Sequence = Sequence,
     object_cap': (Cap | None) = None)
   =>
     _method_cap = method_cap'
@@ -7083,10 +7083,7 @@ class Lambda is (AST & Expr)
     let captures': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
-    let body': (AST | None) =
-      try iter.next()
-      else err("Lambda missing required field: body", pos'); error
-      end
+    let body': (AST | None) = try iter.next() else Sequence end
     let object_cap': (AST | None) = try iter.next() else None end
     if
       try
@@ -7125,7 +7122,7 @@ class Lambda is (AST & Expr)
       else err("Lambda got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
       end
     _body =
-      try body' as (Sequence)
+      try body' as Sequence
       else err("Lambda got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
       end
     _object_cap =
@@ -7143,7 +7140,7 @@ class Lambda is (AST & Expr)
   fun captures(): this->(LambdaCaptures | None) => _captures
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
-  fun body(): this->(Sequence) => _body
+  fun body(): this->Sequence => _body
   fun object_cap(): this->(Cap | None) => _object_cap
   
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
@@ -7153,7 +7150,7 @@ class Lambda is (AST & Expr)
   fun ref set_captures(captures': (LambdaCaptures | None) = None) => _captures = consume captures'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_body(body': (Sequence)) => _body = consume body'
+  fun ref set_body(body': Sequence = Sequence) => _body = consume body'
   fun ref set_object_cap(object_cap': (Cap | None) = None) => _object_cap = consume object_cap'
   
   fun string(): String iso^ =>
@@ -8899,7 +8896,7 @@ class LambdaType is (AST & Type)
   var _method_cap: (Cap | None)
   var _name: (Id | None)
   var _type_params: (TypeParams | None)
-  var _param_types: (TupleType | None)
+  var _param_types: TupleType
   var _return_type: (Type | None)
   var _partial: (Question | None)
   var _object_cap: (Cap | GenCap | None)
@@ -8909,7 +8906,7 @@ class LambdaType is (AST & Type)
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
-    param_types': (TupleType | None) = None,
+    param_types': TupleType = TupleType,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
@@ -8935,7 +8932,7 @@ class LambdaType is (AST & Type)
     let method_cap': (AST | None) = try iter.next() else None end
     let name': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let param_types': (AST | None) = try iter.next() else None end
+    let param_types': (AST | None) = try iter.next() else TupleType end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
     let object_cap': (AST | None) = try iter.next() else None end
@@ -8961,7 +8958,7 @@ class LambdaType is (AST & Type)
       else err("LambdaType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
       end
     _param_types =
-      try param_types' as (TupleType | None)
+      try param_types' as TupleType
       else err("LambdaType got incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end); error
       end
     _return_type =
@@ -8987,7 +8984,7 @@ class LambdaType is (AST & Type)
   fun method_cap(): this->(Cap | None) => _method_cap
   fun name(): this->(Id | None) => _name
   fun type_params(): this->(TypeParams | None) => _type_params
-  fun param_types(): this->(TupleType | None) => _param_types
+  fun param_types(): this->TupleType => _param_types
   fun return_type(): this->(Type | None) => _return_type
   fun partial(): this->(Question | None) => _partial
   fun object_cap(): this->(Cap | GenCap | None) => _object_cap
@@ -8996,7 +8993,7 @@ class LambdaType is (AST & Type)
   fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
   fun ref set_name(name': (Id | None) = None) => _name = consume name'
   fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_param_types(param_types': (TupleType | None) = None) => _param_types = consume param_types'
+  fun ref set_param_types(param_types': TupleType = TupleType) => _param_types = consume param_types'
   fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
   fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
   fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'

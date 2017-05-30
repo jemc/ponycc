@@ -807,6 +807,13 @@ primitive ParserDefs
       .> opt_no_dflt_rule("type", ["commatype"])
       .> skip("None", ["Tk[RParen]"])
     
+    // infixtype [commatype]
+    g.def("paramtypes")
+      .> print_inline()
+      .> tree("Tk[TupleType]")
+      .> rule("type", ["type"])
+      .> while_token_do_rule("Tk[Comma]", "type", ["type"])
+    
     // type {uniontype | isecttype}
     g.def("infixtype")
       .> rule("type", ["type"])
@@ -858,7 +865,7 @@ primitive ParserDefs
       .> opt_token("function name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
       .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["tupletype"])
+      .> opt_rule("parameters", ["paramtypes"], "Tk[TupleType]")
       .> skip("None", ["Tk[RParen]"])
       .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])

@@ -647,9 +647,37 @@ primitive Print
     end
     g.write("end")
   
-  fun _show(g: _Gen, x: Lambda) => None // TODO
-  fun _show(g: _Gen, x: LambdaCaptures) => None // TODO
-  fun _show(g: _Gen, x: LambdaCapture) => None // TODO
+  fun _show(g: _Gen, x: Lambda) =>
+    g.write("{")
+    try _show(g, x.method_cap() as Cap); g.write(" ") end
+    try _show(g, x.name() as Id) end
+    try _show(g, x.type_params() as TypeParams) end
+    try _show(g, x.params() as Params) else g.write("()") end
+    try _show(g, x.captures() as LambdaCaptures) end
+    try let r = x.return_type() as Type; g.write(": "); _show(g, r) end
+    try let q = x.partial() as Question; g.write(" "); _show(g, q) end
+    g.write(" =>")
+    g.push_indent()
+    g.line_start()
+    _show_bare(g, x.body())
+    g.pop_indent()
+    g.line_start()
+    g.write("}")
+    try let c = x.object_cap() as Cap; g.write(" "); _show(g, c) end
+  
+  fun _show(g: _Gen, x: LambdaCaptures) =>
+    g.write("(")
+    for (i, c) in x.list().pairs() do
+      if i > 0 then g.write(", ") end
+      _show(g, c)
+    end
+    g.write(")")
+  
+  fun _show(g: _Gen, x: LambdaCapture) =>
+    _show(g, x.name())
+    try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
+    try let e = x.expr() as Expr; g.write(" = "); _show(g, e) end
+  
   fun _show(g: _Gen, x: Object) => None // TODO
   fun _show(g: _Gen, x: LitArray) => None // TODO
   
