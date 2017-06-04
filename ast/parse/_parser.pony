@@ -165,7 +165,7 @@ class _Parser
       else
         _error("Syntax error: Unterminated " + terminating,
           try (tree as TkTree).pos else last_helpful_token._2 end)
-        _error_continue("expected terminating " + expected + "before here", last_helpful_token._2)
+        _error_continue("Expected terminating " + expected + " before here", last_helpful_token._2)
       end
     end
   
