@@ -1,24 +1,27 @@
-.PHONY: all
-all: test/test
+.PHONY: all test
+all: ponycc/test/test
+
+test: ponycc/test/test
+	ponycc/test/test
 
 clean:
-	rm -f ast/gen/gen
-	rm -f ast/ast.pony
-	rm -f ast/parse/_parser.pony
-	rm -f test/test
+	rm -f ponycc/ast/gen/gen
+	rm -f ponycc/ast/ast.pony
+	rm -f ponycc/ast/parse/_parser.pony
+	rm -f ponycc/test/test
 
-ast/gen/gen: $(shell find ast/gen/*.pony)
-	stable env ponyc --debug -o ast/gen ast/gen
+ponycc/ast/gen/gen: $(shell find ponycc/ast/gen/*.pony)
+	stable env ponyc --debug -o ponycc/ast/gen ponycc/ast/gen
 
-ast/ast.pony: ast/gen/gen
-	ast/gen/gen ast > $@
+ponycc/ast/ast.pony: ponycc/ast/gen/gen
+	ponycc/ast/gen/gen ast > $@
 
-ast/parse/_parser.pony: ast/gen/gen
-	ast/gen/gen parser > $@
+ponycc/ast/parse/_parser.pony: ponycc/ast/gen/gen
+	ponycc/ast/gen/gen parser > $@
 
-test/test: ast/ast.pony ast/parse/_parser.pony \
-	$(shell find ast/*.pony) \
-	$(shell find ast/parse/*.pony) \
-	$(shell find ast/print/*.pony) \
-	$(shell find test/*.pony)
-	stable env ponyc --debug -o test test
+ponycc/test/test: ponycc/ast/ast.pony ponycc/ast/parse/_parser.pony \
+	$(shell find ponycc/ast/*.pony) \
+	$(shell find ponycc/ast/parse/*.pony) \
+	$(shell find ponycc/ast/print/*.pony) \
+	$(shell find ponycc/test/*.pony)
+	stable env ponyc --debug -o ponycc/test ponycc/test
