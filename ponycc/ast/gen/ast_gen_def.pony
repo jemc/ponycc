@@ -1,11 +1,11 @@
 
 use "collections"
 
-trait _ASTDef
+trait ASTGenDef
   fun name(): String
   fun code_gen(g: CodeGen)
 
-class _ASTDefFixed is _ASTDef
+class ASTGenDefFixed is ASTGenDef
   let _gen: ASTGen
   let _name: String
   let _traits: Array[String] = Array[String] // TODO: remove and use unions only
@@ -224,7 +224,7 @@ class _ASTDefFixed is _ASTDef
     g.pop_indent()
     g.line()
 
-class _ASTDefWrap is _ASTDef
+class ASTGenDefWrap is ASTGenDef
   let _gen: ASTGen
   let _name: String
   let value_type: String
@@ -317,7 +317,7 @@ class _ASTDefWrap is _ASTDef
     g.pop_indent()
     g.line()
 
-class _ASTDefLexeme is _ASTDef
+class ASTGenDefLexeme is ASTGenDef
   let _gen: ASTGen
   let _name: String
   let _traits: Array[String] = Array[String] // TODO: remove and use unions only

@@ -2,19 +2,19 @@
 use "collections"
 
 class ASTGen
-  let defs:   List[_ASTDef]            = defs.create()
+  let defs:   List[ASTGenDef]            = defs.create()
   let unions: Map[String, Set[String]] = unions.create()
   
   new ref create() => None
   
-  fun ref def(n: String): _ASTDefFixed =>
-    _ASTDefFixed(this, n)
+  fun ref def(n: String): ASTGenDefFixed =>
+    ASTGenDefFixed(this, n)
   
-  fun ref def_wrap(n: String, t: String): _ASTDefWrap =>
-    _ASTDefWrap(this, n, t)
+  fun ref def_wrap(n: String, t: String): ASTGenDefWrap =>
+    ASTGenDefWrap(this, n, t)
   
-  fun ref def_lexeme(n: String): _ASTDefLexeme =>
-    _ASTDefLexeme(this, n)
+  fun ref def_lexeme(n: String): ASTGenDefLexeme =>
+    ASTGenDefLexeme(this, n)
   
   fun string(): String =>
     let g: CodeGen = CodeGen
