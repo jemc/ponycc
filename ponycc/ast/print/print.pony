@@ -451,12 +451,12 @@ primitive Print
       _show_if[IfType](g, i)
     end
   
-  fun _show_if[A: (If ref | IfDef ref | IfType ref)](g: _Gen, x: A) =>
-    iftype A <: If ref then
+  fun _show_if[A: (If val | IfDef val | IfType val)](g: _Gen, x: A) =>
+    iftype A <: If val then
       _show(g, x.condition())
-    elseif A <: IfDef ref then
+    elseif A <: IfDef val then
       _show(g, x.condition())
-    elseif A <: IfType ref then
+    elseif A <: IfType val then
       _show(g, x.sub())
       g.write(" <: ")
       _show(g, x.super())
@@ -468,15 +468,15 @@ primitive Print
     
     g.pop_indent()
     g.line_start()
-    iftype A <: If ref then
+    iftype A <: If val then
       _show_ifelse[A](g, x.else_body())
-    elseif A <: IfDef ref then
+    elseif A <: IfDef val then
       _show_ifelse[A](g, x.else_body())
-    elseif A <: IfType ref then
+    elseif A <: IfType val then
       _show_ifelse[A](g, x.else_body())
     end
   
-  fun _show_ifelse[A: (If ref | IfDef ref | IfType ref)](g: _Gen,
+  fun _show_ifelse[A: (If val | IfDef val | IfType val)](g: _Gen,
     x: (Sequence | A | None))
   =>
     match x

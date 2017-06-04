@@ -3,8 +3,8 @@ primitive ASTDefs
   fun apply(g: ASTGen) =>
     g.def("Module")
       .> with_scope()
-      .> has("use_decls",  "Array[UseDecl]",     "Array[UseDecl]")
-      .> has("type_decls", "Array[TypeDecl]",    "Array[TypeDecl]")
+      .> has("use_decls",  "coll.Vec[UseDecl]",     "coll.Vec[UseDecl]")
+      .> has("type_decls", "coll.Vec[TypeDecl]",    "coll.Vec[TypeDecl]")
       .> has("docs",       "(LitString | None)", "None")
     
     g.def("UsePackage")
@@ -35,8 +35,8 @@ primitive ASTDefs
     end
     
     g.def("Members")
-      .> has("fields",  "Array[Field]",  "Array[Field]")
-      .> has("methods", "Array[Method]", "Array[Method]")
+      .> has("fields",  "coll.Vec[Field]",  "coll.Vec[Field]")
+      .> has("methods", "coll.Vec[Method]", "coll.Vec[Method]")
     
     for name in ["FieldLet"; "FieldVar"; "FieldEmbed"].values() do
       g.def(name)
@@ -63,7 +63,7 @@ primitive ASTDefs
     end
     
     g.def("TypeParams")
-      .> has("list", "Array[TypeParam]", "Array[TypeParam]")
+      .> has("list", "coll.Vec[TypeParam]", "coll.Vec[TypeParam]")
     
     g.def("TypeParam")
       .> has("name",       "Id")
@@ -71,10 +71,10 @@ primitive ASTDefs
       .> has("default",    "(Type | None)", "None")
     
     g.def("TypeArgs")
-      .> has("list", "Array[Type]", "Array[Type]")
+      .> has("list", "coll.Vec[Type]", "coll.Vec[Type]")
     
     g.def("Params")
-      .> has("list",     "Array[Param]",      "Array[Param]") // TODO: account for case where parser emits ellipsis in multiple argument positions
+      .> has("list",     "coll.Vec[Param]",      "coll.Vec[Param]") // TODO: account for case where parser emits ellipsis in multiple argument positions
       .> has("ellipsis", "(Ellipsis | None)", "None")
     
     g.def("Param")
@@ -86,7 +86,7 @@ primitive ASTDefs
     g.def("Sequence")
       .> with_scope() // TODO: doesn't always have a scope...
       .> in_union("Expr")
-      .> has("list", "Array[Expr]", "Array[Expr]")
+      .> has("list", "coll.Vec[Expr]", "coll.Vec[Expr]")
     
     for name in [
       "Return"; "Break"; "Continue"; "Error"; "CompileIntrinsic"; "CompileError"
@@ -171,11 +171,11 @@ primitive ASTDefs
     
     g.def("IdTuple") // TODO: implement as Tuple[(Id | IdTuple)]
       .> with_type()
-      .> has("elements", "Array[(Id | IdTuple)]", "Array[(Id | IdTuple)]")
+      .> has("elements", "coll.Vec[(Id | IdTuple)]", "coll.Vec[(Id | IdTuple)]")
     
     g.def("AssignTuple") // TODO: implement as Tuple[Assign]
       .> with_type()
-      .> has("elements", "Array[Assign]", "Array[Assign]")
+      .> has("elements", "coll.Vec[Assign]", "coll.Vec[Assign]")
     
     g.def("Match")
       .> in_union("Expr")
@@ -188,7 +188,7 @@ primitive ASTDefs
     g.def("Cases")
       .> with_scope() // to simplify branch consolidation
       .> with_type()
-      .> has("list", "Array[Case]", "Array[Case]")
+      .> has("list", "coll.Vec[Case]", "coll.Vec[Case]")
     
     g.def("Case")
       .> with_scope()
@@ -300,10 +300,10 @@ primitive ASTDefs
       .> has("partial",    "(Question | None)", "None")
     
     g.def("Args")
-      .> has("list", "Array[Sequence]", "Array[Sequence]")
+      .> has("list", "coll.Vec[Sequence]", "coll.Vec[Sequence]")
     
     g.def("NamedArgs")
-      .> has("list", "Array[NamedArg]", "Array[NamedArg]")
+      .> has("list", "coll.Vec[NamedArg]", "coll.Vec[NamedArg]")
     
     g.def("NamedArg")
       .> has("name",  "Id")
@@ -323,7 +323,7 @@ primitive ASTDefs
       .> has("object_cap",  "(Cap | None)",            "None")
     
     g.def("LambdaCaptures")
-      .> has("list", "Array[LambdaCapture]", "Array[LambdaCapture]")
+      .> has("list", "coll.Vec[LambdaCapture]", "coll.Vec[LambdaCapture]")
     
     g.def("LambdaCapture")
       .> has("name",       "Id")
@@ -344,7 +344,7 @@ primitive ASTDefs
     g.def("Tuple")
       .> in_union("Expr")
       .> with_type()
-      .> has("elements", "Array[Sequence]", "Array[Sequence]")
+      .> has("elements", "coll.Vec[Sequence]", "coll.Vec[Sequence]")
     
     g.def("This")
       .> in_union("Expr")
@@ -425,15 +425,15 @@ primitive ASTDefs
     
     g.def("UnionType")
       .> in_union("Type")
-      .> has("list", "Array[Type]", "Array[Type]") // TODO: try to fix the parser compat with this, using seq() instead of _BuildInfix, or at least flattening in the parser first (maybe _BuildInfixFlat?)
+      .> has("list", "coll.Vec[Type]", "coll.Vec[Type]") // TODO: try to fix the parser compat with this, using seq() instead of _BuildInfix, or at least flattening in the parser first (maybe _BuildInfixFlat?)
     
     g.def("IsectType")
       .> in_union("Type")
-      .> has("list", "Array[Type]", "Array[Type]") // TODO: try to fix the parser compat with this, using seq() instead of _BuildInfix, or at least flattening in the parser first (maybe _BuildInfixFlat?)
+      .> has("list", "coll.Vec[Type]", "coll.Vec[Type]") // TODO: try to fix the parser compat with this, using seq() instead of _BuildInfix, or at least flattening in the parser first (maybe _BuildInfixFlat?)
     
     g.def("TupleType")
       .> in_union("Type")
-      .> has("list", "Array[Type]", "Array[Type]") // TODO: confirm parser compat with this
+      .> has("list", "coll.Vec[Type]", "coll.Vec[Type]") // TODO: confirm parser compat with this
     
     g.def("NominalType")
       .> in_union("Type")

@@ -35,7 +35,7 @@ class ASTGenDefFixed is ASTGenDef
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is ")
+    g.line("class val " + _name + " is ")
     if _traits.size() == 0 then
       g.add("AST")
     else
@@ -57,7 +57,7 @@ class ASTGenDefFixed is ASTGenDef
     if fields.size() > 0 then g.line() end
     
     // Declare a constructor that initializes all fields from parameters.
-    g.line("new create(")
+    g.line("new val create(")
     var iter = fields.values()
     g.push_indent()
     for (field_name, field_type, field_default) in iter do
@@ -94,9 +94,9 @@ class ASTGenDefFixed is ASTGenDef
     
     var iter_next = "iter.next()"
     for (field_name, field_type, field_default) in fields.values() do
-      if (try field_type.find("Array[") == 0 else false end) then
-        let elem_type: String = field_type.substring(6, -1)
-        g.line("let " + field_name + "' = " + field_type)
+      if field_type.at("coll.Vec[") then
+        let elem_type: String = field_type.substring(9, -1)
+        g.line("var " + field_name + "' = " + field_type)
         g.line("var " + field_name + "_next' = ")
         if iter_next != "iter.next()" then
           g.add(iter_next)
@@ -105,7 +105,8 @@ class ASTGenDefFixed is ASTGenDef
         end
         g.line("while true do")
         g.push_indent()
-        g.line("try " + field_name + "'.push(" + field_name + "_next'")
+        g.line("try " + field_name + "' = ")
+        g.add(field_name + "'.push(" + field_name + "_next'")
         g.add(" as " + elem_type + ") else break end")
         g.line("try " + field_name + "_next' = iter.next()")
         g.add(" else " + field_name + "_next' = None; break end")
@@ -155,7 +156,7 @@ class ASTGenDefFixed is ASTGenDef
     if fields.size() > 0 then g.line() end
     for (field_name, field_type, field_default) in fields.values() do
       g.line("_" + field_name + " =")
-      if (try field_type.find("Array[") == 0 else false end) then
+      if field_type.at("coll.Vec[") then
         g.add(" " + field_name + "'")
       else
         g.push_indent()
@@ -201,7 +202,7 @@ class ASTGenDefFixed is ASTGenDef
       g.line("s.push('(')")
       iter = fields.values()
       for (field_name, field_type, _) in iter do
-        if field_type.at("Array[", 0) then
+        if field_type.at("coll.Vec[", 0) then
           g.line("s.push('[')")
           g.line("for (i, v) in _" + field_name + ".pairs() do")
           g.push_indent()
@@ -243,7 +244,7 @@ class ASTGenDefWrap is ASTGenDef
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is ")
+    g.line("class val " + _name + " is ")
     if _traits.size() == 0 then
       g.add("AST")
     else
@@ -260,7 +261,7 @@ class ASTGenDefWrap is ASTGenDef
     g.line("var _value: " + value_type)
     
     // Declare a constructor that initializes the value field from a parameter.
-    g.line("new create(value': " + value_type + ") => _value = value'")
+    g.line("new val create(value': " + value_type + ") => _value = value'")
     
     g.block(
       """
@@ -335,7 +336,7 @@ class ASTGenDefLexeme is ASTGenDef
   fun name(): String => _name
   
   fun code_gen(g: CodeGen) =>
-    g.line("class " + _name + " is ")
+    g.line("class val " + _name + " is ")
     if _traits.size() == 0 then
       g.add("AST")
     else
@@ -349,7 +350,7 @@ class ASTGenDefLexeme is ASTGenDef
     g.line("var _pos: SourcePosAny = SourcePosNone")
     
     // Declare a constructor that does nothing.
-    g.line("new create() => None")
+    g.line("new val create() => None")
     
     // Declare a constructor that accepts an iterator but always errors.
     g.block(

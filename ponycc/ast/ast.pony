@@ -1,4 +1,6 @@
-trait AST
+use coll = "collections/persistent"
+
+trait val AST
   fun pos(): SourcePosAny
   fun ref set_pos(pos': SourcePosAny)
   fun string(): String iso^
@@ -205,56 +207,56 @@ primitive ASTInfo
     else "???"
     end
 
-trait BinaryOp is AST
+trait val BinaryOp is AST
 
-trait Cap is AST
+trait val Cap is AST
 
-trait LitBool is AST
+trait val LitBool is AST
 
-trait Type is AST
+trait val Type is AST
 
-trait Field is AST
+trait val Field is AST
 
-trait IfDefBinaryOp is AST
+trait val IfDefBinaryOp is AST
 
-trait GenCap is AST
+trait val GenCap is AST
 
-trait Local is AST
+trait val Local is AST
 
-trait UseDecl is AST
+trait val UseDecl is AST
 
-trait Jump is AST
+trait val Jump is AST
 
-trait CapMod is AST
+trait val CapMod is AST
 
-trait MethodRef is AST
+trait val MethodRef is AST
 
-trait TypeDecl is AST
+trait val TypeDecl is AST
 
-trait IfDefCond is AST
+trait val IfDefCond is AST
 
-trait Lexeme is AST
+trait val Lexeme is AST
 
-trait Method is AST
+trait val Method is AST
 
-trait Expr is AST
+trait val Expr is AST
 
-trait FieldRef is AST
+trait val FieldRef is AST
 
-trait LocalRef is AST
+trait val LocalRef is AST
 
-trait UnaryOp is AST
+trait val UnaryOp is AST
 
-class Module is AST
+class val Module is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _use_decls: Array[UseDecl]
-  var _type_decls: Array[TypeDecl]
+  var _use_decls: coll.Vec[UseDecl]
+  var _type_decls: coll.Vec[TypeDecl]
   var _docs: (LitString | None)
   
-  new create(
-    use_decls': Array[UseDecl] = Array[UseDecl],
-    type_decls': Array[TypeDecl] = Array[TypeDecl],
+  new val create(
+    use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl],
+    type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl],
     docs': (LitString | None) = None)
   =>
     _use_decls = use_decls'
@@ -269,16 +271,16 @@ class Module is AST
   
     _pos = pos'
     
-    let use_decls' = Array[UseDecl]
+    var use_decls' = coll.Vec[UseDecl]
     var use_decls_next' = try iter.next() else None end
     while true do
-      try use_decls'.push(use_decls_next' as UseDecl) else break end
+      try use_decls' = use_decls'.push(use_decls_next' as UseDecl) else break end
       try use_decls_next' = iter.next() else use_decls_next' = None; break end
     end
-    let type_decls' = Array[TypeDecl]
+    var type_decls' = coll.Vec[TypeDecl]
     var type_decls_next' = use_decls_next'
     while true do
-      try type_decls'.push(type_decls_next' as TypeDecl) else break end
+      try type_decls' = type_decls'.push(type_decls_next' as TypeDecl) else break end
       try type_decls_next' = iter.next() else type_decls_next' = None; break end
     end
     let docs': (AST | None) = type_decls_next'
@@ -300,12 +302,12 @@ class Module is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun use_decls(): this->Array[UseDecl] => _use_decls
-  fun type_decls(): this->Array[TypeDecl] => _type_decls
+  fun use_decls(): this->coll.Vec[UseDecl] => _use_decls
+  fun type_decls(): this->coll.Vec[TypeDecl] => _type_decls
   fun docs(): this->(LitString | None) => _docs
   
-  fun ref set_use_decls(use_decls': Array[UseDecl] = Array[UseDecl]) => _use_decls = consume use_decls'
-  fun ref set_type_decls(type_decls': Array[TypeDecl] = Array[TypeDecl]) => _type_decls = consume type_decls'
+  fun ref set_use_decls(use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl]) => _use_decls = consume use_decls'
+  fun ref set_type_decls(type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl]) => _type_decls = consume type_decls'
   fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
   
   fun string(): String iso^ =>
@@ -330,13 +332,13 @@ class Module is AST
     s.push(')')
     consume s
 
-class UsePackage is (AST & UseDecl)
+class val UsePackage is (AST & UseDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _prefix: (Id | None)
   var _package: LitString
   
-  new create(
+  new val create(
     prefix': (Id | None) = None,
     package': LitString)
   =>
@@ -391,7 +393,7 @@ class UsePackage is (AST & UseDecl)
     s.push(')')
     consume s
 
-class UseFFIDecl is (AST & UseDecl)
+class val UseFFIDecl is (AST & UseDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: (Id | LitString)
@@ -400,7 +402,7 @@ class UseFFIDecl is (AST & UseDecl)
   var _partial: (Question | None)
   var _guard: (IfDefCond | None)
   
-  new create(
+  new val create(
     name': (Id | LitString),
     return_type': TypeArgs,
     params': (Params | None),
@@ -494,7 +496,7 @@ class UseFFIDecl is (AST & UseDecl)
     s.push(')')
     consume s
 
-class TypeAlias is (AST & TypeDecl)
+class val TypeAlias is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -505,7 +507,7 @@ class TypeAlias is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -610,7 +612,7 @@ class TypeAlias is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Interface is (AST & TypeDecl)
+class val Interface is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -621,7 +623,7 @@ class Interface is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -726,7 +728,7 @@ class Interface is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Trait is (AST & TypeDecl)
+class val Trait is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -737,7 +739,7 @@ class Trait is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -842,7 +844,7 @@ class Trait is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Primitive is (AST & TypeDecl)
+class val Primitive is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -853,7 +855,7 @@ class Primitive is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -958,7 +960,7 @@ class Primitive is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Struct is (AST & TypeDecl)
+class val Struct is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -969,7 +971,7 @@ class Struct is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -1074,7 +1076,7 @@ class Struct is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Class is (AST & TypeDecl)
+class val Class is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -1085,7 +1087,7 @@ class Class is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -1190,7 +1192,7 @@ class Class is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Actor is (AST & TypeDecl)
+class val Actor is (AST & TypeDecl)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -1201,7 +1203,7 @@ class Actor is (AST & TypeDecl)
   var _at: (At | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -1306,15 +1308,15 @@ class Actor is (AST & TypeDecl)
     s.push(')')
     consume s
 
-class Members is AST
+class val Members is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _fields: Array[Field]
-  var _methods: Array[Method]
+  var _fields: coll.Vec[Field]
+  var _methods: coll.Vec[Method]
   
-  new create(
-    fields': Array[Field] = Array[Field],
-    methods': Array[Method] = Array[Method])
+  new val create(
+    fields': coll.Vec[Field] = coll.Vec[Field],
+    methods': coll.Vec[Method] = coll.Vec[Method])
   =>
     _fields = fields'
     _methods = methods'
@@ -1327,16 +1329,16 @@ class Members is AST
   
     _pos = pos'
     
-    let fields' = Array[Field]
+    var fields' = coll.Vec[Field]
     var fields_next' = try iter.next() else None end
     while true do
-      try fields'.push(fields_next' as Field) else break end
+      try fields' = fields'.push(fields_next' as Field) else break end
       try fields_next' = iter.next() else fields_next' = None; break end
     end
-    let methods' = Array[Method]
+    var methods' = coll.Vec[Method]
     var methods_next' = fields_next'
     while true do
-      try methods'.push(methods_next' as Method) else break end
+      try methods' = methods'.push(methods_next' as Method) else break end
       try methods_next' = iter.next() else methods_next' = None; break end
     end
     if methods_next' isnt None then
@@ -1350,11 +1352,11 @@ class Members is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun fields(): this->Array[Field] => _fields
-  fun methods(): this->Array[Method] => _methods
+  fun fields(): this->coll.Vec[Field] => _fields
+  fun methods(): this->coll.Vec[Method] => _methods
   
-  fun ref set_fields(fields': Array[Field] = Array[Field]) => _fields = consume fields'
-  fun ref set_methods(methods': Array[Method] = Array[Method]) => _methods = consume methods'
+  fun ref set_fields(fields': coll.Vec[Field] = coll.Vec[Field]) => _fields = consume fields'
+  fun ref set_methods(methods': coll.Vec[Method] = coll.Vec[Method]) => _methods = consume methods'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1376,14 +1378,14 @@ class Members is AST
     s.push(')')
     consume s
 
-class FieldLet is (AST & Field)
+class val FieldLet is (AST & Field)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _field_type: Type
   var _default: (Expr | None)
   
-  new create(
+  new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
@@ -1451,14 +1453,14 @@ class FieldLet is (AST & Field)
     s.push(')')
     consume s
 
-class FieldVar is (AST & Field)
+class val FieldVar is (AST & Field)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _field_type: Type
   var _default: (Expr | None)
   
-  new create(
+  new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
@@ -1526,14 +1528,14 @@ class FieldVar is (AST & Field)
     s.push(')')
     consume s
 
-class FieldEmbed is (AST & Field)
+class val FieldEmbed is (AST & Field)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _field_type: Type
   var _default: (Expr | None)
   
-  new create(
+  new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
@@ -1601,7 +1603,7 @@ class FieldEmbed is (AST & Field)
     s.push(')')
     consume s
 
-class MethodFun is (AST & Method)
+class val MethodFun is (AST & Method)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -1614,7 +1616,7 @@ class MethodFun is (AST & Method)
   var _body: (Sequence | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -1739,7 +1741,7 @@ class MethodFun is (AST & Method)
     s.push(')')
     consume s
 
-class MethodNew is (AST & Method)
+class val MethodNew is (AST & Method)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -1752,7 +1754,7 @@ class MethodNew is (AST & Method)
   var _body: (Sequence | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -1877,7 +1879,7 @@ class MethodNew is (AST & Method)
     s.push(')')
     consume s
 
-class MethodBe is (AST & Method)
+class val MethodBe is (AST & Method)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -1890,7 +1892,7 @@ class MethodBe is (AST & Method)
   var _body: (Sequence | None)
   var _docs: (LitString | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
@@ -2015,13 +2017,13 @@ class MethodBe is (AST & Method)
     s.push(')')
     consume s
 
-class TypeParams is AST
+class val TypeParams is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[TypeParam]
+  var _list: coll.Vec[TypeParam]
   
-  new create(
-    list': Array[TypeParam] = Array[TypeParam])
+  new val create(
+    list': coll.Vec[TypeParam] = coll.Vec[TypeParam])
   =>
     _list = list'
   
@@ -2033,10 +2035,10 @@ class TypeParams is AST
   
     _pos = pos'
     
-    let list' = Array[TypeParam]
+    var list' = coll.Vec[TypeParam]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as TypeParam) else break end
+      try list' = list'.push(list_next' as TypeParam) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -2049,9 +2051,9 @@ class TypeParams is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[TypeParam] => _list
+  fun list(): this->coll.Vec[TypeParam] => _list
   
-  fun ref set_list(list': Array[TypeParam] = Array[TypeParam]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[TypeParam] = coll.Vec[TypeParam]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2066,14 +2068,14 @@ class TypeParams is AST
     s.push(')')
     consume s
 
-class TypeParam is AST
+class val TypeParam is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _constraint: (Type | None)
   var _default: (Type | None)
   
-  new create(
+  new val create(
     name': Id,
     constraint': (Type | None) = None,
     default': (Type | None) = None)
@@ -2138,13 +2140,13 @@ class TypeParam is AST
     s.push(')')
     consume s
 
-class TypeArgs is AST
+class val TypeArgs is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Type]
+  var _list: coll.Vec[Type]
   
-  new create(
-    list': Array[Type] = Array[Type])
+  new val create(
+    list': coll.Vec[Type] = coll.Vec[Type])
   =>
     _list = list'
   
@@ -2156,10 +2158,10 @@ class TypeArgs is AST
   
     _pos = pos'
     
-    let list' = Array[Type]
+    var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Type) else break end
+      try list' = list'.push(list_next' as Type) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -2172,9 +2174,9 @@ class TypeArgs is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Type] => _list
+  fun list(): this->coll.Vec[Type] => _list
   
-  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2189,14 +2191,14 @@ class TypeArgs is AST
     s.push(')')
     consume s
 
-class Params is AST
+class val Params is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Param]
+  var _list: coll.Vec[Param]
   var _ellipsis: (Ellipsis | None)
   
-  new create(
-    list': Array[Param] = Array[Param],
+  new val create(
+    list': coll.Vec[Param] = coll.Vec[Param],
     ellipsis': (Ellipsis | None) = None)
   =>
     _list = list'
@@ -2210,10 +2212,10 @@ class Params is AST
   
     _pos = pos'
     
-    let list' = Array[Param]
+    var list' = coll.Vec[Param]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Param) else break end
+      try list' = list'.push(list_next' as Param) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     let ellipsis': (AST | None) = list_next'
@@ -2234,10 +2236,10 @@ class Params is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Param] => _list
+  fun list(): this->coll.Vec[Param] => _list
   fun ellipsis(): this->(Ellipsis | None) => _ellipsis
   
-  fun ref set_list(list': Array[Param] = Array[Param]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Param] = coll.Vec[Param]) => _list = consume list'
   fun ref set_ellipsis(ellipsis': (Ellipsis | None) = None) => _ellipsis = consume ellipsis'
   
   fun string(): String iso^ =>
@@ -2255,14 +2257,14 @@ class Params is AST
     s.push(')')
     consume s
 
-class Param is AST
+class val Param is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _param_type: (Type | None)
   var _default: (Expr | None)
   
-  new create(
+  new val create(
     name': Id,
     param_type': (Type | None) = None,
     default': (Expr | None) = None)
@@ -2327,13 +2329,13 @@ class Param is AST
     s.push(')')
     consume s
 
-class Sequence is (AST & Expr)
+class val Sequence is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Expr]
+  var _list: coll.Vec[Expr]
   
-  new create(
-    list': Array[Expr] = Array[Expr])
+  new val create(
+    list': coll.Vec[Expr] = coll.Vec[Expr])
   =>
     _list = list'
   
@@ -2345,10 +2347,10 @@ class Sequence is (AST & Expr)
   
     _pos = pos'
     
-    let list' = Array[Expr]
+    var list' = coll.Vec[Expr]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Expr) else break end
+      try list' = list'.push(list_next' as Expr) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -2361,9 +2363,9 @@ class Sequence is (AST & Expr)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Expr] => _list
+  fun list(): this->coll.Vec[Expr] => _list
   
-  fun ref set_list(list': Array[Expr] = Array[Expr]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Expr] = coll.Vec[Expr]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2378,12 +2380,12 @@ class Sequence is (AST & Expr)
     s.push(')')
     consume s
 
-class Return is (AST & Jump & Expr)
+class val Return is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2428,12 +2430,12 @@ class Return is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class Break is (AST & Jump & Expr)
+class val Break is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2478,12 +2480,12 @@ class Break is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class Continue is (AST & Jump & Expr)
+class val Continue is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2528,12 +2530,12 @@ class Continue is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class Error is (AST & Jump & Expr)
+class val Error is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2578,12 +2580,12 @@ class Error is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class CompileIntrinsic is (AST & Jump & Expr)
+class val CompileIntrinsic is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2628,12 +2630,12 @@ class CompileIntrinsic is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class CompileError is (AST & Jump & Expr)
+class val CompileError is (AST & Jump & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _value: (Expr | None)
   
-  new create(
+  new val create(
     value': (Expr | None))
   =>
     _value = value'
@@ -2678,12 +2680,12 @@ class CompileError is (AST & Jump & Expr)
     s.push(')')
     consume s
 
-class IfDefFlag is (AST & IfDefCond)
+class val IfDefFlag is (AST & IfDefCond)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: (Id | LitString)
   
-  new create(
+  new val create(
     name': (Id | LitString))
   =>
     _name = name'
@@ -2728,12 +2730,12 @@ class IfDefFlag is (AST & IfDefCond)
     s.push(')')
     consume s
 
-class IfDefNot is (AST & IfDefCond)
+class val IfDefNot is (AST & IfDefCond)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: IfDefCond
   
-  new create(
+  new val create(
     expr': IfDefCond)
   =>
     _expr = expr'
@@ -2778,13 +2780,13 @@ class IfDefNot is (AST & IfDefCond)
     s.push(')')
     consume s
 
-class IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
+class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: IfDefCond
   var _right: IfDefCond
   
-  new create(
+  new val create(
     left': IfDefCond,
     right': IfDefCond)
   =>
@@ -2842,13 +2844,13 @@ class IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     s.push(')')
     consume s
 
-class IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
+class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: IfDefCond
   var _right: IfDefCond
   
-  new create(
+  new val create(
     left': IfDefCond,
     right': IfDefCond)
   =>
@@ -2906,14 +2908,14 @@ class IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     s.push(')')
     consume s
 
-class IfDef is (AST & Expr)
+class val IfDef is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _condition: IfDefCond
   var _then_body: Sequence
   var _else_body: (Sequence | IfDef | None)
   
-  new create(
+  new val create(
     condition': IfDefCond,
     then_body': Sequence,
     else_body': (Sequence | IfDef | None) = None)
@@ -2981,7 +2983,7 @@ class IfDef is (AST & Expr)
     s.push(')')
     consume s
 
-class IfType is (AST & Expr)
+class val IfType is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _sub: Type
@@ -2989,7 +2991,7 @@ class IfType is (AST & Expr)
   var _then_body: Sequence
   var _else_body: (Sequence | IfType | None)
   
-  new create(
+  new val create(
     sub': Type,
     super': Type,
     then_body': Sequence,
@@ -3070,14 +3072,14 @@ class IfType is (AST & Expr)
     s.push(')')
     consume s
 
-class If is (AST & Expr)
+class val If is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _condition: Sequence
   var _then_body: Sequence
   var _else_body: (Sequence | If | None)
   
-  new create(
+  new val create(
     condition': Sequence,
     then_body': Sequence,
     else_body': (Sequence | If | None) = None)
@@ -3145,14 +3147,14 @@ class If is (AST & Expr)
     s.push(')')
     consume s
 
-class While is (AST & Expr)
+class val While is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _condition: Sequence
   var _loop_body: Sequence
   var _else_body: (Sequence | None)
   
-  new create(
+  new val create(
     condition': Sequence,
     loop_body': Sequence,
     else_body': (Sequence | None) = None)
@@ -3220,14 +3222,14 @@ class While is (AST & Expr)
     s.push(')')
     consume s
 
-class Repeat is (AST & Expr)
+class val Repeat is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _loop_body: Sequence
   var _condition: Sequence
   var _else_body: (Sequence | None)
   
-  new create(
+  new val create(
     loop_body': Sequence,
     condition': Sequence,
     else_body': (Sequence | None) = None)
@@ -3295,7 +3297,7 @@ class Repeat is (AST & Expr)
     s.push(')')
     consume s
 
-class For is (AST & Expr)
+class val For is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _refs: (Id | IdTuple)
@@ -3303,7 +3305,7 @@ class For is (AST & Expr)
   var _loop_body: Sequence
   var _else_body: (Sequence | None)
   
-  new create(
+  new val create(
     refs': (Id | IdTuple),
     iterator': Sequence,
     loop_body': Sequence,
@@ -3384,14 +3386,14 @@ class For is (AST & Expr)
     s.push(')')
     consume s
 
-class With is (AST & Expr)
+class val With is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _assigns: AssignTuple
   var _with_body: Sequence
   var _else_body: (Sequence | None)
   
-  new create(
+  new val create(
     assigns': AssignTuple,
     with_body': Sequence,
     else_body': (Sequence | None) = None)
@@ -3459,13 +3461,13 @@ class With is (AST & Expr)
     s.push(')')
     consume s
 
-class IdTuple is AST
+class val IdTuple is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _elements: Array[(Id | IdTuple)]
+  var _elements: coll.Vec[(Id | IdTuple)]
   
-  new create(
-    elements': Array[(Id | IdTuple)] = Array[(Id | IdTuple)])
+  new val create(
+    elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)])
   =>
     _elements = elements'
   
@@ -3477,10 +3479,10 @@ class IdTuple is AST
   
     _pos = pos'
     
-    let elements' = Array[(Id | IdTuple)]
+    var elements' = coll.Vec[(Id | IdTuple)]
     var elements_next' = try iter.next() else None end
     while true do
-      try elements'.push(elements_next' as (Id | IdTuple)) else break end
+      try elements' = elements'.push(elements_next' as (Id | IdTuple)) else break end
       try elements_next' = iter.next() else elements_next' = None; break end
     end
     if elements_next' isnt None then
@@ -3493,9 +3495,9 @@ class IdTuple is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun elements(): this->Array[(Id | IdTuple)] => _elements
+  fun elements(): this->coll.Vec[(Id | IdTuple)] => _elements
   
-  fun ref set_elements(elements': Array[(Id | IdTuple)] = Array[(Id | IdTuple)]) => _elements = consume elements'
+  fun ref set_elements(elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)]) => _elements = consume elements'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3510,13 +3512,13 @@ class IdTuple is AST
     s.push(')')
     consume s
 
-class AssignTuple is AST
+class val AssignTuple is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _elements: Array[Assign]
+  var _elements: coll.Vec[Assign]
   
-  new create(
-    elements': Array[Assign] = Array[Assign])
+  new val create(
+    elements': coll.Vec[Assign] = coll.Vec[Assign])
   =>
     _elements = elements'
   
@@ -3528,10 +3530,10 @@ class AssignTuple is AST
   
     _pos = pos'
     
-    let elements' = Array[Assign]
+    var elements' = coll.Vec[Assign]
     var elements_next' = try iter.next() else None end
     while true do
-      try elements'.push(elements_next' as Assign) else break end
+      try elements' = elements'.push(elements_next' as Assign) else break end
       try elements_next' = iter.next() else elements_next' = None; break end
     end
     if elements_next' isnt None then
@@ -3544,9 +3546,9 @@ class AssignTuple is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun elements(): this->Array[Assign] => _elements
+  fun elements(): this->coll.Vec[Assign] => _elements
   
-  fun ref set_elements(elements': Array[Assign] = Array[Assign]) => _elements = consume elements'
+  fun ref set_elements(elements': coll.Vec[Assign] = coll.Vec[Assign]) => _elements = consume elements'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3561,14 +3563,14 @@ class AssignTuple is AST
     s.push(')')
     consume s
 
-class Match is (AST & Expr)
+class val Match is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Sequence
   var _cases: Cases
   var _else_body: (Sequence | None)
   
-  new create(
+  new val create(
     expr': Sequence,
     cases': Cases = Cases,
     else_body': (Sequence | None) = None)
@@ -3633,13 +3635,13 @@ class Match is (AST & Expr)
     s.push(')')
     consume s
 
-class Cases is AST
+class val Cases is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Case]
+  var _list: coll.Vec[Case]
   
-  new create(
-    list': Array[Case] = Array[Case])
+  new val create(
+    list': coll.Vec[Case] = coll.Vec[Case])
   =>
     _list = list'
   
@@ -3651,10 +3653,10 @@ class Cases is AST
   
     _pos = pos'
     
-    let list' = Array[Case]
+    var list' = coll.Vec[Case]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Case) else break end
+      try list' = list'.push(list_next' as Case) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -3667,9 +3669,9 @@ class Cases is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Case] => _list
+  fun list(): this->coll.Vec[Case] => _list
   
-  fun ref set_list(list': Array[Case] = Array[Case]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Case] = coll.Vec[Case]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3684,14 +3686,14 @@ class Cases is AST
     s.push(')')
     consume s
 
-class Case is AST
+class val Case is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   var _guard: (Sequence | None)
   var _body: (Sequence | None)
   
-  new create(
+  new val create(
     expr': Expr,
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None)
@@ -3756,14 +3758,14 @@ class Case is AST
     s.push(')')
     consume s
 
-class Try is (AST & Expr)
+class val Try is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _body: Sequence
   var _else_body: (Sequence | None)
   var _then_body: (Sequence | None)
   
-  new create(
+  new val create(
     body': Sequence,
     else_body': (Sequence | None) = None,
     then_body': (Sequence | None) = None)
@@ -3828,13 +3830,13 @@ class Try is (AST & Expr)
     s.push(')')
     consume s
 
-class Consume is (AST & Expr)
+class val Consume is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: (Cap | None)
   var _expr: Expr
   
-  new create(
+  new val create(
     cap': (Cap | None),
     expr': Expr)
   =>
@@ -3892,13 +3894,13 @@ class Consume is (AST & Expr)
     s.push(')')
     consume s
 
-class Recover is (AST & Expr)
+class val Recover is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: (Cap | None)
   var _expr: Sequence
   
-  new create(
+  new val create(
     cap': (Cap | None),
     expr': Sequence)
   =>
@@ -3956,13 +3958,13 @@ class Recover is (AST & Expr)
     s.push(')')
     consume s
 
-class As is (AST & Expr)
+class val As is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   var _as_type: Type
   
-  new create(
+  new val create(
     expr': Expr,
     as_type': Type)
   =>
@@ -4020,13 +4022,13 @@ class As is (AST & Expr)
     s.push(')')
     consume s
 
-class Add is (AST & BinaryOp & Expr)
+class val Add is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4084,13 +4086,13 @@ class Add is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class AddUnsafe is (AST & BinaryOp & Expr)
+class val AddUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4148,13 +4150,13 @@ class AddUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Sub is (AST & BinaryOp & Expr)
+class val Sub is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4212,13 +4214,13 @@ class Sub is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class SubUnsafe is (AST & BinaryOp & Expr)
+class val SubUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4276,13 +4278,13 @@ class SubUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Mul is (AST & BinaryOp & Expr)
+class val Mul is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4340,13 +4342,13 @@ class Mul is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class MulUnsafe is (AST & BinaryOp & Expr)
+class val MulUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4404,13 +4406,13 @@ class MulUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Div is (AST & BinaryOp & Expr)
+class val Div is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4468,13 +4470,13 @@ class Div is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class DivUnsafe is (AST & BinaryOp & Expr)
+class val DivUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4532,13 +4534,13 @@ class DivUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Mod is (AST & BinaryOp & Expr)
+class val Mod is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4596,13 +4598,13 @@ class Mod is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class ModUnsafe is (AST & BinaryOp & Expr)
+class val ModUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4660,13 +4662,13 @@ class ModUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LShift is (AST & BinaryOp & Expr)
+class val LShift is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4724,13 +4726,13 @@ class LShift is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LShiftUnsafe is (AST & BinaryOp & Expr)
+class val LShiftUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4788,13 +4790,13 @@ class LShiftUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class RShift is (AST & BinaryOp & Expr)
+class val RShift is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4852,13 +4854,13 @@ class RShift is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class RShiftUnsafe is (AST & BinaryOp & Expr)
+class val RShiftUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4916,13 +4918,13 @@ class RShiftUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Eq is (AST & BinaryOp & Expr)
+class val Eq is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -4980,13 +4982,13 @@ class Eq is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class EqUnsafe is (AST & BinaryOp & Expr)
+class val EqUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5044,13 +5046,13 @@ class EqUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class NE is (AST & BinaryOp & Expr)
+class val NE is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5108,13 +5110,13 @@ class NE is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class NEUnsafe is (AST & BinaryOp & Expr)
+class val NEUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5172,13 +5174,13 @@ class NEUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LT is (AST & BinaryOp & Expr)
+class val LT is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5236,13 +5238,13 @@ class LT is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LTUnsafe is (AST & BinaryOp & Expr)
+class val LTUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5300,13 +5302,13 @@ class LTUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LE is (AST & BinaryOp & Expr)
+class val LE is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5364,13 +5366,13 @@ class LE is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class LEUnsafe is (AST & BinaryOp & Expr)
+class val LEUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5428,13 +5430,13 @@ class LEUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class GE is (AST & BinaryOp & Expr)
+class val GE is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5492,13 +5494,13 @@ class GE is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class GEUnsafe is (AST & BinaryOp & Expr)
+class val GEUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5556,13 +5558,13 @@ class GEUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class GT is (AST & BinaryOp & Expr)
+class val GT is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5620,13 +5622,13 @@ class GT is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class GTUnsafe is (AST & BinaryOp & Expr)
+class val GTUnsafe is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5684,13 +5686,13 @@ class GTUnsafe is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Is is (AST & BinaryOp & Expr)
+class val Is is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5748,13 +5750,13 @@ class Is is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Isnt is (AST & BinaryOp & Expr)
+class val Isnt is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5812,13 +5814,13 @@ class Isnt is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class And is (AST & BinaryOp & Expr)
+class val And is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5876,13 +5878,13 @@ class And is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Or is (AST & BinaryOp & Expr)
+class val Or is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -5940,13 +5942,13 @@ class Or is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class XOr is (AST & BinaryOp & Expr)
+class val XOr is (AST & BinaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -6004,12 +6006,12 @@ class XOr is (AST & BinaryOp & Expr)
     s.push(')')
     consume s
 
-class Not is (AST & UnaryOp & Expr)
+class val Not is (AST & UnaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   
-  new create(
+  new val create(
     expr': Expr)
   =>
     _expr = expr'
@@ -6054,12 +6056,12 @@ class Not is (AST & UnaryOp & Expr)
     s.push(')')
     consume s
 
-class Neg is (AST & UnaryOp & Expr)
+class val Neg is (AST & UnaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   
-  new create(
+  new val create(
     expr': Expr)
   =>
     _expr = expr'
@@ -6104,12 +6106,12 @@ class Neg is (AST & UnaryOp & Expr)
     s.push(')')
     consume s
 
-class NegUnsafe is (AST & UnaryOp & Expr)
+class val NegUnsafe is (AST & UnaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   
-  new create(
+  new val create(
     expr': Expr)
   =>
     _expr = expr'
@@ -6154,12 +6156,12 @@ class NegUnsafe is (AST & UnaryOp & Expr)
     s.push(')')
     consume s
 
-class AddressOf is (AST & UnaryOp & Expr)
+class val AddressOf is (AST & UnaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   
-  new create(
+  new val create(
     expr': Expr)
   =>
     _expr = expr'
@@ -6204,12 +6206,12 @@ class AddressOf is (AST & UnaryOp & Expr)
     s.push(')')
     consume s
 
-class DigestOf is (AST & UnaryOp & Expr)
+class val DigestOf is (AST & UnaryOp & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _expr: Expr
   
-  new create(
+  new val create(
     expr': Expr)
   =>
     _expr = expr'
@@ -6254,13 +6256,13 @@ class DigestOf is (AST & UnaryOp & Expr)
     s.push(')')
     consume s
 
-class LocalLet is (AST & Local & Expr)
+class val LocalLet is (AST & Local & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _local_type: (Type | None)
   
-  new create(
+  new val create(
     name': Id,
     local_type': (Type | None))
   =>
@@ -6318,13 +6320,13 @@ class LocalLet is (AST & Local & Expr)
     s.push(')')
     consume s
 
-class LocalVar is (AST & Local & Expr)
+class val LocalVar is (AST & Local & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _local_type: (Type | None)
   
-  new create(
+  new val create(
     name': Id,
     local_type': (Type | None))
   =>
@@ -6382,13 +6384,13 @@ class LocalVar is (AST & Local & Expr)
     s.push(')')
     consume s
 
-class Assign is (AST & Expr)
+class val Assign is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Expr
   
-  new create(
+  new val create(
     left': Expr,
     right': Expr)
   =>
@@ -6446,13 +6448,13 @@ class Assign is (AST & Expr)
     s.push(')')
     consume s
 
-class Dot is (AST & Expr)
+class val Dot is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Id
   
-  new create(
+  new val create(
     left': Expr,
     right': Id)
   =>
@@ -6510,13 +6512,13 @@ class Dot is (AST & Expr)
     s.push(')')
     consume s
 
-class Chain is (AST & Expr)
+class val Chain is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Id
   
-  new create(
+  new val create(
     left': Expr,
     right': Id)
   =>
@@ -6574,13 +6576,13 @@ class Chain is (AST & Expr)
     s.push(')')
     consume s
 
-class Tilde is (AST & Expr)
+class val Tilde is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: Id
   
-  new create(
+  new val create(
     left': Expr,
     right': Id)
   =>
@@ -6638,13 +6640,13 @@ class Tilde is (AST & Expr)
     s.push(')')
     consume s
 
-class Qualify is (AST & Expr)
+class val Qualify is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Expr
   var _right: TypeArgs
   
-  new create(
+  new val create(
     left': Expr,
     right': TypeArgs)
   =>
@@ -6702,14 +6704,14 @@ class Qualify is (AST & Expr)
     s.push(')')
     consume s
 
-class Call is (AST & Expr)
+class val Call is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _callable: Expr
   var _args: Args
   var _named_args: NamedArgs
   
-  new create(
+  new val create(
     callable': Expr,
     args': Args = Args,
     named_args': NamedArgs = NamedArgs)
@@ -6774,7 +6776,7 @@ class Call is (AST & Expr)
     s.push(')')
     consume s
 
-class CallFFI is (AST & Expr)
+class val CallFFI is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: (Id | LitString)
@@ -6783,7 +6785,7 @@ class CallFFI is (AST & Expr)
   var _named_args: NamedArgs
   var _partial: (Question | None)
   
-  new create(
+  new val create(
     name': (Id | LitString),
     type_args': (TypeArgs | None) = None,
     args': Args = Args,
@@ -6868,13 +6870,13 @@ class CallFFI is (AST & Expr)
     s.push(')')
     consume s
 
-class Args is AST
+class val Args is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Sequence]
+  var _list: coll.Vec[Sequence]
   
-  new create(
-    list': Array[Sequence] = Array[Sequence])
+  new val create(
+    list': coll.Vec[Sequence] = coll.Vec[Sequence])
   =>
     _list = list'
   
@@ -6886,10 +6888,10 @@ class Args is AST
   
     _pos = pos'
     
-    let list' = Array[Sequence]
+    var list' = coll.Vec[Sequence]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Sequence) else break end
+      try list' = list'.push(list_next' as Sequence) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -6902,9 +6904,9 @@ class Args is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Sequence] => _list
+  fun list(): this->coll.Vec[Sequence] => _list
   
-  fun ref set_list(list': Array[Sequence] = Array[Sequence]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Sequence] = coll.Vec[Sequence]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6919,13 +6921,13 @@ class Args is AST
     s.push(')')
     consume s
 
-class NamedArgs is AST
+class val NamedArgs is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[NamedArg]
+  var _list: coll.Vec[NamedArg]
   
-  new create(
-    list': Array[NamedArg] = Array[NamedArg])
+  new val create(
+    list': coll.Vec[NamedArg] = coll.Vec[NamedArg])
   =>
     _list = list'
   
@@ -6937,10 +6939,10 @@ class NamedArgs is AST
   
     _pos = pos'
     
-    let list' = Array[NamedArg]
+    var list' = coll.Vec[NamedArg]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as NamedArg) else break end
+      try list' = list'.push(list_next' as NamedArg) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -6953,9 +6955,9 @@ class NamedArgs is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[NamedArg] => _list
+  fun list(): this->coll.Vec[NamedArg] => _list
   
-  fun ref set_list(list': Array[NamedArg] = Array[NamedArg]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[NamedArg] = coll.Vec[NamedArg]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6970,13 +6972,13 @@ class NamedArgs is AST
     s.push(')')
     consume s
 
-class NamedArg is AST
+class val NamedArg is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _value: Sequence
   
-  new create(
+  new val create(
     name': Id,
     value': Sequence)
   =>
@@ -7034,7 +7036,7 @@ class NamedArg is AST
     s.push(')')
     consume s
 
-class Lambda is (AST & Expr)
+class val Lambda is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _method_cap: (Cap | None)
@@ -7047,7 +7049,7 @@ class Lambda is (AST & Expr)
   var _body: Sequence
   var _object_cap: (Cap | None)
   
-  new create(
+  new val create(
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
@@ -7169,13 +7171,13 @@ class Lambda is (AST & Expr)
     s.push(')')
     consume s
 
-class LambdaCaptures is AST
+class val LambdaCaptures is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[LambdaCapture]
+  var _list: coll.Vec[LambdaCapture]
   
-  new create(
-    list': Array[LambdaCapture] = Array[LambdaCapture])
+  new val create(
+    list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture])
   =>
     _list = list'
   
@@ -7187,10 +7189,10 @@ class LambdaCaptures is AST
   
     _pos = pos'
     
-    let list' = Array[LambdaCapture]
+    var list' = coll.Vec[LambdaCapture]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as LambdaCapture) else break end
+      try list' = list'.push(list_next' as LambdaCapture) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -7203,9 +7205,9 @@ class LambdaCaptures is AST
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[LambdaCapture] => _list
+  fun list(): this->coll.Vec[LambdaCapture] => _list
   
-  fun ref set_list(list': Array[LambdaCapture] = Array[LambdaCapture]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7220,14 +7222,14 @@ class LambdaCaptures is AST
     s.push(')')
     consume s
 
-class LambdaCapture is AST
+class val LambdaCapture is AST
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _local_type: (Type | None)
   var _expr: (Expr | None)
   
-  new create(
+  new val create(
     name': Id,
     local_type': (Type | None) = None,
     expr': (Expr | None) = None)
@@ -7292,14 +7294,14 @@ class LambdaCapture is AST
     s.push(')')
     consume s
 
-class Object is (AST & Expr)
+class val Object is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: (Cap | None)
   var _provides: (Type | None)
   var _members: (Members | None)
   
-  new create(
+  new val create(
     cap': (Cap | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None)
@@ -7361,13 +7363,13 @@ class Object is (AST & Expr)
     s.push(')')
     consume s
 
-class LitArray is (AST & Expr)
+class val LitArray is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _elem_type: (Type | None)
   var _sequence: Sequence
   
-  new create(
+  new val create(
     elem_type': (Type | None) = None,
     sequence': Sequence = Sequence)
   =>
@@ -7419,13 +7421,13 @@ class LitArray is (AST & Expr)
     s.push(')')
     consume s
 
-class Tuple is (AST & Expr)
+class val Tuple is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _elements: Array[Sequence]
+  var _elements: coll.Vec[Sequence]
   
-  new create(
-    elements': Array[Sequence] = Array[Sequence])
+  new val create(
+    elements': coll.Vec[Sequence] = coll.Vec[Sequence])
   =>
     _elements = elements'
   
@@ -7437,10 +7439,10 @@ class Tuple is (AST & Expr)
   
     _pos = pos'
     
-    let elements' = Array[Sequence]
+    var elements' = coll.Vec[Sequence]
     var elements_next' = try iter.next() else None end
     while true do
-      try elements'.push(elements_next' as Sequence) else break end
+      try elements' = elements'.push(elements_next' as Sequence) else break end
       try elements_next' = iter.next() else elements_next' = None; break end
     end
     if elements_next' isnt None then
@@ -7453,9 +7455,9 @@ class Tuple is (AST & Expr)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun elements(): this->Array[Sequence] => _elements
+  fun elements(): this->coll.Vec[Sequence] => _elements
   
-  fun ref set_elements(elements': Array[Sequence] = Array[Sequence]) => _elements = consume elements'
+  fun ref set_elements(elements': coll.Vec[Sequence] = coll.Vec[Sequence]) => _elements = consume elements'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7470,10 +7472,10 @@ class Tuple is (AST & Expr)
     s.push(')')
     consume s
 
-class This is (AST & Expr)
+class val This is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7498,10 +7500,10 @@ class This is (AST & Expr)
     s.append("This")
     consume s
 
-class LitTrue is (AST & LitBool & Expr)
+class val LitTrue is (AST & LitBool & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7526,10 +7528,10 @@ class LitTrue is (AST & LitBool & Expr)
     s.append("LitTrue")
     consume s
 
-class LitFalse is (AST & LitBool & Expr)
+class val LitFalse is (AST & LitBool & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7554,10 +7556,10 @@ class LitFalse is (AST & LitBool & Expr)
     s.append("LitFalse")
     consume s
 
-class LitInteger is (AST & Expr)
+class val LitInteger is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   var _value: I128
-  new create(value': I128) => _value = value'
+  new val create(value': I128) => _value = value'
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7585,10 +7587,10 @@ class LitInteger is (AST & Expr)
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
 
-class LitFloat is (AST & Expr)
+class val LitFloat is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   var _value: F64
-  new create(value': F64) => _value = value'
+  new val create(value': F64) => _value = value'
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7616,10 +7618,10 @@ class LitFloat is (AST & Expr)
       String.>append("LitFloat(").>append(_value.string()).>push(')')
     end
 
-class LitString is (AST & Expr)
+class val LitString is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   var _value: String
-  new create(value': String) => _value = value'
+  new val create(value': String) => _value = value'
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7647,10 +7649,10 @@ class LitString is (AST & Expr)
       String.>append("LitString(").>append(_value.string()).>push(')')
     end
 
-class LitCharacter is (AST & Expr)
+class val LitCharacter is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   var _value: U8
-  new create(value': U8) => _value = value'
+  new val create(value': U8) => _value = value'
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7678,10 +7680,10 @@ class LitCharacter is (AST & Expr)
       String.>append("LitCharacter(").>append(_value.string()).>push(')')
     end
 
-class LitLocation is (AST & Expr)
+class val LitLocation is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7706,12 +7708,12 @@ class LitLocation is (AST & Expr)
     s.append("LitLocation")
     consume s
 
-class Reference is (AST & Expr)
+class val Reference is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   
-  new create(
+  new val create(
     name': Id)
   =>
     _name = name'
@@ -7756,10 +7758,10 @@ class Reference is (AST & Expr)
     s.push(')')
     consume s
 
-class DontCare is (AST & Expr)
+class val DontCare is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -7784,12 +7786,12 @@ class DontCare is (AST & Expr)
     s.append("DontCare")
     consume s
 
-class PackageRef is (AST & Expr)
+class val PackageRef is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   
-  new create(
+  new val create(
     name': Id)
   =>
     _name = name'
@@ -7834,13 +7836,13 @@ class PackageRef is (AST & Expr)
     s.push(')')
     consume s
 
-class MethodFunRef is (AST & MethodRef & Expr)
+class val MethodFunRef is (AST & MethodRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
-  new create(
+  new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
   =>
@@ -7898,13 +7900,13 @@ class MethodFunRef is (AST & MethodRef & Expr)
     s.push(')')
     consume s
 
-class MethodNewRef is (AST & MethodRef & Expr)
+class val MethodNewRef is (AST & MethodRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
-  new create(
+  new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
   =>
@@ -7962,13 +7964,13 @@ class MethodNewRef is (AST & MethodRef & Expr)
     s.push(')')
     consume s
 
-class MethodBeRef is (AST & MethodRef & Expr)
+class val MethodBeRef is (AST & MethodRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: (Id | TypeArgs)
   
-  new create(
+  new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
   =>
@@ -8026,13 +8028,13 @@ class MethodBeRef is (AST & MethodRef & Expr)
     s.push(')')
     consume s
 
-class TypeRef is (AST & Expr)
+class val TypeRef is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _package: Expr
   var _name: (Id | TypeArgs)
   
-  new create(
+  new val create(
     package': Expr,
     name': (Id | TypeArgs))
   =>
@@ -8090,13 +8092,13 @@ class TypeRef is (AST & Expr)
     s.push(')')
     consume s
 
-class FieldLetRef is (AST & FieldRef & Expr)
+class val FieldLetRef is (AST & FieldRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: Id
   
-  new create(
+  new val create(
     receiver': Expr,
     name': Id)
   =>
@@ -8154,13 +8156,13 @@ class FieldLetRef is (AST & FieldRef & Expr)
     s.push(')')
     consume s
 
-class FieldVarRef is (AST & FieldRef & Expr)
+class val FieldVarRef is (AST & FieldRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: Id
   
-  new create(
+  new val create(
     receiver': Expr,
     name': Id)
   =>
@@ -8218,13 +8220,13 @@ class FieldVarRef is (AST & FieldRef & Expr)
     s.push(')')
     consume s
 
-class FieldEmbedRef is (AST & FieldRef & Expr)
+class val FieldEmbedRef is (AST & FieldRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: Id
   
-  new create(
+  new val create(
     receiver': Expr,
     name': Id)
   =>
@@ -8282,13 +8284,13 @@ class FieldEmbedRef is (AST & FieldRef & Expr)
     s.push(')')
     consume s
 
-class TupleElementRef is (AST & Expr)
+class val TupleElementRef is (AST & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _receiver: Expr
   var _name: LitInteger
   
-  new create(
+  new val create(
     receiver': Expr,
     name': LitInteger)
   =>
@@ -8346,12 +8348,12 @@ class TupleElementRef is (AST & Expr)
     s.push(')')
     consume s
 
-class LocalLetRef is (AST & LocalRef & Expr)
+class val LocalLetRef is (AST & LocalRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   
-  new create(
+  new val create(
     name': Id)
   =>
     _name = name'
@@ -8396,12 +8398,12 @@ class LocalLetRef is (AST & LocalRef & Expr)
     s.push(')')
     consume s
 
-class LocalVarRef is (AST & LocalRef & Expr)
+class val LocalVarRef is (AST & LocalRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   
-  new create(
+  new val create(
     name': Id)
   =>
     _name = name'
@@ -8446,12 +8448,12 @@ class LocalVarRef is (AST & LocalRef & Expr)
     s.push(')')
     consume s
 
-class ParamRef is (AST & LocalRef & Expr)
+class val ParamRef is (AST & LocalRef & Expr)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   
-  new create(
+  new val create(
     name': Id)
   =>
     _name = name'
@@ -8496,13 +8498,13 @@ class ParamRef is (AST & LocalRef & Expr)
     s.push(')')
     consume s
 
-class ViewpointType is (AST & Type)
+class val ViewpointType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
   var _left: Type
   var _right: Type
   
-  new create(
+  new val create(
     left': Type,
     right': Type)
   =>
@@ -8560,13 +8562,13 @@ class ViewpointType is (AST & Type)
     s.push(')')
     consume s
 
-class UnionType is (AST & Type)
+class val UnionType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Type]
+  var _list: coll.Vec[Type]
   
-  new create(
-    list': Array[Type] = Array[Type])
+  new val create(
+    list': coll.Vec[Type] = coll.Vec[Type])
   =>
     _list = list'
   
@@ -8578,10 +8580,10 @@ class UnionType is (AST & Type)
   
     _pos = pos'
     
-    let list' = Array[Type]
+    var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Type) else break end
+      try list' = list'.push(list_next' as Type) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -8594,9 +8596,9 @@ class UnionType is (AST & Type)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Type] => _list
+  fun list(): this->coll.Vec[Type] => _list
   
-  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8611,13 +8613,13 @@ class UnionType is (AST & Type)
     s.push(')')
     consume s
 
-class IsectType is (AST & Type)
+class val IsectType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Type]
+  var _list: coll.Vec[Type]
   
-  new create(
-    list': Array[Type] = Array[Type])
+  new val create(
+    list': coll.Vec[Type] = coll.Vec[Type])
   =>
     _list = list'
   
@@ -8629,10 +8631,10 @@ class IsectType is (AST & Type)
   
     _pos = pos'
     
-    let list' = Array[Type]
+    var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Type) else break end
+      try list' = list'.push(list_next' as Type) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -8645,9 +8647,9 @@ class IsectType is (AST & Type)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Type] => _list
+  fun list(): this->coll.Vec[Type] => _list
   
-  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8662,13 +8664,13 @@ class IsectType is (AST & Type)
     s.push(')')
     consume s
 
-class TupleType is (AST & Type)
+class val TupleType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  var _list: Array[Type]
+  var _list: coll.Vec[Type]
   
-  new create(
-    list': Array[Type] = Array[Type])
+  new val create(
+    list': coll.Vec[Type] = coll.Vec[Type])
   =>
     _list = list'
   
@@ -8680,10 +8682,10 @@ class TupleType is (AST & Type)
   
     _pos = pos'
     
-    let list' = Array[Type]
+    var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
-      try list'.push(list_next' as Type) else break end
+      try list' = list'.push(list_next' as Type) else break end
       try list_next' = iter.next() else list_next' = None; break end
     end
     if list_next' isnt None then
@@ -8696,9 +8698,9 @@ class TupleType is (AST & Type)
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
   
-  fun list(): this->Array[Type] => _list
+  fun list(): this->coll.Vec[Type] => _list
   
-  fun ref set_list(list': Array[Type] = Array[Type]) => _list = consume list'
+  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8713,7 +8715,7 @@ class TupleType is (AST & Type)
     s.push(')')
     consume s
 
-class NominalType is (AST & Type)
+class val NominalType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
@@ -8722,7 +8724,7 @@ class NominalType is (AST & Type)
   var _cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
   
-  new create(
+  new val create(
     name': Id,
     package': (Id | None) = None,
     type_args': (TypeArgs | None) = None,
@@ -8807,7 +8809,7 @@ class NominalType is (AST & Type)
     s.push(')')
     consume s
 
-class FunType is (AST & Type)
+class val FunType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
   var _cap: Cap
@@ -8815,7 +8817,7 @@ class FunType is (AST & Type)
   var _params: (Params | None)
   var _return_type: (Type | None)
   
-  new create(
+  new val create(
     cap': Cap,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
@@ -8890,7 +8892,7 @@ class FunType is (AST & Type)
     s.push(')')
     consume s
 
-class LambdaType is (AST & Type)
+class val LambdaType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
   var _method_cap: (Cap | None)
@@ -8902,7 +8904,7 @@ class LambdaType is (AST & Type)
   var _object_cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
   
-  new create(
+  new val create(
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
@@ -9014,14 +9016,14 @@ class LambdaType is (AST & Type)
     s.push(')')
     consume s
 
-class TypeParamRef is (AST & Type)
+class val TypeParamRef is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
   var _name: Id
   var _cap: (Cap | GenCap | None)
   var _cap_mod: (CapMod | None)
   
-  new create(
+  new val create(
     name': Id,
     cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
@@ -9086,10 +9088,10 @@ class TypeParamRef is (AST & Type)
     s.push(')')
     consume s
 
-class ThisType is (AST & Type)
+class val ThisType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9114,10 +9116,10 @@ class ThisType is (AST & Type)
     s.append("ThisType")
     consume s
 
-class DontCareType is (AST & Type)
+class val DontCareType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9142,10 +9144,10 @@ class DontCareType is (AST & Type)
     s.append("DontCareType")
     consume s
 
-class ErrorType is (AST & Type)
+class val ErrorType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9170,10 +9172,10 @@ class ErrorType is (AST & Type)
     s.append("ErrorType")
     consume s
 
-class LiteralType is (AST & Type)
+class val LiteralType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9198,10 +9200,10 @@ class LiteralType is (AST & Type)
     s.append("LiteralType")
     consume s
 
-class LiteralTypeBranch is (AST & Type)
+class val LiteralTypeBranch is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9226,10 +9228,10 @@ class LiteralTypeBranch is (AST & Type)
     s.append("LiteralTypeBranch")
     consume s
 
-class OpLiteralType is (AST & Type)
+class val OpLiteralType is (AST & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9254,10 +9256,10 @@ class OpLiteralType is (AST & Type)
     s.append("OpLiteralType")
     consume s
 
-class Iso is (AST & Cap & Type)
+class val Iso is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9282,10 +9284,10 @@ class Iso is (AST & Cap & Type)
     s.append("Iso")
     consume s
 
-class Trn is (AST & Cap & Type)
+class val Trn is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9310,10 +9312,10 @@ class Trn is (AST & Cap & Type)
     s.append("Trn")
     consume s
 
-class Ref is (AST & Cap & Type)
+class val Ref is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9338,10 +9340,10 @@ class Ref is (AST & Cap & Type)
     s.append("Ref")
     consume s
 
-class Val is (AST & Cap & Type)
+class val Val is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9366,10 +9368,10 @@ class Val is (AST & Cap & Type)
     s.append("Val")
     consume s
 
-class Box is (AST & Cap & Type)
+class val Box is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9394,10 +9396,10 @@ class Box is (AST & Cap & Type)
     s.append("Box")
     consume s
 
-class Tag is (AST & Cap & Type)
+class val Tag is (AST & Cap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9422,10 +9424,10 @@ class Tag is (AST & Cap & Type)
     s.append("Tag")
     consume s
 
-class CapRead is (AST & GenCap & Type)
+class val CapRead is (AST & GenCap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9450,10 +9452,10 @@ class CapRead is (AST & GenCap & Type)
     s.append("CapRead")
     consume s
 
-class CapSend is (AST & GenCap & Type)
+class val CapSend is (AST & GenCap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9478,10 +9480,10 @@ class CapSend is (AST & GenCap & Type)
     s.append("CapSend")
     consume s
 
-class CapShare is (AST & GenCap & Type)
+class val CapShare is (AST & GenCap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9506,10 +9508,10 @@ class CapShare is (AST & GenCap & Type)
     s.append("CapShare")
     consume s
 
-class CapAlias is (AST & GenCap & Type)
+class val CapAlias is (AST & GenCap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9534,10 +9536,10 @@ class CapAlias is (AST & GenCap & Type)
     s.append("CapAlias")
     consume s
 
-class CapAny is (AST & GenCap & Type)
+class val CapAny is (AST & GenCap & Type)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9562,10 +9564,10 @@ class CapAny is (AST & GenCap & Type)
     s.append("CapAny")
     consume s
 
-class Aliased is (AST & CapMod)
+class val Aliased is (AST & CapMod)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9590,10 +9592,10 @@ class Aliased is (AST & CapMod)
     s.append("Aliased")
     consume s
 
-class Ephemeral is (AST & CapMod)
+class val Ephemeral is (AST & CapMod)
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9618,10 +9620,10 @@ class Ephemeral is (AST & CapMod)
     s.append("Ephemeral")
     consume s
 
-class At is AST
+class val At is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9646,10 +9648,10 @@ class At is AST
     s.append("At")
     consume s
 
-class Question is AST
+class val Question is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9674,10 +9676,10 @@ class Question is AST
     s.append("Question")
     consume s
 
-class Ellipsis is AST
+class val Ellipsis is AST
   var _pos: SourcePosAny = SourcePosNone
   
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9702,10 +9704,10 @@ class Ellipsis is AST
     s.append("Ellipsis")
     consume s
 
-class Id is AST
+class val Id is AST
   var _pos: SourcePosAny = SourcePosNone
   var _value: String
-  new create(value': String) => _value = value'
+  new val create(value': String) => _value = value'
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9733,9 +9735,9 @@ class Id is AST
       String.>append("Id(").>append(_value.string()).>push(')')
     end
 
-class EOF is (AST & Lexeme)
+class val EOF is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9750,9 +9752,9 @@ class EOF is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("EOF") end
 
-class NewLine is (AST & Lexeme)
+class val NewLine is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9767,9 +9769,9 @@ class NewLine is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("NewLine") end
 
-class Use is (AST & Lexeme)
+class val Use is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9784,9 +9786,9 @@ class Use is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Use") end
 
-class Colon is (AST & Lexeme)
+class val Colon is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9801,9 +9803,9 @@ class Colon is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Colon") end
 
-class Semicolon is (AST & Lexeme)
+class val Semicolon is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9818,9 +9820,9 @@ class Semicolon is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Semicolon") end
 
-class Comma is (AST & Lexeme)
+class val Comma is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9835,9 +9837,9 @@ class Comma is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Comma") end
 
-class Constant is (AST & Lexeme)
+class val Constant is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9852,9 +9854,9 @@ class Constant is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Constant") end
 
-class Pipe is (AST & Lexeme)
+class val Pipe is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9869,9 +9871,9 @@ class Pipe is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Pipe") end
 
-class Ampersand is (AST & Lexeme)
+class val Ampersand is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9886,9 +9888,9 @@ class Ampersand is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Ampersand") end
 
-class SubType is (AST & Lexeme)
+class val SubType is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9903,9 +9905,9 @@ class SubType is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("SubType") end
 
-class Arrow is (AST & Lexeme)
+class val Arrow is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9920,9 +9922,9 @@ class Arrow is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Arrow") end
 
-class DoubleArrow is (AST & Lexeme)
+class val DoubleArrow is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9937,9 +9939,9 @@ class DoubleArrow is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("DoubleArrow") end
 
-class Backslash is (AST & Lexeme)
+class val Backslash is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9954,9 +9956,9 @@ class Backslash is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Backslash") end
 
-class LParen is (AST & Lexeme)
+class val LParen is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9971,9 +9973,9 @@ class LParen is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LParen") end
 
-class RParen is (AST & Lexeme)
+class val RParen is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -9988,9 +9990,9 @@ class RParen is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("RParen") end
 
-class LBrace is (AST & Lexeme)
+class val LBrace is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10005,9 +10007,9 @@ class LBrace is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LBrace") end
 
-class RBrace is (AST & Lexeme)
+class val RBrace is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10022,9 +10024,9 @@ class RBrace is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("RBrace") end
 
-class LSquare is (AST & Lexeme)
+class val LSquare is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10039,9 +10041,9 @@ class LSquare is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LSquare") end
 
-class RSquare is (AST & Lexeme)
+class val RSquare is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10056,9 +10058,9 @@ class RSquare is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("RSquare") end
 
-class LParenNew is (AST & Lexeme)
+class val LParenNew is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10073,9 +10075,9 @@ class LParenNew is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LParenNew") end
 
-class LBraceNew is (AST & Lexeme)
+class val LBraceNew is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10090,9 +10092,9 @@ class LBraceNew is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LBraceNew") end
 
-class LSquareNew is (AST & Lexeme)
+class val LSquareNew is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10107,9 +10109,9 @@ class LSquareNew is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("LSquareNew") end
 
-class SubNew is (AST & Lexeme)
+class val SubNew is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10124,9 +10126,9 @@ class SubNew is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("SubNew") end
 
-class SubUnsafeNew is (AST & Lexeme)
+class val SubUnsafeNew is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10141,9 +10143,9 @@ class SubUnsafeNew is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("SubUnsafeNew") end
 
-class In is (AST & Lexeme)
+class val In is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10158,9 +10160,9 @@ class In is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("In") end
 
-class Until is (AST & Lexeme)
+class val Until is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10175,9 +10177,9 @@ class Until is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Until") end
 
-class Do is (AST & Lexeme)
+class val Do is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10192,9 +10194,9 @@ class Do is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Do") end
 
-class Else is (AST & Lexeme)
+class val Else is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10209,9 +10211,9 @@ class Else is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Else") end
 
-class ElseIf is (AST & Lexeme)
+class val ElseIf is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10226,9 +10228,9 @@ class ElseIf is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("ElseIf") end
 
-class Then is (AST & Lexeme)
+class val Then is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10243,9 +10245,9 @@ class Then is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Then") end
 
-class End is (AST & Lexeme)
+class val End is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10260,9 +10262,9 @@ class End is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("End") end
 
-class Var is (AST & Lexeme)
+class val Var is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10277,9 +10279,9 @@ class Var is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Var") end
 
-class Let is (AST & Lexeme)
+class val Let is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10294,9 +10296,9 @@ class Let is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Let") end
 
-class Embed is (AST & Lexeme)
+class val Embed is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -10311,9 +10313,9 @@ class Embed is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("Embed") end
 
-class Where is (AST & Lexeme)
+class val Where is (AST & Lexeme)
   var _pos: SourcePosAny = SourcePosNone
-  new create() => None
+  new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,

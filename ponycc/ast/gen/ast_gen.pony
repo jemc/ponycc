@@ -19,8 +19,12 @@ class ASTGen
   fun string(): String =>
     let g: CodeGen = CodeGen
     
+    // Use some persistent collections.
+    g.line("use coll = \"collections/persistent\"")
+    g.line()
+    
     // Declare the AST trait
-    g.line("trait AST")
+    g.line("trait val AST")
     g.push_indent()
     g.line("fun pos(): SourcePosAny")
     g.line("fun ref set_pos(pos': SourcePosAny)")
@@ -59,7 +63,7 @@ class ASTGen
     //     if iter.has_next() then g.add(" | ") end
     //   end
     //   g.add(")")
-      g.line("trait " + name + " is AST") // TODO: use union instead
+      g.line("trait val " + name + " is AST") // TODO: use union instead
       g.line()
     end
     

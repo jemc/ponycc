@@ -1,7 +1,7 @@
 
+use coll = "collections/persistent"
 use peg = "peg"
 use ".."
-use "debug"
 
 trait val TkAny is peg.Label
   fun text(): String => string() // Required for peg library, but otherwise unused.
@@ -11,7 +11,7 @@ trait val TkAny is peg.Label
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
-    : (AST | None) ?
+    : (AST ref | None) ?
 
 primitive Tk[A: (AST | None)] is TkAny
   fun string(): String => ASTInfo.name[A]()
@@ -20,7 +20,7 @@ primitive Tk[A: (AST | None)] is TkAny
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
-    : (AST | None) ?
+    : (AST ref | None) ?
   =>
     if false then error end // TODO: fix ponyc, then remove this
     iftype A <: AST
@@ -59,8 +59,18 @@ class TkTree
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
     : (AST | None) ?
   =>
-    let ast_children = Array[(AST | None)]
+    let ast_children = recover Array[(AST | None)] end
     for child in children.values() do
       ast_children.push(child.to_ast(errs))
     end
-    tk._from_iter(ast_children.values(), pos, errs)
+    // TODO: is there a less convoluted way to lift the AST to val?
+    var errs' = recover Array[(String, SourcePosAny)] end
+    let ast =
+      recover val
+        let errs'' = Array[(String, SourcePosAny)]
+        let ast' = tk._from_iter((consume ast_children).values(), pos, errs'')
+        for err in errs''.values() do errs'.push(err) end
+        ast'
+      end
+    for err in (consume errs').values() do errs.push(err) end
+    ast
