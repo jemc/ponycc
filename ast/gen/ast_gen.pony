@@ -30,7 +30,7 @@ class ASTGen
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
       """)
     g.pop_indent()
     g.line()

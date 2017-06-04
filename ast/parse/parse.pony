@@ -8,26 +8,28 @@ class val Parse
   
   fun apply[A: AST = Module](
     source: Source,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
     : A ?
   =>
     match _lexer(source)
     | let tokens: Array[(TkAny, SourcePosAny)] val =>
-      let parser = _Parser(tokens.values())
+      let parser = _Parser(tokens.values(), errs)
       match parser.parse()
       | let tree: TkTree =>
-        let ast = tree.to_ast(err)
+        let ast = tree.to_ast(errs)
         match ast
         | let a: A => return a
         else
-          err("Expected to parse an AST of type " + ASTInfo.name[A]() + ", "
-            + "but got " + tree.tk.string(), tree.pos)
+          errs.push(("Expected to parse an AST of type " + ASTInfo.name[A]()
+            + ", but got " + tree.tk.string(), tree.pos))
         end
       else
-        err("Syntax error", parser.token._2)
+        if errs.size() == 0 then
+          errs.push(("Unspecified syntax error", parser.token._2))
+        end
       end
     | let err_idx: USize =>
-      err("Unknown syntax", SourcePos(source, err_idx, 1))
+      errs.push(("Unknown syntax", SourcePos(source, err_idx, 1)))
     end
     
     error

@@ -85,7 +85,7 @@ class _ASTDefFixed is _ASTDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
       =>
       """)
     g.push_indent()
@@ -122,8 +122,7 @@ class _ASTDefFixed is _ASTDef
           else
             g.push_indent()
             g.line("try iter.next()")
-            g.line("else err(\"" + _name + " missing required field: " + field_name + "\"")
-            g.add(", pos'); error")
+            g.line("else errs.push((\"" + _name + " missing required field: " + field_name + "\", pos')); error")
             g.line("end")
             g.pop_indent()
           end
@@ -136,7 +135,7 @@ class _ASTDefFixed is _ASTDef
       g.line("if " + iter_next + " isnt None then")
       g.push_indent()
       g.line("let extra' = " + iter_next)
-      g.line("err(\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); error")
+      g.line("errs.push((\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end)); error")
       g.pop_indent()
       g.line("end")
     else
@@ -145,7 +144,7 @@ class _ASTDefFixed is _ASTDef
       g.line("try")
       g.push_indent()
       g.line("let extra' = " + iter_next)
-      g.line("err(\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); true")
+      g.line("errs.push((\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end)); true")
       g.pop_indent()
       g.line("else false")
       g.line("end")
@@ -161,8 +160,8 @@ class _ASTDefFixed is _ASTDef
       else
         g.push_indent()
         g.line("try " + field_name + "' as " + field_type)
-        g.line("else err(\"" + _name + " got incompatible field: " + field_name)
-        g.add("\", try (" + field_name + "' as AST).pos() else SourcePosNone end); error")
+        g.line("else errs.push((\"" + _name + " got incompatible field: " + field_name)
+        g.add("\", try (" + field_name + "' as AST).pos() else SourcePosNone end)); error")
         g.line("end")
         g.pop_indent()
       end
@@ -268,7 +267,7 @@ class _ASTDefWrap is _ASTDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
       =>
       """)
     g.push_indent()
@@ -284,7 +283,7 @@ class _ASTDefWrap is _ASTDef
     g.line("try")
     g.push_indent()
     g.line("let extra' = iter.next()")
-    g.line("err(\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end); true")
+    g.line("errs.push((\"" + _name + " got unexpected extra field\", try (extra' as AST).pos() else SourcePosNone end)); true")
     g.pop_indent()
     g.line("else false")
     g.line("end")
@@ -358,11 +357,11 @@ class _ASTDefLexeme is _ASTDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
       =>
       """)
     g.push_indent()
-    g.line("err(\"" + _name + " is a lexeme-only type append should never be built\", pos'); error")
+    g.line("errs.push((\"" + _name + " is a lexeme-only type append should never be built\", pos')); error")
     g.pop_indent()
     g.line()
     

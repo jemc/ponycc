@@ -5,7 +5,7 @@ trait AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   
 
 primitive ASTInfo
@@ -264,7 +264,7 @@ class Module is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -285,7 +285,7 @@ class Module is AST
     if
       try
         let extra' = iter.next()
-        err("Module got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Module got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -294,7 +294,7 @@ class Module is AST
     _type_decls = type_decls'
     _docs =
       try docs' as (LitString | None)
-      else err("Module got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Module got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -346,7 +346,7 @@ class UsePackage is (AST & UseDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -354,23 +354,23 @@ class UsePackage is (AST & UseDecl)
     let prefix': (AST | None) = try iter.next() else None end
     let package': (AST | None) =
       try iter.next()
-      else err("UsePackage missing required field: package", pos'); error
+      else errs.push(("UsePackage missing required field: package", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("UsePackage got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("UsePackage got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _prefix =
       try prefix' as (Id | None)
-      else err("UsePackage got incompatible field: prefix", try (prefix' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UsePackage got incompatible field: prefix", try (prefix' as AST).pos() else SourcePosNone end)); error
       end
     _package =
       try package' as LitString
-      else err("UsePackage got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UsePackage got incompatible field: package", try (package' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -416,55 +416,55 @@ class UseFFIDecl is (AST & UseDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("UseFFIDecl missing required field: name", pos'); error
+      else errs.push(("UseFFIDecl missing required field: name", pos')); error
       end
     let return_type': (AST | None) =
       try iter.next()
-      else err("UseFFIDecl missing required field: return_type", pos'); error
+      else errs.push(("UseFFIDecl missing required field: return_type", pos')); error
       end
     let params': (AST | None) =
       try iter.next()
-      else err("UseFFIDecl missing required field: params", pos'); error
+      else errs.push(("UseFFIDecl missing required field: params", pos')); error
       end
     let partial': (AST | None) =
       try iter.next()
-      else err("UseFFIDecl missing required field: partial", pos'); error
+      else errs.push(("UseFFIDecl missing required field: partial", pos')); error
       end
     let guard': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("UseFFIDecl got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("UseFFIDecl got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("UseFFIDecl got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UseFFIDecl got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as TypeArgs
-      else err("UseFFIDecl got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UseFFIDecl got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("UseFFIDecl got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UseFFIDecl got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("UseFFIDecl got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UseFFIDecl got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _guard =
       try guard' as (IfDefCond | None)
-      else err("UseFFIDecl got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else errs.push(("UseFFIDecl got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -525,14 +525,14 @@ class TypeAlias is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("TypeAlias missing required field: name", pos'); error
+      else errs.push(("TypeAlias missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -543,38 +543,38 @@ class TypeAlias is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("TypeAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("TypeAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("TypeAlias got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("TypeAlias got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("TypeAlias got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("TypeAlias got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("TypeAlias got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("TypeAlias got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("TypeAlias got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeAlias got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -641,14 +641,14 @@ class Interface is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Interface missing required field: name", pos'); error
+      else errs.push(("Interface missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -659,38 +659,38 @@ class Interface is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Interface got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Interface got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Interface got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Interface got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Interface got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Interface got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Interface got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Interface got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Interface got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Interface got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -757,14 +757,14 @@ class Trait is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Trait missing required field: name", pos'); error
+      else errs.push(("Trait missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -775,38 +775,38 @@ class Trait is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Trait got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Trait got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Trait got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Trait got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Trait got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Trait got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Trait got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Trait got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Trait got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Trait got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -873,14 +873,14 @@ class Primitive is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Primitive missing required field: name", pos'); error
+      else errs.push(("Primitive missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -891,38 +891,38 @@ class Primitive is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Primitive got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Primitive got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Primitive got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Primitive got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Primitive got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Primitive got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Primitive got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Primitive got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Primitive got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Primitive got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -989,14 +989,14 @@ class Struct is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Struct missing required field: name", pos'); error
+      else errs.push(("Struct missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1007,38 +1007,38 @@ class Struct is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Struct got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Struct got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Struct got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Struct got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Struct got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Struct got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Struct got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Struct got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Struct got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Struct got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1105,14 +1105,14 @@ class Class is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Class missing required field: name", pos'); error
+      else errs.push(("Class missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1123,38 +1123,38 @@ class Class is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Class got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Class got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Class got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Class got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Class got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Class got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Class got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Class got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Class got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Class got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1221,14 +1221,14 @@ class Actor is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Actor missing required field: name", pos'); error
+      else errs.push(("Actor missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1239,38 +1239,38 @@ class Actor is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        err("Actor got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Actor got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Actor got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("Actor got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Actor got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Actor got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as Members
-      else err("Actor got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
     _at =
       try at' as (At | None)
-      else err("Actor got incompatible field: at", try (at' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: at", try (at' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("Actor got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Actor got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1322,7 +1322,7 @@ class Members is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -1341,7 +1341,7 @@ class Members is AST
     end
     if methods_next' isnt None then
       let extra' = methods_next'
-      err("Members got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("Members got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _fields = fields'
@@ -1395,39 +1395,39 @@ class FieldLet is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("FieldLet missing required field: name", pos'); error
+      else errs.push(("FieldLet missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("FieldLet missing required field: field_type", pos'); error
+      else errs.push(("FieldLet missing required field: field_type", pos')); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("FieldLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("FieldLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _field_type =
       try field_type' as Type
-      else err("FieldLet got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldLet got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end)); error
       end
     _default =
       try default' as (Expr | None)
-      else err("FieldLet got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldLet got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1470,39 +1470,39 @@ class FieldVar is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("FieldVar missing required field: name", pos'); error
+      else errs.push(("FieldVar missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("FieldVar missing required field: field_type", pos'); error
+      else errs.push(("FieldVar missing required field: field_type", pos')); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("FieldVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("FieldVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _field_type =
       try field_type' as Type
-      else err("FieldVar got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldVar got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end)); error
       end
     _default =
       try default' as (Expr | None)
-      else err("FieldVar got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldVar got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1545,39 +1545,39 @@ class FieldEmbed is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("FieldEmbed missing required field: name", pos'); error
+      else errs.push(("FieldEmbed missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
       try iter.next()
-      else err("FieldEmbed missing required field: field_type", pos'); error
+      else errs.push(("FieldEmbed missing required field: field_type", pos')); error
       end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("FieldEmbed got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldEmbed got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("FieldEmbed got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldEmbed got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _field_type =
       try field_type' as Type
-      else err("FieldEmbed got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldEmbed got incompatible field: field_type", try (field_type' as AST).pos() else SourcePosNone end)); error
       end
     _default =
       try default' as (Expr | None)
-      else err("FieldEmbed got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldEmbed got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1638,14 +1638,14 @@ class MethodFun is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("MethodFun missing required field: name", pos'); error
+      else errs.push(("MethodFun missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1658,46 +1658,46 @@ class MethodFun is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("MethodFun got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodFun got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("MethodFun got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("MethodFun got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("MethodFun got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("MethodFun got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("MethodFun got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("MethodFun got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("MethodFun got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("MethodFun got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("MethodFun got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFun got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1776,14 +1776,14 @@ class MethodNew is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("MethodNew missing required field: name", pos'); error
+      else errs.push(("MethodNew missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1796,46 +1796,46 @@ class MethodNew is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("MethodNew got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodNew got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("MethodNew got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("MethodNew got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("MethodNew got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("MethodNew got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("MethodNew got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("MethodNew got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("MethodNew got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("MethodNew got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("MethodNew got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNew got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -1914,14 +1914,14 @@ class MethodBe is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("MethodBe missing required field: name", pos'); error
+      else errs.push(("MethodBe missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -1934,46 +1934,46 @@ class MethodBe is (AST & Method)
     if
       try
         let extra' = iter.next()
-        err("MethodBe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodBe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("MethodBe got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | None)
-      else err("MethodBe got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("MethodBe got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("MethodBe got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("MethodBe got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("MethodBe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("MethodBe got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("MethodBe got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _docs =
       try docs' as (LitString | None)
-      else err("MethodBe got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBe got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2028,7 +2028,7 @@ class TypeParams is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -2041,7 +2041,7 @@ class TypeParams is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("TypeParams got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("TypeParams got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -2085,36 +2085,36 @@ class TypeParam is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("TypeParam missing required field: name", pos'); error
+      else errs.push(("TypeParam missing required field: name", pos')); error
       end
     let constraint': (AST | None) = try iter.next() else None end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("TypeParam got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("TypeParam got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("TypeParam got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParam got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _constraint =
       try constraint' as (Type | None)
-      else err("TypeParam got incompatible field: constraint", try (constraint' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParam got incompatible field: constraint", try (constraint' as AST).pos() else SourcePosNone end)); error
       end
     _default =
       try default' as (Type | None)
-      else err("TypeParam got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParam got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2151,7 +2151,7 @@ class TypeArgs is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -2164,7 +2164,7 @@ class TypeArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("TypeArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("TypeArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -2205,7 +2205,7 @@ class Params is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -2220,7 +2220,7 @@ class Params is AST
     if
       try
         let extra' = iter.next()
-        err("Params got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Params got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2228,7 +2228,7 @@ class Params is AST
     _list = list'
     _ellipsis =
       try ellipsis' as (Ellipsis | None)
-      else err("Params got incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Params got incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2274,36 +2274,36 @@ class Param is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Param missing required field: name", pos'); error
+      else errs.push(("Param missing required field: name", pos')); error
       end
     let param_type': (AST | None) = try iter.next() else None end
     let default': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("Param got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Param got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Param got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Param got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _param_type =
       try param_type' as (Type | None)
-      else err("Param got incompatible field: param_type", try (param_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Param got incompatible field: param_type", try (param_type' as AST).pos() else SourcePosNone end)); error
       end
     _default =
       try default' as (Expr | None)
-      else err("Param got incompatible field: default", try (default' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Param got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2340,7 +2340,7 @@ class Sequence is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -2353,7 +2353,7 @@ class Sequence is (AST & Expr)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("Sequence got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("Sequence got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -2391,26 +2391,26 @@ class Return is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("Return missing required field: value", pos'); error
+      else errs.push(("Return missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Return got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Return got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("Return got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Return got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2441,26 +2441,26 @@ class Break is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("Break missing required field: value", pos'); error
+      else errs.push(("Break missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Break got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Break got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("Break got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Break got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2491,26 +2491,26 @@ class Continue is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("Continue missing required field: value", pos'); error
+      else errs.push(("Continue missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Continue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Continue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("Continue got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Continue got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2541,26 +2541,26 @@ class Error is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("Error missing required field: value", pos'); error
+      else errs.push(("Error missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Error got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Error got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("Error got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Error got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2591,26 +2591,26 @@ class CompileIntrinsic is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("CompileIntrinsic missing required field: value", pos'); error
+      else errs.push(("CompileIntrinsic missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("CompileIntrinsic got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CompileIntrinsic got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("CompileIntrinsic got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CompileIntrinsic got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2641,26 +2641,26 @@ class CompileError is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let value': (AST | None) =
       try iter.next()
-      else err("CompileError missing required field: value", pos'); error
+      else errs.push(("CompileError missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("CompileError got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CompileError got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _value =
       try value' as (Expr | None)
-      else err("CompileError got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CompileError got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2691,26 +2691,26 @@ class IfDefFlag is (AST & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("IfDefFlag missing required field: name", pos'); error
+      else errs.push(("IfDefFlag missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("IfDefFlag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfDefFlag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("IfDefFlag got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefFlag got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2741,26 +2741,26 @@ class IfDefNot is (AST & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("IfDefNot missing required field: expr", pos'); error
+      else errs.push(("IfDefNot missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("IfDefNot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfDefNot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as IfDefCond
-      else err("IfDefNot got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefNot got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2794,34 +2794,34 @@ class IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("IfDefAnd missing required field: left", pos'); error
+      else errs.push(("IfDefAnd missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("IfDefAnd missing required field: right", pos'); error
+      else errs.push(("IfDefAnd missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("IfDefAnd got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfDefAnd got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as IfDefCond
-      else err("IfDefAnd got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefAnd got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as IfDefCond
-      else err("IfDefAnd got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefAnd got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2858,34 +2858,34 @@ class IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("IfDefOr missing required field: left", pos'); error
+      else errs.push(("IfDefOr missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("IfDefOr missing required field: right", pos'); error
+      else errs.push(("IfDefOr missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("IfDefOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfDefOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as IfDefCond
-      else err("IfDefOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as IfDefCond
-      else err("IfDefOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDefOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -2925,39 +2925,39 @@ class IfDef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let condition': (AST | None) =
       try iter.next()
-      else err("IfDef missing required field: condition", pos'); error
+      else errs.push(("IfDef missing required field: condition", pos')); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("IfDef missing required field: then_body", pos'); error
+      else errs.push(("IfDef missing required field: then_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("IfDef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfDef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _condition =
       try condition' as IfDefCond
-      else err("IfDef got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDef got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end)); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("IfDef got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDef got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | IfDef | None)
-      else err("IfDef got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfDef got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3003,47 +3003,47 @@ class IfType is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let sub': (AST | None) =
       try iter.next()
-      else err("IfType missing required field: sub", pos'); error
+      else errs.push(("IfType missing required field: sub", pos')); error
       end
     let super': (AST | None) =
       try iter.next()
-      else err("IfType missing required field: super", pos'); error
+      else errs.push(("IfType missing required field: super", pos')); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("IfType missing required field: then_body", pos'); error
+      else errs.push(("IfType missing required field: then_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("IfType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("IfType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _sub =
       try sub' as Type
-      else err("IfType got incompatible field: sub", try (sub' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfType got incompatible field: sub", try (sub' as AST).pos() else SourcePosNone end)); error
       end
     _super =
       try super' as Type
-      else err("IfType got incompatible field: super", try (super' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfType got incompatible field: super", try (super' as AST).pos() else SourcePosNone end)); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("IfType got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfType got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | IfType | None)
-      else err("IfType got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("IfType got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3089,39 +3089,39 @@ class If is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let condition': (AST | None) =
       try iter.next()
-      else err("If missing required field: condition", pos'); error
+      else errs.push(("If missing required field: condition", pos')); error
       end
     let then_body': (AST | None) =
       try iter.next()
-      else err("If missing required field: then_body", pos'); error
+      else errs.push(("If missing required field: then_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("If got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("If got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _condition =
       try condition' as Sequence
-      else err("If got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else errs.push(("If got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end)); error
       end
     _then_body =
       try then_body' as Sequence
-      else err("If got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("If got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | If | None)
-      else err("If got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("If got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3164,39 +3164,39 @@ class While is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let condition': (AST | None) =
       try iter.next()
-      else err("While missing required field: condition", pos'); error
+      else errs.push(("While missing required field: condition", pos')); error
       end
     let loop_body': (AST | None) =
       try iter.next()
-      else err("While missing required field: loop_body", pos'); error
+      else errs.push(("While missing required field: loop_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("While got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("While got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _condition =
       try condition' as Sequence
-      else err("While got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else errs.push(("While got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end)); error
       end
     _loop_body =
       try loop_body' as Sequence
-      else err("While got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("While got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("While got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("While got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3239,39 +3239,39 @@ class Repeat is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let loop_body': (AST | None) =
       try iter.next()
-      else err("Repeat missing required field: loop_body", pos'); error
+      else errs.push(("Repeat missing required field: loop_body", pos')); error
       end
     let condition': (AST | None) =
       try iter.next()
-      else err("Repeat missing required field: condition", pos'); error
+      else errs.push(("Repeat missing required field: condition", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("Repeat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Repeat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _loop_body =
       try loop_body' as Sequence
-      else err("Repeat got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Repeat got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end)); error
       end
     _condition =
       try condition' as Sequence
-      else err("Repeat got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Repeat got incompatible field: condition", try (condition' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("Repeat got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Repeat got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3317,47 +3317,47 @@ class For is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let refs': (AST | None) =
       try iter.next()
-      else err("For missing required field: refs", pos'); error
+      else errs.push(("For missing required field: refs", pos')); error
       end
     let iterator': (AST | None) =
       try iter.next()
-      else err("For missing required field: iterator", pos'); error
+      else errs.push(("For missing required field: iterator", pos')); error
       end
     let loop_body': (AST | None) =
       try iter.next()
-      else err("For missing required field: loop_body", pos'); error
+      else errs.push(("For missing required field: loop_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("For got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("For got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _refs =
       try refs' as (Id | IdTuple)
-      else err("For got incompatible field: refs", try (refs' as AST).pos() else SourcePosNone end); error
+      else errs.push(("For got incompatible field: refs", try (refs' as AST).pos() else SourcePosNone end)); error
       end
     _iterator =
       try iterator' as Sequence
-      else err("For got incompatible field: iterator", try (iterator' as AST).pos() else SourcePosNone end); error
+      else errs.push(("For got incompatible field: iterator", try (iterator' as AST).pos() else SourcePosNone end)); error
       end
     _loop_body =
       try loop_body' as Sequence
-      else err("For got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("For got incompatible field: loop_body", try (loop_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("For got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("For got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3403,39 +3403,39 @@ class With is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let assigns': (AST | None) =
       try iter.next()
-      else err("With missing required field: assigns", pos'); error
+      else errs.push(("With missing required field: assigns", pos')); error
       end
     let with_body': (AST | None) =
       try iter.next()
-      else err("With missing required field: with_body", pos'); error
+      else errs.push(("With missing required field: with_body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("With got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("With got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _assigns =
       try assigns' as AssignTuple
-      else err("With got incompatible field: assigns", try (assigns' as AST).pos() else SourcePosNone end); error
+      else errs.push(("With got incompatible field: assigns", try (assigns' as AST).pos() else SourcePosNone end)); error
       end
     _with_body =
       try with_body' as Sequence
-      else err("With got incompatible field: with_body", try (with_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("With got incompatible field: with_body", try (with_body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("With got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("With got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3472,7 +3472,7 @@ class IdTuple is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -3485,7 +3485,7 @@ class IdTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("IdTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("IdTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -3523,7 +3523,7 @@ class AssignTuple is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -3536,7 +3536,7 @@ class AssignTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("AssignTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("AssignTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -3580,36 +3580,36 @@ class Match is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("Match missing required field: expr", pos'); error
+      else errs.push(("Match missing required field: expr", pos')); error
       end
     let cases': (AST | None) = try iter.next() else Cases end
     let else_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("Match got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Match got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Sequence
-      else err("Match got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Match got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
     _cases =
       try cases' as Cases
-      else err("Match got incompatible field: cases", try (cases' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Match got incompatible field: cases", try (cases' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("Match got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Match got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3646,7 +3646,7 @@ class Cases is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -3659,7 +3659,7 @@ class Cases is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("Cases got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("Cases got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -3703,36 +3703,36 @@ class Case is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("Case missing required field: expr", pos'); error
+      else errs.push(("Case missing required field: expr", pos')); error
       end
     let guard': (AST | None) = try iter.next() else None end
     let body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("Case got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Case got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("Case got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Case got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
     _guard =
       try guard' as (Sequence | None)
-      else err("Case got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Case got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
     _body =
       try body' as (Sequence | None)
-      else err("Case got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Case got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3775,36 +3775,36 @@ class Try is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let body': (AST | None) =
       try iter.next()
-      else err("Try missing required field: body", pos'); error
+      else errs.push(("Try missing required field: body", pos')); error
       end
     let else_body': (AST | None) = try iter.next() else None end
     let then_body': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("Try got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Try got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _body =
       try body' as Sequence
-      else err("Try got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Try got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
-      else err("Try got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Try got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
     _then_body =
       try then_body' as (Sequence | None)
-      else err("Try got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Try got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3844,34 +3844,34 @@ class Consume is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let cap': (AST | None) =
       try iter.next()
-      else err("Consume missing required field: cap", pos'); error
+      else errs.push(("Consume missing required field: cap", pos')); error
       end
     let expr': (AST | None) =
       try iter.next()
-      else err("Consume missing required field: expr", pos'); error
+      else errs.push(("Consume missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Consume got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Consume got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("Consume got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Consume got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _expr =
       try expr' as Expr
-      else err("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3908,34 +3908,34 @@ class Recover is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let cap': (AST | None) =
       try iter.next()
-      else err("Recover missing required field: cap", pos'); error
+      else errs.push(("Recover missing required field: cap", pos')); error
       end
     let expr': (AST | None) =
       try iter.next()
-      else err("Recover missing required field: expr", pos'); error
+      else errs.push(("Recover missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Recover got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Recover got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("Recover got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Recover got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _expr =
       try expr' as Sequence
-      else err("Recover got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Recover got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -3972,34 +3972,34 @@ class As is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("As missing required field: expr", pos'); error
+      else errs.push(("As missing required field: expr", pos')); error
       end
     let as_type': (AST | None) =
       try iter.next()
-      else err("As missing required field: as_type", pos'); error
+      else errs.push(("As missing required field: as_type", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("As got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("As got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("As got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("As got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
     _as_type =
       try as_type' as Type
-      else err("As got incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("As got incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4036,34 +4036,34 @@ class Add is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Add missing required field: left", pos'); error
+      else errs.push(("Add missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Add missing required field: right", pos'); error
+      else errs.push(("Add missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Add got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Add got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Add got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Add got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4100,34 +4100,34 @@ class AddUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("AddUnsafe missing required field: left", pos'); error
+      else errs.push(("AddUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("AddUnsafe missing required field: right", pos'); error
+      else errs.push(("AddUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("AddUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("AddUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("AddUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("AddUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4164,34 +4164,34 @@ class Sub is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Sub missing required field: left", pos'); error
+      else errs.push(("Sub missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Sub missing required field: right", pos'); error
+      else errs.push(("Sub missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Sub got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Sub got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Sub got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Sub got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4228,34 +4228,34 @@ class SubUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("SubUnsafe missing required field: left", pos'); error
+      else errs.push(("SubUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("SubUnsafe missing required field: right", pos'); error
+      else errs.push(("SubUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("SubUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("SubUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("SubUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("SubUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4292,34 +4292,34 @@ class Mul is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Mul missing required field: left", pos'); error
+      else errs.push(("Mul missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Mul missing required field: right", pos'); error
+      else errs.push(("Mul missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Mul got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Mul got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Mul got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Mul got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4356,34 +4356,34 @@ class MulUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("MulUnsafe missing required field: left", pos'); error
+      else errs.push(("MulUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("MulUnsafe missing required field: right", pos'); error
+      else errs.push(("MulUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("MulUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MulUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("MulUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MulUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4420,34 +4420,34 @@ class Div is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Div missing required field: left", pos'); error
+      else errs.push(("Div missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Div missing required field: right", pos'); error
+      else errs.push(("Div missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Div got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Div got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Div got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Div got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4484,34 +4484,34 @@ class DivUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("DivUnsafe missing required field: left", pos'); error
+      else errs.push(("DivUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("DivUnsafe missing required field: right", pos'); error
+      else errs.push(("DivUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("DivUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("DivUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("DivUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("DivUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4548,34 +4548,34 @@ class Mod is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Mod missing required field: left", pos'); error
+      else errs.push(("Mod missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Mod missing required field: right", pos'); error
+      else errs.push(("Mod missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Mod got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Mod got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Mod got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Mod got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4612,34 +4612,34 @@ class ModUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("ModUnsafe missing required field: left", pos'); error
+      else errs.push(("ModUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("ModUnsafe missing required field: right", pos'); error
+      else errs.push(("ModUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("ModUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("ModUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("ModUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("ModUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4676,34 +4676,34 @@ class LShift is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LShift missing required field: left", pos'); error
+      else errs.push(("LShift missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LShift missing required field: right", pos'); error
+      else errs.push(("LShift missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4740,34 +4740,34 @@ class LShiftUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LShiftUnsafe missing required field: left", pos'); error
+      else errs.push(("LShiftUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LShiftUnsafe missing required field: right", pos'); error
+      else errs.push(("LShiftUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4804,34 +4804,34 @@ class RShift is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("RShift missing required field: left", pos'); error
+      else errs.push(("RShift missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("RShift missing required field: right", pos'); error
+      else errs.push(("RShift missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("RShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("RShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("RShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("RShift got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4868,34 +4868,34 @@ class RShiftUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("RShiftUnsafe missing required field: left", pos'); error
+      else errs.push(("RShiftUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("RShiftUnsafe missing required field: right", pos'); error
+      else errs.push(("RShiftUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("RShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("RShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("RShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("RShiftUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4932,34 +4932,34 @@ class Eq is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Eq missing required field: left", pos'); error
+      else errs.push(("Eq missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Eq missing required field: right", pos'); error
+      else errs.push(("Eq missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Eq got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Eq got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Eq got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Eq got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -4996,34 +4996,34 @@ class EqUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("EqUnsafe missing required field: left", pos'); error
+      else errs.push(("EqUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("EqUnsafe missing required field: right", pos'); error
+      else errs.push(("EqUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("EqUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("EqUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("EqUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("EqUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5060,34 +5060,34 @@ class NE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("NE missing required field: left", pos'); error
+      else errs.push(("NE missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("NE missing required field: right", pos'); error
+      else errs.push(("NE missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("NE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("NE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("NE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5124,34 +5124,34 @@ class NEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("NEUnsafe missing required field: left", pos'); error
+      else errs.push(("NEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("NEUnsafe missing required field: right", pos'); error
+      else errs.push(("NEUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("NEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("NEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("NEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5188,34 +5188,34 @@ class LT is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LT missing required field: left", pos'); error
+      else errs.push(("LT missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LT missing required field: right", pos'); error
+      else errs.push(("LT missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5252,34 +5252,34 @@ class LTUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LTUnsafe missing required field: left", pos'); error
+      else errs.push(("LTUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LTUnsafe missing required field: right", pos'); error
+      else errs.push(("LTUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5316,34 +5316,34 @@ class LE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LE missing required field: left", pos'); error
+      else errs.push(("LE missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LE missing required field: right", pos'); error
+      else errs.push(("LE missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5380,34 +5380,34 @@ class LEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("LEUnsafe missing required field: left", pos'); error
+      else errs.push(("LEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("LEUnsafe missing required field: right", pos'); error
+      else errs.push(("LEUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("LEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5444,34 +5444,34 @@ class GE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("GE missing required field: left", pos'); error
+      else errs.push(("GE missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("GE missing required field: right", pos'); error
+      else errs.push(("GE missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("GE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("GE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("GE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GE got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5508,34 +5508,34 @@ class GEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("GEUnsafe missing required field: left", pos'); error
+      else errs.push(("GEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("GEUnsafe missing required field: right", pos'); error
+      else errs.push(("GEUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("GEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("GEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("GEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GEUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5572,34 +5572,34 @@ class GT is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("GT missing required field: left", pos'); error
+      else errs.push(("GT missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("GT missing required field: right", pos'); error
+      else errs.push(("GT missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("GT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("GT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("GT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GT got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5636,34 +5636,34 @@ class GTUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("GTUnsafe missing required field: left", pos'); error
+      else errs.push(("GTUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("GTUnsafe missing required field: right", pos'); error
+      else errs.push(("GTUnsafe missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("GTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("GTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("GTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GTUnsafe got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5700,34 +5700,34 @@ class Is is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Is missing required field: left", pos'); error
+      else errs.push(("Is missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Is missing required field: right", pos'); error
+      else errs.push(("Is missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Is got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Is got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Is got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Is got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5764,34 +5764,34 @@ class Isnt is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Isnt missing required field: left", pos'); error
+      else errs.push(("Isnt missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Isnt missing required field: right", pos'); error
+      else errs.push(("Isnt missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Isnt got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Isnt got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Isnt got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Isnt got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5828,34 +5828,34 @@ class And is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("And missing required field: left", pos'); error
+      else errs.push(("And missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("And missing required field: right", pos'); error
+      else errs.push(("And missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("And got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("And got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("And got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("And got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5892,34 +5892,34 @@ class Or is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Or missing required field: left", pos'); error
+      else errs.push(("Or missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Or missing required field: right", pos'); error
+      else errs.push(("Or missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Or got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Or got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Or got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Or got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -5956,34 +5956,34 @@ class XOr is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("XOr missing required field: left", pos'); error
+      else errs.push(("XOr missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("XOr missing required field: right", pos'); error
+      else errs.push(("XOr missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("XOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("XOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("XOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("XOr got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6017,26 +6017,26 @@ class Not is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("Not missing required field: expr", pos'); error
+      else errs.push(("Not missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Not got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Not got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("Not got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Not got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6067,26 +6067,26 @@ class Neg is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("Neg missing required field: expr", pos'); error
+      else errs.push(("Neg missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Neg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Neg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("Neg got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Neg got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6117,26 +6117,26 @@ class NegUnsafe is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("NegUnsafe missing required field: expr", pos'); error
+      else errs.push(("NegUnsafe missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("NegUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("NegUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("NegUnsafe got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NegUnsafe got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6167,26 +6167,26 @@ class AddressOf is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("AddressOf missing required field: expr", pos'); error
+      else errs.push(("AddressOf missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("AddressOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("AddressOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("AddressOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("AddressOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6217,26 +6217,26 @@ class DigestOf is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let expr': (AST | None) =
       try iter.next()
-      else err("DigestOf missing required field: expr", pos'); error
+      else errs.push(("DigestOf missing required field: expr", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("DigestOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("DigestOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _expr =
       try expr' as Expr
-      else err("DigestOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("DigestOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6270,34 +6270,34 @@ class LocalLet is (AST & Local & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("LocalLet missing required field: name", pos'); error
+      else errs.push(("LocalLet missing required field: name", pos')); error
       end
     let local_type': (AST | None) =
       try iter.next()
-      else err("LocalLet missing required field: local_type", pos'); error
+      else errs.push(("LocalLet missing required field: local_type", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LocalLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LocalLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("LocalLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalLet got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("LocalLet got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalLet got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6334,34 +6334,34 @@ class LocalVar is (AST & Local & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("LocalVar missing required field: name", pos'); error
+      else errs.push(("LocalVar missing required field: name", pos')); error
       end
     let local_type': (AST | None) =
       try iter.next()
-      else err("LocalVar missing required field: local_type", pos'); error
+      else errs.push(("LocalVar missing required field: local_type", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LocalVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LocalVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("LocalVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalVar got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("LocalVar got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalVar got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6398,34 +6398,34 @@ class Assign is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Assign missing required field: left", pos'); error
+      else errs.push(("Assign missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Assign missing required field: right", pos'); error
+      else errs.push(("Assign missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Assign got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Assign got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Assign got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Assign got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Expr
-      else err("Assign got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Assign got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6462,34 +6462,34 @@ class Dot is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Dot missing required field: left", pos'); error
+      else errs.push(("Dot missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Dot missing required field: right", pos'); error
+      else errs.push(("Dot missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Dot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Dot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Dot got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Dot got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Id
-      else err("Dot got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Dot got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6526,34 +6526,34 @@ class Chain is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Chain missing required field: left", pos'); error
+      else errs.push(("Chain missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Chain missing required field: right", pos'); error
+      else errs.push(("Chain missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Chain got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Chain got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Chain got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Chain got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Id
-      else err("Chain got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Chain got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6590,34 +6590,34 @@ class Tilde is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Tilde missing required field: left", pos'); error
+      else errs.push(("Tilde missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Tilde missing required field: right", pos'); error
+      else errs.push(("Tilde missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Tilde got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Tilde got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Tilde got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Tilde got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Id
-      else err("Tilde got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Tilde got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6654,34 +6654,34 @@ class Qualify is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("Qualify missing required field: left", pos'); error
+      else errs.push(("Qualify missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("Qualify missing required field: right", pos'); error
+      else errs.push(("Qualify missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Qualify got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Qualify got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Expr
-      else err("Qualify got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Qualify got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as TypeArgs
-      else err("Qualify got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Qualify got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6721,36 +6721,36 @@ class Call is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let callable': (AST | None) =
       try iter.next()
-      else err("Call missing required field: callable", pos'); error
+      else errs.push(("Call missing required field: callable", pos')); error
       end
     let args': (AST | None) = try iter.next() else Args end
     let named_args': (AST | None) = try iter.next() else NamedArgs end
     if
       try
         let extra' = iter.next()
-        err("Call got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Call got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _callable =
       try callable' as Expr
-      else err("Call got incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Call got incompatible field: callable", try (callable' as AST).pos() else SourcePosNone end)); error
       end
     _args =
       try args' as Args
-      else err("Call got incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Call got incompatible field: args", try (args' as AST).pos() else SourcePosNone end)); error
       end
     _named_args =
       try named_args' as NamedArgs
-      else err("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6799,14 +6799,14 @@ class CallFFI is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("CallFFI missing required field: name", pos'); error
+      else errs.push(("CallFFI missing required field: name", pos')); error
       end
     let type_args': (AST | None) = try iter.next() else None end
     let args': (AST | None) = try iter.next() else Args end
@@ -6815,30 +6815,30 @@ class CallFFI is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("CallFFI got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CallFFI got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as (Id | LitString)
-      else err("CallFFI got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CallFFI got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _type_args =
       try type_args' as (TypeArgs | None)
-      else err("CallFFI got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CallFFI got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end)); error
       end
     _args =
       try args' as Args
-      else err("CallFFI got incompatible field: args", try (args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CallFFI got incompatible field: args", try (args' as AST).pos() else SourcePosNone end)); error
       end
     _named_args =
       try named_args' as NamedArgs
-      else err("CallFFI got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CallFFI got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("CallFFI got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("CallFFI got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -6881,7 +6881,7 @@ class Args is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -6894,7 +6894,7 @@ class Args is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("Args got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("Args got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -6932,7 +6932,7 @@ class NamedArgs is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -6945,7 +6945,7 @@ class NamedArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("NamedArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("NamedArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -6986,34 +6986,34 @@ class NamedArg is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("NamedArg missing required field: name", pos'); error
+      else errs.push(("NamedArg missing required field: name", pos')); error
       end
     let value': (AST | None) =
       try iter.next()
-      else err("NamedArg missing required field: value", pos'); error
+      else errs.push(("NamedArg missing required field: value", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("NamedArg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("NamedArg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("NamedArg got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NamedArg got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _value =
       try value' as Sequence
-      else err("NamedArg got incompatible field: value", try (value' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NamedArg got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7071,7 +7071,7 @@ class Lambda is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7088,46 +7088,46 @@ class Lambda is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("Lambda got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Lambda got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _method_cap =
       try method_cap' as (Cap | None)
-      else err("Lambda got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | None)
-      else err("Lambda got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("Lambda got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("Lambda got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _captures =
       try captures' as (LambdaCaptures | None)
-      else err("Lambda got incompatible field: captures", try (captures' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: captures", try (captures' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("Lambda got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("Lambda got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _body =
       try body' as Sequence
-      else err("Lambda got incompatible field: body", try (body' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _object_cap =
       try object_cap' as (Cap | None)
-      else err("Lambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Lambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7182,7 +7182,7 @@ class LambdaCaptures is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7195,7 +7195,7 @@ class LambdaCaptures is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("LambdaCaptures got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("LambdaCaptures got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -7239,36 +7239,36 @@ class LambdaCapture is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("LambdaCapture missing required field: name", pos'); error
+      else errs.push(("LambdaCapture missing required field: name", pos')); error
       end
     let local_type': (AST | None) = try iter.next() else None end
     let expr': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("LambdaCapture got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LambdaCapture got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("LambdaCapture got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaCapture got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _local_type =
       try local_type' as (Type | None)
-      else err("LambdaCapture got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaCapture got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
     _expr =
       try expr' as (Expr | None)
-      else err("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7311,7 +7311,7 @@ class Object is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7322,22 +7322,22 @@ class Object is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("Object got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Object got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _cap =
       try cap' as (Cap | None)
-      else err("Object got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Object got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _provides =
       try provides' as (Type | None)
-      else err("Object got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Object got incompatible field: provides", try (provides' as AST).pos() else SourcePosNone end)); error
       end
     _members =
       try members' as (Members | None)
-      else err("Object got incompatible field: members", try (members' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Object got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7377,7 +7377,7 @@ class LitArray is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7387,18 +7387,18 @@ class LitArray is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitArray got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitArray got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _elem_type =
       try elem_type' as (Type | None)
-      else err("LitArray got incompatible field: elem_type", try (elem_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LitArray got incompatible field: elem_type", try (elem_type' as AST).pos() else SourcePosNone end)); error
       end
     _sequence =
       try sequence' as Sequence
-      else err("LitArray got incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LitArray got incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7432,7 +7432,7 @@ class Tuple is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7445,7 +7445,7 @@ class Tuple is (AST & Expr)
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      err("Tuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("Tuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -7477,7 +7477,7 @@ class This is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7485,7 +7485,7 @@ class This is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("This got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("This got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7505,7 +7505,7 @@ class LitTrue is (AST & LitBool & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7513,7 +7513,7 @@ class LitTrue is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitTrue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitTrue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7533,7 +7533,7 @@ class LitFalse is (AST & LitBool & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7541,7 +7541,7 @@ class LitFalse is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitFalse got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitFalse got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7561,7 +7561,7 @@ class LitInteger is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7570,7 +7570,7 @@ class LitInteger is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitInteger got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitInteger got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7592,7 +7592,7 @@ class LitFloat is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7601,7 +7601,7 @@ class LitFloat is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitFloat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitFloat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7623,7 +7623,7 @@ class LitString is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7632,7 +7632,7 @@ class LitString is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitString got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitString got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7654,7 +7654,7 @@ class LitCharacter is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7663,7 +7663,7 @@ class LitCharacter is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitCharacter got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitCharacter got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7685,7 +7685,7 @@ class LitLocation is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7693,7 +7693,7 @@ class LitLocation is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("LitLocation got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LitLocation got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7719,26 +7719,26 @@ class Reference is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("Reference missing required field: name", pos'); error
+      else errs.push(("Reference missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("Reference got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Reference got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("Reference got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("Reference got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7763,7 +7763,7 @@ class DontCare is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -7771,7 +7771,7 @@ class DontCare is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        err("DontCare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("DontCare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7797,26 +7797,26 @@ class PackageRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("PackageRef missing required field: name", pos'); error
+      else errs.push(("PackageRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("PackageRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("PackageRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("PackageRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("PackageRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7850,34 +7850,34 @@ class MethodFunRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("MethodFunRef missing required field: receiver", pos'); error
+      else errs.push(("MethodFunRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("MethodFunRef missing required field: name", pos'); error
+      else errs.push(("MethodFunRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("MethodFunRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodFunRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("MethodFunRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFunRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("MethodFunRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodFunRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7914,34 +7914,34 @@ class MethodNewRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("MethodNewRef missing required field: receiver", pos'); error
+      else errs.push(("MethodNewRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("MethodNewRef missing required field: name", pos'); error
+      else errs.push(("MethodNewRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("MethodNewRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodNewRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("MethodNewRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNewRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("MethodNewRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodNewRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -7978,34 +7978,34 @@ class MethodBeRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("MethodBeRef missing required field: receiver", pos'); error
+      else errs.push(("MethodBeRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("MethodBeRef missing required field: name", pos'); error
+      else errs.push(("MethodBeRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("MethodBeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("MethodBeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("MethodBeRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBeRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("MethodBeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("MethodBeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8042,34 +8042,34 @@ class TypeRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let package': (AST | None) =
       try iter.next()
-      else err("TypeRef missing required field: package", pos'); error
+      else errs.push(("TypeRef missing required field: package", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("TypeRef missing required field: name", pos'); error
+      else errs.push(("TypeRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("TypeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("TypeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _package =
       try package' as Expr
-      else err("TypeRef got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeRef got incompatible field: package", try (package' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | TypeArgs)
-      else err("TypeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8106,34 +8106,34 @@ class FieldLetRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("FieldLetRef missing required field: receiver", pos'); error
+      else errs.push(("FieldLetRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("FieldLetRef missing required field: name", pos'); error
+      else errs.push(("FieldLetRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("FieldLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("FieldLetRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldLetRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as Id
-      else err("FieldLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8170,34 +8170,34 @@ class FieldVarRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("FieldVarRef missing required field: receiver", pos'); error
+      else errs.push(("FieldVarRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("FieldVarRef missing required field: name", pos'); error
+      else errs.push(("FieldVarRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("FieldVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("FieldVarRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldVarRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as Id
-      else err("FieldVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8234,34 +8234,34 @@ class FieldEmbedRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("FieldEmbedRef missing required field: receiver", pos'); error
+      else errs.push(("FieldEmbedRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("FieldEmbedRef missing required field: name", pos'); error
+      else errs.push(("FieldEmbedRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("FieldEmbedRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FieldEmbedRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("FieldEmbedRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldEmbedRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as Id
-      else err("FieldEmbedRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FieldEmbedRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8298,34 +8298,34 @@ class TupleElementRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let receiver': (AST | None) =
       try iter.next()
-      else err("TupleElementRef missing required field: receiver", pos'); error
+      else errs.push(("TupleElementRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
       try iter.next()
-      else err("TupleElementRef missing required field: name", pos'); error
+      else errs.push(("TupleElementRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("TupleElementRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("TupleElementRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _receiver =
       try receiver' as Expr
-      else err("TupleElementRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TupleElementRef got incompatible field: receiver", try (receiver' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as LitInteger
-      else err("TupleElementRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TupleElementRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8359,26 +8359,26 @@ class LocalLetRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("LocalLetRef missing required field: name", pos'); error
+      else errs.push(("LocalLetRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LocalLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LocalLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("LocalLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8409,26 +8409,26 @@ class LocalVarRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("LocalVarRef missing required field: name", pos'); error
+      else errs.push(("LocalVarRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("LocalVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LocalVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("LocalVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LocalVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8459,26 +8459,26 @@ class ParamRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("ParamRef missing required field: name", pos'); error
+      else errs.push(("ParamRef missing required field: name", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("ParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("ParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("ParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("ParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8512,34 +8512,34 @@ class ViewpointType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let left': (AST | None) =
       try iter.next()
-      else err("ViewpointType missing required field: left", pos'); error
+      else errs.push(("ViewpointType missing required field: left", pos')); error
       end
     let right': (AST | None) =
       try iter.next()
-      else err("ViewpointType missing required field: right", pos'); error
+      else errs.push(("ViewpointType missing required field: right", pos')); error
       end
     if
       try
         let extra' = iter.next()
-        err("ViewpointType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("ViewpointType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _left =
       try left' as Type
-      else err("ViewpointType got incompatible field: left", try (left' as AST).pos() else SourcePosNone end); error
+      else errs.push(("ViewpointType got incompatible field: left", try (left' as AST).pos() else SourcePosNone end)); error
       end
     _right =
       try right' as Type
-      else err("ViewpointType got incompatible field: right", try (right' as AST).pos() else SourcePosNone end); error
+      else errs.push(("ViewpointType got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8573,7 +8573,7 @@ class UnionType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -8586,7 +8586,7 @@ class UnionType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("UnionType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("UnionType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -8624,7 +8624,7 @@ class IsectType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -8637,7 +8637,7 @@ class IsectType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("IsectType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("IsectType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -8675,7 +8675,7 @@ class TupleType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -8688,7 +8688,7 @@ class TupleType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      err("TupleType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); error
+      errs.push(("TupleType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -8738,14 +8738,14 @@ class NominalType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("NominalType missing required field: name", pos'); error
+      else errs.push(("NominalType missing required field: name", pos')); error
       end
     let package': (AST | None) = try iter.next() else None end
     let type_args': (AST | None) = try iter.next() else None end
@@ -8754,30 +8754,30 @@ class NominalType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("NominalType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("NominalType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("NominalType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NominalType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _package =
       try package' as (Id | None)
-      else err("NominalType got incompatible field: package", try (package' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NominalType got incompatible field: package", try (package' as AST).pos() else SourcePosNone end)); error
       end
     _type_args =
       try type_args' as (TypeArgs | None)
-      else err("NominalType got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NominalType got incompatible field: type_args", try (type_args' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | GenCap | None)
-      else err("NominalType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NominalType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("NominalType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else errs.push(("NominalType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8829,14 +8829,14 @@ class FunType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let cap': (AST | None) =
       try iter.next()
-      else err("FunType missing required field: cap", pos'); error
+      else errs.push(("FunType missing required field: cap", pos')); error
       end
     let type_params': (AST | None) = try iter.next() else None end
     let params': (AST | None) = try iter.next() else None end
@@ -8844,26 +8844,26 @@ class FunType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("FunType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("FunType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _cap =
       try cap' as Cap
-      else err("FunType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FunType got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("FunType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FunType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
       try params' as (Params | None)
-      else err("FunType got incompatible field: params", try (params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FunType got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("FunType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("FunType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -8924,7 +8924,7 @@ class LambdaType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -8940,42 +8940,42 @@ class LambdaType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("LambdaType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LambdaType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _method_cap =
       try method_cap' as (Cap | None)
-      else err("LambdaType got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end)); error
       end
     _name =
       try name' as (Id | None)
-      else err("LambdaType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
       try type_params' as (TypeParams | None)
-      else err("LambdaType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _param_types =
       try param_types' as TupleType
-      else err("LambdaType got incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
       try return_type' as (Type | None)
-      else err("LambdaType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
       try partial' as (Question | None)
-      else err("LambdaType got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
     _object_cap =
       try object_cap' as (Cap | GenCap | None)
-      else err("LambdaType got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("LambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else errs.push(("LambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -9033,36 +9033,36 @@ class TypeParamRef is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
     
     let name': (AST | None) =
       try iter.next()
-      else err("TypeParamRef missing required field: name", pos'); error
+      else errs.push(("TypeParamRef missing required field: name", pos')); error
       end
     let cap': (AST | None) = try iter.next() else None end
     let cap_mod': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
-        err("TypeParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("TypeParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
     
     _name =
       try name' as Id
-      else err("TypeParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
       try cap' as (Cap | GenCap | None)
-      else err("TypeParamRef got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParamRef got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _cap_mod =
       try cap_mod' as (CapMod | None)
-      else err("TypeParamRef got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end); error
+      else errs.push(("TypeParamRef got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
   fun pos(): SourcePosAny => _pos
@@ -9093,7 +9093,7 @@ class ThisType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9101,7 +9101,7 @@ class ThisType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("ThisType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("ThisType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9121,7 +9121,7 @@ class DontCareType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9129,7 +9129,7 @@ class DontCareType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("DontCareType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("DontCareType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9149,7 +9149,7 @@ class ErrorType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9157,7 +9157,7 @@ class ErrorType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("ErrorType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("ErrorType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9177,7 +9177,7 @@ class LiteralType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9185,7 +9185,7 @@ class LiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("LiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9205,7 +9205,7 @@ class LiteralTypeBranch is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9213,7 +9213,7 @@ class LiteralTypeBranch is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("LiteralTypeBranch got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("LiteralTypeBranch got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9233,7 +9233,7 @@ class OpLiteralType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9241,7 +9241,7 @@ class OpLiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        err("OpLiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("OpLiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9261,7 +9261,7 @@ class Iso is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9269,7 +9269,7 @@ class Iso is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Iso got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Iso got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9289,7 +9289,7 @@ class Trn is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9297,7 +9297,7 @@ class Trn is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Trn got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Trn got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9317,7 +9317,7 @@ class Ref is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9325,7 +9325,7 @@ class Ref is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Ref got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Ref got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9345,7 +9345,7 @@ class Val is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9353,7 +9353,7 @@ class Val is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Val got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Val got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9373,7 +9373,7 @@ class Box is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9381,7 +9381,7 @@ class Box is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Box got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Box got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9401,7 +9401,7 @@ class Tag is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9409,7 +9409,7 @@ class Tag is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        err("Tag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Tag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9429,7 +9429,7 @@ class CapRead is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9437,7 +9437,7 @@ class CapRead is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("CapRead got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CapRead got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9457,7 +9457,7 @@ class CapSend is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9465,7 +9465,7 @@ class CapSend is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("CapSend got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CapSend got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9485,7 +9485,7 @@ class CapShare is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9493,7 +9493,7 @@ class CapShare is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("CapShare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CapShare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9513,7 +9513,7 @@ class CapAlias is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9521,7 +9521,7 @@ class CapAlias is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("CapAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CapAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9541,7 +9541,7 @@ class CapAny is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9549,7 +9549,7 @@ class CapAny is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        err("CapAny got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("CapAny got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9569,7 +9569,7 @@ class Aliased is (AST & CapMod)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9577,7 +9577,7 @@ class Aliased is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        err("Aliased got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Aliased got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9597,7 +9597,7 @@ class Ephemeral is (AST & CapMod)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9605,7 +9605,7 @@ class Ephemeral is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        err("Ephemeral got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Ephemeral got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9625,7 +9625,7 @@ class At is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9633,7 +9633,7 @@ class At is AST
     if
       try
         let extra' = iter.next()
-        err("At got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("At got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9653,7 +9653,7 @@ class Question is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9661,7 +9661,7 @@ class Question is AST
     if
       try
         let extra' = iter.next()
-        err("Question got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Question got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9681,7 +9681,7 @@ class Ellipsis is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9689,7 +9689,7 @@ class Ellipsis is AST
     if
       try
         let extra' = iter.next()
-        err("Ellipsis got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Ellipsis got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9709,7 +9709,7 @@ class Id is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
     _pos = pos'
@@ -9718,7 +9718,7 @@ class Id is AST
     if
       try
         let extra' = iter.next()
-        err("Id got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end); true
+        errs.push(("Id got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9739,10 +9739,10 @@ class EOF is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("EOF is a lexeme-only type append should never be built", pos'); error
+    errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9756,10 +9756,10 @@ class NewLine is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("NewLine is a lexeme-only type append should never be built", pos'); error
+    errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9773,10 +9773,10 @@ class Use is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Use is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9790,10 +9790,10 @@ class Colon is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Colon is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9807,10 +9807,10 @@ class Semicolon is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Semicolon is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Semicolon is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9824,10 +9824,10 @@ class Comma is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Comma is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9841,10 +9841,10 @@ class Constant is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Constant is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9858,10 +9858,10 @@ class Pipe is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Pipe is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9875,10 +9875,10 @@ class Ampersand is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Ampersand is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9892,10 +9892,10 @@ class SubType is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("SubType is a lexeme-only type append should never be built", pos'); error
+    errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9909,10 +9909,10 @@ class Arrow is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Arrow is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9926,10 +9926,10 @@ class DoubleArrow is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("DoubleArrow is a lexeme-only type append should never be built", pos'); error
+    errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9943,10 +9943,10 @@ class Backslash is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Backslash is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9960,10 +9960,10 @@ class LParen is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LParen is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9977,10 +9977,10 @@ class RParen is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("RParen is a lexeme-only type append should never be built", pos'); error
+    errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -9994,10 +9994,10 @@ class LBrace is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LBrace is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10011,10 +10011,10 @@ class RBrace is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("RBrace is a lexeme-only type append should never be built", pos'); error
+    errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10028,10 +10028,10 @@ class LSquare is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LSquare is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10045,10 +10045,10 @@ class RSquare is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("RSquare is a lexeme-only type append should never be built", pos'); error
+    errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10062,10 +10062,10 @@ class LParenNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LParenNew is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10079,10 +10079,10 @@ class LBraceNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LBraceNew is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10096,10 +10096,10 @@ class LSquareNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("LSquareNew is a lexeme-only type append should never be built", pos'); error
+    errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10113,10 +10113,10 @@ class SubNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("SubNew is a lexeme-only type append should never be built", pos'); error
+    errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10130,10 +10130,10 @@ class SubUnsafeNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("SubUnsafeNew is a lexeme-only type append should never be built", pos'); error
+    errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10147,10 +10147,10 @@ class In is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("In is a lexeme-only type append should never be built", pos'); error
+    errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10164,10 +10164,10 @@ class Until is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Until is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10181,10 +10181,10 @@ class Do is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Do is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10198,10 +10198,10 @@ class Else is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Else is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10215,10 +10215,10 @@ class ElseIf is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("ElseIf is a lexeme-only type append should never be built", pos'); error
+    errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10232,10 +10232,10 @@ class Then is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Then is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10249,10 +10249,10 @@ class End is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("End is a lexeme-only type append should never be built", pos'); error
+    errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10266,10 +10266,10 @@ class Var is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Var is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10283,10 +10283,10 @@ class Let is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Let is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10300,10 +10300,10 @@ class Embed is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Embed is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'
@@ -10317,10 +10317,10 @@ class Where is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    err: {(String, SourcePosAny)} = {(s: String, p: SourcePosAny) => None } ref)?
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
   
-    err("Where is a lexeme-only type append should never be built", pos'); error
+    errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
   fun pos(): SourcePosAny => _pos
   fun ref set_pos(pos': SourcePosAny) => _pos = pos'

@@ -39,7 +39,7 @@ interface val SourcePosAny
     let l = entire_line()
     
     let arrow = recover String(l.length()) end
-    for i in Range(0, offset() - l.offset()) do arrow.push(' ') end
+    for i in Range(0, offset() - l.offset().min(offset())) do arrow.push(' ') end
     arrow.push('^')
     if length() >= 1 then
       for i in Range(0, length() - 1) do arrow.push('~') end

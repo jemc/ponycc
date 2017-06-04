@@ -23,17 +23,20 @@ class ParserGen
     g.block(
       """
       let tokens: Iterator[_Token]
+      let errs: Seq[(String, SourcePosAny)]
       var token: _Token
+      var last_helpful_token: _Token
       let errors: Array[String] = Array[String]
       var failed: Bool = false
       var last_matched: String = ""
       
-      new create(tokens': Iterator[_Token]) =>
-        tokens = tokens'
+      new create(tokens': Iterator[_Token], errs': Seq[(String, SourcePosAny)]) =>
+        (tokens, errs) = (tokens', errs')
         token =
           try tokens.next()
           else (Tk[EOF], SourcePosNone)
           end
+        last_helpful_token = token
       
       fun ref parse(): (TkTree | None) =>
         let expected = "class, actor, primitive or trait" // TODO: get this from where?
@@ -54,6 +57,11 @@ class ParserGen
           try tokens.next()
           else (Tk[EOF], token._2)
           end
+        
+        match new_token._1
+        | Tk[NewLine] | Tk[EOF] | Tk[None] => None
+        else last_helpful_token = new_token
+        end
         
         token = new_token
       
@@ -156,29 +164,27 @@ class ParserGen
         // Next token is not in restart set, error
         // Debug("Rule " + state.fn_name + ": Restart check error") // TODO: conditional compile
         
-        _error("syntax error: unexpected token " + _current_tk().desc() + " after " + state.desc)
+        _error("Syntax error: Unexpected token " + _current_tk().desc() + " after " + state.desc, last_helpful_token._2)
         
         failed = true
         _ditch_restart(state)
       
-      fun ref _error(str: String, pos: (SourcePosAny | None) = None) =>
-        Debug("ERROR: " + str) // TODO: show token loc
-        None
+      fun ref _error(str: String, pos: SourcePosAny) =>
+        errs.push((str, pos))
       
-      fun ref _error_continue(str: String, pos: (SourcePosAny | None) = None) =>
-        Debug("ERROR_CONTINUE: " + str) // TODO: show token loc
-        None
+      fun ref _error_continue(str: String, pos: SourcePosAny) =>
+        errs.push((str, pos)) // TODO: actually continue
       
       fun ref _syntax_error(expected: String, tree: (TkTree | None), terminating: String) =>
         if last_matched.size() == 0 then
-          _error("syntax error: no code found")
+          _error("Syntax error: No code found", last_helpful_token._2)
         else
           if terminating.size() == 0 then
-            _error("syntax error: expected " + expected + " after " + last_matched)
+            _error("Syntax error: Expected " + expected + " after " + last_matched, last_helpful_token._2)
           else
-            _error("syntax error: unterminated " + terminating,
-              try (tree as TkTree).pos else token._2 end)
-            _error_continue("expected terminating " + expected + "before here")
+            _error("Syntax error: Unterminated " + terminating,
+              try (tree as TkTree).pos else last_helpful_token._2 end)
+            _error_continue("expected terminating " + expected + "before here", last_helpful_token._2)
           end
         end
       """)
