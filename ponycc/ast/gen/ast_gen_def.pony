@@ -82,12 +82,15 @@ class ASTGenDefFixed is ASTGenDef
     
     // Declare a constructor that sets all fields (and _pos), with no defaults.
     g.line("new val _create(")
+    g.push_indent()
     g.add("pos': SourcePosAny")
     for (field_name, field_type, _) in fields.values() do
-      g.add(", ")
+      g.add(",")
       g.line(field_name + "': " + field_type)
     end
-    g.add(") =>")
+    g.add(")")
+    g.pop_indent()
+    g.line("=>")
     g.push_indent()
     g.line("_pos = pos'")
     for (field_name, field_type, _) in fields.values() do

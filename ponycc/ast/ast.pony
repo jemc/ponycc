@@ -262,10 +262,11 @@ class val Module is AST
     _type_decls = type_decls'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  use_decls': coll.Vec[UseDecl], 
-  type_decls': coll.Vec[TypeDecl], 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    use_decls': coll.Vec[UseDecl],
+    type_decls': coll.Vec[TypeDecl],
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _use_decls = use_decls'
     _type_decls = type_decls'
@@ -351,9 +352,10 @@ class val UsePackage is (AST & UseDecl)
     _prefix = prefix'
     _package = package'
   
-  new val _create(pos': SourcePosAny, 
-  prefix': (Id | None), 
-  package': LitString) =>
+  new val _create(pos': SourcePosAny,
+    prefix': (Id | None),
+    package': LitString)
+  =>
     _pos = pos'
     _prefix = prefix'
     _package = package'
@@ -426,12 +428,13 @@ class val UseFFIDecl is (AST & UseDecl)
     _partial = partial'
     _guard = guard'
   
-  new val _create(pos': SourcePosAny, 
-  name': (Id | LitString), 
-  return_type': TypeArgs, 
-  params': (Params | None), 
-  partial': (Question | None), 
-  guard': (IfDefCond | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': (Id | LitString),
+    return_type': TypeArgs,
+    params': (Params | None),
+    partial': (Question | None),
+    guard': (IfDefCond | None))
+  =>
     _pos = pos'
     _name = name'
     _return_type = return_type'
@@ -546,14 +549,15 @@ class val TypeAlias is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -677,14 +681,15 @@ class val Interface is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -808,14 +813,15 @@ class val Trait is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -939,14 +945,15 @@ class val Primitive is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -1070,14 +1077,15 @@ class val Struct is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -1201,14 +1209,15 @@ class val Class is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -1332,14 +1341,15 @@ class val Actor is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  provides': (Type | None), 
-  members': Members, 
-  at': (At | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    provides': (Type | None),
+    members': Members,
+    at': (At | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -1448,9 +1458,10 @@ class val Members is AST
     _fields = fields'
     _methods = methods'
   
-  new val _create(pos': SourcePosAny, 
-  fields': coll.Vec[Field], 
-  methods': coll.Vec[Method]) =>
+  new val _create(pos': SourcePosAny,
+    fields': coll.Vec[Field],
+    methods': coll.Vec[Method])
+  =>
     _pos = pos'
     _fields = fields'
     _methods = methods'
@@ -1526,10 +1537,11 @@ class val FieldLet is (AST & Field)
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  field_type': Type, 
-  default': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    field_type': Type,
+    default': (Expr | None))
+  =>
     _pos = pos'
     _name = name'
     _field_type = field_type'
@@ -1608,10 +1620,11 @@ class val FieldVar is (AST & Field)
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  field_type': Type, 
-  default': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    field_type': Type,
+    default': (Expr | None))
+  =>
     _pos = pos'
     _name = name'
     _field_type = field_type'
@@ -1690,10 +1703,11 @@ class val FieldEmbed is (AST & Field)
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  field_type': Type, 
-  default': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    field_type': Type,
+    default': (Expr | None))
+  =>
     _pos = pos'
     _name = name'
     _field_type = field_type'
@@ -1790,16 +1804,17 @@ class val MethodFun is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  params': (Params | None), 
-  return_type': (Type | None), 
-  partial': (Question | None), 
-  guard': (Sequence | None), 
-  body': (Sequence | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    params': (Params | None),
+    return_type': (Type | None),
+    partial': (Question | None),
+    guard': (Sequence | None),
+    body': (Sequence | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -1947,16 +1962,17 @@ class val MethodNew is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  params': (Params | None), 
-  return_type': (Type | None), 
-  partial': (Question | None), 
-  guard': (Sequence | None), 
-  body': (Sequence | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    params': (Params | None),
+    return_type': (Type | None),
+    partial': (Question | None),
+    guard': (Sequence | None),
+    body': (Sequence | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -2104,16 +2120,17 @@ class val MethodBe is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | None), 
-  type_params': (TypeParams | None), 
-  params': (Params | None), 
-  return_type': (Type | None), 
-  partial': (Question | None), 
-  guard': (Sequence | None), 
-  body': (Sequence | None), 
-  docs': (LitString | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | None),
+    type_params': (TypeParams | None),
+    params': (Params | None),
+    return_type': (Type | None),
+    partial': (Question | None),
+    guard': (Sequence | None),
+    body': (Sequence | None),
+    docs': (LitString | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -2237,8 +2254,9 @@ class val TypeParams is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[TypeParam]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[TypeParam])
+  =>
     _pos = pos'
     _list = list'
   
@@ -2297,10 +2315,11 @@ class val TypeParam is AST
     _constraint = constraint'
     _default = default'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  constraint': (Type | None), 
-  default': (Type | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    constraint': (Type | None),
+    default': (Type | None))
+  =>
     _pos = pos'
     _name = name'
     _constraint = constraint'
@@ -2370,8 +2389,9 @@ class val TypeArgs is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Type]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Type])
+  =>
     _pos = pos'
     _list = list'
   
@@ -2427,9 +2447,10 @@ class val Params is AST
     _list = list'
     _ellipsis = ellipsis'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Param], 
-  ellipsis': (Ellipsis | None)) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Param],
+    ellipsis': (Ellipsis | None))
+  =>
     _pos = pos'
     _list = list'
     _ellipsis = ellipsis'
@@ -2501,10 +2522,11 @@ class val Param is AST
     _param_type = param_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  param_type': (Type | None), 
-  default': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    param_type': (Type | None),
+    default': (Expr | None))
+  =>
     _pos = pos'
     _name = name'
     _param_type = param_type'
@@ -2574,8 +2596,9 @@ class val Sequence is (AST & Expr)
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Expr]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Expr])
+  =>
     _pos = pos'
     _list = list'
   
@@ -2628,8 +2651,9 @@ class val Return is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2681,8 +2705,9 @@ class val Break is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2734,8 +2759,9 @@ class val Continue is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2787,8 +2813,9 @@ class val Error is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2840,8 +2867,9 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2893,8 +2921,9 @@ class val CompileError is (AST & Jump & Expr)
   =>_pos = SourcePosNone
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  value': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    value': (Expr | None))
+  =>
     _pos = pos'
     _value = value'
   
@@ -2946,8 +2975,9 @@ class val IfDefFlag is (AST & IfDefCond)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': (Id | LitString)) =>
+  new val _create(pos': SourcePosAny,
+    name': (Id | LitString))
+  =>
     _pos = pos'
     _name = name'
   
@@ -2999,8 +3029,9 @@ class val IfDefNot is (AST & IfDefCond)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': IfDefCond) =>
+  new val _create(pos': SourcePosAny,
+    expr': IfDefCond)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -3055,9 +3086,10 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': IfDefCond, 
-  right': IfDefCond) =>
+  new val _create(pos': SourcePosAny,
+    left': IfDefCond,
+    right': IfDefCond)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -3124,9 +3156,10 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': IfDefCond, 
-  right': IfDefCond) =>
+  new val _create(pos': SourcePosAny,
+    left': IfDefCond,
+    right': IfDefCond)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -3196,10 +3229,11 @@ class val IfDef is (AST & Expr)
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  condition': IfDefCond, 
-  then_body': Sequence, 
-  else_body': (Sequence | IfDef | None)) =>
+  new val _create(pos': SourcePosAny,
+    condition': IfDefCond,
+    then_body': Sequence,
+    else_body': (Sequence | IfDef | None))
+  =>
     _pos = pos'
     _condition = condition'
     _then_body = then_body'
@@ -3281,11 +3315,12 @@ class val IfType is (AST & Expr)
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  sub': Type, 
-  super': Type, 
-  then_body': Sequence, 
-  else_body': (Sequence | IfType | None)) =>
+  new val _create(pos': SourcePosAny,
+    sub': Type,
+    super': Type,
+    then_body': Sequence,
+    else_body': (Sequence | IfType | None))
+  =>
     _pos = pos'
     _sub = sub'
     _super = super'
@@ -3376,10 +3411,11 @@ class val If is (AST & Expr)
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  condition': Sequence, 
-  then_body': Sequence, 
-  else_body': (Sequence | If | None)) =>
+  new val _create(pos': SourcePosAny,
+    condition': Sequence,
+    then_body': Sequence,
+    else_body': (Sequence | If | None))
+  =>
     _pos = pos'
     _condition = condition'
     _then_body = then_body'
@@ -3458,10 +3494,11 @@ class val While is (AST & Expr)
     _loop_body = loop_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  condition': Sequence, 
-  loop_body': Sequence, 
-  else_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    condition': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None))
+  =>
     _pos = pos'
     _condition = condition'
     _loop_body = loop_body'
@@ -3540,10 +3577,11 @@ class val Repeat is (AST & Expr)
     _condition = condition'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  loop_body': Sequence, 
-  condition': Sequence, 
-  else_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    loop_body': Sequence,
+    condition': Sequence,
+    else_body': (Sequence | None))
+  =>
     _pos = pos'
     _loop_body = loop_body'
     _condition = condition'
@@ -3625,11 +3663,12 @@ class val For is (AST & Expr)
     _loop_body = loop_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  refs': (Id | IdTuple), 
-  iterator': Sequence, 
-  loop_body': Sequence, 
-  else_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    refs': (Id | IdTuple),
+    iterator': Sequence,
+    loop_body': Sequence,
+    else_body': (Sequence | None))
+  =>
     _pos = pos'
     _refs = refs'
     _iterator = iterator'
@@ -3720,10 +3759,11 @@ class val With is (AST & Expr)
     _with_body = with_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  assigns': AssignTuple, 
-  with_body': Sequence, 
-  else_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    assigns': AssignTuple,
+    with_body': Sequence,
+    else_body': (Sequence | None))
+  =>
     _pos = pos'
     _assigns = assigns'
     _with_body = with_body'
@@ -3796,8 +3836,9 @@ class val IdTuple is AST
   =>_pos = SourcePosNone
     _elements = elements'
   
-  new val _create(pos': SourcePosAny, 
-  elements': coll.Vec[(Id | IdTuple)]) =>
+  new val _create(pos': SourcePosAny,
+    elements': coll.Vec[(Id | IdTuple)])
+  =>
     _pos = pos'
     _elements = elements'
   
@@ -3850,8 +3891,9 @@ class val AssignTuple is AST
   =>_pos = SourcePosNone
     _elements = elements'
   
-  new val _create(pos': SourcePosAny, 
-  elements': coll.Vec[Assign]) =>
+  new val _create(pos': SourcePosAny,
+    elements': coll.Vec[Assign])
+  =>
     _pos = pos'
     _elements = elements'
   
@@ -3910,10 +3952,11 @@ class val Match is (AST & Expr)
     _cases = cases'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Sequence, 
-  cases': Cases, 
-  else_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    expr': Sequence,
+    cases': Cases,
+    else_body': (Sequence | None))
+  =>
     _pos = pos'
     _expr = expr'
     _cases = cases'
@@ -3983,8 +4026,9 @@ class val Cases is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Case]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Case])
+  =>
     _pos = pos'
     _list = list'
   
@@ -4043,10 +4087,11 @@ class val Case is AST
     _guard = guard'
     _body = body'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr, 
-  guard': (Sequence | None), 
-  body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr,
+    guard': (Sequence | None),
+    body': (Sequence | None))
+  =>
     _pos = pos'
     _expr = expr'
     _guard = guard'
@@ -4122,10 +4167,11 @@ class val Try is (AST & Expr)
     _else_body = else_body'
     _then_body = then_body'
   
-  new val _create(pos': SourcePosAny, 
-  body': Sequence, 
-  else_body': (Sequence | None), 
-  then_body': (Sequence | None)) =>
+  new val _create(pos': SourcePosAny,
+    body': Sequence,
+    else_body': (Sequence | None),
+    then_body': (Sequence | None))
+  =>
     _pos = pos'
     _body = body'
     _else_body = else_body'
@@ -4198,9 +4244,10 @@ class val Consume is (AST & Expr)
     _cap = cap'
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  cap': (Cap | None), 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    cap': (Cap | None),
+    expr': Expr)
+  =>
     _pos = pos'
     _cap = cap'
     _expr = expr'
@@ -4267,9 +4314,10 @@ class val Recover is (AST & Expr)
     _cap = cap'
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  cap': (Cap | None), 
-  expr': Sequence) =>
+  new val _create(pos': SourcePosAny,
+    cap': (Cap | None),
+    expr': Sequence)
+  =>
     _pos = pos'
     _cap = cap'
     _expr = expr'
@@ -4336,9 +4384,10 @@ class val As is (AST & Expr)
     _expr = expr'
     _as_type = as_type'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr, 
-  as_type': Type) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr,
+    as_type': Type)
+  =>
     _pos = pos'
     _expr = expr'
     _as_type = as_type'
@@ -4405,9 +4454,10 @@ class val Add is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4474,9 +4524,10 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4543,9 +4594,10 @@ class val Sub is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4612,9 +4664,10 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4681,9 +4734,10 @@ class val Mul is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4750,9 +4804,10 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4819,9 +4874,10 @@ class val Div is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4888,9 +4944,10 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -4957,9 +5014,10 @@ class val Mod is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5026,9 +5084,10 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5095,9 +5154,10 @@ class val LShift is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5164,9 +5224,10 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5233,9 +5294,10 @@ class val RShift is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5302,9 +5364,10 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5371,9 +5434,10 @@ class val Eq is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5440,9 +5504,10 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5509,9 +5574,10 @@ class val NE is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5578,9 +5644,10 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5647,9 +5714,10 @@ class val LT is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5716,9 +5784,10 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5785,9 +5854,10 @@ class val LE is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5854,9 +5924,10 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5923,9 +5994,10 @@ class val GE is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -5992,9 +6064,10 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6061,9 +6134,10 @@ class val GT is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6130,9 +6204,10 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6199,9 +6274,10 @@ class val Is is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6268,9 +6344,10 @@ class val Isnt is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6337,9 +6414,10 @@ class val And is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6406,9 +6484,10 @@ class val Or is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6475,9 +6554,10 @@ class val XOr is (AST & BinaryOp & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -6541,8 +6621,9 @@ class val Not is (AST & UnaryOp & Expr)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -6594,8 +6675,9 @@ class val Neg is (AST & UnaryOp & Expr)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -6647,8 +6729,9 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -6700,8 +6783,9 @@ class val AddressOf is (AST & UnaryOp & Expr)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -6753,8 +6837,9 @@ class val DigestOf is (AST & UnaryOp & Expr)
   =>_pos = SourcePosNone
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  expr': Expr) =>
+  new val _create(pos': SourcePosAny,
+    expr': Expr)
+  =>
     _pos = pos'
     _expr = expr'
   
@@ -6809,9 +6894,10 @@ class val LocalLet is (AST & Local & Expr)
     _name = name'
     _local_type = local_type'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  local_type': (Type | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    local_type': (Type | None))
+  =>
     _pos = pos'
     _name = name'
     _local_type = local_type'
@@ -6878,9 +6964,10 @@ class val LocalVar is (AST & Local & Expr)
     _name = name'
     _local_type = local_type'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  local_type': (Type | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    local_type': (Type | None))
+  =>
     _pos = pos'
     _name = name'
     _local_type = local_type'
@@ -6947,9 +7034,10 @@ class val Assign is (AST & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Expr) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Expr)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -7016,9 +7104,10 @@ class val Dot is (AST & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Id) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Id)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -7085,9 +7174,10 @@ class val Chain is (AST & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Id) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Id)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -7154,9 +7244,10 @@ class val Tilde is (AST & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': Id) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': Id)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -7223,9 +7314,10 @@ class val Qualify is (AST & Expr)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Expr, 
-  right': TypeArgs) =>
+  new val _create(pos': SourcePosAny,
+    left': Expr,
+    right': TypeArgs)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -7295,10 +7387,11 @@ class val Call is (AST & Expr)
     _args = args'
     _named_args = named_args'
   
-  new val _create(pos': SourcePosAny, 
-  callable': Expr, 
-  args': Args, 
-  named_args': NamedArgs) =>
+  new val _create(pos': SourcePosAny,
+    callable': Expr,
+    args': Args,
+    named_args': NamedArgs)
+  =>
     _pos = pos'
     _callable = callable'
     _args = args'
@@ -7380,12 +7473,13 @@ class val CallFFI is (AST & Expr)
     _named_args = named_args'
     _partial = partial'
   
-  new val _create(pos': SourcePosAny, 
-  name': (Id | LitString), 
-  type_args': (TypeArgs | None), 
-  args': Args, 
-  named_args': NamedArgs, 
-  partial': (Question | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': (Id | LitString),
+    type_args': (TypeArgs | None),
+    args': Args,
+    named_args': NamedArgs,
+    partial': (Question | None))
+  =>
     _pos = pos'
     _name = name'
     _type_args = type_args'
@@ -7473,8 +7567,9 @@ class val Args is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Sequence]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Sequence])
+  =>
     _pos = pos'
     _list = list'
   
@@ -7527,8 +7622,9 @@ class val NamedArgs is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[NamedArg]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[NamedArg])
+  =>
     _pos = pos'
     _list = list'
   
@@ -7584,9 +7680,10 @@ class val NamedArg is AST
     _name = name'
     _value = value'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  value': Sequence) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    value': Sequence)
+  =>
     _pos = pos'
     _name = name'
     _value = value'
@@ -7674,16 +7771,17 @@ class val Lambda is (AST & Expr)
     _body = body'
     _object_cap = object_cap'
   
-  new val _create(pos': SourcePosAny, 
-  method_cap': (Cap | None), 
-  name': (Id | None), 
-  type_params': (TypeParams | None), 
-  params': (Params | None), 
-  captures': (LambdaCaptures | None), 
-  return_type': (Type | None), 
-  partial': (Question | None), 
-  body': Sequence, 
-  object_cap': (Cap | None)) =>
+  new val _create(pos': SourcePosAny,
+    method_cap': (Cap | None),
+    name': (Id | None),
+    type_params': (TypeParams | None),
+    params': (Params | None),
+    captures': (LambdaCaptures | None),
+    return_type': (Type | None),
+    partial': (Question | None),
+    body': Sequence,
+    object_cap': (Cap | None))
+  =>
     _pos = pos'
     _method_cap = method_cap'
     _name = name'
@@ -7804,8 +7902,9 @@ class val LambdaCaptures is AST
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[LambdaCapture]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[LambdaCapture])
+  =>
     _pos = pos'
     _list = list'
   
@@ -7864,10 +7963,11 @@ class val LambdaCapture is AST
     _local_type = local_type'
     _expr = expr'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  local_type': (Type | None), 
-  expr': (Expr | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    local_type': (Type | None),
+    expr': (Expr | None))
+  =>
     _pos = pos'
     _name = name'
     _local_type = local_type'
@@ -7943,10 +8043,11 @@ class val Object is (AST & Expr)
     _provides = provides'
     _members = members'
   
-  new val _create(pos': SourcePosAny, 
-  cap': (Cap | None), 
-  provides': (Type | None), 
-  members': (Members | None)) =>
+  new val _create(pos': SourcePosAny,
+    cap': (Cap | None),
+    provides': (Type | None),
+    members': (Members | None))
+  =>
     _pos = pos'
     _cap = cap'
     _provides = provides'
@@ -8016,9 +8117,10 @@ class val LitArray is (AST & Expr)
     _elem_type = elem_type'
     _sequence = sequence'
   
-  new val _create(pos': SourcePosAny, 
-  elem_type': (Type | None), 
-  sequence': Sequence) =>
+  new val _create(pos': SourcePosAny,
+    elem_type': (Type | None),
+    sequence': Sequence)
+  =>
     _pos = pos'
     _elem_type = elem_type'
     _sequence = sequence'
@@ -8076,8 +8178,9 @@ class val Tuple is (AST & Expr)
   =>_pos = SourcePosNone
     _elements = elements'
   
-  new val _create(pos': SourcePosAny, 
-  elements': coll.Vec[Sequence]) =>
+  new val _create(pos': SourcePosAny,
+    elements': coll.Vec[Sequence])
+  =>
     _pos = pos'
     _elements = elements'
   
@@ -8125,7 +8228,8 @@ class val This is (AST & Expr)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -8155,7 +8259,8 @@ class val LitTrue is (AST & LitBool & Expr)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -8185,7 +8290,8 @@ class val LitFalse is (AST & LitBool & Expr)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -8339,7 +8445,8 @@ class val LitLocation is (AST & Expr)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -8374,8 +8481,9 @@ class val Reference is (AST & Expr)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    name': Id)
+  =>
     _pos = pos'
     _name = name'
   
@@ -8422,7 +8530,8 @@ class val DontCare is (AST & Expr)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -8457,8 +8566,9 @@ class val PackageRef is (AST & Expr)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    name': Id)
+  =>
     _pos = pos'
     _name = name'
   
@@ -8513,9 +8623,10 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': (Id | TypeArgs)) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': (Id | TypeArgs))
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8582,9 +8693,10 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': (Id | TypeArgs)) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': (Id | TypeArgs))
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8651,9 +8763,10 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': (Id | TypeArgs)) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': (Id | TypeArgs))
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8720,9 +8833,10 @@ class val TypeRef is (AST & Expr)
     _package = package'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  package': Expr, 
-  name': (Id | TypeArgs)) =>
+  new val _create(pos': SourcePosAny,
+    package': Expr,
+    name': (Id | TypeArgs))
+  =>
     _pos = pos'
     _package = package'
     _name = name'
@@ -8789,9 +8903,10 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': Id)
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8858,9 +8973,10 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': Id)
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8927,9 +9043,10 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': Id)
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -8996,9 +9113,10 @@ class val TupleElementRef is (AST & Expr)
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  receiver': Expr, 
-  name': LitInteger) =>
+  new val _create(pos': SourcePosAny,
+    receiver': Expr,
+    name': LitInteger)
+  =>
     _pos = pos'
     _receiver = receiver'
     _name = name'
@@ -9062,8 +9180,9 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    name': Id)
+  =>
     _pos = pos'
     _name = name'
   
@@ -9115,8 +9234,9 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    name': Id)
+  =>
     _pos = pos'
     _name = name'
   
@@ -9168,8 +9288,9 @@ class val ParamRef is (AST & LocalRef & Expr)
   =>_pos = SourcePosNone
     _name = name'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id) =>
+  new val _create(pos': SourcePosAny,
+    name': Id)
+  =>
     _pos = pos'
     _name = name'
   
@@ -9224,9 +9345,10 @@ class val ViewpointType is (AST & Type)
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny, 
-  left': Type, 
-  right': Type) =>
+  new val _create(pos': SourcePosAny,
+    left': Type,
+    right': Type)
+  =>
     _pos = pos'
     _left = left'
     _right = right'
@@ -9290,8 +9412,9 @@ class val UnionType is (AST & Type)
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Type]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Type])
+  =>
     _pos = pos'
     _list = list'
   
@@ -9344,8 +9467,9 @@ class val IsectType is (AST & Type)
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Type]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Type])
+  =>
     _pos = pos'
     _list = list'
   
@@ -9398,8 +9522,9 @@ class val TupleType is (AST & Type)
   =>_pos = SourcePosNone
     _list = list'
   
-  new val _create(pos': SourcePosAny, 
-  list': coll.Vec[Type]) =>
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Type])
+  =>
     _pos = pos'
     _list = list'
   
@@ -9464,12 +9589,13 @@ class val NominalType is (AST & Type)
     _cap = cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  package': (Id | None), 
-  type_args': (TypeArgs | None), 
-  cap': (Cap | GenCap | None), 
-  cap_mod': (CapMod | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    package': (Id | None),
+    type_args': (TypeArgs | None),
+    cap': (Cap | GenCap | None),
+    cap_mod': (CapMod | None))
+  =>
     _pos = pos'
     _name = name'
     _package = package'
@@ -9566,11 +9692,12 @@ class val FunType is (AST & Type)
     _params = params'
     _return_type = return_type'
   
-  new val _create(pos': SourcePosAny, 
-  cap': Cap, 
-  type_params': (TypeParams | None), 
-  params': (Params | None), 
-  return_type': (Type | None)) =>
+  new val _create(pos': SourcePosAny,
+    cap': Cap,
+    type_params': (TypeParams | None),
+    params': (Params | None),
+    return_type': (Type | None))
+  =>
     _pos = pos'
     _cap = cap'
     _type_params = type_params'
@@ -9670,15 +9797,16 @@ class val LambdaType is (AST & Type)
     _object_cap = object_cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny, 
-  method_cap': (Cap | None), 
-  name': (Id | None), 
-  type_params': (TypeParams | None), 
-  param_types': TupleType, 
-  return_type': (Type | None), 
-  partial': (Question | None), 
-  object_cap': (Cap | GenCap | None), 
-  cap_mod': (CapMod | None)) =>
+  new val _create(pos': SourcePosAny,
+    method_cap': (Cap | None),
+    name': (Id | None),
+    type_params': (TypeParams | None),
+    param_types': TupleType,
+    return_type': (Type | None),
+    partial': (Question | None),
+    object_cap': (Cap | GenCap | None),
+    cap_mod': (CapMod | None))
+  =>
     _pos = pos'
     _method_cap = method_cap'
     _name = name'
@@ -9796,10 +9924,11 @@ class val TypeParamRef is (AST & Type)
     _cap = cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny, 
-  name': Id, 
-  cap': (Cap | GenCap | None), 
-  cap_mod': (CapMod | None)) =>
+  new val _create(pos': SourcePosAny,
+    name': Id,
+    cap': (Cap | GenCap | None),
+    cap_mod': (CapMod | None))
+  =>
     _pos = pos'
     _name = name'
     _cap = cap'
@@ -9864,7 +9993,8 @@ class val ThisType is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -9894,7 +10024,8 @@ class val DontCareType is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -9924,7 +10055,8 @@ class val ErrorType is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -9954,7 +10086,8 @@ class val LiteralType is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -9984,7 +10117,8 @@ class val LiteralTypeBranch is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10014,7 +10148,8 @@ class val OpLiteralType is (AST & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10044,7 +10179,8 @@ class val Iso is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10074,7 +10210,8 @@ class val Trn is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10104,7 +10241,8 @@ class val Ref is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10134,7 +10272,8 @@ class val Val is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10164,7 +10303,8 @@ class val Box is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10194,7 +10334,8 @@ class val Tag is (AST & Cap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10224,7 +10365,8 @@ class val CapRead is (AST & GenCap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10254,7 +10396,8 @@ class val CapSend is (AST & GenCap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10284,7 +10427,8 @@ class val CapShare is (AST & GenCap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10314,7 +10458,8 @@ class val CapAlias is (AST & GenCap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10344,7 +10489,8 @@ class val CapAny is (AST & GenCap & Type)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10374,7 +10520,8 @@ class val Aliased is (AST & CapMod)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10404,7 +10551,8 @@ class val Ephemeral is (AST & CapMod)
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10434,7 +10582,8 @@ class val At is AST
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10464,7 +10613,8 @@ class val Question is AST
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
@@ -10494,7 +10644,8 @@ class val Ellipsis is AST
   
   new val create() => _pos = SourcePosNone
   
-  new val _create(pos': SourcePosAny) =>
+  new val _create(pos': SourcePosAny)
+  =>
     _pos = pos'
   
   new from_iter(
