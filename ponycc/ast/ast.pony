@@ -1,9 +1,8 @@
 use coll = "collections/persistent"
 
 trait val AST
-  fun pos(): SourcePosAny
-  fun ref set_pos(pos': SourcePosAny)
-  fun string(): String iso^
+  fun val pos(): SourcePosAny
+  fun val string(): String iso^
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -248,17 +247,26 @@ trait val LocalRef is AST
 trait val UnaryOp is AST
 
 class val Module is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _use_decls: coll.Vec[UseDecl]
-  var _type_decls: coll.Vec[TypeDecl]
-  var _docs: (LitString | None)
+  let _use_decls: coll.Vec[UseDecl]
+  let _type_decls: coll.Vec[TypeDecl]
+  let _docs: (LitString | None)
   
   new val create(
     use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl],
     type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl],
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _use_decls = use_decls'
+    _type_decls = type_decls'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  use_decls': coll.Vec[UseDecl], 
+  type_decls': coll.Vec[TypeDecl], 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _use_decls = use_decls'
     _type_decls = type_decls'
     _docs = docs'
@@ -268,9 +276,7 @@ class val Module is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var use_decls' = coll.Vec[UseDecl]
     var use_decls_next' = try iter.next() else None end
     while true do
@@ -299,18 +305,18 @@ class val Module is AST
       else errs.push(("Module got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _use_decls, _type_decls, _docs)
   
-  fun use_decls(): this->coll.Vec[UseDecl] => _use_decls
-  fun type_decls(): this->coll.Vec[TypeDecl] => _type_decls
-  fun docs(): this->(LitString | None) => _docs
+  fun val use_decls(): coll.Vec[UseDecl] => _use_decls
+  fun val type_decls(): coll.Vec[TypeDecl] => _type_decls
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_use_decls(use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl]) => _use_decls = consume use_decls'
-  fun ref set_type_decls(type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl]) => _type_decls = consume type_decls'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_use_decls(use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl]) => _create(_pos, use_decls', _type_decls, _docs)
+  fun val with_type_decls(type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl]) => _create(_pos, _use_decls, type_decls', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _use_decls, _type_decls, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Module")
     s.push('(')
@@ -333,15 +339,22 @@ class val Module is AST
     consume s
 
 class val UsePackage is (AST & UseDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _prefix: (Id | None)
-  var _package: LitString
+  let _prefix: (Id | None)
+  let _package: LitString
   
   new val create(
     prefix': (Id | None) = None,
     package': LitString)
-  =>
+  =>_pos = SourcePosNone
+    _prefix = prefix'
+    _package = package'
+  
+  new val _create(pos': SourcePosAny, 
+  prefix': (Id | None), 
+  package': LitString) =>
+    _pos = pos'
     _prefix = prefix'
     _package = package'
   
@@ -350,9 +363,7 @@ class val UsePackage is (AST & UseDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let prefix': (AST | None) = try iter.next() else None end
     let package': (AST | None) =
       try iter.next()
@@ -375,16 +386,16 @@ class val UsePackage is (AST & UseDecl)
       else errs.push(("UsePackage got incompatible field: package", try (package' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _prefix, _package)
   
-  fun prefix(): this->(Id | None) => _prefix
-  fun package(): this->LitString => _package
+  fun val prefix(): (Id | None) => _prefix
+  fun val package(): LitString => _package
   
-  fun ref set_prefix(prefix': (Id | None) = None) => _prefix = consume prefix'
-  fun ref set_package(package': LitString) => _package = consume package'
+  fun val with_prefix(prefix': (Id | None) = None) => _create(_pos, prefix', _package)
+  fun val with_package(package': LitString) => _create(_pos, _prefix, package')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("UsePackage")
     s.push('(')
@@ -394,13 +405,13 @@ class val UsePackage is (AST & UseDecl)
     consume s
 
 class val UseFFIDecl is (AST & UseDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: (Id | LitString)
-  var _return_type: TypeArgs
-  var _params: (Params | None)
-  var _partial: (Question | None)
-  var _guard: (IfDefCond | None)
+  let _name: (Id | LitString)
+  let _return_type: TypeArgs
+  let _params: (Params | None)
+  let _partial: (Question | None)
+  let _guard: (IfDefCond | None)
   
   new val create(
     name': (Id | LitString),
@@ -408,7 +419,20 @@ class val UseFFIDecl is (AST & UseDecl)
     params': (Params | None),
     partial': (Question | None),
     guard': (IfDefCond | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _return_type = return_type'
+    _params = params'
+    _partial = partial'
+    _guard = guard'
+  
+  new val _create(pos': SourcePosAny, 
+  name': (Id | LitString), 
+  return_type': TypeArgs, 
+  params': (Params | None), 
+  partial': (Question | None), 
+  guard': (IfDefCond | None)) =>
+    _pos = pos'
     _name = name'
     _return_type = return_type'
     _params = params'
@@ -420,9 +444,7 @@ class val UseFFIDecl is (AST & UseDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("UseFFIDecl missing required field: name", pos')); error
@@ -469,22 +491,22 @@ class val UseFFIDecl is (AST & UseDecl)
       else errs.push(("UseFFIDecl got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _return_type, _params, _partial, _guard)
   
-  fun name(): this->(Id | LitString) => _name
-  fun return_type(): this->TypeArgs => _return_type
-  fun params(): this->(Params | None) => _params
-  fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(IfDefCond | None) => _guard
+  fun val name(): (Id | LitString) => _name
+  fun val return_type(): TypeArgs => _return_type
+  fun val params(): (Params | None) => _params
+  fun val partial(): (Question | None) => _partial
+  fun val guard(): (IfDefCond | None) => _guard
   
-  fun ref set_name(name': (Id | LitString)) => _name = consume name'
-  fun ref set_return_type(return_type': TypeArgs) => _return_type = consume return_type'
-  fun ref set_params(params': (Params | None)) => _params = consume params'
-  fun ref set_partial(partial': (Question | None)) => _partial = consume partial'
-  fun ref set_guard(guard': (IfDefCond | None) = None) => _guard = consume guard'
+  fun val with_name(name': (Id | LitString)) => _create(_pos, name', _return_type, _params, _partial, _guard)
+  fun val with_return_type(return_type': TypeArgs) => _create(_pos, _name, return_type', _params, _partial, _guard)
+  fun val with_params(params': (Params | None)) => _create(_pos, _name, _return_type, params', _partial, _guard)
+  fun val with_partial(partial': (Question | None)) => _create(_pos, _name, _return_type, _params, partial', _guard)
+  fun val with_guard(guard': (IfDefCond | None) = None) => _create(_pos, _name, _return_type, _params, _partial, guard')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("UseFFIDecl")
     s.push('(')
@@ -497,15 +519,15 @@ class val UseFFIDecl is (AST & UseDecl)
     consume s
 
 class val TypeAlias is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -515,7 +537,24 @@ class val TypeAlias is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -529,9 +568,7 @@ class val TypeAlias is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("TypeAlias missing required field: name", pos')); error
@@ -579,26 +616,26 @@ class val TypeAlias is (AST & TypeDecl)
       else errs.push(("TypeAlias got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeAlias")
     s.push('(')
@@ -613,15 +650,15 @@ class val TypeAlias is (AST & TypeDecl)
     consume s
 
 class val Interface is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -631,7 +668,24 @@ class val Interface is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -645,9 +699,7 @@ class val Interface is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Interface missing required field: name", pos')); error
@@ -695,26 +747,26 @@ class val Interface is (AST & TypeDecl)
       else errs.push(("Interface got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Interface")
     s.push('(')
@@ -729,15 +781,15 @@ class val Interface is (AST & TypeDecl)
     consume s
 
 class val Trait is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -747,7 +799,24 @@ class val Trait is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -761,9 +830,7 @@ class val Trait is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Trait missing required field: name", pos')); error
@@ -811,26 +878,26 @@ class val Trait is (AST & TypeDecl)
       else errs.push(("Trait got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Trait")
     s.push('(')
@@ -845,15 +912,15 @@ class val Trait is (AST & TypeDecl)
     consume s
 
 class val Primitive is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -863,7 +930,24 @@ class val Primitive is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -877,9 +961,7 @@ class val Primitive is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Primitive missing required field: name", pos')); error
@@ -927,26 +1009,26 @@ class val Primitive is (AST & TypeDecl)
       else errs.push(("Primitive got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Primitive")
     s.push('(')
@@ -961,15 +1043,15 @@ class val Primitive is (AST & TypeDecl)
     consume s
 
 class val Struct is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -979,7 +1061,24 @@ class val Struct is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -993,9 +1092,7 @@ class val Struct is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Struct missing required field: name", pos')); error
@@ -1043,26 +1140,26 @@ class val Struct is (AST & TypeDecl)
       else errs.push(("Struct got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Struct")
     s.push('(')
@@ -1077,15 +1174,15 @@ class val Struct is (AST & TypeDecl)
     consume s
 
 class val Class is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -1095,7 +1192,24 @@ class val Class is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1109,9 +1223,7 @@ class val Class is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Class missing required field: name", pos')); error
@@ -1159,26 +1271,26 @@ class val Class is (AST & TypeDecl)
       else errs.push(("Class got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Class")
     s.push('(')
@@ -1193,15 +1305,15 @@ class val Class is (AST & TypeDecl)
     consume s
 
 class val Actor is (AST & TypeDecl)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _provides: (Type | None)
-  var _members: Members
-  var _at: (At | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _provides: (Type | None)
+  let _members: Members
+  let _at: (At | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -1211,7 +1323,24 @@ class val Actor is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _provides = provides'
+    _members = members'
+    _at = at'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  provides': (Type | None), 
+  members': Members, 
+  at': (At | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1225,9 +1354,7 @@ class val Actor is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Actor missing required field: name", pos')); error
@@ -1275,26 +1402,26 @@ class val Actor is (AST & TypeDecl)
       else errs.push(("Actor got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->Members => _members
-  fun at(): this->(At | None) => _at
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val provides(): (Type | None) => _provides
+  fun val members(): Members => _members
+  fun val at(): (At | None) => _at
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': Members = Members) => _members = consume members'
-  fun ref set_at(at': (At | None) = None) => _at = consume at'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Actor")
     s.push('(')
@@ -1309,15 +1436,22 @@ class val Actor is (AST & TypeDecl)
     consume s
 
 class val Members is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _fields: coll.Vec[Field]
-  var _methods: coll.Vec[Method]
+  let _fields: coll.Vec[Field]
+  let _methods: coll.Vec[Method]
   
   new val create(
     fields': coll.Vec[Field] = coll.Vec[Field],
     methods': coll.Vec[Method] = coll.Vec[Method])
-  =>
+  =>_pos = SourcePosNone
+    _fields = fields'
+    _methods = methods'
+  
+  new val _create(pos': SourcePosAny, 
+  fields': coll.Vec[Field], 
+  methods': coll.Vec[Method]) =>
+    _pos = pos'
     _fields = fields'
     _methods = methods'
   
@@ -1326,9 +1460,7 @@ class val Members is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var fields' = coll.Vec[Field]
     var fields_next' = try iter.next() else None end
     while true do
@@ -1349,16 +1481,16 @@ class val Members is AST
     _fields = fields'
     _methods = methods'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _fields, _methods)
   
-  fun fields(): this->coll.Vec[Field] => _fields
-  fun methods(): this->coll.Vec[Method] => _methods
+  fun val fields(): coll.Vec[Field] => _fields
+  fun val methods(): coll.Vec[Method] => _methods
   
-  fun ref set_fields(fields': coll.Vec[Field] = coll.Vec[Field]) => _fields = consume fields'
-  fun ref set_methods(methods': coll.Vec[Method] = coll.Vec[Method]) => _methods = consume methods'
+  fun val with_fields(fields': coll.Vec[Field] = coll.Vec[Field]) => _create(_pos, fields', _methods)
+  fun val with_methods(methods': coll.Vec[Method] = coll.Vec[Method]) => _create(_pos, _fields, methods')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Members")
     s.push('(')
@@ -1379,17 +1511,26 @@ class val Members is AST
     consume s
 
 class val FieldLet is (AST & Field)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _field_type: Type
-  var _default: (Expr | None)
+  let _name: Id
+  let _field_type: Type
+  let _default: (Expr | None)
   
   new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _field_type = field_type'
+    _default = default'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  field_type': Type, 
+  default': (Expr | None)) =>
+    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
@@ -1399,9 +1540,7 @@ class val FieldLet is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("FieldLet missing required field: name", pos')); error
@@ -1432,18 +1571,18 @@ class val FieldLet is (AST & Field)
       else errs.push(("FieldLet got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
-  fun name(): this->Id => _name
-  fun field_type(): this->Type => _field_type
-  fun default(): this->(Expr | None) => _default
+  fun val name(): Id => _name
+  fun val field_type(): Type => _field_type
+  fun val default(): (Expr | None) => _default
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
+  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLet")
     s.push('(')
@@ -1454,17 +1593,26 @@ class val FieldLet is (AST & Field)
     consume s
 
 class val FieldVar is (AST & Field)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _field_type: Type
-  var _default: (Expr | None)
+  let _name: Id
+  let _field_type: Type
+  let _default: (Expr | None)
   
   new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _field_type = field_type'
+    _default = default'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  field_type': Type, 
+  default': (Expr | None)) =>
+    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
@@ -1474,9 +1622,7 @@ class val FieldVar is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("FieldVar missing required field: name", pos')); error
@@ -1507,18 +1653,18 @@ class val FieldVar is (AST & Field)
       else errs.push(("FieldVar got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
-  fun name(): this->Id => _name
-  fun field_type(): this->Type => _field_type
-  fun default(): this->(Expr | None) => _default
+  fun val name(): Id => _name
+  fun val field_type(): Type => _field_type
+  fun val default(): (Expr | None) => _default
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
+  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVar")
     s.push('(')
@@ -1529,17 +1675,26 @@ class val FieldVar is (AST & Field)
     consume s
 
 class val FieldEmbed is (AST & Field)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _field_type: Type
-  var _default: (Expr | None)
+  let _name: Id
+  let _field_type: Type
+  let _default: (Expr | None)
   
   new val create(
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _field_type = field_type'
+    _default = default'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  field_type': Type, 
+  default': (Expr | None)) =>
+    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
@@ -1549,9 +1704,7 @@ class val FieldEmbed is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("FieldEmbed missing required field: name", pos')); error
@@ -1582,18 +1735,18 @@ class val FieldEmbed is (AST & Field)
       else errs.push(("FieldEmbed got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
-  fun name(): this->Id => _name
-  fun field_type(): this->Type => _field_type
-  fun default(): this->(Expr | None) => _default
+  fun val name(): Id => _name
+  fun val field_type(): Type => _field_type
+  fun val default(): (Expr | None) => _default
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_field_type(field_type': Type) => _field_type = consume field_type'
-  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
+  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbed")
     s.push('(')
@@ -1604,17 +1757,17 @@ class val FieldEmbed is (AST & Field)
     consume s
 
 class val MethodFun is (AST & Method)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _params: (Params | None)
-  var _return_type: (Type | None)
-  var _partial: (Question | None)
-  var _guard: (Sequence | None)
-  var _body: (Sequence | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _params: (Params | None)
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _guard: (Sequence | None)
+  let _body: (Sequence | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -1626,7 +1779,28 @@ class val MethodFun is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _params = params'
+    _return_type = return_type'
+    _partial = partial'
+    _guard = guard'
+    _body = body'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  params': (Params | None), 
+  return_type': (Type | None), 
+  partial': (Question | None), 
+  guard': (Sequence | None), 
+  body': (Sequence | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1642,9 +1816,7 @@ class val MethodFun is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("MethodFun missing required field: name", pos')); error
@@ -1702,30 +1874,30 @@ class val MethodFun is (AST & Method)
       else errs.push(("MethodFun got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(Params | None) => _params
-  fun return_type(): this->(Type | None) => _return_type
-  fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(Sequence | None) => _guard
-  fun body(): this->(Sequence | None) => _body
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): (Params | None) => _params
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val guard(): (Sequence | None) => _guard
+  fun val body(): (Sequence | None) => _body
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFun")
     s.push('(')
@@ -1742,17 +1914,17 @@ class val MethodFun is (AST & Method)
     consume s
 
 class val MethodNew is (AST & Method)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _params: (Params | None)
-  var _return_type: (Type | None)
-  var _partial: (Question | None)
-  var _guard: (Sequence | None)
-  var _body: (Sequence | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _params: (Params | None)
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _guard: (Sequence | None)
+  let _body: (Sequence | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -1764,7 +1936,28 @@ class val MethodNew is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _params = params'
+    _return_type = return_type'
+    _partial = partial'
+    _guard = guard'
+    _body = body'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  params': (Params | None), 
+  return_type': (Type | None), 
+  partial': (Question | None), 
+  guard': (Sequence | None), 
+  body': (Sequence | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1780,9 +1973,7 @@ class val MethodNew is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("MethodNew missing required field: name", pos')); error
@@ -1840,30 +2031,30 @@ class val MethodNew is (AST & Method)
       else errs.push(("MethodNew got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(Params | None) => _params
-  fun return_type(): this->(Type | None) => _return_type
-  fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(Sequence | None) => _guard
-  fun body(): this->(Sequence | None) => _body
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): (Params | None) => _params
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val guard(): (Sequence | None) => _guard
+  fun val body(): (Sequence | None) => _body
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNew")
     s.push('(')
@@ -1880,17 +2071,17 @@ class val MethodNew is (AST & Method)
     consume s
 
 class val MethodBe is (AST & Method)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | None)
-  var _type_params: (TypeParams | None)
-  var _params: (Params | None)
-  var _return_type: (Type | None)
-  var _partial: (Question | None)
-  var _guard: (Sequence | None)
-  var _body: (Sequence | None)
-  var _docs: (LitString | None)
+  let _name: Id
+  let _cap: (Cap | None)
+  let _type_params: (TypeParams | None)
+  let _params: (Params | None)
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _guard: (Sequence | None)
+  let _body: (Sequence | None)
+  let _docs: (LitString | None)
   
   new val create(
     name': Id,
@@ -1902,7 +2093,28 @@ class val MethodBe is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _type_params = type_params'
+    _params = params'
+    _return_type = return_type'
+    _partial = partial'
+    _guard = guard'
+    _body = body'
+    _docs = docs'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | None), 
+  type_params': (TypeParams | None), 
+  params': (Params | None), 
+  return_type': (Type | None), 
+  partial': (Question | None), 
+  guard': (Sequence | None), 
+  body': (Sequence | None), 
+  docs': (LitString | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1918,9 +2130,7 @@ class val MethodBe is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("MethodBe missing required field: name", pos')); error
@@ -1978,30 +2188,30 @@ class val MethodBe is (AST & Method)
       else errs.push(("MethodBe got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | None) => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(Params | None) => _params
-  fun return_type(): this->(Type | None) => _return_type
-  fun partial(): this->(Question | None) => _partial
-  fun guard(): this->(Sequence | None) => _guard
-  fun body(): this->(Sequence | None) => _body
-  fun docs(): this->(LitString | None) => _docs
+  fun val name(): Id => _name
+  fun val cap(): (Cap | None) => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): (Params | None) => _params
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val guard(): (Sequence | None) => _guard
+  fun val body(): (Sequence | None) => _body
+  fun val docs(): (LitString | None) => _docs
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
-  fun ref set_docs(docs': (LitString | None) = None) => _docs = consume docs'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBe")
     s.push('(')
@@ -2018,13 +2228,18 @@ class val MethodBe is (AST & Method)
     consume s
 
 class val TypeParams is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[TypeParam]
+  let _list: coll.Vec[TypeParam]
   
   new val create(
     list': coll.Vec[TypeParam] = coll.Vec[TypeParam])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[TypeParam]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -2032,9 +2247,7 @@ class val TypeParams is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[TypeParam]
     var list_next' = try iter.next() else None end
     while true do
@@ -2048,14 +2261,14 @@ class val TypeParams is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[TypeParam] => _list
+  fun val list(): coll.Vec[TypeParam] => _list
   
-  fun ref set_list(list': coll.Vec[TypeParam] = coll.Vec[TypeParam]) => _list = consume list'
+  fun val with_list(list': coll.Vec[TypeParam] = coll.Vec[TypeParam]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParams")
     s.push('(')
@@ -2069,17 +2282,26 @@ class val TypeParams is AST
     consume s
 
 class val TypeParam is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _constraint: (Type | None)
-  var _default: (Type | None)
+  let _name: Id
+  let _constraint: (Type | None)
+  let _default: (Type | None)
   
   new val create(
     name': Id,
     constraint': (Type | None) = None,
     default': (Type | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _constraint = constraint'
+    _default = default'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  constraint': (Type | None), 
+  default': (Type | None)) =>
+    _pos = pos'
     _name = name'
     _constraint = constraint'
     _default = default'
@@ -2089,9 +2311,7 @@ class val TypeParam is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("TypeParam missing required field: name", pos')); error
@@ -2119,18 +2339,18 @@ class val TypeParam is AST
       else errs.push(("TypeParam got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _constraint, _default)
   
-  fun name(): this->Id => _name
-  fun constraint(): this->(Type | None) => _constraint
-  fun default(): this->(Type | None) => _default
+  fun val name(): Id => _name
+  fun val constraint(): (Type | None) => _constraint
+  fun val default(): (Type | None) => _default
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_constraint(constraint': (Type | None) = None) => _constraint = consume constraint'
-  fun ref set_default(default': (Type | None) = None) => _default = consume default'
+  fun val with_name(name': Id) => _create(_pos, name', _constraint, _default)
+  fun val with_constraint(constraint': (Type | None) = None) => _create(_pos, _name, constraint', _default)
+  fun val with_default(default': (Type | None) = None) => _create(_pos, _name, _constraint, default')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParam")
     s.push('(')
@@ -2141,13 +2361,18 @@ class val TypeParam is AST
     consume s
 
 class val TypeArgs is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Type]
+  let _list: coll.Vec[Type]
   
   new val create(
     list': coll.Vec[Type] = coll.Vec[Type])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Type]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -2155,9 +2380,7 @@ class val TypeArgs is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
@@ -2171,14 +2394,14 @@ class val TypeArgs is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Type] => _list
+  fun val list(): coll.Vec[Type] => _list
   
-  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeArgs")
     s.push('(')
@@ -2192,15 +2415,22 @@ class val TypeArgs is AST
     consume s
 
 class val Params is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Param]
-  var _ellipsis: (Ellipsis | None)
+  let _list: coll.Vec[Param]
+  let _ellipsis: (Ellipsis | None)
   
   new val create(
     list': coll.Vec[Param] = coll.Vec[Param],
     ellipsis': (Ellipsis | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+    _ellipsis = ellipsis'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Param], 
+  ellipsis': (Ellipsis | None)) =>
+    _pos = pos'
     _list = list'
     _ellipsis = ellipsis'
   
@@ -2209,9 +2439,7 @@ class val Params is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Param]
     var list_next' = try iter.next() else None end
     while true do
@@ -2233,16 +2461,16 @@ class val Params is AST
       else errs.push(("Params got incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list, _ellipsis)
   
-  fun list(): this->coll.Vec[Param] => _list
-  fun ellipsis(): this->(Ellipsis | None) => _ellipsis
+  fun val list(): coll.Vec[Param] => _list
+  fun val ellipsis(): (Ellipsis | None) => _ellipsis
   
-  fun ref set_list(list': coll.Vec[Param] = coll.Vec[Param]) => _list = consume list'
-  fun ref set_ellipsis(ellipsis': (Ellipsis | None) = None) => _ellipsis = consume ellipsis'
+  fun val with_list(list': coll.Vec[Param] = coll.Vec[Param]) => _create(_pos, list', _ellipsis)
+  fun val with_ellipsis(ellipsis': (Ellipsis | None) = None) => _create(_pos, _list, ellipsis')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Params")
     s.push('(')
@@ -2258,17 +2486,26 @@ class val Params is AST
     consume s
 
 class val Param is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _param_type: (Type | None)
-  var _default: (Expr | None)
+  let _name: Id
+  let _param_type: (Type | None)
+  let _default: (Expr | None)
   
   new val create(
     name': Id,
     param_type': (Type | None) = None,
     default': (Expr | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _param_type = param_type'
+    _default = default'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  param_type': (Type | None), 
+  default': (Expr | None)) =>
+    _pos = pos'
     _name = name'
     _param_type = param_type'
     _default = default'
@@ -2278,9 +2515,7 @@ class val Param is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Param missing required field: name", pos')); error
@@ -2308,18 +2543,18 @@ class val Param is AST
       else errs.push(("Param got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _param_type, _default)
   
-  fun name(): this->Id => _name
-  fun param_type(): this->(Type | None) => _param_type
-  fun default(): this->(Expr | None) => _default
+  fun val name(): Id => _name
+  fun val param_type(): (Type | None) => _param_type
+  fun val default(): (Expr | None) => _default
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_param_type(param_type': (Type | None) = None) => _param_type = consume param_type'
-  fun ref set_default(default': (Expr | None) = None) => _default = consume default'
+  fun val with_name(name': Id) => _create(_pos, name', _param_type, _default)
+  fun val with_param_type(param_type': (Type | None) = None) => _create(_pos, _name, param_type', _default)
+  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _param_type, default')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Param")
     s.push('(')
@@ -2330,13 +2565,18 @@ class val Param is AST
     consume s
 
 class val Sequence is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Expr]
+  let _list: coll.Vec[Expr]
   
   new val create(
     list': coll.Vec[Expr] = coll.Vec[Expr])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Expr]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -2344,9 +2584,7 @@ class val Sequence is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Expr]
     var list_next' = try iter.next() else None end
     while true do
@@ -2360,14 +2598,14 @@ class val Sequence is (AST & Expr)
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Expr] => _list
+  fun val list(): coll.Vec[Expr] => _list
   
-  fun ref set_list(list': coll.Vec[Expr] = coll.Vec[Expr]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Expr] = coll.Vec[Expr]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Sequence")
     s.push('(')
@@ -2381,13 +2619,18 @@ class val Sequence is (AST & Expr)
     consume s
 
 class val Return is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2395,9 +2638,7 @@ class val Return is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("Return missing required field: value", pos')); error
@@ -2415,14 +2656,14 @@ class val Return is (AST & Jump & Expr)
       else errs.push(("Return got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Return")
     s.push('(')
@@ -2431,13 +2672,18 @@ class val Return is (AST & Jump & Expr)
     consume s
 
 class val Break is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2445,9 +2691,7 @@ class val Break is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("Break missing required field: value", pos')); error
@@ -2465,14 +2709,14 @@ class val Break is (AST & Jump & Expr)
       else errs.push(("Break got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Break")
     s.push('(')
@@ -2481,13 +2725,18 @@ class val Break is (AST & Jump & Expr)
     consume s
 
 class val Continue is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2495,9 +2744,7 @@ class val Continue is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("Continue missing required field: value", pos')); error
@@ -2515,14 +2762,14 @@ class val Continue is (AST & Jump & Expr)
       else errs.push(("Continue got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Continue")
     s.push('(')
@@ -2531,13 +2778,18 @@ class val Continue is (AST & Jump & Expr)
     consume s
 
 class val Error is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2545,9 +2797,7 @@ class val Error is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("Error missing required field: value", pos')); error
@@ -2565,14 +2815,14 @@ class val Error is (AST & Jump & Expr)
       else errs.push(("Error got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Error")
     s.push('(')
@@ -2581,13 +2831,18 @@ class val Error is (AST & Jump & Expr)
     consume s
 
 class val CompileIntrinsic is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2595,9 +2850,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("CompileIntrinsic missing required field: value", pos')); error
@@ -2615,14 +2868,14 @@ class val CompileIntrinsic is (AST & Jump & Expr)
       else errs.push(("CompileIntrinsic got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
     s.push('(')
@@ -2631,13 +2884,18 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     consume s
 
 class val CompileError is (AST & Jump & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _value: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     value': (Expr | None))
-  =>
+  =>_pos = SourcePosNone
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  value': (Expr | None)) =>
+    _pos = pos'
     _value = value'
   
   new from_iter(
@@ -2645,9 +2903,7 @@ class val CompileError is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let value': (AST | None) =
       try iter.next()
       else errs.push(("CompileError missing required field: value", pos')); error
@@ -2665,14 +2921,14 @@ class val CompileError is (AST & Jump & Expr)
       else errs.push(("CompileError got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
-  fun value(): this->(Expr | None) => _value
+  fun val value(): (Expr | None) => _value
   
-  fun ref set_value(value': (Expr | None)) => _value = consume value'
+  fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileError")
     s.push('(')
@@ -2681,13 +2937,18 @@ class val CompileError is (AST & Jump & Expr)
     consume s
 
 class val IfDefFlag is (AST & IfDefCond)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: (Id | LitString)
+  let _name: (Id | LitString)
   
   new val create(
     name': (Id | LitString))
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': (Id | LitString)) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -2695,9 +2956,7 @@ class val IfDefFlag is (AST & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("IfDefFlag missing required field: name", pos')); error
@@ -2715,14 +2974,14 @@ class val IfDefFlag is (AST & IfDefCond)
       else errs.push(("IfDefFlag got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->(Id | LitString) => _name
+  fun val name(): (Id | LitString) => _name
   
-  fun ref set_name(name': (Id | LitString)) => _name = consume name'
+  fun val with_name(name': (Id | LitString)) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefFlag")
     s.push('(')
@@ -2731,13 +2990,18 @@ class val IfDefFlag is (AST & IfDefCond)
     consume s
 
 class val IfDefNot is (AST & IfDefCond)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: IfDefCond
+  let _expr: IfDefCond
   
   new val create(
     expr': IfDefCond)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': IfDefCond) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -2745,9 +3009,7 @@ class val IfDefNot is (AST & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("IfDefNot missing required field: expr", pos')); error
@@ -2765,14 +3027,14 @@ class val IfDefNot is (AST & IfDefCond)
       else errs.push(("IfDefNot got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->IfDefCond => _expr
+  fun val expr(): IfDefCond => _expr
   
-  fun ref set_expr(expr': IfDefCond) => _expr = consume expr'
+  fun val with_expr(expr': IfDefCond) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefNot")
     s.push('(')
@@ -2781,15 +3043,22 @@ class val IfDefNot is (AST & IfDefCond)
     consume s
 
 class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: IfDefCond
-  var _right: IfDefCond
+  let _left: IfDefCond
+  let _right: IfDefCond
   
   new val create(
     left': IfDefCond,
     right': IfDefCond)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': IfDefCond, 
+  right': IfDefCond) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -2798,9 +3067,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("IfDefAnd missing required field: left", pos')); error
@@ -2826,16 +3093,16 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
       else errs.push(("IfDefAnd got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->IfDefCond => _left
-  fun right(): this->IfDefCond => _right
+  fun val left(): IfDefCond => _left
+  fun val right(): IfDefCond => _right
   
-  fun ref set_left(left': IfDefCond) => _left = consume left'
-  fun ref set_right(right': IfDefCond) => _right = consume right'
+  fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
+  fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefAnd")
     s.push('(')
@@ -2845,15 +3112,22 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     consume s
 
 class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: IfDefCond
-  var _right: IfDefCond
+  let _left: IfDefCond
+  let _right: IfDefCond
   
   new val create(
     left': IfDefCond,
     right': IfDefCond)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': IfDefCond, 
+  right': IfDefCond) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -2862,9 +3136,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("IfDefOr missing required field: left", pos')); error
@@ -2890,16 +3162,16 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
       else errs.push(("IfDefOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->IfDefCond => _left
-  fun right(): this->IfDefCond => _right
+  fun val left(): IfDefCond => _left
+  fun val right(): IfDefCond => _right
   
-  fun ref set_left(left': IfDefCond) => _left = consume left'
-  fun ref set_right(right': IfDefCond) => _right = consume right'
+  fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
+  fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefOr")
     s.push('(')
@@ -2909,17 +3181,26 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     consume s
 
 class val IfDef is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _condition: IfDefCond
-  var _then_body: Sequence
-  var _else_body: (Sequence | IfDef | None)
+  let _condition: IfDefCond
+  let _then_body: Sequence
+  let _else_body: (Sequence | IfDef | None)
   
   new val create(
     condition': IfDefCond,
     then_body': Sequence,
     else_body': (Sequence | IfDef | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _condition = condition'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  condition': IfDefCond, 
+  then_body': Sequence, 
+  else_body': (Sequence | IfDef | None)) =>
+    _pos = pos'
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
@@ -2929,9 +3210,7 @@ class val IfDef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let condition': (AST | None) =
       try iter.next()
       else errs.push(("IfDef missing required field: condition", pos')); error
@@ -2962,18 +3241,18 @@ class val IfDef is (AST & Expr)
       else errs.push(("IfDef got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
   
-  fun condition(): this->IfDefCond => _condition
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Sequence | IfDef | None) => _else_body
+  fun val condition(): IfDefCond => _condition
+  fun val then_body(): Sequence => _then_body
+  fun val else_body(): (Sequence | IfDef | None) => _else_body
   
-  fun ref set_condition(condition': IfDefCond) => _condition = consume condition'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Sequence | IfDef | None) = None) => _else_body = consume else_body'
+  fun val with_condition(condition': IfDefCond) => _create(_pos, condition', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | IfDef | None) = None) => _create(_pos, _condition, _then_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDef")
     s.push('(')
@@ -2984,19 +3263,30 @@ class val IfDef is (AST & Expr)
     consume s
 
 class val IfType is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _sub: Type
-  var _super: Type
-  var _then_body: Sequence
-  var _else_body: (Sequence | IfType | None)
+  let _sub: Type
+  let _super: Type
+  let _then_body: Sequence
+  let _else_body: (Sequence | IfType | None)
   
   new val create(
     sub': Type,
     super': Type,
     then_body': Sequence,
     else_body': (Sequence | IfType | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _sub = sub'
+    _super = super'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  sub': Type, 
+  super': Type, 
+  then_body': Sequence, 
+  else_body': (Sequence | IfType | None)) =>
+    _pos = pos'
     _sub = sub'
     _super = super'
     _then_body = then_body'
@@ -3007,9 +3297,7 @@ class val IfType is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let sub': (AST | None) =
       try iter.next()
       else errs.push(("IfType missing required field: sub", pos')); error
@@ -3048,20 +3336,20 @@ class val IfType is (AST & Expr)
       else errs.push(("IfType got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _sub, _super, _then_body, _else_body)
   
-  fun sub(): this->Type => _sub
-  fun super(): this->Type => _super
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Sequence | IfType | None) => _else_body
+  fun val sub(): Type => _sub
+  fun val super(): Type => _super
+  fun val then_body(): Sequence => _then_body
+  fun val else_body(): (Sequence | IfType | None) => _else_body
   
-  fun ref set_sub(sub': Type) => _sub = consume sub'
-  fun ref set_super(super': Type) => _super = consume super'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Sequence | IfType | None) = None) => _else_body = consume else_body'
+  fun val with_sub(sub': Type) => _create(_pos, sub', _super, _then_body, _else_body)
+  fun val with_super(super': Type) => _create(_pos, _sub, super', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence) => _create(_pos, _sub, _super, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | IfType | None) = None) => _create(_pos, _sub, _super, _then_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IfType")
     s.push('(')
@@ -3073,17 +3361,26 @@ class val IfType is (AST & Expr)
     consume s
 
 class val If is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _condition: Sequence
-  var _then_body: Sequence
-  var _else_body: (Sequence | If | None)
+  let _condition: Sequence
+  let _then_body: Sequence
+  let _else_body: (Sequence | If | None)
   
   new val create(
     condition': Sequence,
     then_body': Sequence,
     else_body': (Sequence | If | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _condition = condition'
+    _then_body = then_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  condition': Sequence, 
+  then_body': Sequence, 
+  else_body': (Sequence | If | None)) =>
+    _pos = pos'
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
@@ -3093,9 +3390,7 @@ class val If is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let condition': (AST | None) =
       try iter.next()
       else errs.push(("If missing required field: condition", pos')); error
@@ -3126,18 +3421,18 @@ class val If is (AST & Expr)
       else errs.push(("If got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
   
-  fun condition(): this->Sequence => _condition
-  fun then_body(): this->Sequence => _then_body
-  fun else_body(): this->(Sequence | If | None) => _else_body
+  fun val condition(): Sequence => _condition
+  fun val then_body(): Sequence => _then_body
+  fun val else_body(): (Sequence | If | None) => _else_body
   
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_then_body(then_body': Sequence) => _then_body = consume then_body'
-  fun ref set_else_body(else_body': (Sequence | If | None) = None) => _else_body = consume else_body'
+  fun val with_condition(condition': Sequence) => _create(_pos, condition', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | If | None) = None) => _create(_pos, _condition, _then_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("If")
     s.push('(')
@@ -3148,17 +3443,26 @@ class val If is (AST & Expr)
     consume s
 
 class val While is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _condition: Sequence
-  var _loop_body: Sequence
-  var _else_body: (Sequence | None)
+  let _condition: Sequence
+  let _loop_body: Sequence
+  let _else_body: (Sequence | None)
   
   new val create(
     condition': Sequence,
     loop_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _condition = condition'
+    _loop_body = loop_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  condition': Sequence, 
+  loop_body': Sequence, 
+  else_body': (Sequence | None)) =>
+    _pos = pos'
     _condition = condition'
     _loop_body = loop_body'
     _else_body = else_body'
@@ -3168,9 +3472,7 @@ class val While is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let condition': (AST | None) =
       try iter.next()
       else errs.push(("While missing required field: condition", pos')); error
@@ -3201,18 +3503,18 @@ class val While is (AST & Expr)
       else errs.push(("While got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _loop_body, _else_body)
   
-  fun condition(): this->Sequence => _condition
-  fun loop_body(): this->Sequence => _loop_body
-  fun else_body(): this->(Sequence | None) => _else_body
+  fun val condition(): Sequence => _condition
+  fun val loop_body(): Sequence => _loop_body
+  fun val else_body(): (Sequence | None) => _else_body
   
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun val with_condition(condition': Sequence) => _create(_pos, condition', _loop_body, _else_body)
+  fun val with_loop_body(loop_body': Sequence) => _create(_pos, _condition, loop_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _condition, _loop_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("While")
     s.push('(')
@@ -3223,17 +3525,26 @@ class val While is (AST & Expr)
     consume s
 
 class val Repeat is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _loop_body: Sequence
-  var _condition: Sequence
-  var _else_body: (Sequence | None)
+  let _loop_body: Sequence
+  let _condition: Sequence
+  let _else_body: (Sequence | None)
   
   new val create(
     loop_body': Sequence,
     condition': Sequence,
     else_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _loop_body = loop_body'
+    _condition = condition'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  loop_body': Sequence, 
+  condition': Sequence, 
+  else_body': (Sequence | None)) =>
+    _pos = pos'
     _loop_body = loop_body'
     _condition = condition'
     _else_body = else_body'
@@ -3243,9 +3554,7 @@ class val Repeat is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let loop_body': (AST | None) =
       try iter.next()
       else errs.push(("Repeat missing required field: loop_body", pos')); error
@@ -3276,18 +3585,18 @@ class val Repeat is (AST & Expr)
       else errs.push(("Repeat got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _loop_body, _condition, _else_body)
   
-  fun loop_body(): this->Sequence => _loop_body
-  fun condition(): this->Sequence => _condition
-  fun else_body(): this->(Sequence | None) => _else_body
+  fun val loop_body(): Sequence => _loop_body
+  fun val condition(): Sequence => _condition
+  fun val else_body(): (Sequence | None) => _else_body
   
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_condition(condition': Sequence) => _condition = consume condition'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun val with_loop_body(loop_body': Sequence) => _create(_pos, loop_body', _condition, _else_body)
+  fun val with_condition(condition': Sequence) => _create(_pos, _loop_body, condition', _else_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _loop_body, _condition, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Repeat")
     s.push('(')
@@ -3298,19 +3607,30 @@ class val Repeat is (AST & Expr)
     consume s
 
 class val For is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _refs: (Id | IdTuple)
-  var _iterator: Sequence
-  var _loop_body: Sequence
-  var _else_body: (Sequence | None)
+  let _refs: (Id | IdTuple)
+  let _iterator: Sequence
+  let _loop_body: Sequence
+  let _else_body: (Sequence | None)
   
   new val create(
     refs': (Id | IdTuple),
     iterator': Sequence,
     loop_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _refs = refs'
+    _iterator = iterator'
+    _loop_body = loop_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  refs': (Id | IdTuple), 
+  iterator': Sequence, 
+  loop_body': Sequence, 
+  else_body': (Sequence | None)) =>
+    _pos = pos'
     _refs = refs'
     _iterator = iterator'
     _loop_body = loop_body'
@@ -3321,9 +3641,7 @@ class val For is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let refs': (AST | None) =
       try iter.next()
       else errs.push(("For missing required field: refs", pos')); error
@@ -3362,20 +3680,20 @@ class val For is (AST & Expr)
       else errs.push(("For got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _refs, _iterator, _loop_body, _else_body)
   
-  fun refs(): this->(Id | IdTuple) => _refs
-  fun iterator(): this->Sequence => _iterator
-  fun loop_body(): this->Sequence => _loop_body
-  fun else_body(): this->(Sequence | None) => _else_body
+  fun val refs(): (Id | IdTuple) => _refs
+  fun val iterator(): Sequence => _iterator
+  fun val loop_body(): Sequence => _loop_body
+  fun val else_body(): (Sequence | None) => _else_body
   
-  fun ref set_refs(refs': (Id | IdTuple)) => _refs = consume refs'
-  fun ref set_iterator(iterator': Sequence) => _iterator = consume iterator'
-  fun ref set_loop_body(loop_body': Sequence) => _loop_body = consume loop_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun val with_refs(refs': (Id | IdTuple)) => _create(_pos, refs', _iterator, _loop_body, _else_body)
+  fun val with_iterator(iterator': Sequence) => _create(_pos, _refs, iterator', _loop_body, _else_body)
+  fun val with_loop_body(loop_body': Sequence) => _create(_pos, _refs, _iterator, loop_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _refs, _iterator, _loop_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("For")
     s.push('(')
@@ -3387,17 +3705,26 @@ class val For is (AST & Expr)
     consume s
 
 class val With is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _assigns: AssignTuple
-  var _with_body: Sequence
-  var _else_body: (Sequence | None)
+  let _assigns: AssignTuple
+  let _with_body: Sequence
+  let _else_body: (Sequence | None)
   
   new val create(
     assigns': AssignTuple,
     with_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _assigns = assigns'
+    _with_body = with_body'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  assigns': AssignTuple, 
+  with_body': Sequence, 
+  else_body': (Sequence | None)) =>
+    _pos = pos'
     _assigns = assigns'
     _with_body = with_body'
     _else_body = else_body'
@@ -3407,9 +3734,7 @@ class val With is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let assigns': (AST | None) =
       try iter.next()
       else errs.push(("With missing required field: assigns", pos')); error
@@ -3440,18 +3765,18 @@ class val With is (AST & Expr)
       else errs.push(("With got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _assigns, _with_body, _else_body)
   
-  fun assigns(): this->AssignTuple => _assigns
-  fun with_body(): this->Sequence => _with_body
-  fun else_body(): this->(Sequence | None) => _else_body
+  fun val assigns(): AssignTuple => _assigns
+  fun val with_body(): Sequence => _with_body
+  fun val else_body(): (Sequence | None) => _else_body
   
-  fun ref set_assigns(assigns': AssignTuple) => _assigns = consume assigns'
-  fun ref set_with_body(with_body': Sequence) => _with_body = consume with_body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun val with_assigns(assigns': AssignTuple) => _create(_pos, assigns', _with_body, _else_body)
+  fun val with_with_body(with_body': Sequence) => _create(_pos, _assigns, with_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _assigns, _with_body, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("With")
     s.push('(')
@@ -3462,13 +3787,18 @@ class val With is (AST & Expr)
     consume s
 
 class val IdTuple is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _elements: coll.Vec[(Id | IdTuple)]
+  let _elements: coll.Vec[(Id | IdTuple)]
   
   new val create(
     elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)])
-  =>
+  =>_pos = SourcePosNone
+    _elements = elements'
+  
+  new val _create(pos': SourcePosAny, 
+  elements': coll.Vec[(Id | IdTuple)]) =>
+    _pos = pos'
     _elements = elements'
   
   new from_iter(
@@ -3476,9 +3806,7 @@ class val IdTuple is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var elements' = coll.Vec[(Id | IdTuple)]
     var elements_next' = try iter.next() else None end
     while true do
@@ -3492,14 +3820,14 @@ class val IdTuple is AST
     
     _elements = elements'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
-  fun elements(): this->coll.Vec[(Id | IdTuple)] => _elements
+  fun val elements(): coll.Vec[(Id | IdTuple)] => _elements
   
-  fun ref set_elements(elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)]) => _elements = consume elements'
+  fun val with_elements(elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)]) => _create(_pos, elements')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IdTuple")
     s.push('(')
@@ -3513,13 +3841,18 @@ class val IdTuple is AST
     consume s
 
 class val AssignTuple is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _elements: coll.Vec[Assign]
+  let _elements: coll.Vec[Assign]
   
   new val create(
     elements': coll.Vec[Assign] = coll.Vec[Assign])
-  =>
+  =>_pos = SourcePosNone
+    _elements = elements'
+  
+  new val _create(pos': SourcePosAny, 
+  elements': coll.Vec[Assign]) =>
+    _pos = pos'
     _elements = elements'
   
   new from_iter(
@@ -3527,9 +3860,7 @@ class val AssignTuple is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var elements' = coll.Vec[Assign]
     var elements_next' = try iter.next() else None end
     while true do
@@ -3543,14 +3874,14 @@ class val AssignTuple is AST
     
     _elements = elements'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
-  fun elements(): this->coll.Vec[Assign] => _elements
+  fun val elements(): coll.Vec[Assign] => _elements
   
-  fun ref set_elements(elements': coll.Vec[Assign] = coll.Vec[Assign]) => _elements = consume elements'
+  fun val with_elements(elements': coll.Vec[Assign] = coll.Vec[Assign]) => _create(_pos, elements')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("AssignTuple")
     s.push('(')
@@ -3564,17 +3895,26 @@ class val AssignTuple is AST
     consume s
 
 class val Match is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Sequence
-  var _cases: Cases
-  var _else_body: (Sequence | None)
+  let _expr: Sequence
+  let _cases: Cases
+  let _else_body: (Sequence | None)
   
   new val create(
     expr': Sequence,
     cases': Cases = Cases,
     else_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+    _cases = cases'
+    _else_body = else_body'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Sequence, 
+  cases': Cases, 
+  else_body': (Sequence | None)) =>
+    _pos = pos'
     _expr = expr'
     _cases = cases'
     _else_body = else_body'
@@ -3584,9 +3924,7 @@ class val Match is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("Match missing required field: expr", pos')); error
@@ -3614,18 +3952,18 @@ class val Match is (AST & Expr)
       else errs.push(("Match got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _cases, _else_body)
   
-  fun expr(): this->Sequence => _expr
-  fun cases(): this->Cases => _cases
-  fun else_body(): this->(Sequence | None) => _else_body
+  fun val expr(): Sequence => _expr
+  fun val cases(): Cases => _cases
+  fun val else_body(): (Sequence | None) => _else_body
   
-  fun ref set_expr(expr': Sequence) => _expr = consume expr'
-  fun ref set_cases(cases': Cases = Cases) => _cases = consume cases'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
+  fun val with_expr(expr': Sequence) => _create(_pos, expr', _cases, _else_body)
+  fun val with_cases(cases': Cases = Cases) => _create(_pos, _expr, cases', _else_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _expr, _cases, else_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Match")
     s.push('(')
@@ -3636,13 +3974,18 @@ class val Match is (AST & Expr)
     consume s
 
 class val Cases is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Case]
+  let _list: coll.Vec[Case]
   
   new val create(
     list': coll.Vec[Case] = coll.Vec[Case])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Case]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -3650,9 +3993,7 @@ class val Cases is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Case]
     var list_next' = try iter.next() else None end
     while true do
@@ -3666,14 +4007,14 @@ class val Cases is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Case] => _list
+  fun val list(): coll.Vec[Case] => _list
   
-  fun ref set_list(list': coll.Vec[Case] = coll.Vec[Case]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Case] = coll.Vec[Case]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Cases")
     s.push('(')
@@ -3687,17 +4028,26 @@ class val Cases is AST
     consume s
 
 class val Case is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
-  var _guard: (Sequence | None)
-  var _body: (Sequence | None)
+  let _expr: Expr
+  let _guard: (Sequence | None)
+  let _body: (Sequence | None)
   
   new val create(
     expr': Expr,
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+    _guard = guard'
+    _body = body'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr, 
+  guard': (Sequence | None), 
+  body': (Sequence | None)) =>
+    _pos = pos'
     _expr = expr'
     _guard = guard'
     _body = body'
@@ -3707,9 +4057,7 @@ class val Case is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("Case missing required field: expr", pos')); error
@@ -3737,18 +4085,18 @@ class val Case is AST
       else errs.push(("Case got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _guard, _body)
   
-  fun expr(): this->Expr => _expr
-  fun guard(): this->(Sequence | None) => _guard
-  fun body(): this->(Sequence | None) => _body
+  fun val expr(): Expr => _expr
+  fun val guard(): (Sequence | None) => _guard
+  fun val body(): (Sequence | None) => _body
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  fun ref set_guard(guard': (Sequence | None) = None) => _guard = consume guard'
-  fun ref set_body(body': (Sequence | None) = None) => _body = consume body'
+  fun val with_expr(expr': Expr) => _create(_pos, expr', _guard, _body)
+  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _expr, guard', _body)
+  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _expr, _guard, body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Case")
     s.push('(')
@@ -3759,17 +4107,26 @@ class val Case is AST
     consume s
 
 class val Try is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _body: Sequence
-  var _else_body: (Sequence | None)
-  var _then_body: (Sequence | None)
+  let _body: Sequence
+  let _else_body: (Sequence | None)
+  let _then_body: (Sequence | None)
   
   new val create(
     body': Sequence,
     else_body': (Sequence | None) = None,
     then_body': (Sequence | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _body = body'
+    _else_body = else_body'
+    _then_body = then_body'
+  
+  new val _create(pos': SourcePosAny, 
+  body': Sequence, 
+  else_body': (Sequence | None), 
+  then_body': (Sequence | None)) =>
+    _pos = pos'
     _body = body'
     _else_body = else_body'
     _then_body = then_body'
@@ -3779,9 +4136,7 @@ class val Try is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let body': (AST | None) =
       try iter.next()
       else errs.push(("Try missing required field: body", pos')); error
@@ -3809,18 +4164,18 @@ class val Try is (AST & Expr)
       else errs.push(("Try got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _body, _else_body, _then_body)
   
-  fun body(): this->Sequence => _body
-  fun else_body(): this->(Sequence | None) => _else_body
-  fun then_body(): this->(Sequence | None) => _then_body
+  fun val body(): Sequence => _body
+  fun val else_body(): (Sequence | None) => _else_body
+  fun val then_body(): (Sequence | None) => _then_body
   
-  fun ref set_body(body': Sequence) => _body = consume body'
-  fun ref set_else_body(else_body': (Sequence | None) = None) => _else_body = consume else_body'
-  fun ref set_then_body(then_body': (Sequence | None) = None) => _then_body = consume then_body'
+  fun val with_body(body': Sequence) => _create(_pos, body', _else_body, _then_body)
+  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _body, else_body', _then_body)
+  fun val with_then_body(then_body': (Sequence | None) = None) => _create(_pos, _body, _else_body, then_body')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Try")
     s.push('(')
@@ -3831,15 +4186,22 @@ class val Try is (AST & Expr)
     consume s
 
 class val Consume is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _cap: (Cap | None)
-  var _expr: Expr
+  let _cap: (Cap | None)
+  let _expr: Expr
   
   new val create(
     cap': (Cap | None),
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _cap = cap'
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  cap': (Cap | None), 
+  expr': Expr) =>
+    _pos = pos'
     _cap = cap'
     _expr = expr'
   
@@ -3848,9 +4210,7 @@ class val Consume is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let cap': (AST | None) =
       try iter.next()
       else errs.push(("Consume missing required field: cap", pos')); error
@@ -3876,16 +4236,16 @@ class val Consume is (AST & Expr)
       else errs.push(("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
   
-  fun cap(): this->(Cap | None) => _cap
-  fun expr(): this->Expr => _expr
+  fun val cap(): (Cap | None) => _cap
+  fun val expr(): Expr => _expr
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
+  fun val with_expr(expr': Expr) => _create(_pos, _cap, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Consume")
     s.push('(')
@@ -3895,15 +4255,22 @@ class val Consume is (AST & Expr)
     consume s
 
 class val Recover is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _cap: (Cap | None)
-  var _expr: Sequence
+  let _cap: (Cap | None)
+  let _expr: Sequence
   
   new val create(
     cap': (Cap | None),
     expr': Sequence)
-  =>
+  =>_pos = SourcePosNone
+    _cap = cap'
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  cap': (Cap | None), 
+  expr': Sequence) =>
+    _pos = pos'
     _cap = cap'
     _expr = expr'
   
@@ -3912,9 +4279,7 @@ class val Recover is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let cap': (AST | None) =
       try iter.next()
       else errs.push(("Recover missing required field: cap", pos')); error
@@ -3940,16 +4305,16 @@ class val Recover is (AST & Expr)
       else errs.push(("Recover got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
   
-  fun cap(): this->(Cap | None) => _cap
-  fun expr(): this->Sequence => _expr
+  fun val cap(): (Cap | None) => _cap
+  fun val expr(): Sequence => _expr
   
-  fun ref set_cap(cap': (Cap | None)) => _cap = consume cap'
-  fun ref set_expr(expr': Sequence) => _expr = consume expr'
+  fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
+  fun val with_expr(expr': Sequence) => _create(_pos, _cap, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Recover")
     s.push('(')
@@ -3959,15 +4324,22 @@ class val Recover is (AST & Expr)
     consume s
 
 class val As is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
-  var _as_type: Type
+  let _expr: Expr
+  let _as_type: Type
   
   new val create(
     expr': Expr,
     as_type': Type)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+    _as_type = as_type'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr, 
+  as_type': Type) =>
+    _pos = pos'
     _expr = expr'
     _as_type = as_type'
   
@@ -3976,9 +4348,7 @@ class val As is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("As missing required field: expr", pos')); error
@@ -4004,16 +4374,16 @@ class val As is (AST & Expr)
       else errs.push(("As got incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _as_type)
   
-  fun expr(): this->Expr => _expr
-  fun as_type(): this->Type => _as_type
+  fun val expr(): Expr => _expr
+  fun val as_type(): Type => _as_type
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
-  fun ref set_as_type(as_type': Type) => _as_type = consume as_type'
+  fun val with_expr(expr': Expr) => _create(_pos, expr', _as_type)
+  fun val with_as_type(as_type': Type) => _create(_pos, _expr, as_type')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("As")
     s.push('(')
@@ -4023,15 +4393,22 @@ class val As is (AST & Expr)
     consume s
 
 class val Add is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4040,9 +4417,7 @@ class val Add is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Add missing required field: left", pos')); error
@@ -4068,16 +4443,16 @@ class val Add is (AST & BinaryOp & Expr)
       else errs.push(("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Add")
     s.push('(')
@@ -4087,15 +4462,22 @@ class val Add is (AST & BinaryOp & Expr)
     consume s
 
 class val AddUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4104,9 +4486,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("AddUnsafe missing required field: left", pos')); error
@@ -4132,16 +4512,16 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("AddUnsafe")
     s.push('(')
@@ -4151,15 +4531,22 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Sub is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4168,9 +4555,7 @@ class val Sub is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Sub missing required field: left", pos')); error
@@ -4196,16 +4581,16 @@ class val Sub is (AST & BinaryOp & Expr)
       else errs.push(("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Sub")
     s.push('(')
@@ -4215,15 +4600,22 @@ class val Sub is (AST & BinaryOp & Expr)
     consume s
 
 class val SubUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4232,9 +4624,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("SubUnsafe missing required field: left", pos')); error
@@ -4260,16 +4650,16 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("SubUnsafe")
     s.push('(')
@@ -4279,15 +4669,22 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Mul is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4296,9 +4693,7 @@ class val Mul is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Mul missing required field: left", pos')); error
@@ -4324,16 +4719,16 @@ class val Mul is (AST & BinaryOp & Expr)
       else errs.push(("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Mul")
     s.push('(')
@@ -4343,15 +4738,22 @@ class val Mul is (AST & BinaryOp & Expr)
     consume s
 
 class val MulUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4360,9 +4762,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("MulUnsafe missing required field: left", pos')); error
@@ -4388,16 +4788,16 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MulUnsafe")
     s.push('(')
@@ -4407,15 +4807,22 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Div is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4424,9 +4831,7 @@ class val Div is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Div missing required field: left", pos')); error
@@ -4452,16 +4857,16 @@ class val Div is (AST & BinaryOp & Expr)
       else errs.push(("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Div")
     s.push('(')
@@ -4471,15 +4876,22 @@ class val Div is (AST & BinaryOp & Expr)
     consume s
 
 class val DivUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4488,9 +4900,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("DivUnsafe missing required field: left", pos')); error
@@ -4516,16 +4926,16 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("DivUnsafe")
     s.push('(')
@@ -4535,15 +4945,22 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Mod is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4552,9 +4969,7 @@ class val Mod is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Mod missing required field: left", pos')); error
@@ -4580,16 +4995,16 @@ class val Mod is (AST & BinaryOp & Expr)
       else errs.push(("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Mod")
     s.push('(')
@@ -4599,15 +5014,22 @@ class val Mod is (AST & BinaryOp & Expr)
     consume s
 
 class val ModUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4616,9 +5038,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("ModUnsafe missing required field: left", pos')); error
@@ -4644,16 +5064,16 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("ModUnsafe")
     s.push('(')
@@ -4663,15 +5083,22 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LShift is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4680,9 +5107,7 @@ class val LShift is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LShift missing required field: left", pos')); error
@@ -4708,16 +5133,16 @@ class val LShift is (AST & BinaryOp & Expr)
       else errs.push(("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LShift")
     s.push('(')
@@ -4727,15 +5152,22 @@ class val LShift is (AST & BinaryOp & Expr)
     consume s
 
 class val LShiftUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4744,9 +5176,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LShiftUnsafe missing required field: left", pos')); error
@@ -4772,16 +5202,16 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LShiftUnsafe")
     s.push('(')
@@ -4791,15 +5221,22 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val RShift is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4808,9 +5245,7 @@ class val RShift is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("RShift missing required field: left", pos')); error
@@ -4836,16 +5271,16 @@ class val RShift is (AST & BinaryOp & Expr)
       else errs.push(("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("RShift")
     s.push('(')
@@ -4855,15 +5290,22 @@ class val RShift is (AST & BinaryOp & Expr)
     consume s
 
 class val RShiftUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4872,9 +5314,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("RShiftUnsafe missing required field: left", pos')); error
@@ -4900,16 +5340,16 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("RShiftUnsafe")
     s.push('(')
@@ -4919,15 +5359,22 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Eq is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -4936,9 +5383,7 @@ class val Eq is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Eq missing required field: left", pos')); error
@@ -4964,16 +5409,16 @@ class val Eq is (AST & BinaryOp & Expr)
       else errs.push(("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Eq")
     s.push('(')
@@ -4983,15 +5428,22 @@ class val Eq is (AST & BinaryOp & Expr)
     consume s
 
 class val EqUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5000,9 +5452,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("EqUnsafe missing required field: left", pos')); error
@@ -5028,16 +5478,16 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("EqUnsafe")
     s.push('(')
@@ -5047,15 +5497,22 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val NE is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5064,9 +5521,7 @@ class val NE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("NE missing required field: left", pos')); error
@@ -5092,16 +5547,16 @@ class val NE is (AST & BinaryOp & Expr)
       else errs.push(("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NE")
     s.push('(')
@@ -5111,15 +5566,22 @@ class val NE is (AST & BinaryOp & Expr)
     consume s
 
 class val NEUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5128,9 +5590,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("NEUnsafe missing required field: left", pos')); error
@@ -5156,16 +5616,16 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NEUnsafe")
     s.push('(')
@@ -5175,15 +5635,22 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LT is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5192,9 +5659,7 @@ class val LT is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LT missing required field: left", pos')); error
@@ -5220,16 +5685,16 @@ class val LT is (AST & BinaryOp & Expr)
       else errs.push(("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LT")
     s.push('(')
@@ -5239,15 +5704,22 @@ class val LT is (AST & BinaryOp & Expr)
     consume s
 
 class val LTUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5256,9 +5728,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LTUnsafe missing required field: left", pos')); error
@@ -5284,16 +5754,16 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LTUnsafe")
     s.push('(')
@@ -5303,15 +5773,22 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LE is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5320,9 +5797,7 @@ class val LE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LE missing required field: left", pos')); error
@@ -5348,16 +5823,16 @@ class val LE is (AST & BinaryOp & Expr)
       else errs.push(("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LE")
     s.push('(')
@@ -5367,15 +5842,22 @@ class val LE is (AST & BinaryOp & Expr)
     consume s
 
 class val LEUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5384,9 +5866,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("LEUnsafe missing required field: left", pos')); error
@@ -5412,16 +5892,16 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LEUnsafe")
     s.push('(')
@@ -5431,15 +5911,22 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val GE is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5448,9 +5935,7 @@ class val GE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("GE missing required field: left", pos')); error
@@ -5476,16 +5961,16 @@ class val GE is (AST & BinaryOp & Expr)
       else errs.push(("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("GE")
     s.push('(')
@@ -5495,15 +5980,22 @@ class val GE is (AST & BinaryOp & Expr)
     consume s
 
 class val GEUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5512,9 +6004,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("GEUnsafe missing required field: left", pos')); error
@@ -5540,16 +6030,16 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("GEUnsafe")
     s.push('(')
@@ -5559,15 +6049,22 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val GT is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5576,9 +6073,7 @@ class val GT is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("GT missing required field: left", pos')); error
@@ -5604,16 +6099,16 @@ class val GT is (AST & BinaryOp & Expr)
       else errs.push(("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("GT")
     s.push('(')
@@ -5623,15 +6118,22 @@ class val GT is (AST & BinaryOp & Expr)
     consume s
 
 class val GTUnsafe is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5640,9 +6142,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("GTUnsafe missing required field: left", pos')); error
@@ -5668,16 +6168,16 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("GTUnsafe")
     s.push('(')
@@ -5687,15 +6187,22 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Is is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5704,9 +6211,7 @@ class val Is is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Is missing required field: left", pos')); error
@@ -5732,16 +6237,16 @@ class val Is is (AST & BinaryOp & Expr)
       else errs.push(("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Is")
     s.push('(')
@@ -5751,15 +6256,22 @@ class val Is is (AST & BinaryOp & Expr)
     consume s
 
 class val Isnt is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5768,9 +6280,7 @@ class val Isnt is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Isnt missing required field: left", pos')); error
@@ -5796,16 +6306,16 @@ class val Isnt is (AST & BinaryOp & Expr)
       else errs.push(("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Isnt")
     s.push('(')
@@ -5815,15 +6325,22 @@ class val Isnt is (AST & BinaryOp & Expr)
     consume s
 
 class val And is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5832,9 +6349,7 @@ class val And is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("And missing required field: left", pos')); error
@@ -5860,16 +6375,16 @@ class val And is (AST & BinaryOp & Expr)
       else errs.push(("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("And")
     s.push('(')
@@ -5879,15 +6394,22 @@ class val And is (AST & BinaryOp & Expr)
     consume s
 
 class val Or is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5896,9 +6418,7 @@ class val Or is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Or missing required field: left", pos')); error
@@ -5924,16 +6444,16 @@ class val Or is (AST & BinaryOp & Expr)
       else errs.push(("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Or")
     s.push('(')
@@ -5943,15 +6463,22 @@ class val Or is (AST & BinaryOp & Expr)
     consume s
 
 class val XOr is (AST & BinaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -5960,9 +6487,7 @@ class val XOr is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("XOr missing required field: left", pos')); error
@@ -5988,16 +6513,16 @@ class val XOr is (AST & BinaryOp & Expr)
       else errs.push(("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("XOr")
     s.push('(')
@@ -6007,13 +6532,18 @@ class val XOr is (AST & BinaryOp & Expr)
     consume s
 
 class val Not is (AST & UnaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
+  let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -6021,9 +6551,7 @@ class val Not is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("Not missing required field: expr", pos')); error
@@ -6041,14 +6569,14 @@ class val Not is (AST & UnaryOp & Expr)
       else errs.push(("Not got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->Expr => _expr
+  fun val expr(): Expr => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Not")
     s.push('(')
@@ -6057,13 +6585,18 @@ class val Not is (AST & UnaryOp & Expr)
     consume s
 
 class val Neg is (AST & UnaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
+  let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -6071,9 +6604,7 @@ class val Neg is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("Neg missing required field: expr", pos')); error
@@ -6091,14 +6622,14 @@ class val Neg is (AST & UnaryOp & Expr)
       else errs.push(("Neg got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->Expr => _expr
+  fun val expr(): Expr => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Neg")
     s.push('(')
@@ -6107,13 +6638,18 @@ class val Neg is (AST & UnaryOp & Expr)
     consume s
 
 class val NegUnsafe is (AST & UnaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
+  let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -6121,9 +6657,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("NegUnsafe missing required field: expr", pos')); error
@@ -6141,14 +6675,14 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
       else errs.push(("NegUnsafe got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->Expr => _expr
+  fun val expr(): Expr => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NegUnsafe")
     s.push('(')
@@ -6157,13 +6691,18 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     consume s
 
 class val AddressOf is (AST & UnaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
+  let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -6171,9 +6710,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("AddressOf missing required field: expr", pos')); error
@@ -6191,14 +6728,14 @@ class val AddressOf is (AST & UnaryOp & Expr)
       else errs.push(("AddressOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->Expr => _expr
+  fun val expr(): Expr => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("AddressOf")
     s.push('(')
@@ -6207,13 +6744,18 @@ class val AddressOf is (AST & UnaryOp & Expr)
     consume s
 
 class val DigestOf is (AST & UnaryOp & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _expr: Expr
+  let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  expr': Expr) =>
+    _pos = pos'
     _expr = expr'
   
   new from_iter(
@@ -6221,9 +6763,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let expr': (AST | None) =
       try iter.next()
       else errs.push(("DigestOf missing required field: expr", pos')); error
@@ -6241,14 +6781,14 @@ class val DigestOf is (AST & UnaryOp & Expr)
       else errs.push(("DigestOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
-  fun expr(): this->Expr => _expr
+  fun val expr(): Expr => _expr
   
-  fun ref set_expr(expr': Expr) => _expr = consume expr'
+  fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("DigestOf")
     s.push('(')
@@ -6257,15 +6797,22 @@ class val DigestOf is (AST & UnaryOp & Expr)
     consume s
 
 class val LocalLet is (AST & Local & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _local_type: (Type | None)
+  let _name: Id
+  let _local_type: (Type | None)
   
   new val create(
     name': Id,
     local_type': (Type | None))
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _local_type = local_type'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  local_type': (Type | None)) =>
+    _pos = pos'
     _name = name'
     _local_type = local_type'
   
@@ -6274,9 +6821,7 @@ class val LocalLet is (AST & Local & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("LocalLet missing required field: name", pos')); error
@@ -6302,16 +6847,16 @@ class val LocalLet is (AST & Local & Expr)
       else errs.push(("LocalLet got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
   
-  fun name(): this->Id => _name
-  fun local_type(): this->(Type | None) => _local_type
+  fun val name(): Id => _name
+  fun val local_type(): (Type | None) => _local_type
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
+  fun val with_name(name': Id) => _create(_pos, name', _local_type)
+  fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLet")
     s.push('(')
@@ -6321,15 +6866,22 @@ class val LocalLet is (AST & Local & Expr)
     consume s
 
 class val LocalVar is (AST & Local & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _local_type: (Type | None)
+  let _name: Id
+  let _local_type: (Type | None)
   
   new val create(
     name': Id,
     local_type': (Type | None))
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _local_type = local_type'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  local_type': (Type | None)) =>
+    _pos = pos'
     _name = name'
     _local_type = local_type'
   
@@ -6338,9 +6890,7 @@ class val LocalVar is (AST & Local & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("LocalVar missing required field: name", pos')); error
@@ -6366,16 +6916,16 @@ class val LocalVar is (AST & Local & Expr)
       else errs.push(("LocalVar got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
   
-  fun name(): this->Id => _name
-  fun local_type(): this->(Type | None) => _local_type
+  fun val name(): Id => _name
+  fun val local_type(): (Type | None) => _local_type
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (Type | None)) => _local_type = consume local_type'
+  fun val with_name(name': Id) => _create(_pos, name', _local_type)
+  fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVar")
     s.push('(')
@@ -6385,15 +6935,22 @@ class val LocalVar is (AST & Local & Expr)
     consume s
 
 class val Assign is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Expr
+  let _left: Expr
+  let _right: Expr
   
   new val create(
     left': Expr,
     right': Expr)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Expr) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -6402,9 +6959,7 @@ class val Assign is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Assign missing required field: left", pos')); error
@@ -6430,16 +6985,16 @@ class val Assign is (AST & Expr)
       else errs.push(("Assign got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Expr => _right
+  fun val left(): Expr => _left
+  fun val right(): Expr => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Expr) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Assign")
     s.push('(')
@@ -6449,15 +7004,22 @@ class val Assign is (AST & Expr)
     consume s
 
 class val Dot is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Id
+  let _left: Expr
+  let _right: Id
   
   new val create(
     left': Expr,
     right': Id)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Id) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -6466,9 +7028,7 @@ class val Dot is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Dot missing required field: left", pos')); error
@@ -6494,16 +7054,16 @@ class val Dot is (AST & Expr)
       else errs.push(("Dot got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Id => _right
+  fun val left(): Expr => _left
+  fun val right(): Id => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Id) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Dot")
     s.push('(')
@@ -6513,15 +7073,22 @@ class val Dot is (AST & Expr)
     consume s
 
 class val Chain is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Id
+  let _left: Expr
+  let _right: Id
   
   new val create(
     left': Expr,
     right': Id)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Id) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -6530,9 +7097,7 @@ class val Chain is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Chain missing required field: left", pos')); error
@@ -6558,16 +7123,16 @@ class val Chain is (AST & Expr)
       else errs.push(("Chain got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Id => _right
+  fun val left(): Expr => _left
+  fun val right(): Id => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Id) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Chain")
     s.push('(')
@@ -6577,15 +7142,22 @@ class val Chain is (AST & Expr)
     consume s
 
 class val Tilde is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: Id
+  let _left: Expr
+  let _right: Id
   
   new val create(
     left': Expr,
     right': Id)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': Id) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -6594,9 +7166,7 @@ class val Tilde is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Tilde missing required field: left", pos')); error
@@ -6622,16 +7192,16 @@ class val Tilde is (AST & Expr)
       else errs.push(("Tilde got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->Id => _right
+  fun val left(): Expr => _left
+  fun val right(): Id => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': Id) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Tilde")
     s.push('(')
@@ -6641,15 +7211,22 @@ class val Tilde is (AST & Expr)
     consume s
 
 class val Qualify is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Expr
-  var _right: TypeArgs
+  let _left: Expr
+  let _right: TypeArgs
   
   new val create(
     left': Expr,
     right': TypeArgs)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Expr, 
+  right': TypeArgs) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -6658,9 +7235,7 @@ class val Qualify is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("Qualify missing required field: left", pos')); error
@@ -6686,16 +7261,16 @@ class val Qualify is (AST & Expr)
       else errs.push(("Qualify got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Expr => _left
-  fun right(): this->TypeArgs => _right
+  fun val left(): Expr => _left
+  fun val right(): TypeArgs => _right
   
-  fun ref set_left(left': Expr) => _left = consume left'
-  fun ref set_right(right': TypeArgs) => _right = consume right'
+  fun val with_left(left': Expr) => _create(_pos, left', _right)
+  fun val with_right(right': TypeArgs) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Qualify")
     s.push('(')
@@ -6705,17 +7280,26 @@ class val Qualify is (AST & Expr)
     consume s
 
 class val Call is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _callable: Expr
-  var _args: Args
-  var _named_args: NamedArgs
+  let _callable: Expr
+  let _args: Args
+  let _named_args: NamedArgs
   
   new val create(
     callable': Expr,
     args': Args = Args,
     named_args': NamedArgs = NamedArgs)
-  =>
+  =>_pos = SourcePosNone
+    _callable = callable'
+    _args = args'
+    _named_args = named_args'
+  
+  new val _create(pos': SourcePosAny, 
+  callable': Expr, 
+  args': Args, 
+  named_args': NamedArgs) =>
+    _pos = pos'
     _callable = callable'
     _args = args'
     _named_args = named_args'
@@ -6725,9 +7309,7 @@ class val Call is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let callable': (AST | None) =
       try iter.next()
       else errs.push(("Call missing required field: callable", pos')); error
@@ -6755,18 +7337,18 @@ class val Call is (AST & Expr)
       else errs.push(("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _callable, _args, _named_args)
   
-  fun callable(): this->Expr => _callable
-  fun args(): this->Args => _args
-  fun named_args(): this->NamedArgs => _named_args
+  fun val callable(): Expr => _callable
+  fun val args(): Args => _args
+  fun val named_args(): NamedArgs => _named_args
   
-  fun ref set_callable(callable': Expr) => _callable = consume callable'
-  fun ref set_args(args': Args = Args) => _args = consume args'
-  fun ref set_named_args(named_args': NamedArgs = NamedArgs) => _named_args = consume named_args'
+  fun val with_callable(callable': Expr) => _create(_pos, callable', _args, _named_args)
+  fun val with_args(args': Args = Args) => _create(_pos, _callable, args', _named_args)
+  fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _callable, _args, named_args')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Call")
     s.push('(')
@@ -6777,13 +7359,13 @@ class val Call is (AST & Expr)
     consume s
 
 class val CallFFI is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: (Id | LitString)
-  var _type_args: (TypeArgs | None)
-  var _args: Args
-  var _named_args: NamedArgs
-  var _partial: (Question | None)
+  let _name: (Id | LitString)
+  let _type_args: (TypeArgs | None)
+  let _args: Args
+  let _named_args: NamedArgs
+  let _partial: (Question | None)
   
   new val create(
     name': (Id | LitString),
@@ -6791,7 +7373,20 @@ class val CallFFI is (AST & Expr)
     args': Args = Args,
     named_args': NamedArgs = NamedArgs,
     partial': (Question | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _type_args = type_args'
+    _args = args'
+    _named_args = named_args'
+    _partial = partial'
+  
+  new val _create(pos': SourcePosAny, 
+  name': (Id | LitString), 
+  type_args': (TypeArgs | None), 
+  args': Args, 
+  named_args': NamedArgs, 
+  partial': (Question | None)) =>
+    _pos = pos'
     _name = name'
     _type_args = type_args'
     _args = args'
@@ -6803,9 +7398,7 @@ class val CallFFI is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("CallFFI missing required field: name", pos')); error
@@ -6843,22 +7436,22 @@ class val CallFFI is (AST & Expr)
       else errs.push(("CallFFI got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _type_args, _args, _named_args, _partial)
   
-  fun name(): this->(Id | LitString) => _name
-  fun type_args(): this->(TypeArgs | None) => _type_args
-  fun args(): this->Args => _args
-  fun named_args(): this->NamedArgs => _named_args
-  fun partial(): this->(Question | None) => _partial
+  fun val name(): (Id | LitString) => _name
+  fun val type_args(): (TypeArgs | None) => _type_args
+  fun val args(): Args => _args
+  fun val named_args(): NamedArgs => _named_args
+  fun val partial(): (Question | None) => _partial
   
-  fun ref set_name(name': (Id | LitString)) => _name = consume name'
-  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
-  fun ref set_args(args': Args = Args) => _args = consume args'
-  fun ref set_named_args(named_args': NamedArgs = NamedArgs) => _named_args = consume named_args'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
+  fun val with_name(name': (Id | LitString)) => _create(_pos, name', _type_args, _args, _named_args, _partial)
+  fun val with_type_args(type_args': (TypeArgs | None) = None) => _create(_pos, _name, type_args', _args, _named_args, _partial)
+  fun val with_args(args': Args = Args) => _create(_pos, _name, _type_args, args', _named_args, _partial)
+  fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _name, _type_args, _args, named_args', _partial)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _type_args, _args, _named_args, partial')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CallFFI")
     s.push('(')
@@ -6871,13 +7464,18 @@ class val CallFFI is (AST & Expr)
     consume s
 
 class val Args is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Sequence]
+  let _list: coll.Vec[Sequence]
   
   new val create(
     list': coll.Vec[Sequence] = coll.Vec[Sequence])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Sequence]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -6885,9 +7483,7 @@ class val Args is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Sequence]
     var list_next' = try iter.next() else None end
     while true do
@@ -6901,14 +7497,14 @@ class val Args is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Sequence] => _list
+  fun val list(): coll.Vec[Sequence] => _list
   
-  fun ref set_list(list': coll.Vec[Sequence] = coll.Vec[Sequence]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Args")
     s.push('(')
@@ -6922,13 +7518,18 @@ class val Args is AST
     consume s
 
 class val NamedArgs is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[NamedArg]
+  let _list: coll.Vec[NamedArg]
   
   new val create(
     list': coll.Vec[NamedArg] = coll.Vec[NamedArg])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[NamedArg]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -6936,9 +7537,7 @@ class val NamedArgs is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[NamedArg]
     var list_next' = try iter.next() else None end
     while true do
@@ -6952,14 +7551,14 @@ class val NamedArgs is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[NamedArg] => _list
+  fun val list(): coll.Vec[NamedArg] => _list
   
-  fun ref set_list(list': coll.Vec[NamedArg] = coll.Vec[NamedArg]) => _list = consume list'
+  fun val with_list(list': coll.Vec[NamedArg] = coll.Vec[NamedArg]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArgs")
     s.push('(')
@@ -6973,15 +7572,22 @@ class val NamedArgs is AST
     consume s
 
 class val NamedArg is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _value: Sequence
+  let _name: Id
+  let _value: Sequence
   
   new val create(
     name': Id,
     value': Sequence)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _value = value'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  value': Sequence) =>
+    _pos = pos'
     _name = name'
     _value = value'
   
@@ -6990,9 +7596,7 @@ class val NamedArg is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("NamedArg missing required field: name", pos')); error
@@ -7018,16 +7622,16 @@ class val NamedArg is AST
       else errs.push(("NamedArg got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _value)
   
-  fun name(): this->Id => _name
-  fun value(): this->Sequence => _value
+  fun val name(): Id => _name
+  fun val value(): Sequence => _value
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_value(value': Sequence) => _value = consume value'
+  fun val with_name(name': Id) => _create(_pos, name', _value)
+  fun val with_value(value': Sequence) => _create(_pos, _name, value')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArg")
     s.push('(')
@@ -7037,17 +7641,17 @@ class val NamedArg is AST
     consume s
 
 class val Lambda is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _method_cap: (Cap | None)
-  var _name: (Id | None)
-  var _type_params: (TypeParams | None)
-  var _params: (Params | None)
-  var _captures: (LambdaCaptures | None)
-  var _return_type: (Type | None)
-  var _partial: (Question | None)
-  var _body: Sequence
-  var _object_cap: (Cap | None)
+  let _method_cap: (Cap | None)
+  let _name: (Id | None)
+  let _type_params: (TypeParams | None)
+  let _params: (Params | None)
+  let _captures: (LambdaCaptures | None)
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _body: Sequence
+  let _object_cap: (Cap | None)
   
   new val create(
     method_cap': (Cap | None) = None,
@@ -7059,7 +7663,28 @@ class val Lambda is (AST & Expr)
     partial': (Question | None) = None,
     body': Sequence = Sequence,
     object_cap': (Cap | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _params = params'
+    _captures = captures'
+    _return_type = return_type'
+    _partial = partial'
+    _body = body'
+    _object_cap = object_cap'
+  
+  new val _create(pos': SourcePosAny, 
+  method_cap': (Cap | None), 
+  name': (Id | None), 
+  type_params': (TypeParams | None), 
+  params': (Params | None), 
+  captures': (LambdaCaptures | None), 
+  return_type': (Type | None), 
+  partial': (Question | None), 
+  body': Sequence, 
+  object_cap': (Cap | None)) =>
+    _pos = pos'
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -7075,9 +7700,7 @@ class val Lambda is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let method_cap': (AST | None) = try iter.next() else None end
     let name': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -7132,30 +7755,30 @@ class val Lambda is (AST & Expr)
       else errs.push(("Lambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   
-  fun method_cap(): this->(Cap | None) => _method_cap
-  fun name(): this->(Id | None) => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(Params | None) => _params
-  fun captures(): this->(LambdaCaptures | None) => _captures
-  fun return_type(): this->(Type | None) => _return_type
-  fun partial(): this->(Question | None) => _partial
-  fun body(): this->Sequence => _body
-  fun object_cap(): this->(Cap | None) => _object_cap
+  fun val method_cap(): (Cap | None) => _method_cap
+  fun val name(): (Id | None) => _name
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): (Params | None) => _params
+  fun val captures(): (LambdaCaptures | None) => _captures
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val body(): Sequence => _body
+  fun val object_cap(): (Cap | None) => _object_cap
   
-  fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
-  fun ref set_name(name': (Id | None) = None) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_captures(captures': (LambdaCaptures | None) = None) => _captures = consume captures'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_body(body': Sequence = Sequence) => _body = consume body'
-  fun ref set_object_cap(object_cap': (Cap | None) = None) => _object_cap = consume object_cap'
+  fun val with_method_cap(method_cap': (Cap | None) = None) => _create(_pos, method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_name(name': (Id | None) = None) => _create(_pos, _method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_params(params': (Params | None) = None) => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_captures(captures': (LambdaCaptures | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap)
+  fun val with_body(body': Sequence = Sequence) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
+  fun val with_object_cap(object_cap': (Cap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Lambda")
     s.push('(')
@@ -7172,13 +7795,18 @@ class val Lambda is (AST & Expr)
     consume s
 
 class val LambdaCaptures is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[LambdaCapture]
+  let _list: coll.Vec[LambdaCapture]
   
   new val create(
     list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[LambdaCapture]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -7186,9 +7814,7 @@ class val LambdaCaptures is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[LambdaCapture]
     var list_next' = try iter.next() else None end
     while true do
@@ -7202,14 +7828,14 @@ class val LambdaCaptures is AST
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[LambdaCapture] => _list
+  fun val list(): coll.Vec[LambdaCapture] => _list
   
-  fun ref set_list(list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture]) => _list = consume list'
+  fun val with_list(list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCaptures")
     s.push('(')
@@ -7223,17 +7849,26 @@ class val LambdaCaptures is AST
     consume s
 
 class val LambdaCapture is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _local_type: (Type | None)
-  var _expr: (Expr | None)
+  let _name: Id
+  let _local_type: (Type | None)
+  let _expr: (Expr | None)
   
   new val create(
     name': Id,
     local_type': (Type | None) = None,
     expr': (Expr | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _local_type = local_type'
+    _expr = expr'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  local_type': (Type | None), 
+  expr': (Expr | None)) =>
+    _pos = pos'
     _name = name'
     _local_type = local_type'
     _expr = expr'
@@ -7243,9 +7878,7 @@ class val LambdaCapture is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("LambdaCapture missing required field: name", pos')); error
@@ -7273,18 +7906,18 @@ class val LambdaCapture is AST
       else errs.push(("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type, _expr)
   
-  fun name(): this->Id => _name
-  fun local_type(): this->(Type | None) => _local_type
-  fun expr(): this->(Expr | None) => _expr
+  fun val name(): Id => _name
+  fun val local_type(): (Type | None) => _local_type
+  fun val expr(): (Expr | None) => _expr
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_local_type(local_type': (Type | None) = None) => _local_type = consume local_type'
-  fun ref set_expr(expr': (Expr | None) = None) => _expr = consume expr'
+  fun val with_name(name': Id) => _create(_pos, name', _local_type, _expr)
+  fun val with_local_type(local_type': (Type | None) = None) => _create(_pos, _name, local_type', _expr)
+  fun val with_expr(expr': (Expr | None) = None) => _create(_pos, _name, _local_type, expr')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCapture")
     s.push('(')
@@ -7295,17 +7928,26 @@ class val LambdaCapture is AST
     consume s
 
 class val Object is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _cap: (Cap | None)
-  var _provides: (Type | None)
-  var _members: (Members | None)
+  let _cap: (Cap | None)
+  let _provides: (Type | None)
+  let _members: (Members | None)
   
   new val create(
     cap': (Cap | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _cap = cap'
+    _provides = provides'
+    _members = members'
+  
+  new val _create(pos': SourcePosAny, 
+  cap': (Cap | None), 
+  provides': (Type | None), 
+  members': (Members | None)) =>
+    _pos = pos'
     _cap = cap'
     _provides = provides'
     _members = members'
@@ -7315,9 +7957,7 @@ class val Object is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let cap': (AST | None) = try iter.next() else None end
     let provides': (AST | None) = try iter.next() else None end
     let members': (AST | None) = try iter.next() else None end
@@ -7342,18 +7982,18 @@ class val Object is (AST & Expr)
       else errs.push(("Object got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _provides, _members)
   
-  fun cap(): this->(Cap | None) => _cap
-  fun provides(): this->(Type | None) => _provides
-  fun members(): this->(Members | None) => _members
+  fun val cap(): (Cap | None) => _cap
+  fun val provides(): (Type | None) => _provides
+  fun val members(): (Members | None) => _members
   
-  fun ref set_cap(cap': (Cap | None) = None) => _cap = consume cap'
-  fun ref set_provides(provides': (Type | None) = None) => _provides = consume provides'
-  fun ref set_members(members': (Members | None) = None) => _members = consume members'
+  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, cap', _provides, _members)
+  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _cap, provides', _members)
+  fun val with_members(members': (Members | None) = None) => _create(_pos, _cap, _provides, members')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Object")
     s.push('(')
@@ -7364,15 +8004,22 @@ class val Object is (AST & Expr)
     consume s
 
 class val LitArray is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _elem_type: (Type | None)
-  var _sequence: Sequence
+  let _elem_type: (Type | None)
+  let _sequence: Sequence
   
   new val create(
     elem_type': (Type | None) = None,
     sequence': Sequence = Sequence)
-  =>
+  =>_pos = SourcePosNone
+    _elem_type = elem_type'
+    _sequence = sequence'
+  
+  new val _create(pos': SourcePosAny, 
+  elem_type': (Type | None), 
+  sequence': Sequence) =>
+    _pos = pos'
     _elem_type = elem_type'
     _sequence = sequence'
   
@@ -7381,9 +8028,7 @@ class val LitArray is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let elem_type': (AST | None) = try iter.next() else None end
     let sequence': (AST | None) = try iter.next() else Sequence end
     if
@@ -7403,16 +8048,16 @@ class val LitArray is (AST & Expr)
       else errs.push(("LitArray got incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _elem_type, _sequence)
   
-  fun elem_type(): this->(Type | None) => _elem_type
-  fun sequence(): this->Sequence => _sequence
+  fun val elem_type(): (Type | None) => _elem_type
+  fun val sequence(): Sequence => _sequence
   
-  fun ref set_elem_type(elem_type': (Type | None) = None) => _elem_type = consume elem_type'
-  fun ref set_sequence(sequence': Sequence = Sequence) => _sequence = consume sequence'
+  fun val with_elem_type(elem_type': (Type | None) = None) => _create(_pos, elem_type', _sequence)
+  fun val with_sequence(sequence': Sequence = Sequence) => _create(_pos, _elem_type, sequence')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LitArray")
     s.push('(')
@@ -7422,13 +8067,18 @@ class val LitArray is (AST & Expr)
     consume s
 
 class val Tuple is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _elements: coll.Vec[Sequence]
+  let _elements: coll.Vec[Sequence]
   
   new val create(
     elements': coll.Vec[Sequence] = coll.Vec[Sequence])
-  =>
+  =>_pos = SourcePosNone
+    _elements = elements'
+  
+  new val _create(pos': SourcePosAny, 
+  elements': coll.Vec[Sequence]) =>
+    _pos = pos'
     _elements = elements'
   
   new from_iter(
@@ -7436,9 +8086,7 @@ class val Tuple is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var elements' = coll.Vec[Sequence]
     var elements_next' = try iter.next() else None end
     while true do
@@ -7452,14 +8100,14 @@ class val Tuple is (AST & Expr)
     
     _elements = elements'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
-  fun elements(): this->coll.Vec[Sequence] => _elements
+  fun val elements(): coll.Vec[Sequence] => _elements
   
-  fun ref set_elements(elements': coll.Vec[Sequence] = coll.Vec[Sequence]) => _elements = consume elements'
+  fun val with_elements(elements': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, elements')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Tuple")
     s.push('(')
@@ -7473,17 +8121,19 @@ class val Tuple is (AST & Expr)
     consume s
 
 class val This is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -7492,26 +8142,28 @@ class val This is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("This")
     consume s
 
 class val LitTrue is (AST & LitBool & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -7520,26 +8172,28 @@ class val LitTrue is (AST & LitBool & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LitTrue")
     consume s
 
 class val LitFalse is (AST & LitBool & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -7548,24 +8202,24 @@ class val LitFalse is (AST & LitBool & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LitFalse")
     consume s
 
 class val LitInteger is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: I128
-  new val create(value': I128) => _value = value'
+  let _pos: SourcePosAny
+  let _value: I128
+  new val create(value': I128) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': I128) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
     _value = 88 // TODO: parse from _pos?
     
@@ -7577,26 +8231,26 @@ class val LitInteger is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): LitInteger => _create(pos', _value)
   
-  fun value(): I128 => _value
-  fun ref set_value(value': I128) => _value = value'
-  fun string(): String iso^ =>
+  fun val value(): I128 => _value
+  fun val with_value(value': I128): LitInteger => _create(_pos, value')
+  fun val string(): String iso^ =>
     recover
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
 
 class val LitFloat is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: F64
-  new val create(value': F64) => _value = value'
+  let _pos: SourcePosAny
+  let _value: F64
+  new val create(value': F64) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': F64) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
     _value = 88 // TODO: parse from _pos?
     
@@ -7608,26 +8262,26 @@ class val LitFloat is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): LitFloat => _create(pos', _value)
   
-  fun value(): F64 => _value
-  fun ref set_value(value': F64) => _value = value'
-  fun string(): String iso^ =>
+  fun val value(): F64 => _value
+  fun val with_value(value': F64): LitFloat => _create(_pos, value')
+  fun val string(): String iso^ =>
     recover
       String.>append("LitFloat(").>append(_value.string()).>push(')')
     end
 
 class val LitString is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: String
-  new val create(value': String) => _value = value'
+  let _pos: SourcePosAny
+  let _value: String
+  new val create(value': String) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': String) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
     _value = "foo" // TODO: parse from _pos?
     
@@ -7639,26 +8293,26 @@ class val LitString is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): LitString => _create(pos', _value)
   
-  fun value(): String => _value
-  fun ref set_value(value': String) => _value = value'
-  fun string(): String iso^ =>
+  fun val value(): String => _value
+  fun val with_value(value': String): LitString => _create(_pos, value')
+  fun val string(): String iso^ =>
     recover
       String.>append("LitString(").>append(_value.string()).>push(')')
     end
 
 class val LitCharacter is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: U8
-  new val create(value': U8) => _value = value'
+  let _pos: SourcePosAny
+  let _value: U8
+  new val create(value': U8) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': U8) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
     _value = 88 // TODO: parse from _pos?
     
@@ -7670,28 +8324,30 @@ class val LitCharacter is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): LitCharacter => _create(pos', _value)
   
-  fun value(): U8 => _value
-  fun ref set_value(value': U8) => _value = value'
-  fun string(): String iso^ =>
+  fun val value(): U8 => _value
+  fun val with_value(value': U8): LitCharacter => _create(_pos, value')
+  fun val string(): String iso^ =>
     recover
       String.>append("LitCharacter(").>append(_value.string()).>push(')')
     end
 
 class val LitLocation is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -7700,22 +8356,27 @@ class val LitLocation is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
     consume s
 
 class val Reference is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
+  let _name: Id
   
   new val create(
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -7723,9 +8384,7 @@ class val Reference is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("Reference missing required field: name", pos')); error
@@ -7743,14 +8402,14 @@ class val Reference is (AST & Expr)
       else errs.push(("Reference got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->Id => _name
+  fun val name(): Id => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_name(name': Id) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Reference")
     s.push('(')
@@ -7759,17 +8418,19 @@ class val Reference is (AST & Expr)
     consume s
 
 class val DontCare is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -7778,22 +8439,27 @@ class val DontCare is (AST & Expr)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCare")
     consume s
 
 class val PackageRef is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
+  let _name: Id
   
   new val create(
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -7801,9 +8467,7 @@ class val PackageRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("PackageRef missing required field: name", pos')); error
@@ -7821,14 +8485,14 @@ class val PackageRef is (AST & Expr)
       else errs.push(("PackageRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->Id => _name
+  fun val name(): Id => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_name(name': Id) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("PackageRef")
     s.push('(')
@@ -7837,15 +8501,22 @@ class val PackageRef is (AST & Expr)
     consume s
 
 class val MethodFunRef is (AST & MethodRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: (Id | TypeArgs)
+  let _receiver: Expr
+  let _name: (Id | TypeArgs)
   
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': (Id | TypeArgs)) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -7854,9 +8525,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("MethodFunRef missing required field: receiver", pos')); error
@@ -7882,16 +8551,16 @@ class val MethodFunRef is (AST & MethodRef & Expr)
       else errs.push(("MethodFunRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->(Id | TypeArgs) => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): (Id | TypeArgs) => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': (Id | TypeArgs)) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFunRef")
     s.push('(')
@@ -7901,15 +8570,22 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     consume s
 
 class val MethodNewRef is (AST & MethodRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: (Id | TypeArgs)
+  let _receiver: Expr
+  let _name: (Id | TypeArgs)
   
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': (Id | TypeArgs)) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -7918,9 +8594,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("MethodNewRef missing required field: receiver", pos')); error
@@ -7946,16 +8620,16 @@ class val MethodNewRef is (AST & MethodRef & Expr)
       else errs.push(("MethodNewRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->(Id | TypeArgs) => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): (Id | TypeArgs) => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': (Id | TypeArgs)) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNewRef")
     s.push('(')
@@ -7965,15 +8639,22 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     consume s
 
 class val MethodBeRef is (AST & MethodRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: (Id | TypeArgs)
+  let _receiver: Expr
+  let _name: (Id | TypeArgs)
   
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': (Id | TypeArgs)) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -7982,9 +8663,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("MethodBeRef missing required field: receiver", pos')); error
@@ -8010,16 +8689,16 @@ class val MethodBeRef is (AST & MethodRef & Expr)
       else errs.push(("MethodBeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->(Id | TypeArgs) => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): (Id | TypeArgs) => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': (Id | TypeArgs)) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBeRef")
     s.push('(')
@@ -8029,15 +8708,22 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     consume s
 
 class val TypeRef is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _package: Expr
-  var _name: (Id | TypeArgs)
+  let _package: Expr
+  let _name: (Id | TypeArgs)
   
   new val create(
     package': Expr,
     name': (Id | TypeArgs))
-  =>
+  =>_pos = SourcePosNone
+    _package = package'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  package': Expr, 
+  name': (Id | TypeArgs)) =>
+    _pos = pos'
     _package = package'
     _name = name'
   
@@ -8046,9 +8732,7 @@ class val TypeRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let package': (AST | None) =
       try iter.next()
       else errs.push(("TypeRef missing required field: package", pos')); error
@@ -8074,16 +8758,16 @@ class val TypeRef is (AST & Expr)
       else errs.push(("TypeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _package, _name)
   
-  fun package(): this->Expr => _package
-  fun name(): this->(Id | TypeArgs) => _name
+  fun val package(): Expr => _package
+  fun val name(): (Id | TypeArgs) => _name
   
-  fun ref set_package(package': Expr) => _package = consume package'
-  fun ref set_name(name': (Id | TypeArgs)) => _name = consume name'
+  fun val with_package(package': Expr) => _create(_pos, package', _name)
+  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _package, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeRef")
     s.push('(')
@@ -8093,15 +8777,22 @@ class val TypeRef is (AST & Expr)
     consume s
 
 class val FieldLetRef is (AST & FieldRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: Id
+  let _receiver: Expr
+  let _name: Id
   
   new val create(
     receiver': Expr,
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': Id) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -8110,9 +8801,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("FieldLetRef missing required field: receiver", pos')); error
@@ -8138,16 +8827,16 @@ class val FieldLetRef is (AST & FieldRef & Expr)
       else errs.push(("FieldLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->Id => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): Id => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLetRef")
     s.push('(')
@@ -8157,15 +8846,22 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     consume s
 
 class val FieldVarRef is (AST & FieldRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: Id
+  let _receiver: Expr
+  let _name: Id
   
   new val create(
     receiver': Expr,
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': Id) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -8174,9 +8870,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("FieldVarRef missing required field: receiver", pos')); error
@@ -8202,16 +8896,16 @@ class val FieldVarRef is (AST & FieldRef & Expr)
       else errs.push(("FieldVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->Id => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): Id => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVarRef")
     s.push('(')
@@ -8221,15 +8915,22 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     consume s
 
 class val FieldEmbedRef is (AST & FieldRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: Id
+  let _receiver: Expr
+  let _name: Id
   
   new val create(
     receiver': Expr,
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': Id) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -8238,9 +8939,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("FieldEmbedRef missing required field: receiver", pos')); error
@@ -8266,16 +8965,16 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
       else errs.push(("FieldEmbedRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->Id => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): Id => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbedRef")
     s.push('(')
@@ -8285,15 +8984,22 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     consume s
 
 class val TupleElementRef is (AST & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _receiver: Expr
-  var _name: LitInteger
+  let _receiver: Expr
+  let _name: LitInteger
   
   new val create(
     receiver': Expr,
     name': LitInteger)
-  =>
+  =>_pos = SourcePosNone
+    _receiver = receiver'
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  receiver': Expr, 
+  name': LitInteger) =>
+    _pos = pos'
     _receiver = receiver'
     _name = name'
   
@@ -8302,9 +9008,7 @@ class val TupleElementRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let receiver': (AST | None) =
       try iter.next()
       else errs.push(("TupleElementRef missing required field: receiver", pos')); error
@@ -8330,16 +9034,16 @@ class val TupleElementRef is (AST & Expr)
       else errs.push(("TupleElementRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
-  fun receiver(): this->Expr => _receiver
-  fun name(): this->LitInteger => _name
+  fun val receiver(): Expr => _receiver
+  fun val name(): LitInteger => _name
   
-  fun ref set_receiver(receiver': Expr) => _receiver = consume receiver'
-  fun ref set_name(name': LitInteger) => _name = consume name'
+  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
+  fun val with_name(name': LitInteger) => _create(_pos, _receiver, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleElementRef")
     s.push('(')
@@ -8349,13 +9053,18 @@ class val TupleElementRef is (AST & Expr)
     consume s
 
 class val LocalLetRef is (AST & LocalRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
+  let _name: Id
   
   new val create(
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -8363,9 +9072,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("LocalLetRef missing required field: name", pos')); error
@@ -8383,14 +9090,14 @@ class val LocalLetRef is (AST & LocalRef & Expr)
       else errs.push(("LocalLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->Id => _name
+  fun val name(): Id => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_name(name': Id) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLetRef")
     s.push('(')
@@ -8399,13 +9106,18 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     consume s
 
 class val LocalVarRef is (AST & LocalRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
+  let _name: Id
   
   new val create(
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -8413,9 +9125,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("LocalVarRef missing required field: name", pos')); error
@@ -8433,14 +9143,14 @@ class val LocalVarRef is (AST & LocalRef & Expr)
       else errs.push(("LocalVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->Id => _name
+  fun val name(): Id => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_name(name': Id) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVarRef")
     s.push('(')
@@ -8449,13 +9159,18 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     consume s
 
 class val ParamRef is (AST & LocalRef & Expr)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
+  let _name: Id
   
   new val create(
     name': Id)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id) =>
+    _pos = pos'
     _name = name'
   
   new from_iter(
@@ -8463,9 +9178,7 @@ class val ParamRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("ParamRef missing required field: name", pos')); error
@@ -8483,14 +9196,14 @@ class val ParamRef is (AST & LocalRef & Expr)
       else errs.push(("ParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
-  fun name(): this->Id => _name
+  fun val name(): Id => _name
   
-  fun ref set_name(name': Id) => _name = consume name'
+  fun val with_name(name': Id) => _create(_pos, name')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("ParamRef")
     s.push('(')
@@ -8499,15 +9212,22 @@ class val ParamRef is (AST & LocalRef & Expr)
     consume s
 
 class val ViewpointType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _left: Type
-  var _right: Type
+  let _left: Type
+  let _right: Type
   
   new val create(
     left': Type,
     right': Type)
-  =>
+  =>_pos = SourcePosNone
+    _left = left'
+    _right = right'
+  
+  new val _create(pos': SourcePosAny, 
+  left': Type, 
+  right': Type) =>
+    _pos = pos'
     _left = left'
     _right = right'
   
@@ -8516,9 +9236,7 @@ class val ViewpointType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let left': (AST | None) =
       try iter.next()
       else errs.push(("ViewpointType missing required field: left", pos')); error
@@ -8544,16 +9262,16 @@ class val ViewpointType is (AST & Type)
       else errs.push(("ViewpointType got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
-  fun left(): this->Type => _left
-  fun right(): this->Type => _right
+  fun val left(): Type => _left
+  fun val right(): Type => _right
   
-  fun ref set_left(left': Type) => _left = consume left'
-  fun ref set_right(right': Type) => _right = consume right'
+  fun val with_left(left': Type) => _create(_pos, left', _right)
+  fun val with_right(right': Type) => _create(_pos, _left, right')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("ViewpointType")
     s.push('(')
@@ -8563,13 +9281,18 @@ class val ViewpointType is (AST & Type)
     consume s
 
 class val UnionType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Type]
+  let _list: coll.Vec[Type]
   
   new val create(
     list': coll.Vec[Type] = coll.Vec[Type])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Type]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -8577,9 +9300,7 @@ class val UnionType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
@@ -8593,14 +9314,14 @@ class val UnionType is (AST & Type)
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Type] => _list
+  fun val list(): coll.Vec[Type] => _list
   
-  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("UnionType")
     s.push('(')
@@ -8614,13 +9335,18 @@ class val UnionType is (AST & Type)
     consume s
 
 class val IsectType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Type]
+  let _list: coll.Vec[Type]
   
   new val create(
     list': coll.Vec[Type] = coll.Vec[Type])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Type]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -8628,9 +9354,7 @@ class val IsectType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
@@ -8644,14 +9368,14 @@ class val IsectType is (AST & Type)
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Type] => _list
+  fun val list(): coll.Vec[Type] => _list
   
-  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("IsectType")
     s.push('(')
@@ -8665,13 +9389,18 @@ class val IsectType is (AST & Type)
     consume s
 
 class val TupleType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _list: coll.Vec[Type]
+  let _list: coll.Vec[Type]
   
   new val create(
     list': coll.Vec[Type] = coll.Vec[Type])
-  =>
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny, 
+  list': coll.Vec[Type]) =>
+    _pos = pos'
     _list = list'
   
   new from_iter(
@@ -8679,9 +9408,7 @@ class val TupleType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     var list' = coll.Vec[Type]
     var list_next' = try iter.next() else None end
     while true do
@@ -8695,14 +9422,14 @@ class val TupleType is (AST & Type)
     
     _list = list'
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
-  fun list(): this->coll.Vec[Type] => _list
+  fun val list(): coll.Vec[Type] => _list
   
-  fun ref set_list(list': coll.Vec[Type] = coll.Vec[Type]) => _list = consume list'
+  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleType")
     s.push('(')
@@ -8716,13 +9443,13 @@ class val TupleType is (AST & Type)
     consume s
 
 class val NominalType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _package: (Id | None)
-  var _type_args: (TypeArgs | None)
-  var _cap: (Cap | GenCap | None)
-  var _cap_mod: (CapMod | None)
+  let _name: Id
+  let _package: (Id | None)
+  let _type_args: (TypeArgs | None)
+  let _cap: (Cap | GenCap | None)
+  let _cap_mod: (CapMod | None)
   
   new val create(
     name': Id,
@@ -8730,7 +9457,20 @@ class val NominalType is (AST & Type)
     type_args': (TypeArgs | None) = None,
     cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _package = package'
+    _type_args = type_args'
+    _cap = cap'
+    _cap_mod = cap_mod'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  package': (Id | None), 
+  type_args': (TypeArgs | None), 
+  cap': (Cap | GenCap | None), 
+  cap_mod': (CapMod | None)) =>
+    _pos = pos'
     _name = name'
     _package = package'
     _type_args = type_args'
@@ -8742,9 +9482,7 @@ class val NominalType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("NominalType missing required field: name", pos')); error
@@ -8782,22 +9520,22 @@ class val NominalType is (AST & Type)
       else errs.push(("NominalType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
   
-  fun name(): this->Id => _name
-  fun package(): this->(Id | None) => _package
-  fun type_args(): this->(TypeArgs | None) => _type_args
-  fun cap(): this->(Cap | GenCap | None) => _cap
-  fun cap_mod(): this->(CapMod | None) => _cap_mod
+  fun val name(): Id => _name
+  fun val package(): (Id | None) => _package
+  fun val type_args(): (TypeArgs | None) => _type_args
+  fun val cap(): (Cap | GenCap | None) => _cap
+  fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_package(package': (Id | None) = None) => _package = consume package'
-  fun ref set_type_args(type_args': (TypeArgs | None) = None) => _type_args = consume type_args'
-  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
+  fun val with_name(name': Id) => _create(_pos, name', _package, _type_args, _cap, _cap_mod)
+  fun val with_package(package': (Id | None) = None) => _create(_pos, _name, package', _type_args, _cap, _cap_mod)
+  fun val with_type_args(type_args': (TypeArgs | None) = None) => _create(_pos, _name, _package, type_args', _cap, _cap_mod)
+  fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("NominalType")
     s.push('(')
@@ -8810,19 +9548,30 @@ class val NominalType is (AST & Type)
     consume s
 
 class val FunType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _cap: Cap
-  var _type_params: (TypeParams | None)
-  var _params: (Params | None)
-  var _return_type: (Type | None)
+  let _cap: Cap
+  let _type_params: (TypeParams | None)
+  let _params: (Params | None)
+  let _return_type: (Type | None)
   
   new val create(
     cap': Cap,
     type_params': (TypeParams | None) = None,
     params': (Params | None) = None,
     return_type': (Type | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _cap = cap'
+    _type_params = type_params'
+    _params = params'
+    _return_type = return_type'
+  
+  new val _create(pos': SourcePosAny, 
+  cap': Cap, 
+  type_params': (TypeParams | None), 
+  params': (Params | None), 
+  return_type': (Type | None)) =>
+    _pos = pos'
     _cap = cap'
     _type_params = type_params'
     _params = params'
@@ -8833,9 +9582,7 @@ class val FunType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let cap': (AST | None) =
       try iter.next()
       else errs.push(("FunType missing required field: cap", pos')); error
@@ -8868,20 +9615,20 @@ class val FunType is (AST & Type)
       else errs.push(("FunType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _type_params, _params, _return_type)
   
-  fun cap(): this->Cap => _cap
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun params(): this->(Params | None) => _params
-  fun return_type(): this->(Type | None) => _return_type
+  fun val cap(): Cap => _cap
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): (Params | None) => _params
+  fun val return_type(): (Type | None) => _return_type
   
-  fun ref set_cap(cap': Cap) => _cap = consume cap'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_params(params': (Params | None) = None) => _params = consume params'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
+  fun val with_cap(cap': Cap) => _create(_pos, cap', _type_params, _params, _return_type)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _cap, type_params', _params, _return_type)
+  fun val with_params(params': (Params | None) = None) => _create(_pos, _cap, _type_params, params', _return_type)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _cap, _type_params, _params, return_type')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("FunType")
     s.push('(')
@@ -8893,16 +9640,16 @@ class val FunType is (AST & Type)
     consume s
 
 class val LambdaType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _method_cap: (Cap | None)
-  var _name: (Id | None)
-  var _type_params: (TypeParams | None)
-  var _param_types: TupleType
-  var _return_type: (Type | None)
-  var _partial: (Question | None)
-  var _object_cap: (Cap | GenCap | None)
-  var _cap_mod: (CapMod | None)
+  let _method_cap: (Cap | None)
+  let _name: (Id | None)
+  let _type_params: (TypeParams | None)
+  let _param_types: TupleType
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _object_cap: (Cap | GenCap | None)
+  let _cap_mod: (CapMod | None)
   
   new val create(
     method_cap': (Cap | None) = None,
@@ -8913,7 +9660,26 @@ class val LambdaType is (AST & Type)
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _param_types = param_types'
+    _return_type = return_type'
+    _partial = partial'
+    _object_cap = object_cap'
+    _cap_mod = cap_mod'
+  
+  new val _create(pos': SourcePosAny, 
+  method_cap': (Cap | None), 
+  name': (Id | None), 
+  type_params': (TypeParams | None), 
+  param_types': TupleType, 
+  return_type': (Type | None), 
+  partial': (Question | None), 
+  object_cap': (Cap | GenCap | None), 
+  cap_mod': (CapMod | None)) =>
+    _pos = pos'
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -8928,9 +9694,7 @@ class val LambdaType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let method_cap': (AST | None) = try iter.next() else None end
     let name': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
@@ -8980,28 +9744,28 @@ class val LambdaType is (AST & Type)
       else errs.push(("LambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
   
-  fun method_cap(): this->(Cap | None) => _method_cap
-  fun name(): this->(Id | None) => _name
-  fun type_params(): this->(TypeParams | None) => _type_params
-  fun param_types(): this->TupleType => _param_types
-  fun return_type(): this->(Type | None) => _return_type
-  fun partial(): this->(Question | None) => _partial
-  fun object_cap(): this->(Cap | GenCap | None) => _object_cap
-  fun cap_mod(): this->(CapMod | None) => _cap_mod
+  fun val method_cap(): (Cap | None) => _method_cap
+  fun val name(): (Id | None) => _name
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val param_types(): TupleType => _param_types
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val object_cap(): (Cap | GenCap | None) => _object_cap
+  fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun ref set_method_cap(method_cap': (Cap | None) = None) => _method_cap = consume method_cap'
-  fun ref set_name(name': (Id | None) = None) => _name = consume name'
-  fun ref set_type_params(type_params': (TypeParams | None) = None) => _type_params = consume type_params'
-  fun ref set_param_types(param_types': TupleType = TupleType) => _param_types = consume param_types'
-  fun ref set_return_type(return_type': (Type | None) = None) => _return_type = consume return_type'
-  fun ref set_partial(partial': (Question | None) = None) => _partial = consume partial'
-  fun ref set_object_cap(object_cap': (Cap | GenCap | None) = None) => _object_cap = consume object_cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
+  fun val with_method_cap(method_cap': (Cap | None) = None) => _create(_pos, method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_name(name': (Id | None) = None) => _create(_pos, _method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_param_types(param_types': TupleType = TupleType) => _create(_pos, _method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod)
+  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod)
+  fun val with_object_cap(object_cap': (Cap | GenCap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaType")
     s.push('(')
@@ -9017,17 +9781,26 @@ class val LambdaType is (AST & Type)
     consume s
 
 class val TypeParamRef is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  var _name: Id
-  var _cap: (Cap | GenCap | None)
-  var _cap_mod: (CapMod | None)
+  let _name: Id
+  let _cap: (Cap | GenCap | None)
+  let _cap_mod: (CapMod | None)
   
   new val create(
     name': Id,
     cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>
+  =>_pos = SourcePosNone
+    _name = name'
+    _cap = cap'
+    _cap_mod = cap_mod'
+  
+  new val _create(pos': SourcePosAny, 
+  name': Id, 
+  cap': (Cap | GenCap | None), 
+  cap_mod': (CapMod | None)) =>
+    _pos = pos'
     _name = name'
     _cap = cap'
     _cap_mod = cap_mod'
@@ -9037,9 +9810,7 @@ class val TypeParamRef is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     let name': (AST | None) =
       try iter.next()
       else errs.push(("TypeParamRef missing required field: name", pos')); error
@@ -9067,18 +9838,18 @@ class val TypeParamRef is (AST & Type)
       else errs.push(("TypeParamRef got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _cap_mod)
   
-  fun name(): this->Id => _name
-  fun cap(): this->(Cap | GenCap | None) => _cap
-  fun cap_mod(): this->(CapMod | None) => _cap_mod
+  fun val name(): Id => _name
+  fun val cap(): (Cap | GenCap | None) => _cap
+  fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun ref set_name(name': Id) => _name = consume name'
-  fun ref set_cap(cap': (Cap | GenCap | None) = None) => _cap = consume cap'
-  fun ref set_cap_mod(cap_mod': (CapMod | None) = None) => _cap_mod = consume cap_mod'
+  fun val with_name(name': Id) => _create(_pos, name', _cap, _cap_mod)
+  fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _cap, cap_mod')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParamRef")
     s.push('(')
@@ -9089,17 +9860,19 @@ class val TypeParamRef is (AST & Type)
     consume s
 
 class val ThisType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9108,26 +9881,28 @@ class val ThisType is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("ThisType")
     consume s
 
 class val DontCareType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9136,26 +9911,28 @@ class val DontCareType is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCareType")
     consume s
 
 class val ErrorType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9164,26 +9941,28 @@ class val ErrorType is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("ErrorType")
     consume s
 
 class val LiteralType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9192,26 +9971,28 @@ class val LiteralType is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralType")
     consume s
 
 class val LiteralTypeBranch is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9220,26 +10001,28 @@ class val LiteralTypeBranch is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralTypeBranch")
     consume s
 
 class val OpLiteralType is (AST & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9248,26 +10031,28 @@ class val OpLiteralType is (AST & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("OpLiteralType")
     consume s
 
 class val Iso is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9276,26 +10061,28 @@ class val Iso is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Iso")
     consume s
 
 class val Trn is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9304,26 +10091,28 @@ class val Trn is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Trn")
     consume s
 
 class val Ref is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9332,26 +10121,28 @@ class val Ref is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Ref")
     consume s
 
 class val Val is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9360,26 +10151,28 @@ class val Val is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Val")
     consume s
 
 class val Box is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9388,26 +10181,28 @@ class val Box is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Box")
     consume s
 
 class val Tag is (AST & Cap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9416,26 +10211,28 @@ class val Tag is (AST & Cap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Tag")
     consume s
 
 class val CapRead is (AST & GenCap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9444,26 +10241,28 @@ class val CapRead is (AST & GenCap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CapRead")
     consume s
 
 class val CapSend is (AST & GenCap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9472,26 +10271,28 @@ class val CapSend is (AST & GenCap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CapSend")
     consume s
 
 class val CapShare is (AST & GenCap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9500,26 +10301,28 @@ class val CapShare is (AST & GenCap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CapShare")
     consume s
 
 class val CapAlias is (AST & GenCap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9528,26 +10331,28 @@ class val CapAlias is (AST & GenCap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAlias")
     consume s
 
 class val CapAny is (AST & GenCap & Type)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9556,26 +10361,28 @@ class val CapAny is (AST & GenCap & Type)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAny")
     consume s
 
 class val Aliased is (AST & CapMod)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9584,26 +10391,28 @@ class val Aliased is (AST & CapMod)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Aliased")
     consume s
 
 class val Ephemeral is (AST & CapMod)
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9612,26 +10421,28 @@ class val Ephemeral is (AST & CapMod)
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Ephemeral")
     consume s
 
 class val At is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9640,26 +10451,28 @@ class val At is AST
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("At")
     consume s
 
 class val Question is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9668,26 +10481,28 @@ class val Question is AST
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Question")
     consume s
 
 class val Ellipsis is AST
-  var _pos: SourcePosAny = SourcePosNone
+  let _pos: SourcePosAny
   
-  new val create() => None
+  new val create() => _pos = SourcePosNone
+  
+  new val _create(pos': SourcePosAny) =>
+    _pos = pos'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
-    
     if
       try
         let extra' = iter.next()
@@ -9696,24 +10511,24 @@ class val Ellipsis is AST
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     let s = recover iso String end
     s.append("Ellipsis")
     consume s
 
 class val Id is AST
-  var _pos: SourcePosAny = SourcePosNone
-  var _value: String
-  new val create(value': String) => _value = value'
+  let _pos: SourcePosAny
+  let _value: String
+  new val create(value': String) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': String) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     _pos = pos'
     _value = "foo" // TODO: parse from _pos?
     
@@ -9725,609 +10540,539 @@ class val Id is AST
       end
     then error end
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): Id => _create(pos', _value)
   
-  fun value(): String => _value
-  fun ref set_value(value': String) => _value = value'
-  fun string(): String iso^ =>
+  fun val value(): String => _value
+  fun val with_value(value': String): Id => _create(_pos, value')
+  fun val string(): String iso^ =>
     recover
       String.>append("Id(").>append(_value.string()).>push(')')
     end
 
 class val EOF is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): EOF => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("EOF") end
 
 class val NewLine is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): NewLine => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("NewLine") end
 
 class val Use is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Use => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Use") end
 
 class val Colon is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Colon => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Colon") end
 
 class val Semicolon is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Semicolon is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Semicolon => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Semicolon") end
 
 class val Comma is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Comma => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Comma") end
 
 class val Constant is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Constant => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Constant") end
 
 class val Pipe is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Pipe => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Pipe") end
 
 class val Ampersand is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Ampersand => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Ampersand") end
 
 class val SubType is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): SubType => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("SubType") end
 
 class val Arrow is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Arrow => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Arrow") end
 
 class val DoubleArrow is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("DoubleArrow") end
 
 class val Backslash is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Backslash => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Backslash") end
 
 class val LParen is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LParen => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LParen") end
 
 class val RParen is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): RParen => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("RParen") end
 
 class val LBrace is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LBrace => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LBrace") end
 
 class val RBrace is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): RBrace => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("RBrace") end
 
 class val LSquare is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LSquare => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LSquare") end
 
 class val RSquare is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): RSquare => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("RSquare") end
 
 class val LParenNew is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LParenNew => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LParenNew") end
 
 class val LBraceNew is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LBraceNew => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LBraceNew") end
 
 class val LSquareNew is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LSquareNew => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("LSquareNew") end
 
 class val SubNew is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): SubNew => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("SubNew") end
 
 class val SubUnsafeNew is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("SubUnsafeNew") end
 
 class val In is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): In => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("In") end
 
 class val Until is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Until => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Until") end
 
 class val Do is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Do => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Do") end
 
 class val Else is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Else => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Else") end
 
 class val ElseIf is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): ElseIf => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("ElseIf") end
 
 class val Then is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Then => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Then") end
 
 class val End is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): End => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("End") end
 
 class val Var is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Var => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Var") end
 
 class val Let is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Let => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Let") end
 
 class val Embed is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Embed => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Embed") end
 
 class val Where is (AST & Lexeme)
-  var _pos: SourcePosAny = SourcePosNone
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
-  
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
-  fun pos(): SourcePosAny => _pos
-  fun ref set_pos(pos': SourcePosAny) => _pos = pos'
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): Where => create()
   
-  fun string(): String iso^ =>
+  fun val string(): String iso^ =>
     recover String.>append("Where") end
 
 

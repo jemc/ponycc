@@ -47,12 +47,12 @@ class ASTGenDefFixed is ASTGenDef
     g.push_indent()
     
     // Declare common fields.
-    g.line("var _pos: SourcePosAny = SourcePosNone")
+    g.line("let _pos: SourcePosAny")
     g.line()
     
     // Declare all fields.
     for (field_name, field_type, _) in fields.values() do
-      g.line("var _" + field_name + ": " + field_type)
+      g.line("let _" + field_name + ": " + field_type)
     end
     if fields.size() > 0 then g.line() end
     
@@ -68,16 +68,33 @@ class ASTGenDefFixed is ASTGenDef
     g.add(")")
     g.pop_indent()
     if fields.size() == 0 then
-      g.add(" => None")
+      g.add(" => _pos = SourcePosNone")
     else
       g.line("=>")
       g.push_indent()
+      g.add("_pos = SourcePosNone")
       for (field_name, field_type, _) in fields.values() do
         g.line("_" + field_name + " = " + field_name + "'")
       end
       g.pop_indent()
     end
-    if fields.size() > 0 then g.line() end
+    g.line()
+    
+    // Declare a constructor that sets all fields (and _pos), with no defaults.
+    g.line("new val _create(")
+    g.add("pos': SourcePosAny")
+    for (field_name, field_type, _) in fields.values() do
+      g.add(", ")
+      g.line(field_name + "': " + field_type)
+    end
+    g.add(") =>")
+    g.push_indent()
+    g.line("_pos = pos'")
+    for (field_name, field_type, _) in fields.values() do
+      g.line("_" + field_name + " = " + field_name + "'")
+    end
+    g.pop_indent()
+    g.line()
     
     // Declare a constructor that initializes all fields from an iterator.
     g.block(
@@ -86,11 +103,9 @@ class ASTGenDefFixed is ASTGenDef
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
         errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
-      =>
-      """)
+      =>""")
     g.push_indent()
     g.line("_pos = pos'")
-    g.line()
     
     var iter_next = "iter.next()"
     for (field_name, field_type, field_default) in fields.values() do
@@ -172,29 +187,40 @@ class ASTGenDefFixed is ASTGenDef
     g.line()
     
     // Declare common getters and setters.
-    g.line("fun pos(): SourcePosAny => _pos")
-    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line("fun val pos(): SourcePosAny => _pos")
+    g.line("fun val with_pos(pos': SourcePosAny) => _create(pos'")
+    for (field_name, _, _) in fields.values() do
+      g.add(", _" + field_name)
+    end
+    g.add(")")
     g.line()
     
     // Declare getter methods for all fields.
     for (field_name, field_type, _) in fields.values() do
-      g.line("fun " + field_name + "(): this->" + field_type + " => ")
+      g.line("fun val " + field_name + "(): " + field_type + " => ")
       g.add("_" + field_name)
     end
     if fields.size() > 0 then g.line() end
     
     // Declare setter methods for all fields.
     for (field_name, field_type, field_default) in fields.values() do
-      g.line("fun ref set_" + field_name + "(")
+      g.line("fun val with_" + field_name + "(")
       g.add(field_name + "': " + field_type)
       if field_default.size() > 0 then g.add(" = " + field_default) end
-      g.add(") => ")
-      g.add("_" + field_name + " = consume " + field_name + "'")
+      g.add(") => _create(_pos")
+      for (other_field_name, _, _) in fields.values() do
+        if other_field_name == field_name then
+          g.add(", " + field_name + "'")
+        else
+          g.add(", _" + other_field_name)
+        end
+      end
+      g.add(")")
     end
     if fields.size() > 0 then g.line() end
     
     // Declare a string method to print itself.
-    g.line("fun string(): String iso^ =>")
+    g.line("fun val string(): String iso^ =>")
     g.push_indent()
     g.line("let s = recover iso String end")
     g.line("s.append(\"" + _name + "\")")
@@ -255,13 +281,22 @@ class ASTGenDefWrap is ASTGenDef
     g.push_indent()
     
     // Declare common fields.
-    g.line("var _pos: SourcePosAny = SourcePosNone")
+    g.line("let _pos: SourcePosAny")
     
     // Declare the value field.
-    g.line("var _value: " + value_type)
+    g.line("let _value: " + value_type)
     
     // Declare a constructor that initializes the value field from a parameter.
-    g.line("new val create(value': " + value_type + ") => _value = value'")
+    g.line("new val create(value': " + value_type + ") =>")
+    g.push_indent()
+    g.add("(_pos, _value) = (SourcePosNone, value')")
+    g.pop_indent()
+    
+    // Declare a constructor that initializes the value and pos from parameters.
+    g.line("new val _create(pos': SourcePosAny, value': " + value_type + ") =>")
+    g.push_indent()
+    g.add("(_pos, _value) = (pos', value')")
+    g.pop_indent()
     
     g.block(
       """
@@ -269,8 +304,7 @@ class ASTGenDefWrap is ASTGenDef
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
         errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
-      =>
-      """)
+      =>""")
     g.push_indent()
     g.line("_pos = pos'")
     if value_type == "String" then
@@ -294,18 +328,18 @@ class ASTGenDefWrap is ASTGenDef
     g.line()
     
     // Declare common getters and setters.
-    g.line("fun pos(): SourcePosAny => _pos")
-    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line("fun val pos(): SourcePosAny => _pos")
+    g.line("fun val with_pos(pos': SourcePosAny): " + _name + " => _create(pos', _value)")
     g.line()
     
     // Declare a getter method for the value field.
-    g.line("fun value(): " + value_type + " => _value")
+    g.line("fun val value(): " + value_type + " => _value")
     
     // Declare a setter methods for the value field.
-    g.line("fun ref set_value(value': " + value_type + ") => _value = value'")
+    g.line("fun val with_value(value': " + value_type + "): " + _name + " => _create(_pos, value')")
     
     // Declare a string method to print itself.
-    g.line("fun string(): String iso^ =>")
+    g.line("fun val string(): String iso^ =>")
     g.push_indent()
     g.line("recover")
     g.push_indent()
@@ -346,9 +380,6 @@ class ASTGenDefLexeme is ASTGenDef
     end
     g.push_indent()
     
-    // Declare common fields.
-    g.line("var _pos: SourcePosAny = SourcePosNone")
-    
     // Declare a constructor that does nothing.
     g.line("new val create() => None")
     
@@ -359,20 +390,19 @@ class ASTGenDefLexeme is ASTGenDef
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
         errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
-      =>
-      """)
+      =>""")
     g.push_indent()
     g.line("errs.push((\"" + _name + " is a lexeme-only type append should never be built\", pos')); error")
     g.pop_indent()
     g.line()
     
     // Declare common getters and setters.
-    g.line("fun pos(): SourcePosAny => _pos")
-    g.line("fun ref set_pos(pos': SourcePosAny) => _pos = pos'")
+    g.line("fun val pos(): SourcePosAny => SourcePosNone")
+    g.line("fun val with_pos(pos': SourcePosAny): " + _name + " => create()")
     g.line()
     
     // Declare a string method to print itself.
-    g.line("fun string(): String iso^ =>")
+    g.line("fun val string(): String iso^ =>")
     g.push_indent()
     g.line("recover String.>append(\"" + _name + "\") end")
     g.pop_indent()

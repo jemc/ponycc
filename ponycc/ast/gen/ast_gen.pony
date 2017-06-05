@@ -26,9 +26,8 @@ class ASTGen
     // Declare the AST trait
     g.line("trait val AST")
     g.push_indent()
-    g.line("fun pos(): SourcePosAny")
-    g.line("fun ref set_pos(pos': SourcePosAny)")
-    g.line("fun string(): String iso^")
+    g.line("fun val pos(): SourcePosAny")
+    g.line("fun val string(): String iso^")
     g.block(
       """
       new from_iter(
