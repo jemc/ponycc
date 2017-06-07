@@ -23,5 +23,7 @@ ponycc/test/test: ponycc/ast/ast.pony ponycc/ast/parse/_parser.pony \
 	$(shell find ponycc/ast/*.pony) \
 	$(shell find ponycc/ast/parse/*.pony) \
 	$(shell find ponycc/ast/print/*.pony) \
+	$(shell find ponycc/frame/*.pony) \
+	$(shell find ponycc/pass/syntax/*.pony) \
 	$(shell find ponycc/test/*.pony)
 	stable env ponyc --debug -o ponycc/test ponycc/test

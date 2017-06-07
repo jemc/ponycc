@@ -1,6 +1,7 @@
 use coll = "collections/persistent"
 
 trait val AST
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
   fun val pos(): SourcePosAny
   fun val string(): String iso^
   new from_iter(
@@ -306,6 +307,7 @@ class val Module is AST
       else errs.push(("Module got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Module](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _use_decls, _type_decls, _docs)
   
@@ -388,6 +390,7 @@ class val UsePackage is (AST & UseDecl)
       else errs.push(("UsePackage got incompatible field: package", try (package' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UsePackage](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _prefix, _package)
   
@@ -494,6 +497,7 @@ class val UseFFIDecl is (AST & UseDecl)
       else errs.push(("UseFFIDecl got incompatible field: guard", try (guard' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UseFFIDecl](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _return_type, _params, _partial, _guard)
   
@@ -620,6 +624,7 @@ class val TypeAlias is (AST & TypeDecl)
       else errs.push(("TypeAlias got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeAlias](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -752,6 +757,7 @@ class val Interface is (AST & TypeDecl)
       else errs.push(("Interface got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Interface](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -884,6 +890,7 @@ class val Trait is (AST & TypeDecl)
       else errs.push(("Trait got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trait](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1016,6 +1023,7 @@ class val Primitive is (AST & TypeDecl)
       else errs.push(("Primitive got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Primitive](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1148,6 +1156,7 @@ class val Struct is (AST & TypeDecl)
       else errs.push(("Struct got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Struct](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1280,6 +1289,7 @@ class val Class is (AST & TypeDecl)
       else errs.push(("Class got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Class](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1412,6 +1422,7 @@ class val Actor is (AST & TypeDecl)
       else errs.push(("Actor got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Actor](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1492,6 +1503,7 @@ class val Members is AST
     _fields = fields'
     _methods = methods'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Members](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _fields, _methods)
   
@@ -1583,6 +1595,7 @@ class val FieldLet is (AST & Field)
       else errs.push(("FieldLet got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLet](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
@@ -1666,6 +1679,7 @@ class val FieldVar is (AST & Field)
       else errs.push(("FieldVar got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVar](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
@@ -1749,6 +1763,7 @@ class val FieldEmbed is (AST & Field)
       else errs.push(("FieldEmbed got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbed](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
   
@@ -1889,6 +1904,7 @@ class val MethodFun is (AST & Method)
       else errs.push(("MethodFun got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFun](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2047,6 +2063,7 @@ class val MethodNew is (AST & Method)
       else errs.push(("MethodNew got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNew](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2205,6 +2222,7 @@ class val MethodBe is (AST & Method)
       else errs.push(("MethodBe got incompatible field: docs", try (docs' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2279,6 +2297,7 @@ class val TypeParams is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -2358,6 +2377,7 @@ class val TypeParam is AST
       else errs.push(("TypeParam got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParam](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _constraint, _default)
   
@@ -2414,6 +2434,7 @@ class val TypeArgs is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -2482,6 +2503,7 @@ class val Params is AST
       else errs.push(("Params got incompatible field: ellipsis", try (ellipsis' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Params](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list, _ellipsis)
   
@@ -2565,6 +2587,7 @@ class val Param is AST
       else errs.push(("Param got incompatible field: default", try (default' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Param](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _param_type, _default)
   
@@ -2621,6 +2644,7 @@ class val Sequence is (AST & Expr)
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -2680,6 +2704,7 @@ class val Return is (AST & Jump & Expr)
       else errs.push(("Return got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -2734,6 +2759,7 @@ class val Break is (AST & Jump & Expr)
       else errs.push(("Break got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -2788,6 +2814,7 @@ class val Continue is (AST & Jump & Expr)
       else errs.push(("Continue got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -2842,6 +2869,7 @@ class val Error is (AST & Jump & Expr)
       else errs.push(("Error got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -2896,6 +2924,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
       else errs.push(("CompileIntrinsic got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -2950,6 +2979,7 @@ class val CompileError is (AST & Jump & Expr)
       else errs.push(("CompileError got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
   
@@ -3004,6 +3034,7 @@ class val IfDefFlag is (AST & IfDefCond)
       else errs.push(("IfDefFlag got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -3058,6 +3089,7 @@ class val IfDefNot is (AST & IfDefCond)
       else errs.push(("IfDefNot got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -3125,6 +3157,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
       else errs.push(("IfDefAnd got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefAnd](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -3195,6 +3228,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
       else errs.push(("IfDefOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefOr](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -3275,6 +3309,7 @@ class val IfDef is (AST & Expr)
       else errs.push(("IfDef got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
   
@@ -3371,6 +3406,7 @@ class val IfType is (AST & Expr)
       else errs.push(("IfType got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _sub, _super, _then_body, _else_body)
   
@@ -3457,6 +3493,7 @@ class val If is (AST & Expr)
       else errs.push(("If got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[If](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
   
@@ -3540,6 +3577,7 @@ class val While is (AST & Expr)
       else errs.push(("While got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[While](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _loop_body, _else_body)
   
@@ -3623,6 +3661,7 @@ class val Repeat is (AST & Expr)
       else errs.push(("Repeat got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Repeat](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _loop_body, _condition, _else_body)
   
@@ -3719,6 +3758,7 @@ class val For is (AST & Expr)
       else errs.push(("For got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[For](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _refs, _iterator, _loop_body, _else_body)
   
@@ -3805,6 +3845,7 @@ class val With is (AST & Expr)
       else errs.push(("With got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _assigns, _with_body, _else_body)
   
@@ -3861,6 +3902,7 @@ class val IdTuple is AST
     
     _elements = elements'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
@@ -3916,6 +3958,7 @@ class val AssignTuple is AST
     
     _elements = elements'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
@@ -3995,6 +4038,7 @@ class val Match is (AST & Expr)
       else errs.push(("Match got incompatible field: else_body", try (else_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Match](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _cases, _else_body)
   
@@ -4051,6 +4095,7 @@ class val Cases is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -4130,6 +4175,7 @@ class val Case is AST
       else errs.push(("Case got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Case](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _guard, _body)
   
@@ -4210,6 +4256,7 @@ class val Try is (AST & Expr)
       else errs.push(("Try got incompatible field: then_body", try (then_body' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Try](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _body, _else_body, _then_body)
   
@@ -4283,6 +4330,7 @@ class val Consume is (AST & Expr)
       else errs.push(("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Consume](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
   
@@ -4353,6 +4401,7 @@ class val Recover is (AST & Expr)
       else errs.push(("Recover got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Recover](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
   
@@ -4423,6 +4472,7 @@ class val As is (AST & Expr)
       else errs.push(("As got incompatible field: as_type", try (as_type' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[As](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _as_type)
   
@@ -4493,6 +4543,7 @@ class val Add is (AST & BinaryOp & Expr)
       else errs.push(("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4563,6 +4614,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4633,6 +4685,7 @@ class val Sub is (AST & BinaryOp & Expr)
       else errs.push(("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4703,6 +4756,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4773,6 +4827,7 @@ class val Mul is (AST & BinaryOp & Expr)
       else errs.push(("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4843,6 +4898,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4913,6 +4969,7 @@ class val Div is (AST & BinaryOp & Expr)
       else errs.push(("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -4983,6 +5040,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5053,6 +5111,7 @@ class val Mod is (AST & BinaryOp & Expr)
       else errs.push(("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5123,6 +5182,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5193,6 +5253,7 @@ class val LShift is (AST & BinaryOp & Expr)
       else errs.push(("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5263,6 +5324,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5333,6 +5395,7 @@ class val RShift is (AST & BinaryOp & Expr)
       else errs.push(("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5403,6 +5466,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5473,6 +5537,7 @@ class val Eq is (AST & BinaryOp & Expr)
       else errs.push(("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5543,6 +5608,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5613,6 +5679,7 @@ class val NE is (AST & BinaryOp & Expr)
       else errs.push(("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5683,6 +5750,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5753,6 +5821,7 @@ class val LT is (AST & BinaryOp & Expr)
       else errs.push(("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5823,6 +5892,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5893,6 +5963,7 @@ class val LE is (AST & BinaryOp & Expr)
       else errs.push(("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -5963,6 +6034,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6033,6 +6105,7 @@ class val GE is (AST & BinaryOp & Expr)
       else errs.push(("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6103,6 +6176,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6173,6 +6247,7 @@ class val GT is (AST & BinaryOp & Expr)
       else errs.push(("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6243,6 +6318,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       else errs.push(("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6313,6 +6389,7 @@ class val Is is (AST & BinaryOp & Expr)
       else errs.push(("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6383,6 +6460,7 @@ class val Isnt is (AST & BinaryOp & Expr)
       else errs.push(("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6453,6 +6531,7 @@ class val And is (AST & BinaryOp & Expr)
       else errs.push(("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6523,6 +6602,7 @@ class val Or is (AST & BinaryOp & Expr)
       else errs.push(("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6593,6 +6673,7 @@ class val XOr is (AST & BinaryOp & Expr)
       else errs.push(("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -6650,6 +6731,7 @@ class val Not is (AST & UnaryOp & Expr)
       else errs.push(("Not got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -6704,6 +6786,7 @@ class val Neg is (AST & UnaryOp & Expr)
       else errs.push(("Neg got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -6758,6 +6841,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
       else errs.push(("NegUnsafe got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -6812,6 +6896,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
       else errs.push(("AddressOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -6866,6 +6951,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
       else errs.push(("DigestOf got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
   
@@ -6933,6 +7019,7 @@ class val LocalLet is (AST & Local & Expr)
       else errs.push(("LocalLet got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLet](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
   
@@ -7003,6 +7090,7 @@ class val LocalVar is (AST & Local & Expr)
       else errs.push(("LocalVar got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVar](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
   
@@ -7073,6 +7161,7 @@ class val Assign is (AST & Expr)
       else errs.push(("Assign got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Assign](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -7143,6 +7232,7 @@ class val Dot is (AST & Expr)
       else errs.push(("Dot got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Dot](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -7213,6 +7303,7 @@ class val Chain is (AST & Expr)
       else errs.push(("Chain got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Chain](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -7283,6 +7374,7 @@ class val Tilde is (AST & Expr)
       else errs.push(("Tilde got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tilde](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -7353,6 +7445,7 @@ class val Qualify is (AST & Expr)
       else errs.push(("Qualify got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Qualify](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -7430,6 +7523,7 @@ class val Call is (AST & Expr)
       else errs.push(("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _callable, _args, _named_args)
   
@@ -7530,6 +7624,7 @@ class val CallFFI is (AST & Expr)
       else errs.push(("CallFFI got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CallFFI](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _type_args, _args, _named_args, _partial)
   
@@ -7592,6 +7687,7 @@ class val Args is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -7647,6 +7743,7 @@ class val NamedArgs is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -7719,6 +7816,7 @@ class val NamedArg is AST
       else errs.push(("NamedArg got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArg](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _value)
   
@@ -7853,6 +7951,7 @@ class val Lambda is (AST & Expr)
       else errs.push(("Lambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Lambda](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   
@@ -7927,6 +8026,7 @@ class val LambdaCaptures is AST
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -8006,6 +8106,7 @@ class val LambdaCapture is AST
       else errs.push(("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type, _expr)
   
@@ -8083,6 +8184,7 @@ class val Object is (AST & Expr)
       else errs.push(("Object got incompatible field: members", try (members' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Object](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _provides, _members)
   
@@ -8150,6 +8252,7 @@ class val LitArray is (AST & Expr)
       else errs.push(("LitArray got incompatible field: sequence", try (sequence' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitArray](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _elem_type, _sequence)
   
@@ -8203,6 +8306,7 @@ class val Tuple is (AST & Expr)
     
     _elements = elements'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
   
@@ -8246,6 +8350,7 @@ class val This is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -8277,6 +8382,7 @@ class val LitTrue is (AST & LitBool & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -8308,6 +8414,7 @@ class val LitFalse is (AST & LitBool & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -8337,6 +8444,7 @@ class val LitInteger is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitInteger](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitInteger => _create(pos', _value)
   
@@ -8368,6 +8476,7 @@ class val LitFloat is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFloat](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitFloat => _create(pos', _value)
   
@@ -8399,6 +8508,7 @@ class val LitString is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitString](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitString => _create(pos', _value)
   
@@ -8430,6 +8540,7 @@ class val LitCharacter is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitCharacter](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitCharacter => _create(pos', _value)
   
@@ -8463,6 +8574,7 @@ class val LitLocation is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -8510,6 +8622,7 @@ class val Reference is (AST & Expr)
       else errs.push(("Reference got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -8548,6 +8661,7 @@ class val DontCare is (AST & Expr)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -8595,6 +8709,7 @@ class val PackageRef is (AST & Expr)
       else errs.push(("PackageRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -8662,6 +8777,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
       else errs.push(("MethodFunRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFunRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -8732,6 +8848,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
       else errs.push(("MethodNewRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNewRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -8802,6 +8919,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
       else errs.push(("MethodBeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBeRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -8872,6 +8990,7 @@ class val TypeRef is (AST & Expr)
       else errs.push(("TypeRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _package, _name)
   
@@ -8942,6 +9061,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
       else errs.push(("FieldLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLetRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -9012,6 +9132,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
       else errs.push(("FieldVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVarRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -9082,6 +9203,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
       else errs.push(("FieldEmbedRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbedRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -9152,6 +9274,7 @@ class val TupleElementRef is (AST & Expr)
       else errs.push(("TupleElementRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleElementRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
   
@@ -9209,6 +9332,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
       else errs.push(("LocalLetRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -9263,6 +9387,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
       else errs.push(("LocalVarRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -9317,6 +9442,7 @@ class val ParamRef is (AST & LocalRef & Expr)
       else errs.push(("ParamRef got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
   
@@ -9384,6 +9510,7 @@ class val ViewpointType is (AST & Type)
       else errs.push(("ViewpointType got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ViewpointType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
   
@@ -9437,6 +9564,7 @@ class val UnionType is (AST & Type)
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -9492,6 +9620,7 @@ class val IsectType is (AST & Type)
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -9547,6 +9676,7 @@ class val TupleType is (AST & Type)
     
     _list = list'
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
   
@@ -9646,6 +9776,7 @@ class val NominalType is (AST & Type)
       else errs.push(("NominalType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NominalType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
   
@@ -9742,6 +9873,7 @@ class val FunType is (AST & Type)
       else errs.push(("FunType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FunType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _type_params, _params, _return_type)
   
@@ -9872,6 +10004,7 @@ class val LambdaType is (AST & Type)
       else errs.push(("LambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
   
@@ -9967,6 +10100,7 @@ class val TypeParamRef is (AST & Type)
       else errs.push(("TypeParamRef got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
       end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParamRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _cap_mod)
   
@@ -10011,6 +10145,7 @@ class val ThisType is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10042,6 +10177,7 @@ class val DontCareType is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10073,6 +10209,7 @@ class val ErrorType is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10104,6 +10241,7 @@ class val LiteralType is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10135,6 +10273,7 @@ class val LiteralTypeBranch is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10166,6 +10305,7 @@ class val OpLiteralType is (AST & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10197,6 +10337,7 @@ class val Iso is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10228,6 +10369,7 @@ class val Trn is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10259,6 +10401,7 @@ class val Ref is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10290,6 +10433,7 @@ class val Val is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10321,6 +10465,7 @@ class val Box is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10352,6 +10497,7 @@ class val Tag is (AST & Cap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10383,6 +10529,7 @@ class val CapRead is (AST & GenCap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10414,6 +10561,7 @@ class val CapSend is (AST & GenCap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10445,6 +10593,7 @@ class val CapShare is (AST & GenCap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10476,6 +10625,7 @@ class val CapAlias is (AST & GenCap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10507,6 +10657,7 @@ class val CapAny is (AST & GenCap & Type)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10538,6 +10689,7 @@ class val Aliased is (AST & CapMod)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10569,6 +10721,7 @@ class val Ephemeral is (AST & CapMod)
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10600,6 +10753,7 @@ class val At is AST
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10631,6 +10785,7 @@ class val Question is AST
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10662,6 +10817,7 @@ class val Ellipsis is AST
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
@@ -10691,6 +10847,7 @@ class val Id is AST
       end
     then error end
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Id](consume c, this)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Id => _create(pos', _value)
   
@@ -10710,6 +10867,7 @@ class val EOF is (AST & Lexeme)
   =>
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EOF](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): EOF => create()
   
@@ -10725,6 +10883,7 @@ class val NewLine is (AST & Lexeme)
   =>
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NewLine](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): NewLine => create()
   
@@ -10740,6 +10899,7 @@ class val Use is (AST & Lexeme)
   =>
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Use](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Use => create()
   
@@ -10755,6 +10915,7 @@ class val Colon is (AST & Lexeme)
   =>
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Colon](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Colon => create()
   
@@ -10770,6 +10931,7 @@ class val Semicolon is (AST & Lexeme)
   =>
     errs.push(("Semicolon is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Semicolon => create()
   
@@ -10785,6 +10947,7 @@ class val Comma is (AST & Lexeme)
   =>
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Comma](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Comma => create()
   
@@ -10800,6 +10963,7 @@ class val Constant is (AST & Lexeme)
   =>
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Constant](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Constant => create()
   
@@ -10815,6 +10979,7 @@ class val Pipe is (AST & Lexeme)
   =>
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Pipe](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Pipe => create()
   
@@ -10830,6 +10995,7 @@ class val Ampersand is (AST & Lexeme)
   =>
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ampersand](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Ampersand => create()
   
@@ -10845,6 +11011,7 @@ class val SubType is (AST & Lexeme)
   =>
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubType](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubType => create()
   
@@ -10860,6 +11027,7 @@ class val Arrow is (AST & Lexeme)
   =>
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Arrow](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Arrow => create()
   
@@ -10875,6 +11043,7 @@ class val DoubleArrow is (AST & Lexeme)
   =>
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DoubleArrow](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
   
@@ -10890,6 +11059,7 @@ class val Backslash is (AST & Lexeme)
   =>
     errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Backslash](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Backslash => create()
   
@@ -10905,6 +11075,7 @@ class val LParen is (AST & Lexeme)
   =>
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParen => create()
   
@@ -10920,6 +11091,7 @@ class val RParen is (AST & Lexeme)
   =>
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RParen => create()
   
@@ -10935,6 +11107,7 @@ class val LBrace is (AST & Lexeme)
   =>
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBrace](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBrace => create()
   
@@ -10950,6 +11123,7 @@ class val RBrace is (AST & Lexeme)
   =>
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RBrace](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RBrace => create()
   
@@ -10965,6 +11139,7 @@ class val LSquare is (AST & Lexeme)
   =>
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquare](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquare => create()
   
@@ -10980,6 +11155,7 @@ class val RSquare is (AST & Lexeme)
   =>
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RSquare](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RSquare => create()
   
@@ -10995,6 +11171,7 @@ class val LParenNew is (AST & Lexeme)
   =>
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParenNew](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParenNew => create()
   
@@ -11010,6 +11187,7 @@ class val LBraceNew is (AST & Lexeme)
   =>
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBraceNew](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBraceNew => create()
   
@@ -11025,6 +11203,7 @@ class val LSquareNew is (AST & Lexeme)
   =>
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquareNew](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquareNew => create()
   
@@ -11040,6 +11219,7 @@ class val SubNew is (AST & Lexeme)
   =>
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubNew](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubNew => create()
   
@@ -11055,6 +11235,7 @@ class val SubUnsafeNew is (AST & Lexeme)
   =>
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafeNew](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
   
@@ -11070,6 +11251,7 @@ class val In is (AST & Lexeme)
   =>
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[In](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): In => create()
   
@@ -11085,6 +11267,7 @@ class val Until is (AST & Lexeme)
   =>
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Until](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Until => create()
   
@@ -11100,6 +11283,7 @@ class val Do is (AST & Lexeme)
   =>
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Do](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Do => create()
   
@@ -11115,6 +11299,7 @@ class val Else is (AST & Lexeme)
   =>
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Else](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Else => create()
   
@@ -11130,6 +11315,7 @@ class val ElseIf is (AST & Lexeme)
   =>
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ElseIf](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): ElseIf => create()
   
@@ -11145,6 +11331,7 @@ class val Then is (AST & Lexeme)
   =>
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Then](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Then => create()
   
@@ -11160,6 +11347,7 @@ class val End is (AST & Lexeme)
   =>
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[End](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): End => create()
   
@@ -11175,6 +11363,7 @@ class val Var is (AST & Lexeme)
   =>
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Var](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Var => create()
   
@@ -11190,6 +11379,7 @@ class val Let is (AST & Lexeme)
   =>
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Let](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Let => create()
   
@@ -11205,6 +11395,7 @@ class val Embed is (AST & Lexeme)
   =>
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Embed](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Embed => create()
   
@@ -11220,6 +11411,7 @@ class val Where is (AST & Lexeme)
   =>
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Where](consume c, this)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Where => create()
   

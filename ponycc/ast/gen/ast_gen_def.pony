@@ -189,6 +189,9 @@ class ASTGenDefFixed is ASTGenDef
     g.pop_indent()
     g.line()
     
+    // Declare common helpers.
+    g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => _pos")
     g.line("fun val with_pos(pos': SourcePosAny) => _create(pos'")
@@ -330,6 +333,9 @@ class ASTGenDefWrap is ASTGenDef
     g.pop_indent()
     g.line()
     
+    // Declare common helpers.
+    g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => _pos")
     g.line("fun val with_pos(pos': SourcePosAny): " + _name + " => _create(pos', _value)")
@@ -398,6 +404,9 @@ class ASTGenDefLexeme is ASTGenDef
     g.line("errs.push((\"" + _name + " is a lexeme-only type append should never be built\", pos')); error")
     g.pop_indent()
     g.line()
+    
+    // Declare common helpers.
+    g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => SourcePosNone")

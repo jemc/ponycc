@@ -4,6 +4,7 @@ use "glob"
 use "ponytest"
 
 use "../ast"
+use "../frame"
 
 actor Main is TestList
   new create(env: Env) =>

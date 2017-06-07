@@ -4,49 +4,16 @@ use "ponytest"
 use "../ast"
 use "../ast/parse"
 use "../ast/print"
+use "../pass/syntax"
 
 trait TestCommand
   fun ref add_line(line: String) => None
   fun ref add_error(err: TestCommandError): TestCommandError => err
   fun apply(h: TestHelper, source: Source) => None
-
-class TestCommandNone is TestCommand
-
-class TestCommandPrint is TestCommand
-  fun apply(h: TestHelper, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let module =
-      try
-        Parse(source, errs)
-      else
-        return h.fail("An unexpected parser error occurred.")
-      end
-    
-    for (message, pos) in errs.values() do
-      h.fail(message + ": " + pos.string())
-      let shown = pos.show_in_line()
-      h.fail(shown._1)
-      h.fail(shown._2)
-    end
-    
-    h.assert_eq[String](source.content(), Print(module))
-
-class TestCommandParse is TestCommand
-  embed expected: Array[TestCommandError] = Array[TestCommandError]
   
-  fun ref add_error(err: TestCommandError): TestCommandError =>
-    expected.push(err); err
-  
-  fun apply(h: TestHelper, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let success =
-      try
-        Parse(source, errs)
-        true
-      else
-        false
-      end
-    
+  fun _check_errors(h: TestHelper, expected: Array[TestCommandError] box,
+    success: Bool, errs: Array[(String, SourcePosAny)] box)
+  =>
     h.assert_eq[Bool](success, expected.size() == 0, "Success")
     
     for (i, expect) in expected.pairs() do
@@ -68,6 +35,56 @@ class TestCommandParse is TestCommand
     end
     
     h.assert_eq[USize](expected.size(), errs.size(), "Number of Errors")
+
+class TestCommandNone is TestCommand
+
+class TestCommandPrint is TestCommand
+  fun apply(h: TestHelper, source: Source) =>
+    let errs = Array[(String, SourcePosAny)]
+    let module =
+      try
+        Parse(source, errs)
+      else
+        return h.fail("An unexpected parser error occurred.")
+      end
+    
+    h.assert_eq[String](source.content(), Print(module))
+
+class TestCommandParse is TestCommand
+  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  
+  fun ref add_error(err: TestCommandError): TestCommandError =>
+    _expected.push(err); err
+  
+  fun apply(h: TestHelper, source: Source) =>
+    let errs = Array[(String, SourcePosAny)]
+    let success =
+      try
+        Parse(source, errs)
+        true
+      else
+        false
+      end
+    
+    _check_errors(h, _expected, success, errs)
+
+class TestCommandSyntax is TestCommand
+  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  
+  fun ref add_error(err: TestCommandError): TestCommandError =>
+    _expected.push(err); err
+  
+  fun apply(h: TestHelper, source: Source) =>
+    let errs = Array[(String, SourcePosAny)]
+    let module =
+      try
+        Parse(source, errs)
+      else
+        return h.fail("An unexpected parser error occurred.")
+      end
+    
+    Syntax.start(module, errs)
+    _check_errors(h, _expected, errs.size() == 0, errs)
 
 class TestCommandError is TestCommand
   let message: String
