@@ -226,7 +226,7 @@ class ASTGenDefFixed is ASTGenDef
     if fields.size() > 0 then g.line() end
     
     // Declare a string method to print itself.
-    g.line("fun val string(): String iso^ =>")
+    g.line("fun string(): String iso^ =>")
     g.push_indent()
     g.line("let s = recover iso String end")
     g.line("s.append(\"" + _name + "\")")
@@ -348,7 +348,7 @@ class ASTGenDefWrap is ASTGenDef
     g.line("fun val with_value(value': " + value_type + "): " + _name + " => _create(_pos, value')")
     
     // Declare a string method to print itself.
-    g.line("fun val string(): String iso^ =>")
+    g.line("fun string(): String iso^ =>")
     g.push_indent()
     g.line("recover")
     g.push_indent()
@@ -414,7 +414,7 @@ class ASTGenDefLexeme is ASTGenDef
     g.line()
     
     // Declare a string method to print itself.
-    g.line("fun val string(): String iso^ =>")
+    g.line("fun string(): String iso^ =>")
     g.push_indent()
     g.line("recover String.>append(\"" + _name + "\") end")
     g.pop_indent()

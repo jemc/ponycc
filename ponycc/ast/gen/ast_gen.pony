@@ -28,7 +28,7 @@ class ASTGen
     g.push_indent()
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)")
     g.line("fun val pos(): SourcePosAny")
-    g.line("fun val string(): String iso^")
+    g.line("fun string(): String iso^")
     g.block(
       """
       new from_iter(

@@ -3,7 +3,7 @@ use coll = "collections/persistent"
 trait val AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
   fun val pos(): SourcePosAny
-  fun val string(): String iso^
+  fun string(): String iso^
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
@@ -319,7 +319,7 @@ class val Module is AST
   fun val with_type_decls(type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl]) => _create(_pos, _use_decls, type_decls', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _use_decls, _type_decls, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Module")
     s.push('(')
@@ -400,7 +400,7 @@ class val UsePackage is (AST & UseDecl)
   fun val with_prefix(prefix': (Id | None) = None) => _create(_pos, prefix', _package)
   fun val with_package(package': LitString) => _create(_pos, _prefix, package')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UsePackage")
     s.push('(')
@@ -513,7 +513,7 @@ class val UseFFIDecl is (AST & UseDecl)
   fun val with_partial(partial': (Question | None)) => _create(_pos, _name, _return_type, _params, partial', _guard)
   fun val with_guard(guard': (IfDefCond | None) = None) => _create(_pos, _name, _return_type, _params, _partial, guard')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UseFFIDecl")
     s.push('(')
@@ -644,7 +644,7 @@ class val TypeAlias is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeAlias")
     s.push('(')
@@ -777,7 +777,7 @@ class val Interface is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Interface")
     s.push('(')
@@ -910,7 +910,7 @@ class val Trait is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trait")
     s.push('(')
@@ -1043,7 +1043,7 @@ class val Primitive is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Primitive")
     s.push('(')
@@ -1176,7 +1176,7 @@ class val Struct is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Struct")
     s.push('(')
@@ -1309,7 +1309,7 @@ class val Class is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Class")
     s.push('(')
@@ -1442,7 +1442,7 @@ class val Actor is (AST & TypeDecl)
   fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Actor")
     s.push('(')
@@ -1513,7 +1513,7 @@ class val Members is AST
   fun val with_fields(fields': coll.Vec[Field] = coll.Vec[Field]) => _create(_pos, fields', _methods)
   fun val with_methods(methods': coll.Vec[Method] = coll.Vec[Method]) => _create(_pos, _fields, methods')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Members")
     s.push('(')
@@ -1607,7 +1607,7 @@ class val FieldLet is (AST & Field)
   fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLet")
     s.push('(')
@@ -1691,7 +1691,7 @@ class val FieldVar is (AST & Field)
   fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVar")
     s.push('(')
@@ -1775,7 +1775,7 @@ class val FieldEmbed is (AST & Field)
   fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbed")
     s.push('(')
@@ -1928,7 +1928,7 @@ class val MethodFun is (AST & Method)
   fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFun")
     s.push('(')
@@ -2087,7 +2087,7 @@ class val MethodNew is (AST & Method)
   fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNew")
     s.push('(')
@@ -2246,7 +2246,7 @@ class val MethodBe is (AST & Method)
   fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBe")
     s.push('(')
@@ -2305,7 +2305,7 @@ class val TypeParams is AST
   
   fun val with_list(list': coll.Vec[TypeParam] = coll.Vec[TypeParam]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParams")
     s.push('(')
@@ -2389,7 +2389,7 @@ class val TypeParam is AST
   fun val with_constraint(constraint': (Type | None) = None) => _create(_pos, _name, constraint', _default)
   fun val with_default(default': (Type | None) = None) => _create(_pos, _name, _constraint, default')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParam")
     s.push('(')
@@ -2442,7 +2442,7 @@ class val TypeArgs is AST
   
   fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeArgs")
     s.push('(')
@@ -2513,7 +2513,7 @@ class val Params is AST
   fun val with_list(list': coll.Vec[Param] = coll.Vec[Param]) => _create(_pos, list', _ellipsis)
   fun val with_ellipsis(ellipsis': (Ellipsis | None) = None) => _create(_pos, _list, ellipsis')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Params")
     s.push('(')
@@ -2599,7 +2599,7 @@ class val Param is AST
   fun val with_param_type(param_type': (Type | None) = None) => _create(_pos, _name, param_type', _default)
   fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _param_type, default')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Param")
     s.push('(')
@@ -2652,7 +2652,7 @@ class val Sequence is (AST & Expr)
   
   fun val with_list(list': coll.Vec[Expr] = coll.Vec[Expr]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Sequence")
     s.push('(')
@@ -2712,7 +2712,7 @@ class val Return is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Return")
     s.push('(')
@@ -2767,7 +2767,7 @@ class val Break is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Break")
     s.push('(')
@@ -2822,7 +2822,7 @@ class val Continue is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Continue")
     s.push('(')
@@ -2877,7 +2877,7 @@ class val Error is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Error")
     s.push('(')
@@ -2932,7 +2932,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
     s.push('(')
@@ -2987,7 +2987,7 @@ class val CompileError is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)) => _create(_pos, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileError")
     s.push('(')
@@ -3042,7 +3042,7 @@ class val IfDefFlag is (AST & IfDefCond)
   
   fun val with_name(name': (Id | LitString)) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefFlag")
     s.push('(')
@@ -3097,7 +3097,7 @@ class val IfDefNot is (AST & IfDefCond)
   
   fun val with_expr(expr': IfDefCond) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefNot")
     s.push('(')
@@ -3167,7 +3167,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
   fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefAnd")
     s.push('(')
@@ -3238,7 +3238,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
   fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefOr")
     s.push('(')
@@ -3321,7 +3321,7 @@ class val IfDef is (AST & Expr)
   fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | IfDef | None) = None) => _create(_pos, _condition, _then_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDef")
     s.push('(')
@@ -3420,7 +3420,7 @@ class val IfType is (AST & Expr)
   fun val with_then_body(then_body': Sequence) => _create(_pos, _sub, _super, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | IfType | None) = None) => _create(_pos, _sub, _super, _then_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfType")
     s.push('(')
@@ -3505,7 +3505,7 @@ class val If is (AST & Expr)
   fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | If | None) = None) => _create(_pos, _condition, _then_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("If")
     s.push('(')
@@ -3589,7 +3589,7 @@ class val While is (AST & Expr)
   fun val with_loop_body(loop_body': Sequence) => _create(_pos, _condition, loop_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _condition, _loop_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("While")
     s.push('(')
@@ -3673,7 +3673,7 @@ class val Repeat is (AST & Expr)
   fun val with_condition(condition': Sequence) => _create(_pos, _loop_body, condition', _else_body)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _loop_body, _condition, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Repeat")
     s.push('(')
@@ -3772,7 +3772,7 @@ class val For is (AST & Expr)
   fun val with_loop_body(loop_body': Sequence) => _create(_pos, _refs, _iterator, loop_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _refs, _iterator, _loop_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("For")
     s.push('(')
@@ -3857,7 +3857,7 @@ class val With is (AST & Expr)
   fun val with_with_body(with_body': Sequence) => _create(_pos, _assigns, with_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _assigns, _with_body, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("With")
     s.push('(')
@@ -3910,7 +3910,7 @@ class val IdTuple is AST
   
   fun val with_elements(elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)]) => _create(_pos, elements')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IdTuple")
     s.push('(')
@@ -3966,7 +3966,7 @@ class val AssignTuple is AST
   
   fun val with_elements(elements': coll.Vec[Assign] = coll.Vec[Assign]) => _create(_pos, elements')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AssignTuple")
     s.push('(')
@@ -4050,7 +4050,7 @@ class val Match is (AST & Expr)
   fun val with_cases(cases': Cases = Cases) => _create(_pos, _expr, cases', _else_body)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _expr, _cases, else_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Match")
     s.push('(')
@@ -4103,7 +4103,7 @@ class val Cases is AST
   
   fun val with_list(list': coll.Vec[Case] = coll.Vec[Case]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Cases")
     s.push('(')
@@ -4187,7 +4187,7 @@ class val Case is AST
   fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _expr, guard', _body)
   fun val with_body(body': (Sequence | None) = None) => _create(_pos, _expr, _guard, body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Case")
     s.push('(')
@@ -4268,7 +4268,7 @@ class val Try is (AST & Expr)
   fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _body, else_body', _then_body)
   fun val with_then_body(then_body': (Sequence | None) = None) => _create(_pos, _body, _else_body, then_body')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Try")
     s.push('(')
@@ -4340,7 +4340,7 @@ class val Consume is (AST & Expr)
   fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
   fun val with_expr(expr': Expr) => _create(_pos, _cap, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Consume")
     s.push('(')
@@ -4411,7 +4411,7 @@ class val Recover is (AST & Expr)
   fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
   fun val with_expr(expr': Sequence) => _create(_pos, _cap, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Recover")
     s.push('(')
@@ -4482,7 +4482,7 @@ class val As is (AST & Expr)
   fun val with_expr(expr': Expr) => _create(_pos, expr', _as_type)
   fun val with_as_type(as_type': Type) => _create(_pos, _expr, as_type')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("As")
     s.push('(')
@@ -4553,7 +4553,7 @@ class val Add is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Add")
     s.push('(')
@@ -4624,7 +4624,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AddUnsafe")
     s.push('(')
@@ -4695,7 +4695,7 @@ class val Sub is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Sub")
     s.push('(')
@@ -4766,7 +4766,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("SubUnsafe")
     s.push('(')
@@ -4837,7 +4837,7 @@ class val Mul is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Mul")
     s.push('(')
@@ -4908,7 +4908,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MulUnsafe")
     s.push('(')
@@ -4979,7 +4979,7 @@ class val Div is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Div")
     s.push('(')
@@ -5050,7 +5050,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DivUnsafe")
     s.push('(')
@@ -5121,7 +5121,7 @@ class val Mod is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Mod")
     s.push('(')
@@ -5192,7 +5192,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ModUnsafe")
     s.push('(')
@@ -5263,7 +5263,7 @@ class val LShift is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LShift")
     s.push('(')
@@ -5334,7 +5334,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LShiftUnsafe")
     s.push('(')
@@ -5405,7 +5405,7 @@ class val RShift is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RShift")
     s.push('(')
@@ -5476,7 +5476,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RShiftUnsafe")
     s.push('(')
@@ -5547,7 +5547,7 @@ class val Eq is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Eq")
     s.push('(')
@@ -5618,7 +5618,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("EqUnsafe")
     s.push('(')
@@ -5689,7 +5689,7 @@ class val NE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NE")
     s.push('(')
@@ -5760,7 +5760,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NEUnsafe")
     s.push('(')
@@ -5831,7 +5831,7 @@ class val LT is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LT")
     s.push('(')
@@ -5902,7 +5902,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LTUnsafe")
     s.push('(')
@@ -5973,7 +5973,7 @@ class val LE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LE")
     s.push('(')
@@ -6044,7 +6044,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LEUnsafe")
     s.push('(')
@@ -6115,7 +6115,7 @@ class val GE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GE")
     s.push('(')
@@ -6186,7 +6186,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GEUnsafe")
     s.push('(')
@@ -6257,7 +6257,7 @@ class val GT is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GT")
     s.push('(')
@@ -6328,7 +6328,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GTUnsafe")
     s.push('(')
@@ -6399,7 +6399,7 @@ class val Is is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Is")
     s.push('(')
@@ -6470,7 +6470,7 @@ class val Isnt is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Isnt")
     s.push('(')
@@ -6541,7 +6541,7 @@ class val And is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("And")
     s.push('(')
@@ -6612,7 +6612,7 @@ class val Or is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Or")
     s.push('(')
@@ -6683,7 +6683,7 @@ class val XOr is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("XOr")
     s.push('(')
@@ -6739,7 +6739,7 @@ class val Not is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Not")
     s.push('(')
@@ -6794,7 +6794,7 @@ class val Neg is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Neg")
     s.push('(')
@@ -6849,7 +6849,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NegUnsafe")
     s.push('(')
@@ -6904,7 +6904,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AddressOf")
     s.push('(')
@@ -6959,7 +6959,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr) => _create(_pos, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DigestOf")
     s.push('(')
@@ -7029,7 +7029,7 @@ class val LocalLet is (AST & Local & Expr)
   fun val with_name(name': Id) => _create(_pos, name', _local_type)
   fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLet")
     s.push('(')
@@ -7100,7 +7100,7 @@ class val LocalVar is (AST & Local & Expr)
   fun val with_name(name': Id) => _create(_pos, name', _local_type)
   fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVar")
     s.push('(')
@@ -7171,7 +7171,7 @@ class val Assign is (AST & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Expr) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Assign")
     s.push('(')
@@ -7242,7 +7242,7 @@ class val Dot is (AST & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Dot")
     s.push('(')
@@ -7313,7 +7313,7 @@ class val Chain is (AST & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Chain")
     s.push('(')
@@ -7384,7 +7384,7 @@ class val Tilde is (AST & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': Id) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tilde")
     s.push('(')
@@ -7455,7 +7455,7 @@ class val Qualify is (AST & Expr)
   fun val with_left(left': Expr) => _create(_pos, left', _right)
   fun val with_right(right': TypeArgs) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Qualify")
     s.push('(')
@@ -7535,7 +7535,7 @@ class val Call is (AST & Expr)
   fun val with_args(args': Args = Args) => _create(_pos, _callable, args', _named_args)
   fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _callable, _args, named_args')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Call")
     s.push('(')
@@ -7640,7 +7640,7 @@ class val CallFFI is (AST & Expr)
   fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _name, _type_args, _args, named_args', _partial)
   fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _type_args, _args, _named_args, partial')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CallFFI")
     s.push('(')
@@ -7695,7 +7695,7 @@ class val Args is AST
   
   fun val with_list(list': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Args")
     s.push('(')
@@ -7751,7 +7751,7 @@ class val NamedArgs is AST
   
   fun val with_list(list': coll.Vec[NamedArg] = coll.Vec[NamedArg]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArgs")
     s.push('(')
@@ -7826,7 +7826,7 @@ class val NamedArg is AST
   fun val with_name(name': Id) => _create(_pos, name', _value)
   fun val with_value(value': Sequence) => _create(_pos, _name, value')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArg")
     s.push('(')
@@ -7975,7 +7975,7 @@ class val Lambda is (AST & Expr)
   fun val with_body(body': Sequence = Sequence) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
   fun val with_object_cap(object_cap': (Cap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Lambda")
     s.push('(')
@@ -8034,7 +8034,7 @@ class val LambdaCaptures is AST
   
   fun val with_list(list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCaptures")
     s.push('(')
@@ -8118,7 +8118,7 @@ class val LambdaCapture is AST
   fun val with_local_type(local_type': (Type | None) = None) => _create(_pos, _name, local_type', _expr)
   fun val with_expr(expr': (Expr | None) = None) => _create(_pos, _name, _local_type, expr')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCapture")
     s.push('(')
@@ -8196,7 +8196,7 @@ class val Object is (AST & Expr)
   fun val with_provides(provides': (Type | None) = None) => _create(_pos, _cap, provides', _members)
   fun val with_members(members': (Members | None) = None) => _create(_pos, _cap, _provides, members')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Object")
     s.push('(')
@@ -8262,7 +8262,7 @@ class val LitArray is (AST & Expr)
   fun val with_elem_type(elem_type': (Type | None) = None) => _create(_pos, elem_type', _sequence)
   fun val with_sequence(sequence': Sequence = Sequence) => _create(_pos, _elem_type, sequence')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitArray")
     s.push('(')
@@ -8314,7 +8314,7 @@ class val Tuple is (AST & Expr)
   
   fun val with_elements(elements': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, elements')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tuple")
     s.push('(')
@@ -8354,7 +8354,7 @@ class val This is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("This")
     consume s
@@ -8386,7 +8386,7 @@ class val LitTrue is (AST & LitBool & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitTrue")
     consume s
@@ -8418,7 +8418,7 @@ class val LitFalse is (AST & LitBool & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitFalse")
     consume s
@@ -8450,7 +8450,7 @@ class val LitInteger is (AST & Expr)
   
   fun val value(): I128 => _value
   fun val with_value(value': I128): LitInteger => _create(_pos, value')
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
@@ -8482,7 +8482,7 @@ class val LitFloat is (AST & Expr)
   
   fun val value(): F64 => _value
   fun val with_value(value': F64): LitFloat => _create(_pos, value')
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover
       String.>append("LitFloat(").>append(_value.string()).>push(')')
     end
@@ -8514,7 +8514,7 @@ class val LitString is (AST & Expr)
   
   fun val value(): String => _value
   fun val with_value(value': String): LitString => _create(_pos, value')
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover
       String.>append("LitString(").>append(_value.string()).>push(')')
     end
@@ -8546,7 +8546,7 @@ class val LitCharacter is (AST & Expr)
   
   fun val value(): U8 => _value
   fun val with_value(value': U8): LitCharacter => _create(_pos, value')
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover
       String.>append("LitCharacter(").>append(_value.string()).>push(')')
     end
@@ -8578,7 +8578,7 @@ class val LitLocation is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
     consume s
@@ -8630,7 +8630,7 @@ class val Reference is (AST & Expr)
   
   fun val with_name(name': Id) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Reference")
     s.push('(')
@@ -8665,7 +8665,7 @@ class val DontCare is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCare")
     consume s
@@ -8717,7 +8717,7 @@ class val PackageRef is (AST & Expr)
   
   fun val with_name(name': Id) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("PackageRef")
     s.push('(')
@@ -8787,7 +8787,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFunRef")
     s.push('(')
@@ -8858,7 +8858,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNewRef")
     s.push('(')
@@ -8929,7 +8929,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBeRef")
     s.push('(')
@@ -9000,7 +9000,7 @@ class val TypeRef is (AST & Expr)
   fun val with_package(package': Expr) => _create(_pos, package', _name)
   fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _package, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeRef")
     s.push('(')
@@ -9071,7 +9071,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLetRef")
     s.push('(')
@@ -9142,7 +9142,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVarRef")
     s.push('(')
@@ -9213,7 +9213,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': Id) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbedRef")
     s.push('(')
@@ -9284,7 +9284,7 @@ class val TupleElementRef is (AST & Expr)
   fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
   fun val with_name(name': LitInteger) => _create(_pos, _receiver, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleElementRef")
     s.push('(')
@@ -9340,7 +9340,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLetRef")
     s.push('(')
@@ -9395,7 +9395,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVarRef")
     s.push('(')
@@ -9450,7 +9450,7 @@ class val ParamRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id) => _create(_pos, name')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ParamRef")
     s.push('(')
@@ -9520,7 +9520,7 @@ class val ViewpointType is (AST & Type)
   fun val with_left(left': Type) => _create(_pos, left', _right)
   fun val with_right(right': Type) => _create(_pos, _left, right')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ViewpointType")
     s.push('(')
@@ -9572,7 +9572,7 @@ class val UnionType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UnionType")
     s.push('(')
@@ -9628,7 +9628,7 @@ class val IsectType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IsectType")
     s.push('(')
@@ -9684,7 +9684,7 @@ class val TupleType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleType")
     s.push('(')
@@ -9792,7 +9792,7 @@ class val NominalType is (AST & Type)
   fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NominalType")
     s.push('(')
@@ -9887,7 +9887,7 @@ class val FunType is (AST & Type)
   fun val with_params(params': (Params | None) = None) => _create(_pos, _cap, _type_params, params', _return_type)
   fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _cap, _type_params, _params, return_type')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FunType")
     s.push('(')
@@ -10026,7 +10026,7 @@ class val LambdaType is (AST & Type)
   fun val with_object_cap(object_cap': (Cap | GenCap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaType")
     s.push('(')
@@ -10112,7 +10112,7 @@ class val TypeParamRef is (AST & Type)
   fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _cap, cap_mod')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParamRef")
     s.push('(')
@@ -10149,7 +10149,7 @@ class val ThisType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ThisType")
     consume s
@@ -10181,7 +10181,7 @@ class val DontCareType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCareType")
     consume s
@@ -10213,7 +10213,7 @@ class val ErrorType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ErrorType")
     consume s
@@ -10245,7 +10245,7 @@ class val LiteralType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralType")
     consume s
@@ -10277,7 +10277,7 @@ class val LiteralTypeBranch is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralTypeBranch")
     consume s
@@ -10309,7 +10309,7 @@ class val OpLiteralType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("OpLiteralType")
     consume s
@@ -10341,7 +10341,7 @@ class val Iso is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Iso")
     consume s
@@ -10373,7 +10373,7 @@ class val Trn is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trn")
     consume s
@@ -10405,7 +10405,7 @@ class val Ref is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ref")
     consume s
@@ -10437,7 +10437,7 @@ class val Val is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Val")
     consume s
@@ -10469,7 +10469,7 @@ class val Box is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Box")
     consume s
@@ -10501,7 +10501,7 @@ class val Tag is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tag")
     consume s
@@ -10533,7 +10533,7 @@ class val CapRead is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapRead")
     consume s
@@ -10565,7 +10565,7 @@ class val CapSend is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapSend")
     consume s
@@ -10597,7 +10597,7 @@ class val CapShare is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapShare")
     consume s
@@ -10629,7 +10629,7 @@ class val CapAlias is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAlias")
     consume s
@@ -10661,7 +10661,7 @@ class val CapAny is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAny")
     consume s
@@ -10693,7 +10693,7 @@ class val Aliased is (AST & CapMod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Aliased")
     consume s
@@ -10725,7 +10725,7 @@ class val Ephemeral is (AST & CapMod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ephemeral")
     consume s
@@ -10757,7 +10757,7 @@ class val At is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("At")
     consume s
@@ -10789,7 +10789,7 @@ class val Question is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Question")
     consume s
@@ -10821,7 +10821,7 @@ class val Ellipsis is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny) => _create(pos')
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ellipsis")
     consume s
@@ -10853,7 +10853,7 @@ class val Id is AST
   
   fun val value(): String => _value
   fun val with_value(value': String): Id => _create(_pos, value')
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover
       String.>append("Id(").>append(_value.string()).>push(')')
     end
@@ -10871,7 +10871,7 @@ class val EOF is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): EOF => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("EOF") end
 
 class val NewLine is (AST & Lexeme)
@@ -10887,7 +10887,7 @@ class val NewLine is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): NewLine => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("NewLine") end
 
 class val Use is (AST & Lexeme)
@@ -10903,7 +10903,7 @@ class val Use is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Use => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Use") end
 
 class val Colon is (AST & Lexeme)
@@ -10919,7 +10919,7 @@ class val Colon is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Colon => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Colon") end
 
 class val Semicolon is (AST & Lexeme)
@@ -10935,7 +10935,7 @@ class val Semicolon is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Semicolon => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Semicolon") end
 
 class val Comma is (AST & Lexeme)
@@ -10951,7 +10951,7 @@ class val Comma is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Comma => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Comma") end
 
 class val Constant is (AST & Lexeme)
@@ -10967,7 +10967,7 @@ class val Constant is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Constant => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Constant") end
 
 class val Pipe is (AST & Lexeme)
@@ -10983,7 +10983,7 @@ class val Pipe is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Pipe => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Pipe") end
 
 class val Ampersand is (AST & Lexeme)
@@ -10999,7 +10999,7 @@ class val Ampersand is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Ampersand => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Ampersand") end
 
 class val SubType is (AST & Lexeme)
@@ -11015,7 +11015,7 @@ class val SubType is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubType => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("SubType") end
 
 class val Arrow is (AST & Lexeme)
@@ -11031,7 +11031,7 @@ class val Arrow is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Arrow => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Arrow") end
 
 class val DoubleArrow is (AST & Lexeme)
@@ -11047,7 +11047,7 @@ class val DoubleArrow is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("DoubleArrow") end
 
 class val Backslash is (AST & Lexeme)
@@ -11063,7 +11063,7 @@ class val Backslash is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Backslash => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Backslash") end
 
 class val LParen is (AST & Lexeme)
@@ -11079,7 +11079,7 @@ class val LParen is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParen => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LParen") end
 
 class val RParen is (AST & Lexeme)
@@ -11095,7 +11095,7 @@ class val RParen is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RParen => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("RParen") end
 
 class val LBrace is (AST & Lexeme)
@@ -11111,7 +11111,7 @@ class val LBrace is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBrace => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LBrace") end
 
 class val RBrace is (AST & Lexeme)
@@ -11127,7 +11127,7 @@ class val RBrace is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RBrace => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("RBrace") end
 
 class val LSquare is (AST & Lexeme)
@@ -11143,7 +11143,7 @@ class val LSquare is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquare => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LSquare") end
 
 class val RSquare is (AST & Lexeme)
@@ -11159,7 +11159,7 @@ class val RSquare is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RSquare => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("RSquare") end
 
 class val LParenNew is (AST & Lexeme)
@@ -11175,7 +11175,7 @@ class val LParenNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParenNew => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LParenNew") end
 
 class val LBraceNew is (AST & Lexeme)
@@ -11191,7 +11191,7 @@ class val LBraceNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBraceNew => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LBraceNew") end
 
 class val LSquareNew is (AST & Lexeme)
@@ -11207,7 +11207,7 @@ class val LSquareNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquareNew => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("LSquareNew") end
 
 class val SubNew is (AST & Lexeme)
@@ -11223,7 +11223,7 @@ class val SubNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubNew => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("SubNew") end
 
 class val SubUnsafeNew is (AST & Lexeme)
@@ -11239,7 +11239,7 @@ class val SubUnsafeNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("SubUnsafeNew") end
 
 class val In is (AST & Lexeme)
@@ -11255,7 +11255,7 @@ class val In is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): In => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("In") end
 
 class val Until is (AST & Lexeme)
@@ -11271,7 +11271,7 @@ class val Until is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Until => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Until") end
 
 class val Do is (AST & Lexeme)
@@ -11287,7 +11287,7 @@ class val Do is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Do => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Do") end
 
 class val Else is (AST & Lexeme)
@@ -11303,7 +11303,7 @@ class val Else is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Else => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Else") end
 
 class val ElseIf is (AST & Lexeme)
@@ -11319,7 +11319,7 @@ class val ElseIf is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): ElseIf => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("ElseIf") end
 
 class val Then is (AST & Lexeme)
@@ -11335,7 +11335,7 @@ class val Then is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Then => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Then") end
 
 class val End is (AST & Lexeme)
@@ -11351,7 +11351,7 @@ class val End is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): End => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("End") end
 
 class val Var is (AST & Lexeme)
@@ -11367,7 +11367,7 @@ class val Var is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Var => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Var") end
 
 class val Let is (AST & Lexeme)
@@ -11383,7 +11383,7 @@ class val Let is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Let => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Let") end
 
 class val Embed is (AST & Lexeme)
@@ -11399,7 +11399,7 @@ class val Embed is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Embed => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Embed") end
 
 class val Where is (AST & Lexeme)
@@ -11415,7 +11415,7 @@ class val Where is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Where => create()
   
-  fun val string(): String iso^ =>
+  fun string(): String iso^ =>
     recover String.>append("Where") end
 
 
