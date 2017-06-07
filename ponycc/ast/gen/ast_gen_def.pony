@@ -1,6 +1,4 @@
 
-use "collections"
-
 trait ASTGenDef
   fun name(): String
   fun code_gen(g: CodeGen)
@@ -10,7 +8,7 @@ class ASTGenDefFixed is ASTGenDef
   let _name: String
   let _traits: Array[String] = Array[String] // TODO: remove and use unions only
   
-  let fields: List[(String, String, String)] = fields.create()
+  let fields: Array[(String, String, String)] = fields.create()
   
   var _todo:       Bool = false
   var _with_scope: Bool = false
@@ -29,8 +27,8 @@ class ASTGenDefFixed is ASTGenDef
   fun ref in_union(n: String, n2: String = "") =>
     _traits.push(n)
     if n2.size() > 0 then _traits.push(n2) end
-    _gen._add_to_union(n, _name)
-    if n2.size() > 0 then _gen._add_to_union(n2, n) end
+    _gen._add_to_union(n, this)
+    if n2.size() > 0 then _gen._add_to_union(n2, this) end
   
   fun name(): String => _name
   
@@ -194,7 +192,8 @@ class ASTGenDefFixed is ASTGenDef
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => _pos")
-    g.line("fun val with_pos(pos': SourcePosAny) => _create(pos'")
+    g.line("fun val with_pos(pos': SourcePosAny): " + _name)
+    g.add(" => _create(pos'")
     for (field_name, _, _) in fields.values() do
       g.add(", _" + field_name)
     end
@@ -209,11 +208,10 @@ class ASTGenDefFixed is ASTGenDef
     if fields.size() > 0 then g.line() end
     
     // Declare setter methods for all fields.
-    for (field_name, field_type, field_default) in fields.values() do
+    for (field_name, field_type, _) in fields.values() do
       g.line("fun val with_" + field_name + "(")
-      g.add(field_name + "': " + field_type)
-      if field_default.size() > 0 then g.add(" = " + field_default) end
-      g.add(") => _create(_pos")
+      g.add(field_name + "': " + field_type + "): " + _name)
+      g.add(" => _create(_pos")
       for (other_field_name, _, _) in fields.values() do
         if other_field_name == field_name then
           g.add(", " + field_name + "'")
@@ -270,8 +268,8 @@ class ASTGenDefWrap is ASTGenDef
   fun ref in_union(n: String, n2: String = "") =>
     _traits.push(n)
     if n2.size() > 0 then _traits.push(n2) end
-    _gen._add_to_union(n, _name)
-    if n2.size() > 0 then _gen._add_to_union(n2, n) end
+    _gen._add_to_union(n, this)
+    if n2.size() > 0 then _gen._add_to_union(n2, this) end
   
   fun name(): String => _name
   
@@ -373,8 +371,8 @@ class ASTGenDefLexeme is ASTGenDef
   fun ref in_union(n: String, n2: String = "") =>
     _traits.push(n)
     if n2.size() > 0 then _traits.push(n2) end
-    _gen._add_to_union(n, _name)
-    if n2.size() > 0 then _gen._add_to_union(n2, n) end
+    _gen._add_to_union(n, this)
+    if n2.size() > 0 then _gen._add_to_union(n2, this) end
   
   fun name(): String => _name
   

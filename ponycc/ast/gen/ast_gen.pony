@@ -2,8 +2,8 @@
 use "collections"
 
 class ASTGen
-  let defs:   List[ASTGenDef]            = defs.create()
-  let unions: Map[String, Set[String]] = unions.create()
+  let defs:   List[ASTGenDef]               = defs.create()
+  let unions: Map[String, SetIs[ASTGenDef]] = unions.create()
   
   new ref create() => None
   
@@ -55,15 +55,61 @@ class ASTGen
     g.line()
     
     // Declare each type union.
-    for (name, types) in unions.pairs() do
+    for (name, union_defs) in unions.pairs() do
     //   g.line("type " + name + " is (")
-    //   let iter = types.values()
+    //   let iter = union_defs.values()
     //   for t in iter do
     //     g.add(t)
     //     if iter.has_next() then g.add(" | ") end
     //   end
     //   g.add(")")
+      
       g.line("trait val " + name + " is AST") // TODO: use union instead
+      g.push_indent()
+      
+      // Determine which fields are common among all types.
+      let common_fields = Map[String, String]
+      let union_iter = union_defs.values()
+      for union_def in union_iter do
+        match union_def | let def_fixed: ASTGenDefFixed box =>
+          for (field_name, field_type, _) in def_fixed.fields.values() do
+            common_fields(field_name) = field_type
+          end
+          break // stop after processing just the first ASTGenDefFixed
+        end
+      end
+      for union_def in union_iter do
+        match union_def | let def_fixed: ASTGenDefFixed box =>
+          // This snapshot is needed because we can't remove elements from the
+          // map while iterating over it - the iterator will bug out.
+          let common_fields_snapshot =
+            Array[(String, String)].>concat(common_fields.pairs())
+          
+          for (field_name, field_type) in common_fields_snapshot.values() do
+            if not
+              def_fixed.fields.contains((field_name, field_type, ""),
+                {(l: (String, String, String), r: (String, String, String))
+                  : Bool
+                =>
+                  (l._1 == r._1) and (l._2 == r._2)
+                })
+            then
+              try common_fields.remove(field_name) end
+            end
+          end
+        end
+      end
+      
+      // Define getter and setter trait methods for all common fields.
+      for (field_name, field_type) in common_fields.pairs() do
+        g.line("fun val " + field_name + "(): " + field_type)
+      end
+      for (field_name, field_type) in common_fields.pairs() do
+        g.line("fun val with_" + field_name + "(")
+        g.add(field_name + "': " + field_type + "): " + name)
+      end
+      
+      g.pop_indent()
       g.line()
     end
     
@@ -74,7 +120,7 @@ class ASTGen
     
     g.string()
   
-  fun ref _add_to_union(u: String, m: String) =>
-    try  unions(u).set(m)
-    else unions(u) = Set[String].>set(m)
+  fun ref _add_to_union(u: String, d: ASTGenDef) =>
+    try  unions(u).set(d)
+    else unions(u) = SetIs[ASTGenDef].>set(d)
     end

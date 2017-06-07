@@ -208,6 +208,10 @@ primitive ASTInfo
     end
 
 trait val BinaryOp is AST
+  fun val left(): Expr
+  fun val right(): Expr
+  fun val with_left(left': Expr): BinaryOp
+  fun val with_right(right': Expr): BinaryOp
 
 trait val Cap is AST
 
@@ -216,36 +220,96 @@ trait val LitBool is AST
 trait val Type is AST
 
 trait val Field is AST
+  fun val field_type(): Type
+  fun val default(): (Expr | None)
+  fun val name(): Id
+  fun val with_field_type(field_type': Type): Field
+  fun val with_default(default': (Expr | None)): Field
+  fun val with_name(name': Id): Field
 
 trait val IfDefBinaryOp is AST
+  fun val left(): IfDefCond
+  fun val right(): IfDefCond
+  fun val with_left(left': IfDefCond): IfDefBinaryOp
+  fun val with_right(right': IfDefCond): IfDefBinaryOp
 
 trait val GenCap is AST
 
 trait val Local is AST
+  fun val local_type(): (Type | None)
+  fun val name(): Id
+  fun val with_local_type(local_type': (Type | None)): Local
+  fun val with_name(name': Id): Local
 
 trait val UseDecl is AST
 
 trait val Jump is AST
+  fun val value(): (Expr | None)
+  fun val with_value(value': (Expr | None)): Jump
 
 trait val CapMod is AST
 
 trait val MethodRef is AST
+  fun val receiver(): Expr
+  fun val name(): (Id | TypeArgs)
+  fun val with_receiver(receiver': Expr): MethodRef
+  fun val with_name(name': (Id | TypeArgs)): MethodRef
 
 trait val TypeDecl is AST
+  fun val members(): Members
+  fun val at(): (At | None)
+  fun val type_params(): (TypeParams | None)
+  fun val cap(): (Cap | None)
+  fun val provides(): (Type | None)
+  fun val docs(): (LitString | None)
+  fun val name(): Id
+  fun val with_members(members': Members): TypeDecl
+  fun val with_at(at': (At | None)): TypeDecl
+  fun val with_type_params(type_params': (TypeParams | None)): TypeDecl
+  fun val with_cap(cap': (Cap | None)): TypeDecl
+  fun val with_provides(provides': (Type | None)): TypeDecl
+  fun val with_docs(docs': (LitString | None)): TypeDecl
+  fun val with_name(name': Id): TypeDecl
 
 trait val IfDefCond is AST
 
 trait val Lexeme is AST
 
 trait val Method is AST
+  fun val name(): Id
+  fun val partial(): (Question | None)
+  fun val type_params(): (TypeParams | None)
+  fun val body(): (Sequence | None)
+  fun val cap(): (Cap | None)
+  fun val docs(): (LitString | None)
+  fun val return_type(): (Type | None)
+  fun val params(): (Params | None)
+  fun val guard(): (Sequence | None)
+  fun val with_name(name': Id): Method
+  fun val with_partial(partial': (Question | None)): Method
+  fun val with_type_params(type_params': (TypeParams | None)): Method
+  fun val with_body(body': (Sequence | None)): Method
+  fun val with_cap(cap': (Cap | None)): Method
+  fun val with_docs(docs': (LitString | None)): Method
+  fun val with_return_type(return_type': (Type | None)): Method
+  fun val with_params(params': (Params | None)): Method
+  fun val with_guard(guard': (Sequence | None)): Method
 
 trait val Expr is AST
 
 trait val FieldRef is AST
+  fun val receiver(): Expr
+  fun val name(): Id
+  fun val with_receiver(receiver': Expr): FieldRef
+  fun val with_name(name': Id): FieldRef
 
 trait val LocalRef is AST
+  fun val name(): Id
+  fun val with_name(name': Id): LocalRef
 
 trait val UnaryOp is AST
+  fun val expr(): Expr
+  fun val with_expr(expr': Expr): UnaryOp
 
 class val Module is AST
   let _pos: SourcePosAny
@@ -309,15 +373,15 @@ class val Module is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Module](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _use_decls, _type_decls, _docs)
+  fun val with_pos(pos': SourcePosAny): Module => _create(pos', _use_decls, _type_decls, _docs)
   
   fun val use_decls(): coll.Vec[UseDecl] => _use_decls
   fun val type_decls(): coll.Vec[TypeDecl] => _type_decls
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_use_decls(use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl]) => _create(_pos, use_decls', _type_decls, _docs)
-  fun val with_type_decls(type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl]) => _create(_pos, _use_decls, type_decls', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _use_decls, _type_decls, docs')
+  fun val with_use_decls(use_decls': coll.Vec[UseDecl]): Module => _create(_pos, use_decls', _type_decls, _docs)
+  fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => _create(_pos, _use_decls, type_decls', _docs)
+  fun val with_docs(docs': (LitString | None)): Module => _create(_pos, _use_decls, _type_decls, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -392,13 +456,13 @@ class val UsePackage is (AST & UseDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UsePackage](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _prefix, _package)
+  fun val with_pos(pos': SourcePosAny): UsePackage => _create(pos', _prefix, _package)
   
   fun val prefix(): (Id | None) => _prefix
   fun val package(): LitString => _package
   
-  fun val with_prefix(prefix': (Id | None) = None) => _create(_pos, prefix', _package)
-  fun val with_package(package': LitString) => _create(_pos, _prefix, package')
+  fun val with_prefix(prefix': (Id | None)): UsePackage => _create(_pos, prefix', _package)
+  fun val with_package(package': LitString): UsePackage => _create(_pos, _prefix, package')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -499,7 +563,7 @@ class val UseFFIDecl is (AST & UseDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UseFFIDecl](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _return_type, _params, _partial, _guard)
+  fun val with_pos(pos': SourcePosAny): UseFFIDecl => _create(pos', _name, _return_type, _params, _partial, _guard)
   
   fun val name(): (Id | LitString) => _name
   fun val return_type(): TypeArgs => _return_type
@@ -507,11 +571,11 @@ class val UseFFIDecl is (AST & UseDecl)
   fun val partial(): (Question | None) => _partial
   fun val guard(): (IfDefCond | None) => _guard
   
-  fun val with_name(name': (Id | LitString)) => _create(_pos, name', _return_type, _params, _partial, _guard)
-  fun val with_return_type(return_type': TypeArgs) => _create(_pos, _name, return_type', _params, _partial, _guard)
-  fun val with_params(params': (Params | None)) => _create(_pos, _name, _return_type, params', _partial, _guard)
-  fun val with_partial(partial': (Question | None)) => _create(_pos, _name, _return_type, _params, partial', _guard)
-  fun val with_guard(guard': (IfDefCond | None) = None) => _create(_pos, _name, _return_type, _params, _partial, guard')
+  fun val with_name(name': (Id | LitString)): UseFFIDecl => _create(_pos, name', _return_type, _params, _partial, _guard)
+  fun val with_return_type(return_type': TypeArgs): UseFFIDecl => _create(_pos, _name, return_type', _params, _partial, _guard)
+  fun val with_params(params': (Params | None)): UseFFIDecl => _create(_pos, _name, _return_type, params', _partial, _guard)
+  fun val with_partial(partial': (Question | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, partial', _guard)
+  fun val with_guard(guard': (IfDefCond | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, _partial, guard')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -626,7 +690,7 @@ class val TypeAlias is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeAlias](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): TypeAlias => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -636,13 +700,13 @@ class val TypeAlias is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): TypeAlias => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): TypeAlias => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): TypeAlias => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -759,7 +823,7 @@ class val Interface is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Interface](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Interface => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -769,13 +833,13 @@ class val Interface is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Interface => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Interface => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Interface => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Interface => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Interface => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -892,7 +956,7 @@ class val Trait is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trait](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Trait => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -902,13 +966,13 @@ class val Trait is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Trait => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Trait => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Trait => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Trait => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Trait => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1025,7 +1089,7 @@ class val Primitive is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Primitive](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Primitive => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -1035,13 +1099,13 @@ class val Primitive is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Primitive => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Primitive => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Primitive => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Primitive => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Primitive => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1158,7 +1222,7 @@ class val Struct is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Struct](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Struct => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -1168,13 +1232,13 @@ class val Struct is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Struct => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Struct => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Struct => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Struct => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Struct => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1291,7 +1355,7 @@ class val Class is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Class](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Class => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -1301,13 +1365,13 @@ class val Class is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Class => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Class => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Class => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Class => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Class => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1424,7 +1488,7 @@ class val Actor is (AST & TypeDecl)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Actor](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_pos(pos': SourcePosAny): Actor => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -1434,13 +1498,13 @@ class val Actor is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members = Members) => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Actor => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
+  fun val with_cap(cap': (Cap | None)): Actor => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): Actor => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
+  fun val with_provides(provides': (Type | None)): Actor => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
+  fun val with_members(members': Members): Actor => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
+  fun val with_at(at': (At | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
+  fun val with_docs(docs': (LitString | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1505,13 +1569,13 @@ class val Members is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Members](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _fields, _methods)
+  fun val with_pos(pos': SourcePosAny): Members => _create(pos', _fields, _methods)
   
   fun val fields(): coll.Vec[Field] => _fields
   fun val methods(): coll.Vec[Method] => _methods
   
-  fun val with_fields(fields': coll.Vec[Field] = coll.Vec[Field]) => _create(_pos, fields', _methods)
-  fun val with_methods(methods': coll.Vec[Method] = coll.Vec[Method]) => _create(_pos, _fields, methods')
+  fun val with_fields(fields': coll.Vec[Field]): Members => _create(_pos, fields', _methods)
+  fun val with_methods(methods': coll.Vec[Method]): Members => _create(_pos, _fields, methods')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1597,15 +1661,15 @@ class val FieldLet is (AST & Field)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLet](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
+  fun val with_pos(pos': SourcePosAny): FieldLet => _create(pos', _name, _field_type, _default)
   
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldLet => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type): FieldLet => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None)): FieldLet => _create(_pos, _name, _field_type, default')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1681,15 +1745,15 @@ class val FieldVar is (AST & Field)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVar](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
+  fun val with_pos(pos': SourcePosAny): FieldVar => _create(pos', _name, _field_type, _default)
   
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldVar => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type): FieldVar => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None)): FieldVar => _create(_pos, _name, _field_type, default')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1765,15 +1829,15 @@ class val FieldEmbed is (AST & Field)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbed](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _field_type, _default)
+  fun val with_pos(pos': SourcePosAny): FieldEmbed => _create(pos', _name, _field_type, _default)
   
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id) => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type) => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldEmbed => _create(_pos, name', _field_type, _default)
+  fun val with_field_type(field_type': Type): FieldEmbed => _create(_pos, _name, field_type', _default)
+  fun val with_default(default': (Expr | None)): FieldEmbed => _create(_pos, _name, _field_type, default')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -1906,7 +1970,7 @@ class val MethodFun is (AST & Method)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFun](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_pos(pos': SourcePosAny): MethodFun => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -1918,15 +1982,15 @@ class val MethodFun is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodFun => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None)): MethodFun => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodFun => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None)): MethodFun => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2065,7 +2129,7 @@ class val MethodNew is (AST & Method)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNew](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_pos(pos': SourcePosAny): MethodNew => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -2077,15 +2141,15 @@ class val MethodNew is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodNew => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None)): MethodNew => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodNew => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None)): MethodNew => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2224,7 +2288,7 @@ class val MethodBe is (AST & Method)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_pos(pos': SourcePosAny): MethodBe => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
@@ -2236,15 +2300,15 @@ class val MethodBe is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None) = None) => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None) = None) => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodBe => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_cap(cap': (Cap | None)): MethodBe => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodBe => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': (Params | None)): MethodBe => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_return_type(return_type': (Type | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
+  fun val with_partial(partial': (Question | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
+  fun val with_guard(guard': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
+  fun val with_body(body': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
+  fun val with_docs(docs': (LitString | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2299,11 +2363,11 @@ class val TypeParams is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): TypeParams => _create(pos', _list)
   
   fun val list(): coll.Vec[TypeParam] => _list
   
-  fun val with_list(list': coll.Vec[TypeParam] = coll.Vec[TypeParam]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[TypeParam]): TypeParams => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2379,15 +2443,15 @@ class val TypeParam is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParam](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _constraint, _default)
+  fun val with_pos(pos': SourcePosAny): TypeParam => _create(pos', _name, _constraint, _default)
   
   fun val name(): Id => _name
   fun val constraint(): (Type | None) => _constraint
   fun val default(): (Type | None) => _default
   
-  fun val with_name(name': Id) => _create(_pos, name', _constraint, _default)
-  fun val with_constraint(constraint': (Type | None) = None) => _create(_pos, _name, constraint', _default)
-  fun val with_default(default': (Type | None) = None) => _create(_pos, _name, _constraint, default')
+  fun val with_name(name': Id): TypeParam => _create(_pos, name', _constraint, _default)
+  fun val with_constraint(constraint': (Type | None)): TypeParam => _create(_pos, _name, constraint', _default)
+  fun val with_default(default': (Type | None)): TypeParam => _create(_pos, _name, _constraint, default')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2436,11 +2500,11 @@ class val TypeArgs is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): TypeArgs => _create(pos', _list)
   
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): TypeArgs => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2505,13 +2569,13 @@ class val Params is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Params](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list, _ellipsis)
+  fun val with_pos(pos': SourcePosAny): Params => _create(pos', _list, _ellipsis)
   
   fun val list(): coll.Vec[Param] => _list
   fun val ellipsis(): (Ellipsis | None) => _ellipsis
   
-  fun val with_list(list': coll.Vec[Param] = coll.Vec[Param]) => _create(_pos, list', _ellipsis)
-  fun val with_ellipsis(ellipsis': (Ellipsis | None) = None) => _create(_pos, _list, ellipsis')
+  fun val with_list(list': coll.Vec[Param]): Params => _create(_pos, list', _ellipsis)
+  fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => _create(_pos, _list, ellipsis')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2589,15 +2653,15 @@ class val Param is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Param](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _param_type, _default)
+  fun val with_pos(pos': SourcePosAny): Param => _create(pos', _name, _param_type, _default)
   
   fun val name(): Id => _name
   fun val param_type(): (Type | None) => _param_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id) => _create(_pos, name', _param_type, _default)
-  fun val with_param_type(param_type': (Type | None) = None) => _create(_pos, _name, param_type', _default)
-  fun val with_default(default': (Expr | None) = None) => _create(_pos, _name, _param_type, default')
+  fun val with_name(name': Id): Param => _create(_pos, name', _param_type, _default)
+  fun val with_param_type(param_type': (Type | None)): Param => _create(_pos, _name, param_type', _default)
+  fun val with_default(default': (Expr | None)): Param => _create(_pos, _name, _param_type, default')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2646,11 +2710,11 @@ class val Sequence is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): Sequence => _create(pos', _list)
   
   fun val list(): coll.Vec[Expr] => _list
   
-  fun val with_list(list': coll.Vec[Expr] = coll.Vec[Expr]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Expr]): Sequence => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2706,11 +2770,11 @@ class val Return is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): Return => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Return => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2761,11 +2825,11 @@ class val Break is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): Break => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Break => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2816,11 +2880,11 @@ class val Continue is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): Continue => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Continue => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2871,11 +2935,11 @@ class val Error is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): Error => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Error => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2926,11 +2990,11 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): CompileIntrinsic => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): CompileIntrinsic => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -2981,11 +3045,11 @@ class val CompileError is (AST & Jump & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _value)
+  fun val with_pos(pos': SourcePosAny): CompileError => _create(pos', _value)
   
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)) => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): CompileError => _create(_pos, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3036,11 +3100,11 @@ class val IfDefFlag is (AST & IfDefCond)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): IfDefFlag => _create(pos', _name)
   
   fun val name(): (Id | LitString) => _name
   
-  fun val with_name(name': (Id | LitString)) => _create(_pos, name')
+  fun val with_name(name': (Id | LitString)): IfDefFlag => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3091,11 +3155,11 @@ class val IfDefNot is (AST & IfDefCond)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): IfDefNot => _create(pos', _expr)
   
   fun val expr(): IfDefCond => _expr
   
-  fun val with_expr(expr': IfDefCond) => _create(_pos, expr')
+  fun val with_expr(expr': IfDefCond): IfDefNot => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3159,13 +3223,13 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefAnd](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): IfDefAnd => _create(pos', _left, _right)
   
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
-  fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
-  fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
+  fun val with_left(left': IfDefCond): IfDefAnd => _create(_pos, left', _right)
+  fun val with_right(right': IfDefCond): IfDefAnd => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3230,13 +3294,13 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefOr](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): IfDefOr => _create(pos', _left, _right)
   
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
-  fun val with_left(left': IfDefCond) => _create(_pos, left', _right)
-  fun val with_right(right': IfDefCond) => _create(_pos, _left, right')
+  fun val with_left(left': IfDefCond): IfDefOr => _create(_pos, left', _right)
+  fun val with_right(right': IfDefCond): IfDefOr => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3311,15 +3375,15 @@ class val IfDef is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): IfDef => _create(pos', _condition, _then_body, _else_body)
   
   fun val condition(): IfDefCond => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | IfDef | None) => _else_body
   
-  fun val with_condition(condition': IfDefCond) => _create(_pos, condition', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | IfDef | None) = None) => _create(_pos, _condition, _then_body, else_body')
+  fun val with_condition(condition': IfDefCond): IfDef => _create(_pos, condition', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence): IfDef => _create(_pos, _condition, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | IfDef | None)): IfDef => _create(_pos, _condition, _then_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3408,17 +3472,17 @@ class val IfType is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _sub, _super, _then_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): IfType => _create(pos', _sub, _super, _then_body, _else_body)
   
   fun val sub(): Type => _sub
   fun val super(): Type => _super
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | IfType | None) => _else_body
   
-  fun val with_sub(sub': Type) => _create(_pos, sub', _super, _then_body, _else_body)
-  fun val with_super(super': Type) => _create(_pos, _sub, super', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence) => _create(_pos, _sub, _super, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | IfType | None) = None) => _create(_pos, _sub, _super, _then_body, else_body')
+  fun val with_sub(sub': Type): IfType => _create(_pos, sub', _super, _then_body, _else_body)
+  fun val with_super(super': Type): IfType => _create(_pos, _sub, super', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence): IfType => _create(_pos, _sub, _super, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | IfType | None)): IfType => _create(_pos, _sub, _super, _then_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3495,15 +3559,15 @@ class val If is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[If](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _then_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): If => _create(pos', _condition, _then_body, _else_body)
   
   fun val condition(): Sequence => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | If | None) => _else_body
   
-  fun val with_condition(condition': Sequence) => _create(_pos, condition', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence) => _create(_pos, _condition, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | If | None) = None) => _create(_pos, _condition, _then_body, else_body')
+  fun val with_condition(condition': Sequence): If => _create(_pos, condition', _then_body, _else_body)
+  fun val with_then_body(then_body': Sequence): If => _create(_pos, _condition, then_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | If | None)): If => _create(_pos, _condition, _then_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3579,15 +3643,15 @@ class val While is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[While](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _condition, _loop_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): While => _create(pos', _condition, _loop_body, _else_body)
   
   fun val condition(): Sequence => _condition
   fun val loop_body(): Sequence => _loop_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_condition(condition': Sequence) => _create(_pos, condition', _loop_body, _else_body)
-  fun val with_loop_body(loop_body': Sequence) => _create(_pos, _condition, loop_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _condition, _loop_body, else_body')
+  fun val with_condition(condition': Sequence): While => _create(_pos, condition', _loop_body, _else_body)
+  fun val with_loop_body(loop_body': Sequence): While => _create(_pos, _condition, loop_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None)): While => _create(_pos, _condition, _loop_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3663,15 +3727,15 @@ class val Repeat is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Repeat](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _loop_body, _condition, _else_body)
+  fun val with_pos(pos': SourcePosAny): Repeat => _create(pos', _loop_body, _condition, _else_body)
   
   fun val loop_body(): Sequence => _loop_body
   fun val condition(): Sequence => _condition
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_loop_body(loop_body': Sequence) => _create(_pos, loop_body', _condition, _else_body)
-  fun val with_condition(condition': Sequence) => _create(_pos, _loop_body, condition', _else_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _loop_body, _condition, else_body')
+  fun val with_loop_body(loop_body': Sequence): Repeat => _create(_pos, loop_body', _condition, _else_body)
+  fun val with_condition(condition': Sequence): Repeat => _create(_pos, _loop_body, condition', _else_body)
+  fun val with_else_body(else_body': (Sequence | None)): Repeat => _create(_pos, _loop_body, _condition, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3760,17 +3824,17 @@ class val For is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[For](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _refs, _iterator, _loop_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): For => _create(pos', _refs, _iterator, _loop_body, _else_body)
   
   fun val refs(): (Id | IdTuple) => _refs
   fun val iterator(): Sequence => _iterator
   fun val loop_body(): Sequence => _loop_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_refs(refs': (Id | IdTuple)) => _create(_pos, refs', _iterator, _loop_body, _else_body)
-  fun val with_iterator(iterator': Sequence) => _create(_pos, _refs, iterator', _loop_body, _else_body)
-  fun val with_loop_body(loop_body': Sequence) => _create(_pos, _refs, _iterator, loop_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _refs, _iterator, _loop_body, else_body')
+  fun val with_refs(refs': (Id | IdTuple)): For => _create(_pos, refs', _iterator, _loop_body, _else_body)
+  fun val with_iterator(iterator': Sequence): For => _create(_pos, _refs, iterator', _loop_body, _else_body)
+  fun val with_loop_body(loop_body': Sequence): For => _create(_pos, _refs, _iterator, loop_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None)): For => _create(_pos, _refs, _iterator, _loop_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3847,15 +3911,15 @@ class val With is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _assigns, _with_body, _else_body)
+  fun val with_pos(pos': SourcePosAny): With => _create(pos', _assigns, _with_body, _else_body)
   
   fun val assigns(): AssignTuple => _assigns
   fun val with_body(): Sequence => _with_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_assigns(assigns': AssignTuple) => _create(_pos, assigns', _with_body, _else_body)
-  fun val with_with_body(with_body': Sequence) => _create(_pos, _assigns, with_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _assigns, _with_body, else_body')
+  fun val with_assigns(assigns': AssignTuple): With => _create(_pos, assigns', _with_body, _else_body)
+  fun val with_with_body(with_body': Sequence): With => _create(_pos, _assigns, with_body', _else_body)
+  fun val with_else_body(else_body': (Sequence | None)): With => _create(_pos, _assigns, _with_body, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3904,11 +3968,11 @@ class val IdTuple is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
+  fun val with_pos(pos': SourcePosAny): IdTuple => _create(pos', _elements)
   
   fun val elements(): coll.Vec[(Id | IdTuple)] => _elements
   
-  fun val with_elements(elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)]) => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => _create(_pos, elements')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -3960,11 +4024,11 @@ class val AssignTuple is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
+  fun val with_pos(pos': SourcePosAny): AssignTuple => _create(pos', _elements)
   
   fun val elements(): coll.Vec[Assign] => _elements
   
-  fun val with_elements(elements': coll.Vec[Assign] = coll.Vec[Assign]) => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => _create(_pos, elements')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4040,15 +4104,15 @@ class val Match is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Match](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _cases, _else_body)
+  fun val with_pos(pos': SourcePosAny): Match => _create(pos', _expr, _cases, _else_body)
   
   fun val expr(): Sequence => _expr
   fun val cases(): Cases => _cases
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_expr(expr': Sequence) => _create(_pos, expr', _cases, _else_body)
-  fun val with_cases(cases': Cases = Cases) => _create(_pos, _expr, cases', _else_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _expr, _cases, else_body')
+  fun val with_expr(expr': Sequence): Match => _create(_pos, expr', _cases, _else_body)
+  fun val with_cases(cases': Cases): Match => _create(_pos, _expr, cases', _else_body)
+  fun val with_else_body(else_body': (Sequence | None)): Match => _create(_pos, _expr, _cases, else_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4097,11 +4161,11 @@ class val Cases is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): Cases => _create(pos', _list)
   
   fun val list(): coll.Vec[Case] => _list
   
-  fun val with_list(list': coll.Vec[Case] = coll.Vec[Case]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Case]): Cases => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4177,15 +4241,15 @@ class val Case is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Case](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _guard, _body)
+  fun val with_pos(pos': SourcePosAny): Case => _create(pos', _expr, _guard, _body)
   
   fun val expr(): Expr => _expr
   fun val guard(): (Sequence | None) => _guard
   fun val body(): (Sequence | None) => _body
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr', _guard, _body)
-  fun val with_guard(guard': (Sequence | None) = None) => _create(_pos, _expr, guard', _body)
-  fun val with_body(body': (Sequence | None) = None) => _create(_pos, _expr, _guard, body')
+  fun val with_expr(expr': Expr): Case => _create(_pos, expr', _guard, _body)
+  fun val with_guard(guard': (Sequence | None)): Case => _create(_pos, _expr, guard', _body)
+  fun val with_body(body': (Sequence | None)): Case => _create(_pos, _expr, _guard, body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4258,15 +4322,15 @@ class val Try is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Try](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _body, _else_body, _then_body)
+  fun val with_pos(pos': SourcePosAny): Try => _create(pos', _body, _else_body, _then_body)
   
   fun val body(): Sequence => _body
   fun val else_body(): (Sequence | None) => _else_body
   fun val then_body(): (Sequence | None) => _then_body
   
-  fun val with_body(body': Sequence) => _create(_pos, body', _else_body, _then_body)
-  fun val with_else_body(else_body': (Sequence | None) = None) => _create(_pos, _body, else_body', _then_body)
-  fun val with_then_body(then_body': (Sequence | None) = None) => _create(_pos, _body, _else_body, then_body')
+  fun val with_body(body': Sequence): Try => _create(_pos, body', _else_body, _then_body)
+  fun val with_else_body(else_body': (Sequence | None)): Try => _create(_pos, _body, else_body', _then_body)
+  fun val with_then_body(then_body': (Sequence | None)): Try => _create(_pos, _body, _else_body, then_body')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4332,13 +4396,13 @@ class val Consume is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Consume](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
+  fun val with_pos(pos': SourcePosAny): Consume => _create(pos', _cap, _expr)
   
   fun val cap(): (Cap | None) => _cap
   fun val expr(): Expr => _expr
   
-  fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
-  fun val with_expr(expr': Expr) => _create(_pos, _cap, expr')
+  fun val with_cap(cap': (Cap | None)): Consume => _create(_pos, cap', _expr)
+  fun val with_expr(expr': Expr): Consume => _create(_pos, _cap, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4403,13 +4467,13 @@ class val Recover is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Recover](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _expr)
+  fun val with_pos(pos': SourcePosAny): Recover => _create(pos', _cap, _expr)
   
   fun val cap(): (Cap | None) => _cap
   fun val expr(): Sequence => _expr
   
-  fun val with_cap(cap': (Cap | None)) => _create(_pos, cap', _expr)
-  fun val with_expr(expr': Sequence) => _create(_pos, _cap, expr')
+  fun val with_cap(cap': (Cap | None)): Recover => _create(_pos, cap', _expr)
+  fun val with_expr(expr': Sequence): Recover => _create(_pos, _cap, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4474,13 +4538,13 @@ class val As is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[As](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr, _as_type)
+  fun val with_pos(pos': SourcePosAny): As => _create(pos', _expr, _as_type)
   
   fun val expr(): Expr => _expr
   fun val as_type(): Type => _as_type
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr', _as_type)
-  fun val with_as_type(as_type': Type) => _create(_pos, _expr, as_type')
+  fun val with_expr(expr': Expr): As => _create(_pos, expr', _as_type)
+  fun val with_as_type(as_type': Type): As => _create(_pos, _expr, as_type')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4545,13 +4609,13 @@ class val Add is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Add => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Add => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Add => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4616,13 +4680,13 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): AddUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): AddUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): AddUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4687,13 +4751,13 @@ class val Sub is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Sub => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Sub => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Sub => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4758,13 +4822,13 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): SubUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): SubUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): SubUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4829,13 +4893,13 @@ class val Mul is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Mul => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Mul => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Mul => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4900,13 +4964,13 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): MulUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): MulUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): MulUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -4971,13 +5035,13 @@ class val Div is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Div => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Div => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Div => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5042,13 +5106,13 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): DivUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): DivUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): DivUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5113,13 +5177,13 @@ class val Mod is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Mod => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Mod => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Mod => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5184,13 +5248,13 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): ModUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): ModUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): ModUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5255,13 +5319,13 @@ class val LShift is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LShift => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LShift => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LShift => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5326,13 +5390,13 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LShiftUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LShiftUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LShiftUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5397,13 +5461,13 @@ class val RShift is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): RShift => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): RShift => _create(_pos, left', _right)
+  fun val with_right(right': Expr): RShift => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5468,13 +5532,13 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): RShiftUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): RShiftUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): RShiftUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5539,13 +5603,13 @@ class val Eq is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Eq => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Eq => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Eq => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5610,13 +5674,13 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): EqUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): EqUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): EqUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5681,13 +5745,13 @@ class val NE is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): NE => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): NE => _create(_pos, left', _right)
+  fun val with_right(right': Expr): NE => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5752,13 +5816,13 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): NEUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): NEUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): NEUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5823,13 +5887,13 @@ class val LT is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LT => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LT => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LT => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5894,13 +5958,13 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LTUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LTUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LTUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -5965,13 +6029,13 @@ class val LE is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LE => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LE => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LE => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6036,13 +6100,13 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): LEUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LEUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): LEUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6107,13 +6171,13 @@ class val GE is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): GE => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GE => _create(_pos, left', _right)
+  fun val with_right(right': Expr): GE => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6178,13 +6242,13 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): GEUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GEUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): GEUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6249,13 +6313,13 @@ class val GT is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): GT => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GT => _create(_pos, left', _right)
+  fun val with_right(right': Expr): GT => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6320,13 +6384,13 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): GTUnsafe => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GTUnsafe => _create(_pos, left', _right)
+  fun val with_right(right': Expr): GTUnsafe => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6391,13 +6455,13 @@ class val Is is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Is => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Is => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Is => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6462,13 +6526,13 @@ class val Isnt is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Isnt => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Isnt => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Isnt => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6533,13 +6597,13 @@ class val And is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): And => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): And => _create(_pos, left', _right)
+  fun val with_right(right': Expr): And => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6604,13 +6668,13 @@ class val Or is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Or => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Or => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Or => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6675,13 +6739,13 @@ class val XOr is (AST & BinaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): XOr => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): XOr => _create(_pos, left', _right)
+  fun val with_right(right': Expr): XOr => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6733,11 +6797,11 @@ class val Not is (AST & UnaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): Not => _create(pos', _expr)
   
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr')
+  fun val with_expr(expr': Expr): Not => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6788,11 +6852,11 @@ class val Neg is (AST & UnaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): Neg => _create(pos', _expr)
   
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr')
+  fun val with_expr(expr': Expr): Neg => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6843,11 +6907,11 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): NegUnsafe => _create(pos', _expr)
   
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr')
+  fun val with_expr(expr': Expr): NegUnsafe => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6898,11 +6962,11 @@ class val AddressOf is (AST & UnaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): AddressOf => _create(pos', _expr)
   
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr')
+  fun val with_expr(expr': Expr): AddressOf => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -6953,11 +7017,11 @@ class val DigestOf is (AST & UnaryOp & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _expr)
+  fun val with_pos(pos': SourcePosAny): DigestOf => _create(pos', _expr)
   
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr) => _create(_pos, expr')
+  fun val with_expr(expr': Expr): DigestOf => _create(_pos, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7021,13 +7085,13 @@ class val LocalLet is (AST & Local & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLet](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
+  fun val with_pos(pos': SourcePosAny): LocalLet => _create(pos', _name, _local_type)
   
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
-  fun val with_name(name': Id) => _create(_pos, name', _local_type)
-  fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
+  fun val with_name(name': Id): LocalLet => _create(_pos, name', _local_type)
+  fun val with_local_type(local_type': (Type | None)): LocalLet => _create(_pos, _name, local_type')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7092,13 +7156,13 @@ class val LocalVar is (AST & Local & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVar](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type)
+  fun val with_pos(pos': SourcePosAny): LocalVar => _create(pos', _name, _local_type)
   
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
-  fun val with_name(name': Id) => _create(_pos, name', _local_type)
-  fun val with_local_type(local_type': (Type | None)) => _create(_pos, _name, local_type')
+  fun val with_name(name': Id): LocalVar => _create(_pos, name', _local_type)
+  fun val with_local_type(local_type': (Type | None)): LocalVar => _create(_pos, _name, local_type')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7163,13 +7227,13 @@ class val Assign is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Assign](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Assign => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Expr) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Assign => _create(_pos, left', _right)
+  fun val with_right(right': Expr): Assign => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7234,13 +7298,13 @@ class val Dot is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Dot](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Dot => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Id) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Dot => _create(_pos, left', _right)
+  fun val with_right(right': Id): Dot => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7305,13 +7369,13 @@ class val Chain is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Chain](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Chain => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Id) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Chain => _create(_pos, left', _right)
+  fun val with_right(right': Id): Chain => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7376,13 +7440,13 @@ class val Tilde is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tilde](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Tilde => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': Id) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Tilde => _create(_pos, left', _right)
+  fun val with_right(right': Id): Tilde => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7447,13 +7511,13 @@ class val Qualify is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Qualify](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): Qualify => _create(pos', _left, _right)
   
   fun val left(): Expr => _left
   fun val right(): TypeArgs => _right
   
-  fun val with_left(left': Expr) => _create(_pos, left', _right)
-  fun val with_right(right': TypeArgs) => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Qualify => _create(_pos, left', _right)
+  fun val with_right(right': TypeArgs): Qualify => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7525,15 +7589,15 @@ class val Call is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _callable, _args, _named_args)
+  fun val with_pos(pos': SourcePosAny): Call => _create(pos', _callable, _args, _named_args)
   
   fun val callable(): Expr => _callable
   fun val args(): Args => _args
   fun val named_args(): NamedArgs => _named_args
   
-  fun val with_callable(callable': Expr) => _create(_pos, callable', _args, _named_args)
-  fun val with_args(args': Args = Args) => _create(_pos, _callable, args', _named_args)
-  fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _callable, _args, named_args')
+  fun val with_callable(callable': Expr): Call => _create(_pos, callable', _args, _named_args)
+  fun val with_args(args': Args): Call => _create(_pos, _callable, args', _named_args)
+  fun val with_named_args(named_args': NamedArgs): Call => _create(_pos, _callable, _args, named_args')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7626,7 +7690,7 @@ class val CallFFI is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CallFFI](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _type_args, _args, _named_args, _partial)
+  fun val with_pos(pos': SourcePosAny): CallFFI => _create(pos', _name, _type_args, _args, _named_args, _partial)
   
   fun val name(): (Id | LitString) => _name
   fun val type_args(): (TypeArgs | None) => _type_args
@@ -7634,11 +7698,11 @@ class val CallFFI is (AST & Expr)
   fun val named_args(): NamedArgs => _named_args
   fun val partial(): (Question | None) => _partial
   
-  fun val with_name(name': (Id | LitString)) => _create(_pos, name', _type_args, _args, _named_args, _partial)
-  fun val with_type_args(type_args': (TypeArgs | None) = None) => _create(_pos, _name, type_args', _args, _named_args, _partial)
-  fun val with_args(args': Args = Args) => _create(_pos, _name, _type_args, args', _named_args, _partial)
-  fun val with_named_args(named_args': NamedArgs = NamedArgs) => _create(_pos, _name, _type_args, _args, named_args', _partial)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _name, _type_args, _args, _named_args, partial')
+  fun val with_name(name': (Id | LitString)): CallFFI => _create(_pos, name', _type_args, _args, _named_args, _partial)
+  fun val with_type_args(type_args': (TypeArgs | None)): CallFFI => _create(_pos, _name, type_args', _args, _named_args, _partial)
+  fun val with_args(args': Args): CallFFI => _create(_pos, _name, _type_args, args', _named_args, _partial)
+  fun val with_named_args(named_args': NamedArgs): CallFFI => _create(_pos, _name, _type_args, _args, named_args', _partial)
+  fun val with_partial(partial': (Question | None)): CallFFI => _create(_pos, _name, _type_args, _args, _named_args, partial')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7689,11 +7753,11 @@ class val Args is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): Args => _create(pos', _list)
   
   fun val list(): coll.Vec[Sequence] => _list
   
-  fun val with_list(list': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Sequence]): Args => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7745,11 +7809,11 @@ class val NamedArgs is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): NamedArgs => _create(pos', _list)
   
   fun val list(): coll.Vec[NamedArg] => _list
   
-  fun val with_list(list': coll.Vec[NamedArg] = coll.Vec[NamedArg]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7818,13 +7882,13 @@ class val NamedArg is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArg](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _value)
+  fun val with_pos(pos': SourcePosAny): NamedArg => _create(pos', _name, _value)
   
   fun val name(): Id => _name
   fun val value(): Sequence => _value
   
-  fun val with_name(name': Id) => _create(_pos, name', _value)
-  fun val with_value(value': Sequence) => _create(_pos, _name, value')
+  fun val with_name(name': Id): NamedArg => _create(_pos, name', _value)
+  fun val with_value(value': Sequence): NamedArg => _create(_pos, _name, value')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -7953,7 +8017,7 @@ class val Lambda is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Lambda](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_pos(pos': SourcePosAny): Lambda => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
@@ -7965,15 +8029,15 @@ class val Lambda is (AST & Expr)
   fun val body(): Sequence => _body
   fun val object_cap(): (Cap | None) => _object_cap
   
-  fun val with_method_cap(method_cap': (Cap | None) = None) => _create(_pos, method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_name(name': (Id | None) = None) => _create(_pos, _method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_params(params': (Params | None) = None) => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_captures(captures': (LambdaCaptures | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap)
-  fun val with_body(body': Sequence = Sequence) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
-  fun val with_object_cap(object_cap': (Cap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
+  fun val with_method_cap(method_cap': (Cap | None)): Lambda => _create(_pos, method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_name(name': (Id | None)): Lambda => _create(_pos, _method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_type_params(type_params': (TypeParams | None)): Lambda => _create(_pos, _method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_params(params': (Params | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_captures(captures': (LambdaCaptures | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap)
+  fun val with_return_type(return_type': (Type | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap)
+  fun val with_partial(partial': (Question | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap)
+  fun val with_body(body': Sequence): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
+  fun val with_object_cap(object_cap': (Cap | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8028,11 +8092,11 @@ class val LambdaCaptures is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): LambdaCaptures => _create(pos', _list)
   
   fun val list(): coll.Vec[LambdaCapture] => _list
   
-  fun val with_list(list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8108,15 +8172,15 @@ class val LambdaCapture is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _local_type, _expr)
+  fun val with_pos(pos': SourcePosAny): LambdaCapture => _create(pos', _name, _local_type, _expr)
   
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   fun val expr(): (Expr | None) => _expr
   
-  fun val with_name(name': Id) => _create(_pos, name', _local_type, _expr)
-  fun val with_local_type(local_type': (Type | None) = None) => _create(_pos, _name, local_type', _expr)
-  fun val with_expr(expr': (Expr | None) = None) => _create(_pos, _name, _local_type, expr')
+  fun val with_name(name': Id): LambdaCapture => _create(_pos, name', _local_type, _expr)
+  fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_pos, _name, local_type', _expr)
+  fun val with_expr(expr': (Expr | None)): LambdaCapture => _create(_pos, _name, _local_type, expr')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8186,15 +8250,15 @@ class val Object is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Object](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _provides, _members)
+  fun val with_pos(pos': SourcePosAny): Object => _create(pos', _cap, _provides, _members)
   
   fun val cap(): (Cap | None) => _cap
   fun val provides(): (Type | None) => _provides
   fun val members(): (Members | None) => _members
   
-  fun val with_cap(cap': (Cap | None) = None) => _create(_pos, cap', _provides, _members)
-  fun val with_provides(provides': (Type | None) = None) => _create(_pos, _cap, provides', _members)
-  fun val with_members(members': (Members | None) = None) => _create(_pos, _cap, _provides, members')
+  fun val with_cap(cap': (Cap | None)): Object => _create(_pos, cap', _provides, _members)
+  fun val with_provides(provides': (Type | None)): Object => _create(_pos, _cap, provides', _members)
+  fun val with_members(members': (Members | None)): Object => _create(_pos, _cap, _provides, members')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8254,13 +8318,13 @@ class val LitArray is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitArray](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _elem_type, _sequence)
+  fun val with_pos(pos': SourcePosAny): LitArray => _create(pos', _elem_type, _sequence)
   
   fun val elem_type(): (Type | None) => _elem_type
   fun val sequence(): Sequence => _sequence
   
-  fun val with_elem_type(elem_type': (Type | None) = None) => _create(_pos, elem_type', _sequence)
-  fun val with_sequence(sequence': Sequence = Sequence) => _create(_pos, _elem_type, sequence')
+  fun val with_elem_type(elem_type': (Type | None)): LitArray => _create(_pos, elem_type', _sequence)
+  fun val with_sequence(sequence': Sequence): LitArray => _create(_pos, _elem_type, sequence')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8308,11 +8372,11 @@ class val Tuple is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _elements)
+  fun val with_pos(pos': SourcePosAny): Tuple => _create(pos', _elements)
   
   fun val elements(): coll.Vec[Sequence] => _elements
   
-  fun val with_elements(elements': coll.Vec[Sequence] = coll.Vec[Sequence]) => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[Sequence]): Tuple => _create(_pos, elements')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8352,7 +8416,7 @@ class val This is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): This => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8384,7 +8448,7 @@ class val LitTrue is (AST & LitBool & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): LitTrue => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8416,7 +8480,7 @@ class val LitFalse is (AST & LitBool & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): LitFalse => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8576,7 +8640,7 @@ class val LitLocation is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): LitLocation => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8624,11 +8688,11 @@ class val Reference is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): Reference => _create(pos', _name)
   
   fun val name(): Id => _name
   
-  fun val with_name(name': Id) => _create(_pos, name')
+  fun val with_name(name': Id): Reference => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8663,7 +8727,7 @@ class val DontCare is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): DontCare => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8711,11 +8775,11 @@ class val PackageRef is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): PackageRef => _create(pos', _name)
   
   fun val name(): Id => _name
   
-  fun val with_name(name': Id) => _create(_pos, name')
+  fun val with_name(name': Id): PackageRef => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8779,13 +8843,13 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFunRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): MethodFunRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodFunRef => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)): MethodFunRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8850,13 +8914,13 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNewRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): MethodNewRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodNewRef => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)): MethodNewRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8921,13 +8985,13 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBeRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): MethodBeRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodBeRef => _create(_pos, receiver', _name)
+  fun val with_name(name': (Id | TypeArgs)): MethodBeRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -8992,13 +9056,13 @@ class val TypeRef is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _package, _name)
+  fun val with_pos(pos': SourcePosAny): TypeRef => _create(pos', _package, _name)
   
   fun val package(): Expr => _package
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_package(package': Expr) => _create(_pos, package', _name)
-  fun val with_name(name': (Id | TypeArgs)) => _create(_pos, _package, name')
+  fun val with_package(package': Expr): TypeRef => _create(_pos, package', _name)
+  fun val with_name(name': (Id | TypeArgs)): TypeRef => _create(_pos, _package, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9063,13 +9127,13 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLetRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): FieldLetRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': Id) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldLetRef => _create(_pos, receiver', _name)
+  fun val with_name(name': Id): FieldLetRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9134,13 +9198,13 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVarRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): FieldVarRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': Id) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldVarRef => _create(_pos, receiver', _name)
+  fun val with_name(name': Id): FieldVarRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9205,13 +9269,13 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbedRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): FieldEmbedRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': Id) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldEmbedRef => _create(_pos, receiver', _name)
+  fun val with_name(name': Id): FieldEmbedRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9276,13 +9340,13 @@ class val TupleElementRef is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleElementRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _receiver, _name)
+  fun val with_pos(pos': SourcePosAny): TupleElementRef => _create(pos', _receiver, _name)
   
   fun val receiver(): Expr => _receiver
   fun val name(): LitInteger => _name
   
-  fun val with_receiver(receiver': Expr) => _create(_pos, receiver', _name)
-  fun val with_name(name': LitInteger) => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): TupleElementRef => _create(_pos, receiver', _name)
+  fun val with_name(name': LitInteger): TupleElementRef => _create(_pos, _receiver, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9334,11 +9398,11 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): LocalLetRef => _create(pos', _name)
   
   fun val name(): Id => _name
   
-  fun val with_name(name': Id) => _create(_pos, name')
+  fun val with_name(name': Id): LocalLetRef => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9389,11 +9453,11 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): LocalVarRef => _create(pos', _name)
   
   fun val name(): Id => _name
   
-  fun val with_name(name': Id) => _create(_pos, name')
+  fun val with_name(name': Id): LocalVarRef => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9444,11 +9508,11 @@ class val ParamRef is (AST & LocalRef & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name)
+  fun val with_pos(pos': SourcePosAny): ParamRef => _create(pos', _name)
   
   fun val name(): Id => _name
   
-  fun val with_name(name': Id) => _create(_pos, name')
+  fun val with_name(name': Id): ParamRef => _create(_pos, name')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9512,13 +9576,13 @@ class val ViewpointType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ViewpointType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _left, _right)
+  fun val with_pos(pos': SourcePosAny): ViewpointType => _create(pos', _left, _right)
   
   fun val left(): Type => _left
   fun val right(): Type => _right
   
-  fun val with_left(left': Type) => _create(_pos, left', _right)
-  fun val with_right(right': Type) => _create(_pos, _left, right')
+  fun val with_left(left': Type): ViewpointType => _create(_pos, left', _right)
+  fun val with_right(right': Type): ViewpointType => _create(_pos, _left, right')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9566,11 +9630,11 @@ class val UnionType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): UnionType => _create(pos', _list)
   
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): UnionType => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9622,11 +9686,11 @@ class val IsectType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): IsectType => _create(pos', _list)
   
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): IsectType => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9678,11 +9742,11 @@ class val TupleType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _list)
+  fun val with_pos(pos': SourcePosAny): TupleType => _create(pos', _list)
   
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type] = coll.Vec[Type]) => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): TupleType => _create(_pos, list')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9778,7 +9842,7 @@ class val NominalType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NominalType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
+  fun val with_pos(pos': SourcePosAny): NominalType => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
   
   fun val name(): Id => _name
   fun val package(): (Id | None) => _package
@@ -9786,11 +9850,11 @@ class val NominalType is (AST & Type)
   fun val cap(): (Cap | GenCap | None) => _cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_name(name': Id) => _create(_pos, name', _package, _type_args, _cap, _cap_mod)
-  fun val with_package(package': (Id | None) = None) => _create(_pos, _name, package', _type_args, _cap, _cap_mod)
-  fun val with_type_args(type_args': (TypeArgs | None) = None) => _create(_pos, _name, _package, type_args', _cap, _cap_mod)
-  fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
+  fun val with_name(name': Id): NominalType => _create(_pos, name', _package, _type_args, _cap, _cap_mod)
+  fun val with_package(package': (Id | None)): NominalType => _create(_pos, _name, package', _type_args, _cap, _cap_mod)
+  fun val with_type_args(type_args': (TypeArgs | None)): NominalType => _create(_pos, _name, _package, type_args', _cap, _cap_mod)
+  fun val with_cap(cap': (Cap | GenCap | None)): NominalType => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): NominalType => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -9875,17 +9939,17 @@ class val FunType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FunType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _cap, _type_params, _params, _return_type)
+  fun val with_pos(pos': SourcePosAny): FunType => _create(pos', _cap, _type_params, _params, _return_type)
   
   fun val cap(): Cap => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): (Params | None) => _params
   fun val return_type(): (Type | None) => _return_type
   
-  fun val with_cap(cap': Cap) => _create(_pos, cap', _type_params, _params, _return_type)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _cap, type_params', _params, _return_type)
-  fun val with_params(params': (Params | None) = None) => _create(_pos, _cap, _type_params, params', _return_type)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _cap, _type_params, _params, return_type')
+  fun val with_cap(cap': Cap): FunType => _create(_pos, cap', _type_params, _params, _return_type)
+  fun val with_type_params(type_params': (TypeParams | None)): FunType => _create(_pos, _cap, type_params', _params, _return_type)
+  fun val with_params(params': (Params | None)): FunType => _create(_pos, _cap, _type_params, params', _return_type)
+  fun val with_return_type(return_type': (Type | None)): FunType => _create(_pos, _cap, _type_params, _params, return_type')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10006,7 +10070,7 @@ class val LambdaType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_pos(pos': SourcePosAny): LambdaType => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
   
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
@@ -10017,14 +10081,14 @@ class val LambdaType is (AST & Type)
   fun val object_cap(): (Cap | GenCap | None) => _object_cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_method_cap(method_cap': (Cap | None) = None) => _create(_pos, method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_name(name': (Id | None) = None) => _create(_pos, _method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_type_params(type_params': (TypeParams | None) = None) => _create(_pos, _method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_param_types(param_types': TupleType = TupleType) => _create(_pos, _method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_return_type(return_type': (Type | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod)
-  fun val with_partial(partial': (Question | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod)
-  fun val with_object_cap(object_cap': (Cap | GenCap | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
+  fun val with_method_cap(method_cap': (Cap | None)): LambdaType => _create(_pos, method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_name(name': (Id | None)): LambdaType => _create(_pos, _method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_type_params(type_params': (TypeParams | None)): LambdaType => _create(_pos, _method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_param_types(param_types': TupleType): LambdaType => _create(_pos, _method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod)
+  fun val with_return_type(return_type': (Type | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod)
+  fun val with_partial(partial': (Question | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod)
+  fun val with_object_cap(object_cap': (Cap | GenCap | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10102,15 +10166,15 @@ class val TypeParamRef is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParamRef](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos', _name, _cap, _cap_mod)
+  fun val with_pos(pos': SourcePosAny): TypeParamRef => _create(pos', _name, _cap, _cap_mod)
   
   fun val name(): Id => _name
   fun val cap(): (Cap | GenCap | None) => _cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_name(name': Id) => _create(_pos, name', _cap, _cap_mod)
-  fun val with_cap(cap': (Cap | GenCap | None) = None) => _create(_pos, _name, cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None) = None) => _create(_pos, _name, _cap, cap_mod')
+  fun val with_name(name': Id): TypeParamRef => _create(_pos, name', _cap, _cap_mod)
+  fun val with_cap(cap': (Cap | GenCap | None)): TypeParamRef => _create(_pos, _name, cap', _cap_mod)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): TypeParamRef => _create(_pos, _name, _cap, cap_mod')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10147,7 +10211,7 @@ class val ThisType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): ThisType => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10179,7 +10243,7 @@ class val DontCareType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): DontCareType => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10211,7 +10275,7 @@ class val ErrorType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): ErrorType => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10243,7 +10307,7 @@ class val LiteralType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): LiteralType => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10275,7 +10339,7 @@ class val LiteralTypeBranch is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10307,7 +10371,7 @@ class val OpLiteralType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): OpLiteralType => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10339,7 +10403,7 @@ class val Iso is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Iso => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10371,7 +10435,7 @@ class val Trn is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Trn => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10403,7 +10467,7 @@ class val Ref is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Ref => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10435,7 +10499,7 @@ class val Val is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Val => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10467,7 +10531,7 @@ class val Box is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Box => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10499,7 +10563,7 @@ class val Tag is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Tag => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10531,7 +10595,7 @@ class val CapRead is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): CapRead => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10563,7 +10627,7 @@ class val CapSend is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): CapSend => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10595,7 +10659,7 @@ class val CapShare is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): CapShare => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10627,7 +10691,7 @@ class val CapAlias is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): CapAlias => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10659,7 +10723,7 @@ class val CapAny is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): CapAny => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10691,7 +10755,7 @@ class val Aliased is (AST & CapMod)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Aliased => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10723,7 +10787,7 @@ class val Ephemeral is (AST & CapMod)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Ephemeral => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10755,7 +10819,7 @@ class val At is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): At => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10787,7 +10851,7 @@ class val Question is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Question => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
@@ -10819,7 +10883,7 @@ class val Ellipsis is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny) => _create(pos')
+  fun val with_pos(pos': SourcePosAny): Ellipsis => _create(pos')
   
   fun string(): String iso^ =>
     let s = recover iso String end
