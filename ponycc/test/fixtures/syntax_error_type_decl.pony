@@ -30,6 +30,9 @@ struct @StructWithCAPI
 $ERROR A class cannot specify a C API.
 class @ClassWithCAPI
       ^
+$ERROR A C API type cannot have type parameters.
+actor @CAPIWithTypeParameters[X]
+                             ^
 $ERROR A type alias cannot be named Main - Main must be an actor.
 type Main is X
      ^~~~
@@ -63,9 +66,18 @@ $ERROR A primitive cannot have fields.
 $ERROR A type alias cannot have methods.
   fun type_method() => None
   ^~~
-$ERROR A C API type cannot have type parameters.
-actor @CAPIWithTypeParameters[X]
-                             ^
+$ERROR A type alias cannot have methods.
+  be type_behaviour() => None
+  ^~
+$ERROR A primitive cannot have behaviours.
+  be primitive_behaviour() => None
+  ^~
+$ERROR A struct cannot have behaviours.
+  be struct_behaviour() => None
+  ^~
+$ERROR A class cannot have behaviours.
+  be class_behaviour() => None
+  ^~
 """
 
 type TypeAliasWithoutType
@@ -85,6 +97,8 @@ primitive @PrimitiveWithCAPI
 struct @StructWithCAPI
 class @ClassWithCAPI
 actor @ActorWithCAPI
+
+actor @CAPIWithTypeParameters[X]
 
 type Main is X
 interface Main
@@ -136,4 +150,23 @@ class ClassWithMethod
 actor ActorWithMethod
   fun actor_method() => None
 
-actor @CAPIWithTypeParameters[X]
+type TypeAliasWithBehaviour is X
+  be type_behaviour() => None
+
+interface InterfaceWithBehaviour
+  be interface_behaviour() => None
+
+trait TraitWithBehaviour
+  be trait_behaviour() => None
+
+primitive PrimitiveWithBehaviour
+  be primitive_behaviour() => None
+
+struct StructWithBehaviour
+  be struct_behaviour() => None
+
+class ClassWithBehaviour
+  be class_behaviour() => None
+
+actor ActorWithBehaviour
+  be actor_behaviour() => None

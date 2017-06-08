@@ -53,6 +53,12 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
       
+      try ast.at() as At
+        frame.err(
+          "A C API type cannot have type parameters.",
+          ast.type_params() as TypeParams)
+      end
+      
       iftype A <: (TypeAlias | Interface | Trait | Primitive) then
         try
           let first_field = ast.members().fields()(0)
@@ -67,10 +73,13 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
       
-      try ast.at() as At
-        frame.err(
-          "A C API type cannot have type parameters.",
-          ast.type_params() as TypeParams)
+      iftype A <: (Primitive | Struct | Class) then
+        for m in ast.members().methods().values() do
+          try m as MethodBe
+            frame.err(desc + "cannot have behaviours.", m)
+          end
+          break // only report the first behaviour
+        end
       end
       
       // TODO: syntax.c: check_provides_type
