@@ -60,25 +60,22 @@ primitive Syntax is FrameVisitor[Syntax]
       end
       
       iftype A <: (TypeAlias | Interface | Trait | Primitive) then
-        try
-          let first_field = ast.members().fields()(0)
-          frame.err(desc + "cannot have fields.", first_field)
+        for f in ast.members().fields().values() do
+          frame.err(desc + "cannot have fields.", f)
         end
       end
       
       iftype A <: TypeAlias then
-        try
-          let first_method = ast.members().methods()(0)
-          frame.err(desc + "cannot have methods.", first_method)
+        for m in ast.members().methods().values() do
+          frame.err(desc + "cannot have methods.", m)
         end
       end
       
       iftype A <: (Primitive | Struct | Class) then
         for m in ast.members().methods().values() do
-          try m as MethodBe
-            frame.err(desc + "cannot have behaviours.", m)
+          try
+            frame.err(desc + "cannot have behaviours.", m as MethodBe)
           end
-          break // only report the first behaviour
         end
       end
       
