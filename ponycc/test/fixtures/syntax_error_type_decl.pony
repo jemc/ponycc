@@ -60,6 +60,9 @@ $ERROR A trait cannot have fields.
 $ERROR A primitive cannot have fields.
   let primitive_field: X
   ^~~
+$ERROR A type alias cannot have methods.
+  fun type_method() => None
+  ^~~
 $ERROR A C API type cannot have type parameters.
 actor @CAPIWithTypeParameters[X]
                              ^
@@ -111,5 +114,26 @@ class ClassWithField
 
 actor ActorWithField
   let actor_field: X
+
+type TypeAliasWithMethod is X
+  fun type_method() => None
+
+interface InterfaceWithMethod
+  fun interface_method() => None
+
+trait TraitWithMethod
+  fun trait_method() => None
+
+primitive PrimitiveWithMethod
+  fun primitive_method() => None
+
+struct StructWithMethod
+  fun struct_method() => None
+
+class ClassWithMethod
+  fun class_method() => None
+
+actor ActorWithMethod
+  fun actor_method() => None
 
 actor @CAPIWithTypeParameters[X]

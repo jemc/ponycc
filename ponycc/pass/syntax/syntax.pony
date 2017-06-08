@@ -60,6 +60,13 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
       
+      iftype A <: TypeAlias then
+        try
+          let first_method = ast.members().methods()(0)
+          frame.err(desc + "cannot have methods.", first_method)
+        end
+      end
+      
       try ast.at() as At
         frame.err(
           "A C API type cannot have type parameters.",
