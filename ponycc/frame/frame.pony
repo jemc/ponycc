@@ -35,4 +35,4 @@ class Frame[V: FrameVisitor[V]]
   
   fun ref err(s: String, a: AST) => _upper.err(s, a)
   fun module(): Module => _upper.module()
-  fun type_decl(): TypeDecl ? => _type_decl as TypeDecl
+  fun type_decl(): (TypeDecl | None) => _type_decl
