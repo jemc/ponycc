@@ -258,11 +258,12 @@ class ASTGenDefFixed is ASTGenDef
 class ASTGenDefWrap is ASTGenDef
   let _gen: ASTGen
   let _name: String
-  let value_type: String
+  let _value_type: String
+  let _value_parser: String
   let _traits: Array[String] = Array[String] // TODO: remove and use unions only
   
-  new create(g: ASTGen, n: String, t: String) =>
-    (_gen, _name, value_type) = (g, n, t)
+  new create(g: ASTGen, n: String, t: String, p: String) =>
+    (_gen, _name, _value_type, _value_parser) = (g, n, t, p)
     _gen.defs.push(this)
   
   fun ref in_union(n: String, n2: String = "") =>
@@ -288,16 +289,16 @@ class ASTGenDefWrap is ASTGenDef
     g.line("let _pos: SourcePosAny")
     
     // Declare the value field.
-    g.line("let _value: " + value_type)
+    g.line("let _value: " + _value_type)
     
     // Declare a constructor that initializes the value field from a parameter.
-    g.line("new val create(value': " + value_type + ") =>")
+    g.line("new val create(value': " + _value_type + ") =>")
     g.push_indent()
     g.add("(_pos, _value) = (SourcePosNone, value')")
     g.pop_indent()
     
     // Declare a constructor that initializes the value and pos from parameters.
-    g.line("new val _create(pos': SourcePosAny, value': " + value_type + ") =>")
+    g.line("new val _create(pos': SourcePosAny, value': " + _value_type + ") =>")
     g.push_indent()
     g.add("(_pos, _value) = (pos', value')")
     g.pop_indent()
@@ -311,11 +312,19 @@ class ASTGenDefWrap is ASTGenDef
       =>""")
     g.push_indent()
     g.line("_pos = pos'")
-    if value_type == "String" then
-      g.line("_value = \"foo\" // TODO: parse from _pos?")
-    else
-      g.line("_value = 88 // TODO: parse from _pos?")
-    end
+    g.line("_value =")
+    g.push_indent()
+    g.line("try")
+    g.push_indent()
+    g.line(_value_parser + "(_pos)")
+    g.pop_indent()
+    g.line("else")
+    g.push_indent()
+    g.line("errs.push((\"" + _name + " failed to parse value\", _pos)); true")
+    g.line("error")
+    g.pop_indent()
+    g.line("end")
+    g.pop_indent()
     g.line()
     g.line("if")
     g.push_indent()
@@ -340,10 +349,10 @@ class ASTGenDefWrap is ASTGenDef
     g.line()
     
     // Declare a getter method for the value field.
-    g.line("fun val value(): " + value_type + " => _value")
+    g.line("fun val value(): " + _value_type + " => _value")
     
     // Declare a setter methods for the value field.
-    g.line("fun val with_value(value': " + value_type + "): " + _name + " => _create(_pos, value')")
+    g.line("fun val with_value(value': " + _value_type + "): " + _name + " => _create(_pos, value')")
     
     // Declare a string method to print itself.
     g.line("fun string(): String iso^ =>")

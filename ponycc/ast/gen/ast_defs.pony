@@ -354,16 +354,17 @@ primitive ASTDefs
         .> in_union("LitBool", "Expr")
     end
     
-    g.def_wrap("LitInteger", "I128")
+    g.def_wrap("LitInteger", "U128", "_ASTUtil.parse_lit_integer")
       .> in_union("Expr")
     
-    g.def_wrap("LitFloat", "F64")
+    g.def_wrap("LitFloat", "F64", "_ASTUtil.parse_lit_float")
       .> in_union("Expr")
     
-    g.def_wrap("LitString", "String")
+    // TODO: Distinguish between LitString and LitStringTriple
+    g.def_wrap("LitString", "String", "_ASTUtil.parse_lit_string")
       .> in_union("Expr")
     
-    g.def_wrap("LitCharacter", "U8")
+    g.def_wrap("LitCharacter", "U8", "_ASTUtil.parse_lit_character")
       .> in_union("Expr")
     
     g.def("LitLocation")
@@ -508,7 +509,7 @@ primitive ASTDefs
     
     g.def("Ellipsis")
     
-    g.def_wrap("Id", "String")
+    g.def_wrap("Id", "String", "_ASTUtil.parse_id")
     
     for name in [
       "EOF"

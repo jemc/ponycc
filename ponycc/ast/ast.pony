@@ -8489,16 +8489,22 @@ class val LitFalse is (AST & LitBool & Expr)
 
 class val LitInteger is (AST & Expr)
   let _pos: SourcePosAny
-  let _value: I128
-  new val create(value': I128) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': I128) =>(_pos, _value) = (pos', value')
+  let _value: U128
+  new val create(value': U128) =>(_pos, _value) = (SourcePosNone, value')
+  new val _create(pos': SourcePosAny, value': U128) =>(_pos, _value) = (pos', value')
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    _value = 88 // TODO: parse from _pos?
+    _value =
+      try
+        _ASTUtil.parse_lit_integer(_pos)
+      else
+        errs.push(("LitInteger failed to parse value", _pos)); true
+        error
+      end
     
     if
       try
@@ -8512,8 +8518,8 @@ class val LitInteger is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitInteger => _create(pos', _value)
   
-  fun val value(): I128 => _value
-  fun val with_value(value': I128): LitInteger => _create(_pos, value')
+  fun val value(): U128 => _value
+  fun val with_value(value': U128): LitInteger => _create(_pos, value')
   fun string(): String iso^ =>
     recover
       String.>append("LitInteger(").>append(_value.string()).>push(')')
@@ -8530,7 +8536,13 @@ class val LitFloat is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    _value = 88 // TODO: parse from _pos?
+    _value =
+      try
+        _ASTUtil.parse_lit_float(_pos)
+      else
+        errs.push(("LitFloat failed to parse value", _pos)); true
+        error
+      end
     
     if
       try
@@ -8562,7 +8574,13 @@ class val LitString is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    _value = "foo" // TODO: parse from _pos?
+    _value =
+      try
+        _ASTUtil.parse_lit_string(_pos)
+      else
+        errs.push(("LitString failed to parse value", _pos)); true
+        error
+      end
     
     if
       try
@@ -8594,7 +8612,13 @@ class val LitCharacter is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    _value = 88 // TODO: parse from _pos?
+    _value =
+      try
+        _ASTUtil.parse_lit_character(_pos)
+      else
+        errs.push(("LitCharacter failed to parse value", _pos)); true
+        error
+      end
     
     if
       try
@@ -10901,7 +10925,13 @@ class val Id is AST
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    _value = "foo" // TODO: parse from _pos?
+    _value =
+      try
+        _ASTUtil.parse_id(_pos)
+      else
+        errs.push(("Id failed to parse value", _pos)); true
+        error
+      end
     
     if
       try

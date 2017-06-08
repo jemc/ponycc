@@ -10,8 +10,8 @@ class ASTGen
   fun ref def(n: String): ASTGenDefFixed =>
     ASTGenDefFixed(this, n)
   
-  fun ref def_wrap(n: String, t: String): ASTGenDefWrap =>
-    ASTGenDefWrap(this, n, t)
+  fun ref def_wrap(n: String, t: String, p: String): ASTGenDefWrap =>
+    ASTGenDefWrap(this, n, t, p)
   
   fun ref def_lexeme(n: String): ASTGenDefLexeme =>
     ASTGenDefLexeme(this, n)

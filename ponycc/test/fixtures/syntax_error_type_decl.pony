@@ -30,6 +30,24 @@ struct @StructWithCAPI
 $ERROR A class cannot specify a C API.
 class @ClassWithCAPI
       ^
+$ERROR A type alias cannot be named Main - Main must be an actor.
+type Main is X
+     ^~~~
+$ERROR An interface cannot be named Main - Main must be an actor.
+interface Main
+          ^~~~
+$ERROR A trait cannot be named Main - Main must be an actor.
+trait Main
+      ^~~~
+$ERROR A primitive cannot be named Main - Main must be an actor.
+primitive Main
+          ^~~~
+$ERROR A struct cannot be named Main - Main must be an actor.
+struct Main
+       ^~~~
+$ERROR A class cannot be named Main - Main must be an actor.
+class Main
+      ^~~~
 $ERROR A type alias cannot have fields.
   let type_field: X
   ^~~
@@ -65,34 +83,13 @@ struct @StructWithCAPI
 class @ClassWithCAPI
 actor @ActorWithCAPI
 
-// TODO: support these errors:
-
-// $ERROR A type alias cannot be named Main - Main must be an actor.
-// type Main
-//      ^~~~
-// $ERROR An interface cannot be named Main - Main must be an actor.
-// interface Main
-//           ^~~~
-// $ERROR A trait cannot be named Main - Main must be an actor.
-// trait Main
-//       ^~~~
-// $ERROR A primitive cannot be named Main - Main must be an actor.
-// primitive Main
-//           ^~~~
-// $ERROR A struct cannot be named Main - Main must be an actor.
-// struct Main
-//        ^~~~
-// $ERROR A class cannot be named Main - Main must be an actor.
-// class Main
-//       ^~~~
-
-// type Main is X
-// interface Main
-// trait Main
-// primitive Main
-// struct Main
-// class Main
-// actor Main
+type Main is X
+interface Main
+trait Main
+primitive Main
+struct Main
+class Main
+actor Main
 
 type TypeAliasWithField is X
   let type_field: X
