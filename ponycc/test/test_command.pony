@@ -4,6 +4,7 @@ use "ponytest"
 use "../ast"
 use "../ast/parse"
 use "../ast/print"
+use "../pass/post_parse"
 use "../pass/syntax"
 
 trait TestCommand
@@ -56,7 +57,7 @@ class TestCommandPrint is TestCommand
         Parse(source, errs)
       else
         _print_errors(h, errs)
-        return h.fail("An unexpected parser error occurred.")
+        return h.fail("Unexpected parser error(s) occurred.")
       end
     
     h.assert_eq[String](source.content(), Print(module))
@@ -79,6 +80,25 @@ class TestCommandParse is TestCommand
     
     _check_errors(h, _expected, success, errs)
 
+class TestCommandPostParse is TestCommand
+  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  
+  fun ref add_error(err: TestCommandError): TestCommandError =>
+    _expected.push(err); err
+  
+  fun apply(h: TestHelper, source: Source) =>
+    let errs = Array[(String, SourcePosAny)]
+    let module =
+      try
+        Parse(source, errs)
+      else
+        _print_errors(h, errs)
+        return h.fail("Unexpected parser error(s) occurred.")
+      end
+    
+    PostParse.start(module, errs)
+    _check_errors(h, _expected, errs.size() == 0, errs)
+
 class TestCommandSyntax is TestCommand
   embed _expected: Array[TestCommandError] = Array[TestCommandError]
   
@@ -92,8 +112,14 @@ class TestCommandSyntax is TestCommand
         Parse(source, errs)
       else
         _print_errors(h, errs)
-        return h.fail("An unexpected parser error occurred.")
+        return h.fail("Unexpected parser error(s) occurred.")
       end
+    
+    PostParse.start(module, errs)
+    if errs.size() > 0 then
+      _print_errors(h, errs)
+      return h.fail("Unexpected syntax error(s) occurred.")
+    end
     
     Syntax.start(module, errs)
     _check_errors(h, _expected, errs.size() == 0, errs)
