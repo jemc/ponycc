@@ -9,7 +9,29 @@ primitive Syntax is FrameVisitor[Syntax]
   
   fun apply[A: AST val](frame: Frame[Syntax], ast: A) =>
     iftype A <: Module then
+      for t in ast.use_decls().values() do frame.visit(t) end
       for t in ast.type_decls().values() do frame.visit(t) end
+    
+    elseif A <: UsePackage then
+      // TODO: check that ast.prefix().value() is a valid package identifier.
+      None
+    
+    elseif A <: UseFFIDecl then
+      try frame.visit(ast.guard() as IfDefCond) end
+    
+    elseif A <: IfDefCond then
+      iftype A <: IfDefFlag then
+        match ast.name()
+        | let n: Id => None // TODO: verify platform flag
+        | let n: LitString => None // TODO: verify lowercase is NOT a platform flag, or "illegal flag"
+        end
+      elseif A <: IfDefNot then
+        frame.visit(ast.expr())
+      elseif A <: IfDefBinaryOp then
+        frame.visit(ast.left())
+        frame.visit(ast.right())
+      else Unreachable(ast)
+      end
     
     elseif A <: TypeDecl then
       // TODO: check that ast.name() is a valid type name (uppercase).
@@ -97,6 +119,8 @@ primitive Syntax is FrameVisitor[Syntax]
       None
     
     elseif A <: Method then
+      // TODO: check that ast.name() is a valid method name (lowercase).
+      
       iftype A <: MethodFun then
         try frame.type_decl() as (Trait | Interface) else
           try
