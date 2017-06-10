@@ -63,14 +63,20 @@ class TkTree
     for child in children.values() do
       ast_children.push(child.to_ast(errs))
     end
+    
     // TODO: is there a less convoluted way to lift the AST to val?
     var errs' = recover Array[(String, SourcePosAny)] end
-    let ast =
+    try
       recover val
         let errs'' = Array[(String, SourcePosAny)]
-        let ast' = tk._from_iter((consume ast_children).values(), pos, errs'')
-        for err in errs''.values() do errs'.push(err) end
-        ast'
+        try
+          tk._from_iter((consume ast_children).values(), pos, errs'')
+        else
+          for err in errs''.values() do errs'.push(err) end
+          error
+        end
       end
-    for err in (consume errs').values() do errs.push(err) end
-    ast
+    else
+      for err in (consume errs').values() do errs.push(err) end
+      error
+    end
