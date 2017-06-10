@@ -168,12 +168,12 @@ primitive ASTInfo
     elseif A <: At then "At"
     elseif A <: Question then "Question"
     elseif A <: Ellipsis then "Ellipsis"
+    elseif A <: Semicolon then "Semicolon"
     elseif A <: Id then "Id"
     elseif A <: EOF then "EOF"
     elseif A <: NewLine then "NewLine"
     elseif A <: Use then "Use"
     elseif A <: Colon then "Colon"
-    elseif A <: Semicolon then "Semicolon"
     elseif A <: Comma then "Comma"
     elseif A <: Constant then "Constant"
     elseif A <: Pipe then "Pipe"
@@ -10914,6 +10914,62 @@ class val Ellipsis is AST
     s.append("Ellipsis")
     consume s
 
+class val Semicolon is (AST & Expr)
+  let _pos: SourcePosAny
+  
+  let _list: coll.Vec[Expr]
+  
+  new val create(
+    list': coll.Vec[Expr])
+  =>_pos = SourcePosNone
+    _list = list'
+  
+  new val _create(pos': SourcePosAny,
+    list': coll.Vec[Expr])
+  =>
+    _pos = pos'
+    _list = list'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+  =>
+    _pos = pos'
+    var list' = coll.Vec[Expr]
+    var list_next' = try iter.next() else None end
+    while true do
+      try list' = list'.push(list_next' as Expr) else break end
+      try list_next' = iter.next() else list_next' = None; break end
+    end
+    if list_next' isnt None then
+      let extra' = list_next'
+      errs.push(("Semicolon got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+    end
+    
+    _list = list'
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
+  fun val pos(): SourcePosAny => _pos
+  fun val with_pos(pos': SourcePosAny): Semicolon => _create(pos', _list)
+  
+  fun val list(): coll.Vec[Expr] => _list
+  
+  fun val with_list(list': coll.Vec[Expr]): Semicolon => _create(_pos, list')
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Semicolon")
+    s.push('(')
+    s.push('[')
+    for (i, v) in _list.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
+      s.append(v.string())
+    end
+    s.push(']')
+    s.push(')')
+    consume s
+
 class val Id is AST
   let _pos: SourcePosAny
   let _value: String
@@ -11015,22 +11071,6 @@ class val Colon is (AST & Lexeme)
   
   fun string(): String iso^ =>
     recover String.>append("Colon") end
-
-class val Semicolon is (AST & Lexeme)
-  new val create() => None
-  new from_iter(
-    iter: Iterator[(AST | None)],
-    pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
-  =>
-    errs.push(("Semicolon is a lexeme-only type append should never be built", pos')); error
-  
-  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
-  fun val pos(): SourcePosAny => SourcePosNone
-  fun val with_pos(pos': SourcePosAny): Semicolon => create()
-  
-  fun string(): String iso^ =>
-    recover String.>append("Semicolon") end
 
 class val Comma is (AST & Lexeme)
   new val create() => None

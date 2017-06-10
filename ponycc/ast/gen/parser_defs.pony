@@ -191,7 +191,7 @@ primitive ParserDefs
     // semi (assignment | jump)
     g.def("semiexpr")
       .> rule("semicolon", ["semi"])
-      .> rule("value", ["assignment"; "jump"])
+      .> opt_no_dflt_rule("value", ["assignment"; "jump"])
     
     // SEMICOLON
     g.def("semi")

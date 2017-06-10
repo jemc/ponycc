@@ -171,6 +171,21 @@ primitive Syntax is FrameVisitor[Syntax]
       end
       
       // TODO: verify that in-signature docstring is not present if has a body.
+      
+      // TODO: also visit other fields?
+      try frame.visit(ast.body() as Sequence) end
+    
+    elseif A <: Sequence then
+      for expr in ast.list().values() do frame.visit(expr) end
+    
+    elseif A <: Expr then
+      iftype A <: Semicolon then
+        frame.err(
+          "Use semicolons only for separating expressions on the same line.",
+          ast)
+        
+        for expr in ast.list().values() do frame.visit(expr) end
+      end
     
     else Unreachable(ast)
     end

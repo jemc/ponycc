@@ -44,7 +44,7 @@ class _Parser
     else last_helpful_token = new_token
     end
     
-    token = new_token
+    token = (new_token._1, last_helpful_token._2)
   
   fun ref _ditch_restart(state: _RuleState): _RuleResult =>
     // Debug("Rule " + state.fn_name + ": Attempting recovery") // TODO: conditional compile
@@ -1888,7 +1888,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = None
+    state.default_tk = Tk[EOF]
     found = false
     res =
       while true do

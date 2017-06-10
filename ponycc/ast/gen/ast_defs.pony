@@ -509,6 +509,10 @@ primitive ASTDefs
     
     g.def("Ellipsis")
     
+    g.def("Semicolon")
+      .> in_union("Expr") // only so we can nicely error for semicolon at EOL.
+      .> has("list", "coll.Vec[Expr]")
+    
     g.def_wrap("Id", "String", "_ASTUtil.parse_id")
     
     for name in [
@@ -516,7 +520,6 @@ primitive ASTDefs
       "NewLine"
       "Use"
       "Colon"
-      "Semicolon"
       "Comma"
       "Constant"
       "Pipe"
