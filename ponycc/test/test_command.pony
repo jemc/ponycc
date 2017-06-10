@@ -11,6 +11,14 @@ trait TestCommand
   fun ref add_error(err: TestCommandError): TestCommandError => err
   fun apply(h: TestHelper, source: Source) => None
   
+  fun _print_errors(h: TestHelper, errs: Array[(String, SourcePosAny)] box) =>
+    for (err, pos) in errs.values() do
+      h.log(err)
+      (let pos1, let pos2) = pos.show_in_line()
+      h.log(pos1)
+      h.log(pos2)
+    end
+  
   fun _check_errors(h: TestHelper, expected: Array[TestCommandError] box,
     success: Bool, errs: Array[(String, SourcePosAny)] box)
   =>
@@ -45,6 +53,7 @@ class TestCommandPrint is TestCommand
       try
         Parse(source, errs)
       else
+        _print_errors(h, errs)
         return h.fail("An unexpected parser error occurred.")
       end
     
@@ -80,6 +89,7 @@ class TestCommandSyntax is TestCommand
       try
         Parse(source, errs)
       else
+        _print_errors(h, errs)
         return h.fail("An unexpected parser error occurred.")
       end
     
