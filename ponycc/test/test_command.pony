@@ -42,7 +42,9 @@ trait TestCommand
       end
     end
     
-    h.assert_eq[USize](expected.size(), errs.size(), "Number of Errors")
+    if not
+      h.assert_eq[USize](expected.size(), errs.size(), "Number of Errors")
+    then _print_errors(h, errs) end
 
 class TestCommandNone is TestCommand
 
