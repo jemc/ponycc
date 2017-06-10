@@ -49,15 +49,14 @@ primitive Syntax is FrameVisitor[Syntax]
       
       iftype A <: TypeAlias then
         try ast.provides() as Type else
-          frame.err(desc + "must specify a type.", ast)
+          frame.err(ast, desc + "must specify a type.")
         end
       end
       
       iftype A <: (TypeAlias | Primitive | Actor) then
         try
-          frame.err(
-            desc + "cannot specify a default capability.",
-            ast.cap() as Cap)
+          frame.err(ast.cap() as Cap,
+            desc + "cannot specify a default capability.")
         end
       end
       
@@ -65,38 +64,36 @@ primitive Syntax is FrameVisitor[Syntax]
         A <: (TypeAlias | Interface | Trait | Primitive | Struct | Class)
       then
         try
-          frame.err(desc + "cannot specify a C API.", ast.at() as At)
+          frame.err(ast.at() as At, desc + "cannot specify a C API.")
         end
         
         if ast.name().value() == "Main" then
-          frame.err(
-            desc + "cannot be named Main - Main must be an actor.",
-            ast.name())
+          frame.err(ast.name(),
+            desc + "cannot be named Main - Main must be an actor.")
         end
       end
       
       try ast.at() as At
-        frame.err(
-          "A C API type cannot have type parameters.",
-          ast.type_params() as TypeParams)
+        frame.err(ast.type_params() as TypeParams,
+          "A C API type cannot have type parameters.")
       end
       
       iftype A <: (TypeAlias | Interface | Trait | Primitive) then
         for f in ast.members().fields().values() do
-          frame.err(desc + "cannot have fields.", f)
+          frame.err(f, desc + "cannot have fields.")
         end
       end
       
       iftype A <: TypeAlias then
         for m in ast.members().methods().values() do
-          frame.err(desc + "cannot have methods.", m)
+          frame.err(m, desc + "cannot have methods.")
         end
       end
       
       iftype A <: (Primitive | Struct | Class) then
         for m in ast.members().methods().values() do
           try
-            frame.err(desc + "cannot have behaviours.", m as MethodBe)
+            frame.err(m as MethodBe, desc + "cannot have behaviours.")
           end
         end
       end
@@ -124,72 +121,62 @@ primitive Syntax is FrameVisitor[Syntax]
       iftype A <: MethodFun then
         try frame.type_decl() as (Trait | Interface) else
           try
-            frame.err(
-              "This function must provide a body.",
-              ast.body() as None; ast)
+            frame.err(ast.body() as None; ast,
+              "This function must provide a body.")
           end
         end
       else
         try
-          frame.err(
-            "Only functions can specify a return type.",
-            ast.return_type() as Type)
+          frame.err(ast.return_type() as Type,
+            "Only functions can specify a return type.")
         end
         
         // TODO: add this check when bare functions are implemented:
         // try
-        //   frame.err(
-        //     "Only functions can be bare.",
-        //     ast.bare() as At)
+        //   frame.err(ast.bare() as At,
+        //     "Only functions can be bare.")
         // end
       end
       
       iftype A <: MethodNew then
         try frame.type_decl() as Primitive
-          frame.err(
-            "A primitive constructor cannot specify a receiver capability.",
-            ast.cap() as Cap)
+          frame.err(ast.cap() as Cap,
+            "A primitive constructor cannot specify a receiver capability.")
         end
         
         try frame.type_decl() as Actor
-          frame.err(
-            "An actor constructor cannot be partial.",
-            ast.partial() as Question)
+          frame.err(ast.partial() as Question,
+            "An actor constructor cannot be partial.")
         end
         
         try frame.type_decl() as (Trait | Interface)
           try
-            frame.err(
-              "A trait or interface constructor cannot provide a body.",
-              ast.body() as Sequence)
+            frame.err(ast.body() as Sequence,
+              "A trait or interface constructor cannot provide a body.")
           end
         else
           try
-            frame.err(
-              "This constructor must provide a body.",
-              ast.body() as None; ast)
+            frame.err(ast.body() as None; ast,
+              "This constructor must provide a body.")
           end
         end
       end
       
       iftype A <: MethodBe then
         try
-          frame.err(
-            "A behaviour cannot specify a receiver capability.",
-            ast.cap() as Cap)
+          frame.err(ast.cap() as Cap,
+            "A behaviour cannot specify a receiver capability.")
         end
         
         try
-          frame.err(
-            "A behaviour cannot be partial.",
-            ast.partial() as Question)
+          frame.err(ast.partial() as Question,
+            "A behaviour cannot be partial.")
         end
         
         try frame.type_decl() as (Trait | Interface) else
           try
-            frame.err(
-              "This behaviour must provide a body.",
-              ast.body() as None; ast)
+            frame.err(ast.body() as None; ast,
+              "This behaviour must provide a body.")
           end
         end
       end
@@ -204,9 +191,8 @@ primitive Syntax is FrameVisitor[Syntax]
     
     elseif A <: Expr then
       iftype A <: Semicolon then
-        frame.err(
-          "Use semicolons only for separating expressions on the same line.",
-          ast)
+        frame.err(ast,
+          "Use semicolons only for separating expressions on the same line.")
         
         for expr in ast.list().values() do frame.visit(expr) end
       end

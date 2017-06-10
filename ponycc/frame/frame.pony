@@ -12,7 +12,7 @@ class _FrameTop[V: FrameVisitor[V]]
   new create(module': Module, errors': Array[(String, SourcePosAny)]) =>
     (_module, _errors) = (module', errors')
   
-  fun ref err(s: String, a: AST) => _errors.push((s, a.pos()))
+  fun ref err(a: AST, s: String) => _errors.push((s, a.pos()))
   fun module(): Module => _module
 
 class Frame[V: FrameVisitor[V]]
@@ -33,6 +33,6 @@ class Frame[V: FrameVisitor[V]]
         V.apply[A](Frame[V]._create_under[A](frame, a), a)
       })
   
-  fun ref err(s: String, a: AST) => _upper.err(s, a)
+  fun ref err(a: AST, s: String) => _upper.err(a, s)
   fun module(): Module => _upper.module()
   fun type_decl(): (TypeDecl | None) => _type_decl
