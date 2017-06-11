@@ -22,6 +22,15 @@ primitive PostParse is FrameVisitor[PostParse]
         try
           frame.err(ast.docs() as LitString,
             "A method with a body cannot have a docstring in the signature.")
+        else
+          if body.list().size() > 1 then
+            try
+              frame.replace(ast.with_docs(body.list()(0) as LitString))
+              // TODO: reassign ast here, like so:
+              // ast = ast.with_docs(body.list()(0) as LitString)
+              // frame.replace(ast)
+            end
+          end
         end
       end
     
