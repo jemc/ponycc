@@ -37,15 +37,36 @@ class Frame[V: FrameVisitor[V]]
         V.apply[A](Frame[V]._create_under(frame, a), a)
       })
   
-  fun ref err(a: AST, s: String) => _upper.err(a, s)
+  fun ref err(a: AST, s: String) =>
+    """
+    Emit an error, indicating a problem with the given AST node, including the
+    given message as a human-friendly explanation of the problem.
+    """
+    _upper.err(a, s)
   
   fun parent(n: USize = 1): AST =>
+    """
+    Get the n-th AST node above this one.
+    
+    If n is zero, the AST node associated with the current Frame is returned.
+    If n is too high, the uppermost AST node in this Frame stack is returned.
+    """
     if n == 0 then _ast else _upper.parent(n - 1) end
   
-  fun module(): Module => _upper.module()
+  fun module(): Module =>
+    """
+    Get the nearest Module above this AST node.
+    """
+    _upper.module()
   
   fun type_decl(): (TypeDecl | None) =>
+    """
+    Get the nearest TypeDecl above this AST node.
+    """
     try _ast as TypeDecl else _upper.type_decl() end
   
   fun method(): (Method | None) =>
+    """
+    Get the nearest Method above this AST node.
+    """
     try _ast as Method else _upper.method() end
