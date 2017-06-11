@@ -7,7 +7,7 @@ interface val FrameVisitor[V: FrameVisitor[V]]
 
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: Array[(String, SourcePosAny)]
-  let _module: Module
+  var _module: Module
   
   new create(module': Module, errors': Array[(String, SourcePosAny)]) =>
     (_module, _errors) = (module', errors')
@@ -15,13 +15,14 @@ class _FrameTop[V: FrameVisitor[V]]
   fun ref err(a: AST, s: String) => _errors.push((s, a.pos()))
   
   fun parent(n: USize): AST => _module // ignore n - we can't go any higher
+  fun ref replace(a: AST) => try _module = a as Module end
   fun module(): Module => _module
   fun type_decl(): (TypeDecl | None) => None
   fun method(): (Method | None) => None
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
-  let _ast: AST
+  var _ast: AST
   
   new create(module': Module, errors': Array[(String, SourcePosAny)]) =>
     _upper = _FrameTop[V](module', errors')
@@ -52,6 +53,23 @@ class Frame[V: FrameVisitor[V]]
     If n is too high, the uppermost AST node in this Frame stack is returned.
     """
     if n == 0 then _ast else _upper.parent(n - 1) end
+  
+  fun ref replace(replace': AST) =>
+    """
+    Replace the current AST node for this Frame with the given replacement AST.
+    
+    If the given AST is not the correct type for replacing this slot in the
+    parent AST, or if the Frame's current AST is not actually a child of the
+    parent AST, the replacement operation will silently fail, with no effect.
+    """
+    if _ast isnt replace' then
+      if parent() is _ast then // TODO: less hacky dealing with FrameTop.
+        _upper.replace(replace')
+      else
+        _upper.replace(parent().with_replaced_child(_ast, replace'))
+      end
+      _ast = replace'
+    end
   
   fun module(): Module =>
     """
