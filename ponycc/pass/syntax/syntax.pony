@@ -4,8 +4,10 @@ use "../../frame"
 use "../../unreachable"
 
 primitive Syntax is FrameVisitor[Syntax]
-  fun start(ast: Module, errors: Array[(String, SourcePosAny)]) =>
-    apply[Module](Frame[Syntax](ast, errors), ast)
+  fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
+    let frame = Frame[Syntax](ast, errors)
+    apply[Module](frame, ast)
+    frame.module()
   
   fun apply[A: AST val](frame: Frame[Syntax], ast: A) =>
     iftype A <: Module then

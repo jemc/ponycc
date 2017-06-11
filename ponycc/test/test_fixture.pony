@@ -42,6 +42,7 @@ class TestFixture is UnitTest
         elseif line.at("$POST_PARSE") then last_command = TestCommandPostParse; commands.unshift(last_command)
         elseif line.at("$SYNTAX")     then last_command = TestCommandSyntax;    commands.unshift(last_command)
         elseif line.at("$ERROR")      then last_command = commands(0).add_error(TestCommandError(line.substring(7)))
+        elseif line.at("$CHECK")      then last_command = commands(0).add_check(TestCommandCheck(line.substring(7)))
         else last_command.add_line(line)
         end
       end

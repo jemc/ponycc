@@ -4,8 +4,10 @@ use "../../frame"
 use "../../unreachable"
 
 primitive PostParse is FrameVisitor[PostParse]
-  fun start(ast: Module, errors: Array[(String, SourcePosAny)]) =>
-    apply[Module](Frame[PostParse](ast, errors), ast)
+  fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
+    let frame = Frame[PostParse](ast, errors)
+    apply[Module](frame, ast)
+    frame.module()
   
   fun apply[A: AST val](frame: Frame[PostParse], ast: A) =>
     iftype A <: Module then

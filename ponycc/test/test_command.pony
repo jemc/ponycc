@@ -10,6 +10,8 @@ use "../pass/syntax"
 trait TestCommand
   fun ref add_line(line: String) => None
   fun ref add_error(err: TestCommandError): TestCommandError => err
+  fun ref add_check(err: TestCommandCheck): TestCommandCheck => err
+  
   fun apply(h: TestHelper, source: Source) => None
   
   fun _print_errors(h: TestHelper, errs: Array[(String, SourcePosAny)] box) =>
@@ -63,10 +65,9 @@ class TestCommandPrint is TestCommand
     h.assert_eq[String](source.content(), Print(module))
 
 class TestCommandParse is TestCommand
-  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
   
-  fun ref add_error(err: TestCommandError): TestCommandError =>
-    _expected.push(err); err
+  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
   
   fun apply(h: TestHelper, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
@@ -78,17 +79,18 @@ class TestCommandParse is TestCommand
         false
       end
     
-    _check_errors(h, _expected, success, errs)
+    _check_errors(h, _errs, success, errs)
 
 class TestCommandPostParse is TestCommand
-  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
+  embed _checks: Array[TestCommandCheck] = Array[TestCommandCheck]
   
-  fun ref add_error(err: TestCommandError): TestCommandError =>
-    _expected.push(err); err
+  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
+  fun ref add_check(c: TestCommandCheck): TestCommandCheck => _checks.push(c); c
   
   fun apply(h: TestHelper, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
-    let module =
+    var module =
       try
         Parse(source, errs)
       else
@@ -96,18 +98,21 @@ class TestCommandPostParse is TestCommand
         return h.fail("Unexpected parser error(s) occurred.")
       end
     
-    PostParse.start(module, errs)
-    _check_errors(h, _expected, errs.size() == 0, errs)
+    module = PostParse.start(module, errs)
+    
+    _check_errors(h, _errs, errs.size() == 0, errs)
+    for check in _checks.values() do check.check(h, module) end
 
 class TestCommandSyntax is TestCommand
-  embed _expected: Array[TestCommandError] = Array[TestCommandError]
+  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
+  embed _checks: Array[TestCommandCheck] = Array[TestCommandCheck]
   
-  fun ref add_error(err: TestCommandError): TestCommandError =>
-    _expected.push(err); err
+  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
+  fun ref add_check(c: TestCommandCheck): TestCommandCheck => _checks.push(c); c
   
   fun apply(h: TestHelper, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
-    let module =
+    var module =
       try
         Parse(source, errs)
       else
@@ -115,14 +120,15 @@ class TestCommandSyntax is TestCommand
         return h.fail("Unexpected parser error(s) occurred.")
       end
     
-    PostParse.start(module, errs)
+    module = PostParse.start(module, errs)
     if errs.size() > 0 then
       _print_errors(h, errs)
       return h.fail("Unexpected syntax error(s) occurred.")
     end
     
-    Syntax.start(module, errs)
-    _check_errors(h, _expected, errs.size() == 0, errs)
+    module = Syntax.start(module, errs)
+    _check_errors(h, _errs, errs.size() == 0, errs)
+    for check in _checks.values() do check.check(h, module) end
 
 class TestCommandError is TestCommand
   let message: String
@@ -130,3 +136,31 @@ class TestCommandError is TestCommand
   
   new create(m: String) => message = m
   fun ref add_line(line: String) => lines.push(line)
+
+class TestCommandCheck is TestCommand
+  let path: String
+  embed lines: Array[String] = Array[String]
+  
+  new create(p: String) => path = p
+  fun ref add_line(line: String) => lines.push(line)
+  
+  fun check(h: TestHelper, module: Module) =>
+    var ast: (AST | None) = module
+    var last_crumb: String = ""
+    try
+      for crumb in path.clone().>strip().split_by(".").values() do
+        last_crumb = crumb
+        let pieces = crumb.split_by("-", 2)
+        
+        ast =
+          (ast as AST).get_child_dynamic(
+            pieces(0),
+            try pieces(1).usize() else 0 end)
+      end
+      
+      h.assert_eq[String](String.join(lines), ast.string())
+    else
+      h.fail("Check failed to walk path: " + path)
+      h.log("The crumb that failed parse and/or lookup was: " + last_crumb)
+      h.log("The (AST | None) it couldn't be looked up on was: " + ast.string())
+    end

@@ -6,6 +6,12 @@ $ERROR A method with a body cannot have a docstring in the signature.
 $ERROR A method with a body cannot have a docstring in the signature.
   fun banana(): None "another bad one" => "the real docstring"; None
                      ^~~~~~~~~~~~~~~~~
+$CHECK type_decls-0.members.methods-2.docs
+LitString(this docstring is okay)
+
+$CHECK type_decls-0.members.methods-3.docs
+LitString(this one is also fine)
+
 """
 
 trait T
