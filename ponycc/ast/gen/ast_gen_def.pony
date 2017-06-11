@@ -223,6 +223,55 @@ class ASTGenDefFixed is ASTGenDef
     end
     if fields.size() > 0 then g.line() end
     
+    // Declare a method that finds (first occurrence of) the given child and
+    // replaces it with the given new child, returning the resulting AST.
+    // If the given child was not found, the original AST is returned.
+    // If the given child is an incompatible type, the original AST is returned.
+    // TODO: use a while loop to replace more than just the first occurrence.
+    g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>")
+    g.push_indent()
+    g.line("if child' is replace' then return this end")
+    g.line("try")
+    g.push_indent()
+    for (field_name, field_type, _) in fields.values() do
+      if field_type.at("coll.Vec[", 0) then
+        let elem_type: String = field_type.substring(9, -1)
+        g.line("try")
+        g.push_indent()
+        g.line("let i = _" + field_name + ".find(child' as " + elem_type + ")")
+        g.line("return _create(_pos")
+        for (other_field_name, _, _) in fields.values() do
+          if other_field_name == field_name then
+            g.add(", _" + field_name + ".update(i, replace' as " + elem_type + ")")
+          else
+            g.add(", _" + other_field_name)
+          end
+        end
+        g.add(")")
+        g.pop_indent()
+        g.line("end")
+      else
+        g.line("if child' is _" + field_name + " then")
+        g.push_indent()
+        g.line("return _create(_pos")
+        for (other_field_name, _, _) in fields.values() do
+          if other_field_name == field_name then
+            g.add(", replace' as " + field_type)
+          else
+            g.add(", _" + other_field_name)
+          end
+        end
+        g.add(")")
+        g.pop_indent()
+        g.line("end")
+      end
+    end
+    g.line("error")
+    g.pop_indent()
+    g.line("else this")
+    g.line("end")
+    g.pop_indent()
+    
     // Declare a string method to print itself.
     g.line("fun string(): String iso^ =>")
     g.push_indent()
@@ -342,6 +391,7 @@ class ASTGenDefWrap is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => _pos")
@@ -414,6 +464,7 @@ class ASTGenDefLexeme is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => SourcePosNone")

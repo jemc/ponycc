@@ -2,6 +2,7 @@ use coll = "collections/persistent"
 
 trait val AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST
   fun val pos(): SourcePosAny
   fun string(): String iso^
   new from_iter(
@@ -383,6 +384,23 @@ class val Module is AST
   fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => _create(_pos, _use_decls, type_decls', _docs)
   fun val with_docs(docs': (LitString | None)): Module => _create(_pos, _use_decls, _type_decls, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _use_decls.find(child' as UseDecl)
+        return _create(_pos, _use_decls.update(i, replace' as UseDecl), _type_decls, _docs)
+      end
+      try
+        let i = _type_decls.find(child' as TypeDecl)
+        return _create(_pos, _use_decls, _type_decls.update(i, replace' as TypeDecl), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _use_decls, _type_decls, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Module")
@@ -464,6 +482,18 @@ class val UsePackage is (AST & UseDecl)
   fun val with_prefix(prefix': (Id | None)): UsePackage => _create(_pos, prefix', _package)
   fun val with_package(package': LitString): UsePackage => _create(_pos, _prefix, package')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _prefix then
+        return _create(_pos, replace' as (Id | None), _package)
+      end
+      if child' is _package then
+        return _create(_pos, _prefix, replace' as LitString)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UsePackage")
@@ -577,6 +607,27 @@ class val UseFFIDecl is (AST & UseDecl)
   fun val with_partial(partial': (Question | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, partial', _guard)
   fun val with_guard(guard': (IfDefCond | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, _partial, guard')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as (Id | LitString), _return_type, _params, _partial, _guard)
+      end
+      if child' is _return_type then
+        return _create(_pos, _name, replace' as TypeArgs, _params, _partial, _guard)
+      end
+      if child' is _params then
+        return _create(_pos, _name, _return_type, replace' as (Params | None), _partial, _guard)
+      end
+      if child' is _partial then
+        return _create(_pos, _name, _return_type, _params, replace' as (Question | None), _guard)
+      end
+      if child' is _guard then
+        return _create(_pos, _name, _return_type, _params, _partial, replace' as (IfDefCond | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UseFFIDecl")
@@ -708,6 +759,33 @@ class val TypeAlias is (AST & TypeDecl)
   fun val with_at(at': (At | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeAlias")
@@ -841,6 +919,33 @@ class val Interface is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Interface")
@@ -974,6 +1079,33 @@ class val Trait is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trait")
@@ -1107,6 +1239,33 @@ class val Primitive is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Primitive")
@@ -1240,6 +1399,33 @@ class val Struct is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Struct")
@@ -1373,6 +1559,33 @@ class val Class is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Class")
@@ -1506,6 +1719,33 @@ class val Actor is (AST & TypeDecl)
   fun val with_at(at': (At | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
   fun val with_docs(docs': (LitString | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+      end
+      if child' is _provides then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+      end
+      if child' is _members then
+        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+      end
+      if child' is _at then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Actor")
@@ -1577,6 +1817,20 @@ class val Members is AST
   fun val with_fields(fields': coll.Vec[Field]): Members => _create(_pos, fields', _methods)
   fun val with_methods(methods': coll.Vec[Method]): Members => _create(_pos, _fields, methods')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _fields.find(child' as Field)
+        return _create(_pos, _fields.update(i, replace' as Field), _methods)
+      end
+      try
+        let i = _methods.find(child' as Method)
+        return _create(_pos, _fields, _methods.update(i, replace' as Method))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Members")
@@ -1671,6 +1925,21 @@ class val FieldLet is (AST & Field)
   fun val with_field_type(field_type': Type): FieldLet => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None)): FieldLet => _create(_pos, _name, _field_type, default')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _field_type, _default)
+      end
+      if child' is _field_type then
+        return _create(_pos, _name, replace' as Type, _default)
+      end
+      if child' is _default then
+        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLet")
@@ -1755,6 +2024,21 @@ class val FieldVar is (AST & Field)
   fun val with_field_type(field_type': Type): FieldVar => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None)): FieldVar => _create(_pos, _name, _field_type, default')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _field_type, _default)
+      end
+      if child' is _field_type then
+        return _create(_pos, _name, replace' as Type, _default)
+      end
+      if child' is _default then
+        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVar")
@@ -1839,6 +2123,21 @@ class val FieldEmbed is (AST & Field)
   fun val with_field_type(field_type': Type): FieldEmbed => _create(_pos, _name, field_type', _default)
   fun val with_default(default': (Expr | None)): FieldEmbed => _create(_pos, _name, _field_type, default')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _field_type, _default)
+      end
+      if child' is _field_type then
+        return _create(_pos, _name, replace' as Type, _default)
+      end
+      if child' is _default then
+        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbed")
@@ -1992,6 +2291,39 @@ class val MethodFun is (AST & Method)
   fun val with_body(body': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _params then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _return_type then
+        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+      end
+      if child' is _partial then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+      end
+      if child' is _guard then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+      end
+      if child' is _body then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFun")
@@ -2151,6 +2483,39 @@ class val MethodNew is (AST & Method)
   fun val with_body(body': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _params then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _return_type then
+        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+      end
+      if child' is _partial then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+      end
+      if child' is _guard then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+      end
+      if child' is _body then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNew")
@@ -2310,6 +2675,39 @@ class val MethodBe is (AST & Method)
   fun val with_body(body': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
   fun val with_docs(docs': (LitString | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _type_params then
+        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _params then
+        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+      end
+      if child' is _return_type then
+        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+      end
+      if child' is _partial then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+      end
+      if child' is _guard then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+      end
+      if child' is _body then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+      end
+      if child' is _docs then
+        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBe")
@@ -2369,6 +2767,16 @@ class val TypeParams is AST
   
   fun val with_list(list': coll.Vec[TypeParam]): TypeParams => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as TypeParam)
+        return _create(_pos, _list.update(i, replace' as TypeParam))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParams")
@@ -2453,6 +2861,21 @@ class val TypeParam is AST
   fun val with_constraint(constraint': (Type | None)): TypeParam => _create(_pos, _name, constraint', _default)
   fun val with_default(default': (Type | None)): TypeParam => _create(_pos, _name, _constraint, default')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _constraint, _default)
+      end
+      if child' is _constraint then
+        return _create(_pos, _name, replace' as (Type | None), _default)
+      end
+      if child' is _default then
+        return _create(_pos, _name, _constraint, replace' as (Type | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParam")
@@ -2506,6 +2929,16 @@ class val TypeArgs is AST
   
   fun val with_list(list': coll.Vec[Type]): TypeArgs => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Type)
+        return _create(_pos, _list.update(i, replace' as Type))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeArgs")
@@ -2577,6 +3010,19 @@ class val Params is AST
   fun val with_list(list': coll.Vec[Param]): Params => _create(_pos, list', _ellipsis)
   fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => _create(_pos, _list, ellipsis')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Param)
+        return _create(_pos, _list.update(i, replace' as Param), _ellipsis)
+      end
+      if child' is _ellipsis then
+        return _create(_pos, _list, replace' as (Ellipsis | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Params")
@@ -2663,6 +3109,21 @@ class val Param is AST
   fun val with_param_type(param_type': (Type | None)): Param => _create(_pos, _name, param_type', _default)
   fun val with_default(default': (Expr | None)): Param => _create(_pos, _name, _param_type, default')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _param_type, _default)
+      end
+      if child' is _param_type then
+        return _create(_pos, _name, replace' as (Type | None), _default)
+      end
+      if child' is _default then
+        return _create(_pos, _name, _param_type, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Param")
@@ -2716,6 +3177,16 @@ class val Sequence is (AST & Expr)
   
   fun val with_list(list': coll.Vec[Expr]): Sequence => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Expr)
+        return _create(_pos, _list.update(i, replace' as Expr))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Sequence")
@@ -2776,6 +3247,15 @@ class val Return is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): Return => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Return")
@@ -2831,6 +3311,15 @@ class val Break is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): Break => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Break")
@@ -2886,6 +3375,15 @@ class val Continue is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): Continue => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Continue")
@@ -2941,6 +3439,15 @@ class val Error is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): Error => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Error")
@@ -2996,6 +3503,15 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): CompileIntrinsic => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileIntrinsic")
@@ -3051,6 +3567,15 @@ class val CompileError is (AST & Jump & Expr)
   
   fun val with_value(value': (Expr | None)): CompileError => _create(_pos, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _value then
+        return _create(_pos, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CompileError")
@@ -3106,6 +3631,15 @@ class val IfDefFlag is (AST & IfDefCond)
   
   fun val with_name(name': (Id | LitString)): IfDefFlag => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as (Id | LitString))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefFlag")
@@ -3161,6 +3695,15 @@ class val IfDefNot is (AST & IfDefCond)
   
   fun val with_expr(expr': IfDefCond): IfDefNot => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as IfDefCond)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefNot")
@@ -3231,6 +3774,18 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   fun val with_left(left': IfDefCond): IfDefAnd => _create(_pos, left', _right)
   fun val with_right(right': IfDefCond): IfDefAnd => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as IfDefCond, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as IfDefCond)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefAnd")
@@ -3302,6 +3857,18 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   fun val with_left(left': IfDefCond): IfDefOr => _create(_pos, left', _right)
   fun val with_right(right': IfDefCond): IfDefOr => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as IfDefCond, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as IfDefCond)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDefOr")
@@ -3385,6 +3952,21 @@ class val IfDef is (AST & Expr)
   fun val with_then_body(then_body': Sequence): IfDef => _create(_pos, _condition, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | IfDef | None)): IfDef => _create(_pos, _condition, _then_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _condition then
+        return _create(_pos, replace' as IfDefCond, _then_body, _else_body)
+      end
+      if child' is _then_body then
+        return _create(_pos, _condition, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _condition, _then_body, replace' as (Sequence | IfDef | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfDef")
@@ -3484,6 +4066,24 @@ class val IfType is (AST & Expr)
   fun val with_then_body(then_body': Sequence): IfType => _create(_pos, _sub, _super, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | IfType | None)): IfType => _create(_pos, _sub, _super, _then_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _sub then
+        return _create(_pos, replace' as Type, _super, _then_body, _else_body)
+      end
+      if child' is _super then
+        return _create(_pos, _sub, replace' as Type, _then_body, _else_body)
+      end
+      if child' is _then_body then
+        return _create(_pos, _sub, _super, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _sub, _super, _then_body, replace' as (Sequence | IfType | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IfType")
@@ -3569,6 +4169,21 @@ class val If is (AST & Expr)
   fun val with_then_body(then_body': Sequence): If => _create(_pos, _condition, then_body', _else_body)
   fun val with_else_body(else_body': (Sequence | If | None)): If => _create(_pos, _condition, _then_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _condition then
+        return _create(_pos, replace' as Sequence, _then_body, _else_body)
+      end
+      if child' is _then_body then
+        return _create(_pos, _condition, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _condition, _then_body, replace' as (Sequence | If | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("If")
@@ -3653,6 +4268,21 @@ class val While is (AST & Expr)
   fun val with_loop_body(loop_body': Sequence): While => _create(_pos, _condition, loop_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None)): While => _create(_pos, _condition, _loop_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _condition then
+        return _create(_pos, replace' as Sequence, _loop_body, _else_body)
+      end
+      if child' is _loop_body then
+        return _create(_pos, _condition, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _condition, _loop_body, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("While")
@@ -3737,6 +4367,21 @@ class val Repeat is (AST & Expr)
   fun val with_condition(condition': Sequence): Repeat => _create(_pos, _loop_body, condition', _else_body)
   fun val with_else_body(else_body': (Sequence | None)): Repeat => _create(_pos, _loop_body, _condition, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _loop_body then
+        return _create(_pos, replace' as Sequence, _condition, _else_body)
+      end
+      if child' is _condition then
+        return _create(_pos, _loop_body, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _loop_body, _condition, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Repeat")
@@ -3836,6 +4481,24 @@ class val For is (AST & Expr)
   fun val with_loop_body(loop_body': Sequence): For => _create(_pos, _refs, _iterator, loop_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None)): For => _create(_pos, _refs, _iterator, _loop_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _refs then
+        return _create(_pos, replace' as (Id | IdTuple), _iterator, _loop_body, _else_body)
+      end
+      if child' is _iterator then
+        return _create(_pos, _refs, replace' as Sequence, _loop_body, _else_body)
+      end
+      if child' is _loop_body then
+        return _create(_pos, _refs, _iterator, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _refs, _iterator, _loop_body, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("For")
@@ -3921,6 +4584,21 @@ class val With is (AST & Expr)
   fun val with_with_body(with_body': Sequence): With => _create(_pos, _assigns, with_body', _else_body)
   fun val with_else_body(else_body': (Sequence | None)): With => _create(_pos, _assigns, _with_body, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _assigns then
+        return _create(_pos, replace' as AssignTuple, _with_body, _else_body)
+      end
+      if child' is _with_body then
+        return _create(_pos, _assigns, replace' as Sequence, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _assigns, _with_body, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("With")
@@ -3974,6 +4652,16 @@ class val IdTuple is AST
   
   fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => _create(_pos, elements')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _elements.find(child' as (Id | IdTuple))
+        return _create(_pos, _elements.update(i, replace' as (Id | IdTuple)))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IdTuple")
@@ -4030,6 +4718,16 @@ class val AssignTuple is AST
   
   fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => _create(_pos, elements')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _elements.find(child' as Assign)
+        return _create(_pos, _elements.update(i, replace' as Assign))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AssignTuple")
@@ -4114,6 +4812,21 @@ class val Match is (AST & Expr)
   fun val with_cases(cases': Cases): Match => _create(_pos, _expr, cases', _else_body)
   fun val with_else_body(else_body': (Sequence | None)): Match => _create(_pos, _expr, _cases, else_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Sequence, _cases, _else_body)
+      end
+      if child' is _cases then
+        return _create(_pos, _expr, replace' as Cases, _else_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _expr, _cases, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Match")
@@ -4167,6 +4880,16 @@ class val Cases is AST
   
   fun val with_list(list': coll.Vec[Case]): Cases => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Case)
+        return _create(_pos, _list.update(i, replace' as Case))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Cases")
@@ -4251,6 +4974,21 @@ class val Case is AST
   fun val with_guard(guard': (Sequence | None)): Case => _create(_pos, _expr, guard', _body)
   fun val with_body(body': (Sequence | None)): Case => _create(_pos, _expr, _guard, body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr, _guard, _body)
+      end
+      if child' is _guard then
+        return _create(_pos, _expr, replace' as (Sequence | None), _body)
+      end
+      if child' is _body then
+        return _create(_pos, _expr, _guard, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Case")
@@ -4332,6 +5070,21 @@ class val Try is (AST & Expr)
   fun val with_else_body(else_body': (Sequence | None)): Try => _create(_pos, _body, else_body', _then_body)
   fun val with_then_body(then_body': (Sequence | None)): Try => _create(_pos, _body, _else_body, then_body')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _body then
+        return _create(_pos, replace' as Sequence, _else_body, _then_body)
+      end
+      if child' is _else_body then
+        return _create(_pos, _body, replace' as (Sequence | None), _then_body)
+      end
+      if child' is _then_body then
+        return _create(_pos, _body, _else_body, replace' as (Sequence | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Try")
@@ -4404,6 +5157,18 @@ class val Consume is (AST & Expr)
   fun val with_cap(cap': (Cap | None)): Consume => _create(_pos, cap', _expr)
   fun val with_expr(expr': Expr): Consume => _create(_pos, _cap, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _cap then
+        return _create(_pos, replace' as (Cap | None), _expr)
+      end
+      if child' is _expr then
+        return _create(_pos, _cap, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Consume")
@@ -4475,6 +5240,18 @@ class val Recover is (AST & Expr)
   fun val with_cap(cap': (Cap | None)): Recover => _create(_pos, cap', _expr)
   fun val with_expr(expr': Sequence): Recover => _create(_pos, _cap, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _cap then
+        return _create(_pos, replace' as (Cap | None), _expr)
+      end
+      if child' is _expr then
+        return _create(_pos, _cap, replace' as Sequence)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Recover")
@@ -4546,6 +5323,18 @@ class val As is (AST & Expr)
   fun val with_expr(expr': Expr): As => _create(_pos, expr', _as_type)
   fun val with_as_type(as_type': Type): As => _create(_pos, _expr, as_type')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr, _as_type)
+      end
+      if child' is _as_type then
+        return _create(_pos, _expr, replace' as Type)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("As")
@@ -4617,6 +5406,18 @@ class val Add is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Add => _create(_pos, left', _right)
   fun val with_right(right': Expr): Add => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Add")
@@ -4688,6 +5489,18 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): AddUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): AddUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AddUnsafe")
@@ -4759,6 +5572,18 @@ class val Sub is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Sub => _create(_pos, left', _right)
   fun val with_right(right': Expr): Sub => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Sub")
@@ -4830,6 +5655,18 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): SubUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): SubUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("SubUnsafe")
@@ -4901,6 +5738,18 @@ class val Mul is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Mul => _create(_pos, left', _right)
   fun val with_right(right': Expr): Mul => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Mul")
@@ -4972,6 +5821,18 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): MulUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): MulUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MulUnsafe")
@@ -5043,6 +5904,18 @@ class val Div is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Div => _create(_pos, left', _right)
   fun val with_right(right': Expr): Div => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Div")
@@ -5114,6 +5987,18 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): DivUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): DivUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DivUnsafe")
@@ -5185,6 +6070,18 @@ class val Mod is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Mod => _create(_pos, left', _right)
   fun val with_right(right': Expr): Mod => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Mod")
@@ -5256,6 +6153,18 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): ModUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): ModUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ModUnsafe")
@@ -5327,6 +6236,18 @@ class val LShift is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LShift => _create(_pos, left', _right)
   fun val with_right(right': Expr): LShift => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LShift")
@@ -5398,6 +6319,18 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LShiftUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): LShiftUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LShiftUnsafe")
@@ -5469,6 +6402,18 @@ class val RShift is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): RShift => _create(_pos, left', _right)
   fun val with_right(right': Expr): RShift => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RShift")
@@ -5540,6 +6485,18 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): RShiftUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): RShiftUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("RShiftUnsafe")
@@ -5611,6 +6568,18 @@ class val Eq is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Eq => _create(_pos, left', _right)
   fun val with_right(right': Expr): Eq => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Eq")
@@ -5682,6 +6651,18 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): EqUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): EqUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("EqUnsafe")
@@ -5753,6 +6734,18 @@ class val NE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): NE => _create(_pos, left', _right)
   fun val with_right(right': Expr): NE => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NE")
@@ -5824,6 +6817,18 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): NEUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): NEUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NEUnsafe")
@@ -5895,6 +6900,18 @@ class val LT is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LT => _create(_pos, left', _right)
   fun val with_right(right': Expr): LT => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LT")
@@ -5966,6 +6983,18 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LTUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): LTUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LTUnsafe")
@@ -6037,6 +7066,18 @@ class val LE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LE => _create(_pos, left', _right)
   fun val with_right(right': Expr): LE => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LE")
@@ -6108,6 +7149,18 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): LEUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): LEUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LEUnsafe")
@@ -6179,6 +7232,18 @@ class val GE is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): GE => _create(_pos, left', _right)
   fun val with_right(right': Expr): GE => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GE")
@@ -6250,6 +7315,18 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): GEUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): GEUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GEUnsafe")
@@ -6321,6 +7398,18 @@ class val GT is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): GT => _create(_pos, left', _right)
   fun val with_right(right': Expr): GT => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GT")
@@ -6392,6 +7481,18 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): GTUnsafe => _create(_pos, left', _right)
   fun val with_right(right': Expr): GTUnsafe => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("GTUnsafe")
@@ -6463,6 +7564,18 @@ class val Is is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Is => _create(_pos, left', _right)
   fun val with_right(right': Expr): Is => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Is")
@@ -6534,6 +7647,18 @@ class val Isnt is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Isnt => _create(_pos, left', _right)
   fun val with_right(right': Expr): Isnt => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Isnt")
@@ -6605,6 +7730,18 @@ class val And is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): And => _create(_pos, left', _right)
   fun val with_right(right': Expr): And => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("And")
@@ -6676,6 +7813,18 @@ class val Or is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): Or => _create(_pos, left', _right)
   fun val with_right(right': Expr): Or => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Or")
@@ -6747,6 +7896,18 @@ class val XOr is (AST & BinaryOp & Expr)
   fun val with_left(left': Expr): XOr => _create(_pos, left', _right)
   fun val with_right(right': Expr): XOr => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("XOr")
@@ -6803,6 +7964,15 @@ class val Not is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr): Not => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Not")
@@ -6858,6 +8028,15 @@ class val Neg is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr): Neg => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Neg")
@@ -6913,6 +8092,15 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr): NegUnsafe => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NegUnsafe")
@@ -6968,6 +8156,15 @@ class val AddressOf is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr): AddressOf => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("AddressOf")
@@ -7023,6 +8220,15 @@ class val DigestOf is (AST & UnaryOp & Expr)
   
   fun val with_expr(expr': Expr): DigestOf => _create(_pos, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _expr then
+        return _create(_pos, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DigestOf")
@@ -7093,6 +8299,18 @@ class val LocalLet is (AST & Local & Expr)
   fun val with_name(name': Id): LocalLet => _create(_pos, name', _local_type)
   fun val with_local_type(local_type': (Type | None)): LocalLet => _create(_pos, _name, local_type')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _local_type)
+      end
+      if child' is _local_type then
+        return _create(_pos, _name, replace' as (Type | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLet")
@@ -7164,6 +8382,18 @@ class val LocalVar is (AST & Local & Expr)
   fun val with_name(name': Id): LocalVar => _create(_pos, name', _local_type)
   fun val with_local_type(local_type': (Type | None)): LocalVar => _create(_pos, _name, local_type')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _local_type)
+      end
+      if child' is _local_type then
+        return _create(_pos, _name, replace' as (Type | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVar")
@@ -7235,6 +8465,18 @@ class val Assign is (AST & Expr)
   fun val with_left(left': Expr): Assign => _create(_pos, left', _right)
   fun val with_right(right': Expr): Assign => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Expr)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Assign")
@@ -7306,6 +8548,18 @@ class val Dot is (AST & Expr)
   fun val with_left(left': Expr): Dot => _create(_pos, left', _right)
   fun val with_right(right': Id): Dot => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Dot")
@@ -7377,6 +8631,18 @@ class val Chain is (AST & Expr)
   fun val with_left(left': Expr): Chain => _create(_pos, left', _right)
   fun val with_right(right': Id): Chain => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Chain")
@@ -7448,6 +8714,18 @@ class val Tilde is (AST & Expr)
   fun val with_left(left': Expr): Tilde => _create(_pos, left', _right)
   fun val with_right(right': Id): Tilde => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tilde")
@@ -7519,6 +8797,18 @@ class val Qualify is (AST & Expr)
   fun val with_left(left': Expr): Qualify => _create(_pos, left', _right)
   fun val with_right(right': TypeArgs): Qualify => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Expr, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as TypeArgs)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Qualify")
@@ -7599,6 +8889,21 @@ class val Call is (AST & Expr)
   fun val with_args(args': Args): Call => _create(_pos, _callable, args', _named_args)
   fun val with_named_args(named_args': NamedArgs): Call => _create(_pos, _callable, _args, named_args')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _callable then
+        return _create(_pos, replace' as Expr, _args, _named_args)
+      end
+      if child' is _args then
+        return _create(_pos, _callable, replace' as Args, _named_args)
+      end
+      if child' is _named_args then
+        return _create(_pos, _callable, _args, replace' as NamedArgs)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Call")
@@ -7704,6 +9009,27 @@ class val CallFFI is (AST & Expr)
   fun val with_named_args(named_args': NamedArgs): CallFFI => _create(_pos, _name, _type_args, _args, named_args', _partial)
   fun val with_partial(partial': (Question | None)): CallFFI => _create(_pos, _name, _type_args, _args, _named_args, partial')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as (Id | LitString), _type_args, _args, _named_args, _partial)
+      end
+      if child' is _type_args then
+        return _create(_pos, _name, replace' as (TypeArgs | None), _args, _named_args, _partial)
+      end
+      if child' is _args then
+        return _create(_pos, _name, _type_args, replace' as Args, _named_args, _partial)
+      end
+      if child' is _named_args then
+        return _create(_pos, _name, _type_args, _args, replace' as NamedArgs, _partial)
+      end
+      if child' is _partial then
+        return _create(_pos, _name, _type_args, _args, _named_args, replace' as (Question | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CallFFI")
@@ -7759,6 +9085,16 @@ class val Args is AST
   
   fun val with_list(list': coll.Vec[Sequence]): Args => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Sequence)
+        return _create(_pos, _list.update(i, replace' as Sequence))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Args")
@@ -7815,6 +9151,16 @@ class val NamedArgs is AST
   
   fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as NamedArg)
+        return _create(_pos, _list.update(i, replace' as NamedArg))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArgs")
@@ -7890,6 +9236,18 @@ class val NamedArg is AST
   fun val with_name(name': Id): NamedArg => _create(_pos, name', _value)
   fun val with_value(value': Sequence): NamedArg => _create(_pos, _name, value')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _value)
+      end
+      if child' is _value then
+        return _create(_pos, _name, replace' as Sequence)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NamedArg")
@@ -8039,6 +9397,39 @@ class val Lambda is (AST & Expr)
   fun val with_body(body': Sequence): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
   fun val with_object_cap(object_cap': (Cap | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _method_cap then
+        return _create(_pos, replace' as (Cap | None), _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+      end
+      if child' is _name then
+        return _create(_pos, _method_cap, replace' as (Id | None), _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+      end
+      if child' is _type_params then
+        return _create(_pos, _method_cap, _name, replace' as (TypeParams | None), _params, _captures, _return_type, _partial, _body, _object_cap)
+      end
+      if child' is _params then
+        return _create(_pos, _method_cap, _name, _type_params, replace' as (Params | None), _captures, _return_type, _partial, _body, _object_cap)
+      end
+      if child' is _captures then
+        return _create(_pos, _method_cap, _name, _type_params, _params, replace' as (LambdaCaptures | None), _return_type, _partial, _body, _object_cap)
+      end
+      if child' is _return_type then
+        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, replace' as (Type | None), _partial, _body, _object_cap)
+      end
+      if child' is _partial then
+        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, replace' as (Question | None), _body, _object_cap)
+      end
+      if child' is _body then
+        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, replace' as Sequence, _object_cap)
+      end
+      if child' is _object_cap then
+        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, replace' as (Cap | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Lambda")
@@ -8098,6 +9489,16 @@ class val LambdaCaptures is AST
   
   fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as LambdaCapture)
+        return _create(_pos, _list.update(i, replace' as LambdaCapture))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCaptures")
@@ -8182,6 +9583,21 @@ class val LambdaCapture is AST
   fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_pos, _name, local_type', _expr)
   fun val with_expr(expr': (Expr | None)): LambdaCapture => _create(_pos, _name, _local_type, expr')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _local_type, _expr)
+      end
+      if child' is _local_type then
+        return _create(_pos, _name, replace' as (Type | None), _expr)
+      end
+      if child' is _expr then
+        return _create(_pos, _name, _local_type, replace' as (Expr | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaCapture")
@@ -8260,6 +9676,21 @@ class val Object is (AST & Expr)
   fun val with_provides(provides': (Type | None)): Object => _create(_pos, _cap, provides', _members)
   fun val with_members(members': (Members | None)): Object => _create(_pos, _cap, _provides, members')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _cap then
+        return _create(_pos, replace' as (Cap | None), _provides, _members)
+      end
+      if child' is _provides then
+        return _create(_pos, _cap, replace' as (Type | None), _members)
+      end
+      if child' is _members then
+        return _create(_pos, _cap, _provides, replace' as (Members | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Object")
@@ -8326,6 +9757,18 @@ class val LitArray is (AST & Expr)
   fun val with_elem_type(elem_type': (Type | None)): LitArray => _create(_pos, elem_type', _sequence)
   fun val with_sequence(sequence': Sequence): LitArray => _create(_pos, _elem_type, sequence')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _elem_type then
+        return _create(_pos, replace' as (Type | None), _sequence)
+      end
+      if child' is _sequence then
+        return _create(_pos, _elem_type, replace' as Sequence)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitArray")
@@ -8378,6 +9821,16 @@ class val Tuple is (AST & Expr)
   
   fun val with_elements(elements': coll.Vec[Sequence]): Tuple => _create(_pos, elements')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _elements.find(child' as Sequence)
+        return _create(_pos, _elements.update(i, replace' as Sequence))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tuple")
@@ -8418,6 +9871,12 @@ class val This is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): This => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("This")
@@ -8450,6 +9909,12 @@ class val LitTrue is (AST & LitBool & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitTrue => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitTrue")
@@ -8482,6 +9947,12 @@ class val LitFalse is (AST & LitBool & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitFalse => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitFalse")
@@ -8515,6 +9986,7 @@ class val LitInteger is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitInteger](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitInteger => _create(pos', _value)
   
@@ -8553,6 +10025,7 @@ class val LitFloat is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFloat](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitFloat => _create(pos', _value)
   
@@ -8591,6 +10064,7 @@ class val LitString is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitString](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitString => _create(pos', _value)
   
@@ -8629,6 +10103,7 @@ class val LitCharacter is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitCharacter](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitCharacter => _create(pos', _value)
   
@@ -8666,6 +10141,12 @@ class val LitLocation is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitLocation => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LitLocation")
@@ -8718,6 +10199,15 @@ class val Reference is (AST & Expr)
   
   fun val with_name(name': Id): Reference => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Reference")
@@ -8753,6 +10243,12 @@ class val DontCare is (AST & Expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DontCare => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCare")
@@ -8805,6 +10301,15 @@ class val PackageRef is (AST & Expr)
   
   fun val with_name(name': Id): PackageRef => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("PackageRef")
@@ -8875,6 +10380,18 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr): MethodFunRef => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)): MethodFunRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodFunRef")
@@ -8946,6 +10463,18 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr): MethodNewRef => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)): MethodNewRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodNewRef")
@@ -9017,6 +10546,18 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   fun val with_receiver(receiver': Expr): MethodBeRef => _create(_pos, receiver', _name)
   fun val with_name(name': (Id | TypeArgs)): MethodBeRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("MethodBeRef")
@@ -9088,6 +10629,18 @@ class val TypeRef is (AST & Expr)
   fun val with_package(package': Expr): TypeRef => _create(_pos, package', _name)
   fun val with_name(name': (Id | TypeArgs)): TypeRef => _create(_pos, _package, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _package then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _package, replace' as (Id | TypeArgs))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeRef")
@@ -9159,6 +10712,18 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr): FieldLetRef => _create(_pos, receiver', _name)
   fun val with_name(name': Id): FieldLetRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldLetRef")
@@ -9230,6 +10795,18 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr): FieldVarRef => _create(_pos, receiver', _name)
   fun val with_name(name': Id): FieldVarRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldVarRef")
@@ -9301,6 +10878,18 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   fun val with_receiver(receiver': Expr): FieldEmbedRef => _create(_pos, receiver', _name)
   fun val with_name(name': Id): FieldEmbedRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FieldEmbedRef")
@@ -9372,6 +10961,18 @@ class val TupleElementRef is (AST & Expr)
   fun val with_receiver(receiver': Expr): TupleElementRef => _create(_pos, receiver', _name)
   fun val with_name(name': LitInteger): TupleElementRef => _create(_pos, _receiver, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _receiver then
+        return _create(_pos, replace' as Expr, _name)
+      end
+      if child' is _name then
+        return _create(_pos, _receiver, replace' as LitInteger)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleElementRef")
@@ -9428,6 +11029,15 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id): LocalLetRef => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalLetRef")
@@ -9483,6 +11093,15 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id): LocalVarRef => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LocalVarRef")
@@ -9538,6 +11157,15 @@ class val ParamRef is (AST & LocalRef & Expr)
   
   fun val with_name(name': Id): ParamRef => _create(_pos, name')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ParamRef")
@@ -9608,6 +11236,18 @@ class val ViewpointType is (AST & Type)
   fun val with_left(left': Type): ViewpointType => _create(_pos, left', _right)
   fun val with_right(right': Type): ViewpointType => _create(_pos, _left, right')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _left then
+        return _create(_pos, replace' as Type, _right)
+      end
+      if child' is _right then
+        return _create(_pos, _left, replace' as Type)
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ViewpointType")
@@ -9660,6 +11300,16 @@ class val UnionType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type]): UnionType => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Type)
+        return _create(_pos, _list.update(i, replace' as Type))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("UnionType")
@@ -9716,6 +11366,16 @@ class val IsectType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type]): IsectType => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Type)
+        return _create(_pos, _list.update(i, replace' as Type))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("IsectType")
@@ -9772,6 +11432,16 @@ class val TupleType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type]): TupleType => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Type)
+        return _create(_pos, _list.update(i, replace' as Type))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TupleType")
@@ -9880,6 +11550,27 @@ class val NominalType is (AST & Type)
   fun val with_cap(cap': (Cap | GenCap | None)): NominalType => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None)): NominalType => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _package, _type_args, _cap, _cap_mod)
+      end
+      if child' is _package then
+        return _create(_pos, _name, replace' as (Id | None), _type_args, _cap, _cap_mod)
+      end
+      if child' is _type_args then
+        return _create(_pos, _name, _package, replace' as (TypeArgs | None), _cap, _cap_mod)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, _package, _type_args, replace' as (Cap | GenCap | None), _cap_mod)
+      end
+      if child' is _cap_mod then
+        return _create(_pos, _name, _package, _type_args, _cap, replace' as (CapMod | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("NominalType")
@@ -9975,6 +11666,24 @@ class val FunType is (AST & Type)
   fun val with_params(params': (Params | None)): FunType => _create(_pos, _cap, _type_params, params', _return_type)
   fun val with_return_type(return_type': (Type | None)): FunType => _create(_pos, _cap, _type_params, _params, return_type')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _cap then
+        return _create(_pos, replace' as Cap, _type_params, _params, _return_type)
+      end
+      if child' is _type_params then
+        return _create(_pos, _cap, replace' as (TypeParams | None), _params, _return_type)
+      end
+      if child' is _params then
+        return _create(_pos, _cap, _type_params, replace' as (Params | None), _return_type)
+      end
+      if child' is _return_type then
+        return _create(_pos, _cap, _type_params, _params, replace' as (Type | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("FunType")
@@ -10114,6 +11823,36 @@ class val LambdaType is (AST & Type)
   fun val with_object_cap(object_cap': (Cap | GenCap | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _method_cap then
+        return _create(_pos, replace' as (Cap | None), _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+      end
+      if child' is _name then
+        return _create(_pos, _method_cap, replace' as (Id | None), _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+      end
+      if child' is _type_params then
+        return _create(_pos, _method_cap, _name, replace' as (TypeParams | None), _param_types, _return_type, _partial, _object_cap, _cap_mod)
+      end
+      if child' is _param_types then
+        return _create(_pos, _method_cap, _name, _type_params, replace' as TupleType, _return_type, _partial, _object_cap, _cap_mod)
+      end
+      if child' is _return_type then
+        return _create(_pos, _method_cap, _name, _type_params, _param_types, replace' as (Type | None), _partial, _object_cap, _cap_mod)
+      end
+      if child' is _partial then
+        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, replace' as (Question | None), _object_cap, _cap_mod)
+      end
+      if child' is _object_cap then
+        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, replace' as (Cap | GenCap | None), _cap_mod)
+      end
+      if child' is _cap_mod then
+        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, replace' as (CapMod | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LambdaType")
@@ -10200,6 +11939,21 @@ class val TypeParamRef is (AST & Type)
   fun val with_cap(cap': (Cap | GenCap | None)): TypeParamRef => _create(_pos, _name, cap', _cap_mod)
   fun val with_cap_mod(cap_mod': (CapMod | None)): TypeParamRef => _create(_pos, _name, _cap, cap_mod')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _name then
+        return _create(_pos, replace' as Id, _cap, _cap_mod)
+      end
+      if child' is _cap then
+        return _create(_pos, _name, replace' as (Cap | GenCap | None), _cap_mod)
+      end
+      if child' is _cap_mod then
+        return _create(_pos, _name, _cap, replace' as (CapMod | None))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("TypeParamRef")
@@ -10237,6 +11991,12 @@ class val ThisType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ThisType => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ThisType")
@@ -10269,6 +12029,12 @@ class val DontCareType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DontCareType => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("DontCareType")
@@ -10301,6 +12067,12 @@ class val ErrorType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ErrorType => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("ErrorType")
@@ -10333,6 +12105,12 @@ class val LiteralType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LiteralType => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralType")
@@ -10365,6 +12143,12 @@ class val LiteralTypeBranch is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("LiteralTypeBranch")
@@ -10397,6 +12181,12 @@ class val OpLiteralType is (AST & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): OpLiteralType => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("OpLiteralType")
@@ -10429,6 +12219,12 @@ class val Iso is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Iso => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Iso")
@@ -10461,6 +12257,12 @@ class val Trn is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Trn => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Trn")
@@ -10493,6 +12295,12 @@ class val Ref is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ref => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ref")
@@ -10525,6 +12333,12 @@ class val Val is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Val => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Val")
@@ -10557,6 +12371,12 @@ class val Box is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Box => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Box")
@@ -10589,6 +12409,12 @@ class val Tag is (AST & Cap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Tag => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Tag")
@@ -10621,6 +12447,12 @@ class val CapRead is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapRead => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapRead")
@@ -10653,6 +12485,12 @@ class val CapSend is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapSend => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapSend")
@@ -10685,6 +12523,12 @@ class val CapShare is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapShare => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapShare")
@@ -10717,6 +12561,12 @@ class val CapAlias is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapAlias => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAlias")
@@ -10749,6 +12599,12 @@ class val CapAny is (AST & GenCap & Type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapAny => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("CapAny")
@@ -10781,6 +12637,12 @@ class val Aliased is (AST & CapMod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Aliased => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Aliased")
@@ -10813,6 +12675,12 @@ class val Ephemeral is (AST & CapMod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ephemeral => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ephemeral")
@@ -10845,6 +12713,12 @@ class val At is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): At => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("At")
@@ -10877,6 +12751,12 @@ class val Question is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Question => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Question")
@@ -10909,6 +12789,12 @@ class val Ellipsis is AST
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ellipsis => _create(pos')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Ellipsis")
@@ -10957,6 +12843,16 @@ class val Semicolon is (AST & Expr)
   
   fun val with_list(list': coll.Vec[Expr]): Semicolon => _create(_pos, list')
   
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _list.find(child' as Expr)
+        return _create(_pos, _list.update(i, replace' as Expr))
+      end
+      error
+    else this
+    end
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Semicolon")
@@ -10998,6 +12894,7 @@ class val Id is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Id](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Id => _create(pos', _value)
   
@@ -11018,6 +12915,7 @@ class val EOF is (AST & Lexeme)
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EOF](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): EOF => create()
   
@@ -11034,6 +12932,7 @@ class val NewLine is (AST & Lexeme)
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NewLine](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): NewLine => create()
   
@@ -11050,6 +12949,7 @@ class val Use is (AST & Lexeme)
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Use](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Use => create()
   
@@ -11066,6 +12966,7 @@ class val Colon is (AST & Lexeme)
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Colon](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Colon => create()
   
@@ -11082,6 +12983,7 @@ class val Comma is (AST & Lexeme)
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Comma](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Comma => create()
   
@@ -11098,6 +13000,7 @@ class val Constant is (AST & Lexeme)
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Constant](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Constant => create()
   
@@ -11114,6 +13017,7 @@ class val Pipe is (AST & Lexeme)
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Pipe](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Pipe => create()
   
@@ -11130,6 +13034,7 @@ class val Ampersand is (AST & Lexeme)
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ampersand](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Ampersand => create()
   
@@ -11146,6 +13051,7 @@ class val SubType is (AST & Lexeme)
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubType](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubType => create()
   
@@ -11162,6 +13068,7 @@ class val Arrow is (AST & Lexeme)
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Arrow](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Arrow => create()
   
@@ -11178,6 +13085,7 @@ class val DoubleArrow is (AST & Lexeme)
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DoubleArrow](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
   
@@ -11194,6 +13102,7 @@ class val Backslash is (AST & Lexeme)
     errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Backslash](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Backslash => create()
   
@@ -11210,6 +13119,7 @@ class val LParen is (AST & Lexeme)
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParen => create()
   
@@ -11226,6 +13136,7 @@ class val RParen is (AST & Lexeme)
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RParen => create()
   
@@ -11242,6 +13153,7 @@ class val LBrace is (AST & Lexeme)
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBrace](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBrace => create()
   
@@ -11258,6 +13170,7 @@ class val RBrace is (AST & Lexeme)
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RBrace](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RBrace => create()
   
@@ -11274,6 +13187,7 @@ class val LSquare is (AST & Lexeme)
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquare](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquare => create()
   
@@ -11290,6 +13204,7 @@ class val RSquare is (AST & Lexeme)
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RSquare](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RSquare => create()
   
@@ -11306,6 +13221,7 @@ class val LParenNew is (AST & Lexeme)
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParenNew](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParenNew => create()
   
@@ -11322,6 +13238,7 @@ class val LBraceNew is (AST & Lexeme)
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBraceNew](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBraceNew => create()
   
@@ -11338,6 +13255,7 @@ class val LSquareNew is (AST & Lexeme)
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquareNew](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquareNew => create()
   
@@ -11354,6 +13272,7 @@ class val SubNew is (AST & Lexeme)
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubNew](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubNew => create()
   
@@ -11370,6 +13289,7 @@ class val SubUnsafeNew is (AST & Lexeme)
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafeNew](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
   
@@ -11386,6 +13306,7 @@ class val In is (AST & Lexeme)
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[In](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): In => create()
   
@@ -11402,6 +13323,7 @@ class val Until is (AST & Lexeme)
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Until](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Until => create()
   
@@ -11418,6 +13340,7 @@ class val Do is (AST & Lexeme)
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Do](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Do => create()
   
@@ -11434,6 +13357,7 @@ class val Else is (AST & Lexeme)
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Else](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Else => create()
   
@@ -11450,6 +13374,7 @@ class val ElseIf is (AST & Lexeme)
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ElseIf](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): ElseIf => create()
   
@@ -11466,6 +13391,7 @@ class val Then is (AST & Lexeme)
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Then](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Then => create()
   
@@ -11482,6 +13408,7 @@ class val End is (AST & Lexeme)
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[End](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): End => create()
   
@@ -11498,6 +13425,7 @@ class val Var is (AST & Lexeme)
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Var](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Var => create()
   
@@ -11514,6 +13442,7 @@ class val Let is (AST & Lexeme)
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Let](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Let => create()
   
@@ -11530,6 +13459,7 @@ class val Embed is (AST & Lexeme)
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Embed](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Embed => create()
   
@@ -11546,6 +13476,7 @@ class val Where is (AST & Lexeme)
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Where](consume c, this)
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Where => create()
   
