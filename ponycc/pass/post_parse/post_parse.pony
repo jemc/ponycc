@@ -4,6 +4,17 @@ use "../../frame"
 use "../../unreachable"
 
 primitive PostParse is FrameVisitor[PostParse]
+  """
+  The purpose of the PostParse pass is to check and/or clean up any oddities
+  in the AST related to the specific implementation of the parser or grammar.
+  
+  Checks or cleanup operations that would also need to also be done for AST
+  nodes that had been created directly in Pony code do not belong here
+  (they probably belong in the Sugar pass, or later).
+  
+  This pass changes the AST, and is not idempotent.
+  """
+  
   fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
     let frame = Frame[PostParse](ast, errors)
     apply[Module](frame, ast)

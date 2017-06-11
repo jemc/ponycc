@@ -4,10 +4,20 @@ use "../../frame"
 use "../../unreachable"
 
 primitive Syntax is FrameVisitor[Syntax]
+  """
+  The purpose of the Syntax pass is to impose some extra limitation on the
+  forms that are allowed in the Pony compiler, even when they are allowed
+  by the parser, or by the AST data structure types.
+  
+  Checks that require any kind of larger context (such as other packages,
+  scoping, name resolution, type information) do not belong here.
+  
+  This pass only reads the AST.
+  """
+  
   fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
-    let frame = Frame[Syntax](ast, errors)
-    apply[Module](frame, ast)
-    frame.module()
+    apply[Module](Frame[Syntax](ast, errors), ast)
+    ast // return the original module - this pass can't change the AST.
   
   fun apply[A: AST val](frame: Frame[Syntax], ast: A) =>
     iftype A <: Module then
