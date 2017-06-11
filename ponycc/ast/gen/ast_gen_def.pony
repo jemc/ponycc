@@ -223,6 +223,27 @@ class ASTGenDefFixed is ASTGenDef
     end
     if fields.size() > 0 then g.line() end
     
+    // Declare a method that supports lookup of children by String name and
+    // optional USize index number (only supported by coll.Vec fields).
+    // Any invalid lookup is an error.
+    g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>")
+    if fields.size() == 0 then
+      g.add(" error")
+    else
+      g.push_indent()
+      g.line("match child'")
+      for (field_name, field_type, _) in fields.values() do
+        g.line("| \"" + field_name + "\" => _" + field_name)
+        if field_type.at("coll.Vec[", 0) then
+          g.add("(index')")
+        end
+      end
+      g.line("else error")
+      g.line("end")
+      g.pop_indent()
+    end
+    g.line()
+    
     // Declare a method that finds (first occurrence of) the given child and
     // replaces it with the given new child, returning the resulting AST.
     // If the given child was not found, the original AST is returned.
@@ -271,6 +292,7 @@ class ASTGenDefFixed is ASTGenDef
     g.line("else this")
     g.line("end")
     g.pop_indent()
+    g.line()
     
     // Declare a string method to print itself.
     g.line("fun string(): String iso^ =>")
@@ -391,6 +413,7 @@ class ASTGenDefWrap is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
     // Declare common getters and setters.
@@ -464,6 +487,7 @@ class ASTGenDefLexeme is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
     // Declare common getters and setters.
