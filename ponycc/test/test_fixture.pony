@@ -26,8 +26,8 @@ class TestFixture is UnitTest
       return h.fail("Expected the start of the source file to be a docstring.")
     end
     
-    let commands = List[TestCommand]
-    var last_command: TestCommand = TestCommandNone
+    let commands = List[TestCommandAny]
+    var last_command: (TestCommandAny | None) = None
     var commands_parsed = false
     try
       while true do
@@ -37,13 +37,13 @@ class TestFixture is UnitTest
         i = j
         
         if line.at(triple)            then commands_parsed = true; break
-        elseif line.at("$PRINT")      then last_command = TestCommandPrint;     commands.unshift(last_command)
-        elseif line.at("$PARSE")      then last_command = TestCommandParse;     commands.unshift(last_command)
-        elseif line.at("$POST_PARSE") then last_command = TestCommandPostParse; commands.unshift(last_command)
-        elseif line.at("$SYNTAX")     then last_command = TestCommandSyntax;    commands.unshift(last_command)
-        elseif line.at("$ERROR")      then last_command = commands(0).add_error(TestCommandError(line.substring(7)))
-        elseif line.at("$CHECK")      then last_command = commands(0).add_check(TestCommandCheck(line.substring(7)))
-        else last_command.add_line(line)
+        elseif line.at("$PRINT")      then last_command = TestCommand[_Print](h, line.substring(7));      commands.unshift(last_command as TestCommandAny)
+        elseif line.at("$PARSE")      then last_command = TestCommand[_Parse](h, line.substring(7));      commands.unshift(last_command as TestCommandAny)
+        elseif line.at("$POST_PARSE") then last_command = TestCommand[_PostParse](h, line.substring(11)); commands.unshift(last_command as TestCommandAny)
+        elseif line.at("$SYNTAX")     then last_command = TestCommand[_Syntax](h, line.substring(8));     commands.unshift(last_command as TestCommandAny)
+        elseif line.at("$ERROR")      then last_command = commands(0).add_error(TestCommand[_Error](h, line.substring(7)))
+        elseif line.at("$CHECK")      then last_command = commands(0).add_check(TestCommand[_Check](h, line.substring(7)))
+        else (last_command as TestCommandAny).add_line(line)
         end
       end
     else
@@ -51,5 +51,5 @@ class TestFixture is UnitTest
     end
     
     for command in commands.values() do
-      command(h, source)
+      command(source)
     end

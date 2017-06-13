@@ -7,69 +7,106 @@ use "../ast/print"
 use "../pass/post_parse"
 use "../pass/syntax"
 
-trait TestCommand
-  fun ref add_line(line: String) => None
-  fun ref add_error(err: TestCommandError): TestCommandError => err
-  fun ref add_check(err: TestCommandCheck): TestCommandCheck => err
+interface TestCommandAny
+  fun h(): TestHelper
   
-  fun apply(h: TestHelper, source: Source) => None
+  fun ref add_line(l: String)
+  fun ref add_error(e: TestCommand[_Error]): TestCommand[_Error]
+  fun ref add_check(c: TestCommand[_Check]): TestCommand[_Check]
   
-  fun _print_errors(h: TestHelper, errs: Array[(String, SourcePosAny)] box) =>
-    for (err, pos) in errs.values() do
-      h.log(err)
+  fun ref apply(source: Source)
+  
+  fun print_errors(actual_errors: Array[(String, SourcePosAny)] box)
+  
+  fun check_errors(
+    actual_errors: Array[(String, SourcePosAny)] box,
+    success: Bool = true)
+  
+  fun check_checks(module: Module)
+
+trait val TestCommandType
+  new val create()
+  fun apply(command: TestCommandAny, source: Source) => None
+
+class TestCommand[T: TestCommandType val]
+  let _h: TestHelper
+  
+  let message:  String
+  embed lines:  Array[String]              = Array[String]
+  embed errors: Array[TestCommand[_Error]] = Array[TestCommand[_Error]]
+  embed checks: Array[TestCommand[_Check]] = Array[TestCommand[_Check]]
+  
+  new create(h': TestHelper, m': String) =>
+    (_h, message) = (h', m')
+  
+  fun h(): TestHelper => _h
+  
+  fun ref add_line(l: String) => lines.push(l)
+  fun ref add_error(e: TestCommand[_Error]): TestCommand[_Error] => errors.push(e); e
+  fun ref add_check(c: TestCommand[_Check]): TestCommand[_Check] => checks.push(c); c
+  
+  fun ref apply(source: Source) => T(this, source)
+  
+  fun print_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
+    for (err, pos) in actual_errors.values() do
+      _h.log(err)
       (let pos1, let pos2) = pos.show_in_line()
-      h.log(pos1)
-      h.log(pos2)
+      _h.log(pos1)
+      _h.log(pos2)
     end
   
-  fun _check_errors(h: TestHelper, expected: Array[TestCommandError] box,
-    success: Bool, errs: Array[(String, SourcePosAny)] box)
+  fun check_errors(
+    actual_errors: Array[(String, SourcePosAny)] box,
+    success: Bool = true)
   =>
-    h.assert_eq[Bool](success, expected.size() == 0, "Success")
+    _h.assert_eq[Bool](
+      success and (actual_errors.size() == 0),
+      errors.size() == 0,
+      "Success")
     
-    for (i, expect) in expected.pairs() do
+    for (i, expect) in errors.pairs() do
       try
-        let actual = errs(i)
+        let actual = actual_errors(i)
         try
           actual._1.find(expect.message)
         else
-          h.fail("error did not match expected message")
-          h.fail("expected: " + expect.message)
-          h.fail("actual:   " + actual._1)
+          _h.fail("error did not match expected message")
+          _h.fail("expected: " + expect.message)
+          _h.fail("actual:   " + actual._1)
         end
         (let line_1, let line_2) = actual._2.show_in_line()
-        try h.assert_eq[String](expect.lines(0), line_1) end
-        try h.assert_eq[String](expect.lines(1), line_2) end
+        try _h.assert_eq[String](expect.lines(0), line_1) end
+        try _h.assert_eq[String](expect.lines(1), line_2) end
       else
-        h.fail("expected error at index " + i.string() + " is missing")
+        _h.fail("expected error at index " + i.string() + " is missing")
       end
     end
     
     if not
-      h.assert_eq[USize](expected.size(), errs.size(), "Number of Errors")
-    then _print_errors(h, errs) end
+      _h.assert_eq[USize](
+        errors.size(), actual_errors.size(), "Number of Errors")
+    then
+      print_errors(actual_errors)
+    end
+  
+  fun check_checks(module: Module) =>
+    for check in checks.values() do _Check.check(check, module) end
 
-class TestCommandNone is TestCommand
-
-class TestCommandPrint is TestCommand
-  fun apply(h: TestHelper, source: Source) =>
+primitive _Print is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
     let module =
       try
         Parse(source, errs)
       else
-        _print_errors(h, errs)
-        return h.fail("Unexpected parser error(s) occurred.")
+        command.print_errors(errs)
+        return command.h().fail("Unexpected parser error(s) occurred.")
       end
     
-    h.assert_eq[String](source.content(), Print(module))
+    command.h().assert_eq[String](source.content(), Print(module))
 
-class TestCommandParse is TestCommand
-  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
-  
-  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
-  
-  fun apply(h: TestHelper, source: Source) =>
+primitive _Parse is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
     let success =
       try
@@ -79,76 +116,53 @@ class TestCommandParse is TestCommand
         false
       end
     
-    _check_errors(h, _errs, success, errs)
+    command.check_errors(errs, success)
 
-class TestCommandPostParse is TestCommand
-  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
-  embed _checks: Array[TestCommandCheck] = Array[TestCommandCheck]
-  
-  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
-  fun ref add_check(c: TestCommandCheck): TestCommandCheck => _checks.push(c); c
-  
-  fun apply(h: TestHelper, source: Source) =>
+primitive _PostParse is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
     var module =
       try
         Parse(source, errs)
       else
-        _print_errors(h, errs)
-        return h.fail("Unexpected parser error(s) occurred.")
+        command.print_errors(errs)
+        return command.h().fail("Unexpected parser error(s) occurred.")
       end
     
     module = PostParse.start(module, errs)
     
-    _check_errors(h, _errs, errs.size() == 0, errs)
-    for check in _checks.values() do check.check(h, module) end
+    command.check_errors(errs)
+    command.check_checks(module)
 
-class TestCommandSyntax is TestCommand
-  embed _errs:   Array[TestCommandError] = Array[TestCommandError]
-  embed _checks: Array[TestCommandCheck] = Array[TestCommandCheck]
-  
-  fun ref add_error(e: TestCommandError): TestCommandError => _errs.push(e); e
-  fun ref add_check(c: TestCommandCheck): TestCommandCheck => _checks.push(c); c
-  
-  fun apply(h: TestHelper, source: Source) =>
+primitive _Syntax is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
     let errs = Array[(String, SourcePosAny)]
     var module =
       try
         Parse(source, errs)
       else
-        _print_errors(h, errs)
-        return h.fail("Unexpected parser error(s) occurred.")
+        command.print_errors(errs)
+        return command.h().fail("Unexpected parser error(s) occurred.")
       end
     
     module = PostParse.start(module, errs)
     if errs.size() > 0 then
-      _print_errors(h, errs)
-      return h.fail("Unexpected syntax error(s) occurred.")
+      command.print_errors(errs)
+      return command.h().fail("Unexpected syntax error(s) occurred.")
     end
     
     module = Syntax.start(module, errs)
-    _check_errors(h, _errs, errs.size() == 0, errs)
-    for check in _checks.values() do check.check(h, module) end
+    command.check_errors(errs)
+    command.check_checks(module)
 
-class TestCommandError is TestCommand
-  let message: String
-  embed lines: Array[String] = Array[String]
-  
-  new create(m: String) => message = m
-  fun ref add_line(line: String) => lines.push(line)
+primitive _Error is TestCommandType
 
-class TestCommandCheck is TestCommand
-  let path: String
-  embed lines: Array[String] = Array[String]
-  
-  new create(p: String) => path = p
-  fun ref add_line(line: String) => lines.push(line)
-  
-  fun check(h: TestHelper, module: Module) =>
+primitive _Check is TestCommandType
+  fun check(command: TestCommand[_Check] box, module: Module) =>
     var ast: (AST | None) = module
     var last_crumb: String = ""
     try
-      for crumb in path.clone().>strip().split_by(".").values() do
+      for crumb in command.message.clone().>strip().split_by(".").values() do
         last_crumb = crumb
         let pieces = crumb.split_by("-", 2)
         
@@ -158,9 +172,9 @@ class TestCommandCheck is TestCommand
             try pieces(1).usize() else 0 end)
       end
       
-      h.assert_eq[String](String.join(lines), ast.string())
+      command.h().assert_eq[String](String.join(command.lines), ast.string())
     else
-      h.fail("Check failed to walk path: " + path)
-      h.log("The crumb that failed parse and/or lookup was: " + last_crumb)
-      h.log("The (AST | None) it couldn't be looked up on was: " + ast.string())
+      command.h().fail("Check failed to walk path: " + command.message)
+      command.h().log("The crumb that failed parse and/or lookup was: " + last_crumb)
+      command.h().log("The (AST | None) it couldn't be looked up on was: " + ast.string())
     end
