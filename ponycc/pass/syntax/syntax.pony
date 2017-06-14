@@ -15,10 +15,6 @@ primitive Syntax is FrameVisitor[Syntax]
   This pass only reads the AST.
   """
   
-  fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
-    apply[Module](Frame[Syntax](ast, errors), ast)
-    ast // return the original module - this pass can't change the AST.
-  
   fun apply[A: AST val](frame: Frame[Syntax], ast: A) =>
     iftype A <: Module then
       for t in ast.use_decls().values() do frame.visit(t) end

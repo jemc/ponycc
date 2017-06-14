@@ -15,11 +15,6 @@ primitive PostParse is FrameVisitor[PostParse]
   This pass changes the AST, and is not idempotent.
   """
   
-  fun start(ast: Module, errors: Array[(String, SourcePosAny)]): Module =>
-    let frame = Frame[PostParse](ast, errors)
-    apply[Module](frame, ast)
-    frame.module()
-  
   fun apply[A: AST val](frame: Frame[PostParse], ast: A) =>
     iftype A <: Module then
       for t in ast.type_decls().values() do frame.visit(t) end

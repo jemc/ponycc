@@ -5,6 +5,20 @@ interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
   fun apply[A: AST val](frame: Frame[V], a: A)
 
+actor FrameRunner[V: FrameVisitor[V]]
+  new create(ast: Module, fn: {(Module, Array[(String, SourcePosAny)] val)} val)
+  =>
+    var module = ast
+    let errors =
+      recover val
+        let errors = Array[(String, SourcePosAny)]
+        let frame  = Frame[V](ast, errors)
+        V.apply[Module](frame, ast)
+        module = frame.module()
+        errors
+      end
+    fn(module, errors)
+
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: Array[(String, SourcePosAny)]
   var _module: Module

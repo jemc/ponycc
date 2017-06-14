@@ -2,6 +2,7 @@
 use "../ast"
 use "../ast/parse"
 use "../ast/print"
+use "../frame"
 use "../pass/post_parse"
 use "../pass/syntax"
 
@@ -50,10 +51,14 @@ primitive _PostParse is TestCommandType
         return command.h().fail("Unexpected parser error(s) occurred.")
       end
     
-    module = PostParse.start(module, errs)
+    command.h().long_test(2_000_000_000) // 2 second timeout
     
-    command.check_errors(errs)
-    command.check_checks(module)
+    FrameRunner[PostParse](module,
+      {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
+        command.check_errors(errs)
+        command.check_checks(module)
+        command.h().complete(true)
+      } val)
 
 primitive _Syntax is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
@@ -66,12 +71,19 @@ primitive _Syntax is TestCommandType
         return command.h().fail("Unexpected parser error(s) occurred.")
       end
     
-    module = PostParse.start(module, errs)
-    if errs.size() > 0 then
-      command.print_errors(errs)
-      return command.h().fail("Unexpected syntax error(s) occurred.")
-    end
+    command.h().long_test(2_000_000_000) // 2 second timeout
     
-    module = Syntax.start(module, errs)
-    command.check_errors(errs)
-    command.check_checks(module)
+    FrameRunner[PostParse](module,
+      {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
+        if errs.size() > 0 then
+          command.print_errors(errs)
+          return command.h().fail("Unexpected syntax error(s) occurred.")
+        end
+        
+        FrameRunner[Syntax](module,
+          {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
+            command.check_errors(errs)
+            command.check_checks(module)
+            command.h().complete(true)
+          } val)
+      } val)
