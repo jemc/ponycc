@@ -5,28 +5,34 @@ interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
   fun apply[A: AST val](frame: Frame[V], a: A)
 
+actor _FrameErrors
+  embed _errs: Array[(String, SourcePosAny)] = _errs.create()
+  be err(a: AST, s: String) => _errs.push((s, a.pos()))
+  be complete(fn: {(Array[(String, SourcePosAny)] val)} val) =>
+    let copy = recover Array[(String, SourcePosAny)] end
+    for e in _errs.values() do copy.push(e) end
+    fn(consume copy)
+
 actor FrameRunner[V: FrameVisitor[V]]
   new create(ast: Module, fn: {(Module, Array[(String, SourcePosAny)] val)} val)
   =>
-    var module = ast
-    let errors =
-      recover val
-        let errors = Array[(String, SourcePosAny)]
-        let frame  = Frame[V](ast, errors)
-        V.apply[Module](frame, ast)
-        module = frame.module()
-        errors
-      end
-    fn(module, errors)
+    let errors = _FrameErrors
+    let frame  = Frame[V](ast, errors)
+    V.apply[Module](frame, ast)
+    let module = frame.module()
+    
+    errors.complete({(errs: Array[(String, SourcePosAny)] val) =>
+      fn(module, errs)
+    } val)
 
 class _FrameTop[V: FrameVisitor[V]]
-  let _errors: Array[(String, SourcePosAny)]
+  let _errors: _FrameErrors
   var _module: Module
   
-  new create(module': Module, errors': Array[(String, SourcePosAny)]) =>
+  new create(module': Module, errors': _FrameErrors) =>
     (_module, _errors) = (module', errors')
   
-  fun ref err(a: AST, s: String) => _errors.push((s, a.pos()))
+  fun err(a: AST, s: String) => _errors.err(a, s)
   
   fun parent(n: USize): AST => _module // ignore n - we can't go any higher
   fun ref replace(a: AST) => try _module = a as Module end
@@ -38,7 +44,7 @@ class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
   var _ast: AST
   
-  new create(module': Module, errors': Array[(String, SourcePosAny)]) =>
+  new create(module': Module, errors': _FrameErrors) =>
     _upper = _FrameTop[V](module', errors')
     _ast   = module'
   
@@ -52,7 +58,7 @@ class Frame[V: FrameVisitor[V]]
         V.apply[A](Frame[V]._create_under(frame, a), a)
       })
   
-  fun ref err(a: AST, s: String) =>
+  fun err(a: AST, s: String) =>
     """
     Emit an error, indicating a problem with the given AST node, including the
     given message as a human-friendly explanation of the problem.
