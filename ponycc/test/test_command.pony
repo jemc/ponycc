@@ -2,10 +2,6 @@
 use "ponytest"
 
 use "../ast"
-use "../ast/parse"
-use "../ast/print"
-use "../pass/post_parse"
-use "../pass/syntax"
 
 interface val TestCommandAny
   fun h(): TestHelper
@@ -23,10 +19,6 @@ interface val TestCommandAny
     success: Bool = true)
   
   fun check_checks(module: Module)
-
-trait val TestCommandType
-  new val create()
-  fun apply(command: TestCommandAny, source: Source) => None
 
 class val TestCommand[T: TestCommandType val]
   let _h: TestHelper
@@ -90,91 +82,24 @@ class val TestCommand[T: TestCommandType val]
     end
   
   fun check_checks(module: Module) =>
-    for check in checks.values() do _Check.check(check, module) end
-
-primitive _Print is TestCommandType
-  fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let module =
+    for check in checks.values() do
+      var ast: (AST | None) = module
+      var last_crumb: String = ""
       try
-        Parse(source, errs)
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    command.h().assert_eq[String](source.content(), Print(module))
-
-primitive _Parse is TestCommandType
-  fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let success =
-      try
-        Parse(source, errs)
-        true
-      else
-        false
-      end
-    
-    command.check_errors(errs, success)
-
-primitive _PostParse is TestCommandType
-  fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    var module =
-      try
-        Parse(source, errs)
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    module = PostParse.start(module, errs)
-    
-    command.check_errors(errs)
-    command.check_checks(module)
-
-primitive _Syntax is TestCommandType
-  fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    var module =
-      try
-        Parse(source, errs)
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    module = PostParse.start(module, errs)
-    if errs.size() > 0 then
-      command.print_errors(errs)
-      return command.h().fail("Unexpected syntax error(s) occurred.")
-    end
-    
-    module = Syntax.start(module, errs)
-    command.check_errors(errs)
-    command.check_checks(module)
-
-primitive _Error is TestCommandType
-
-primitive _Check is TestCommandType
-  fun check(command: TestCommand[_Check] box, module: Module) =>
-    var ast: (AST | None) = module
-    var last_crumb: String = ""
-    try
-      for crumb in command.message.clone().>strip().split_by(".").values() do
-        last_crumb = crumb
-        let pieces = crumb.split_by("-", 2)
+        for crumb in check.message.clone().>strip().split_by(".").values() do
+          last_crumb = crumb
+          let pieces = crumb.split_by("-", 2)
+          
+          ast =
+            (ast as AST).get_child_dynamic(
+              pieces(0),
+              try pieces(1).usize() else 0 end)
+        end
         
-        ast =
-          (ast as AST).get_child_dynamic(
-            pieces(0),
-            try pieces(1).usize() else 0 end)
+        _h.assert_eq[String](String.join(check.lines), ast.string())
+      else
+        _h.fail("Check failed to walk path: " + check.message)
+        _h.log("The crumb that failed parse and/or lookup was: " + last_crumb)
+        _h.log("The (AST | None) couldn't be looked up on was: " + ast.string())
       end
-      
-      command.h().assert_eq[String](String.join(command.lines), ast.string())
-    else
-      command.h().fail("Check failed to walk path: " + command.message)
-      command.h().log("The crumb that failed parse and/or lookup was: " + last_crumb)
-      command.h().log("The (AST | None) it couldn't be looked up on was: " + ast.string())
     end
