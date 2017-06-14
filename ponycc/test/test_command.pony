@@ -7,14 +7,14 @@ use "../ast/print"
 use "../pass/post_parse"
 use "../pass/syntax"
 
-interface TestCommandAny
+interface val TestCommandAny
   fun h(): TestHelper
   
   fun ref add_line(l: String)
-  fun ref add_error(e: TestCommand[_Error]): TestCommand[_Error]
-  fun ref add_check(c: TestCommand[_Check]): TestCommand[_Check]
+  fun ref add_error(e: TestCommand[_Error])
+  fun ref add_check(c: TestCommand[_Check])
   
-  fun ref apply(source: Source)
+  fun val apply(source: Source)
   
   fun print_errors(actual_errors: Array[(String, SourcePosAny)] box)
   
@@ -28,7 +28,7 @@ trait val TestCommandType
   new val create()
   fun apply(command: TestCommandAny, source: Source) => None
 
-class TestCommand[T: TestCommandType val]
+class val TestCommand[T: TestCommandType val]
   let _h: TestHelper
   
   let message:  String
@@ -36,16 +36,16 @@ class TestCommand[T: TestCommandType val]
   embed errors: Array[TestCommand[_Error]] = Array[TestCommand[_Error]]
   embed checks: Array[TestCommand[_Check]] = Array[TestCommand[_Check]]
   
-  new create(h': TestHelper, m': String) =>
+  new iso create(h': TestHelper, m': String) =>
     (_h, message) = (h', m')
   
   fun h(): TestHelper => _h
   
   fun ref add_line(l: String) => lines.push(l)
-  fun ref add_error(e: TestCommand[_Error]): TestCommand[_Error] => errors.push(e); e
-  fun ref add_check(c: TestCommand[_Check]): TestCommand[_Check] => checks.push(c); c
+  fun ref add_error(e: TestCommand[_Error]) => errors.push(e); e
+  fun ref add_check(c: TestCommand[_Check]) => checks.push(c); c
   
-  fun ref apply(source: Source) => T(this, source)
+  fun val apply(source: Source) => T(this, source)
   
   fun print_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
     for (err, pos) in actual_errors.values() do
