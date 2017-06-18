@@ -189,6 +189,18 @@ class ASTGenDefFixed is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val each(fn: {ref ((AST | None))} ref) =>")
+    g.push_indent()
+    for (field_name, field_type, _) in fields.values() do
+      if field_type.at("coll.Vec[") then
+        g.line("for x in _" + field_name + ".values() do fn(x) end")
+      else
+        g.line("fn(_" + field_name + ")")
+      end
+    else
+      g.add(" None")
+    end
+    g.pop_indent()
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => _pos")
@@ -413,6 +425,7 @@ class ASTGenDefWrap is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val each(fn: {ref ((AST | None))} ref) => None")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
@@ -487,6 +500,7 @@ class ASTGenDefLexeme is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
+    g.line("fun val each(fn: {ref ((AST | None))} ref) => None")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     

@@ -18,7 +18,7 @@ actor FrameRunner[V: FrameVisitor[V]]
   =>
     let errors = _FrameErrors
     let frame  = Frame[V](ast, errors)
-    V.apply[Module](frame, ast)
+    frame._visit(ast)
     let module = frame.module()
     
     errors.complete({(errs: Array[(String, SourcePosAny)] val) =>
@@ -52,11 +52,16 @@ class Frame[V: FrameVisitor[V]]
     _upper = upper'
     _ast   = a
   
-  fun ref visit(ast: AST) =>
+  fun ref _visit(ast: AST) =>
     ast.apply_specialised[Frame[V]](this,
       {[A: AST val](frame: Frame[V], a: A) =>
-        V.apply[A](Frame[V]._create_under(frame, a), a)
+        V.apply[A](Frame[V]._create_under(frame, a) .> _visit_each(a), a)
       })
+  
+  fun ref _visit_each(ast: AST) =>
+    ast.each({ref (child: (AST | None))(frame = this) =>
+      try frame._visit(child as AST) end
+    })
   
   fun err(a: AST, s: String) =>
     """

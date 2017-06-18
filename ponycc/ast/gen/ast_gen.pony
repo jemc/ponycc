@@ -27,6 +27,7 @@ class ASTGen
     g.line("trait val AST")
     g.push_indent()
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)")
+    g.line("fun val each(fn: {ref ((AST | None))} ref)")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST")
     g.line("fun val pos(): SourcePosAny")

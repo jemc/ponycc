@@ -16,16 +16,7 @@ primitive PostParse is FrameVisitor[PostParse]
   """
   
   fun apply[A: AST val](frame: Frame[PostParse], ast: A) =>
-    iftype A <: Module then
-      for t in ast.type_decls().values() do frame.visit(t) end
-    
-    elseif A <: TypeDecl then
-      frame.visit(ast.members())
-    
-    elseif A <: Members then
-      for m in ast.methods().values() do frame.visit(m) end
-    
-    elseif A <: Method then
+    iftype A <: Method then
       match ast.body() | let body: Sequence =>
         try
           frame.err(ast.docs() as LitString,
@@ -44,6 +35,4 @@ primitive PostParse is FrameVisitor[PostParse]
           end
         end
       end
-    
-    else Unreachable(ast)
     end

@@ -2,6 +2,7 @@ use coll = "collections/persistent"
 
 trait val AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
+  fun val each(fn: {ref ((AST | None))} ref)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST
   fun val pos(): SourcePosAny
@@ -374,6 +375,10 @@ class val Module is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Module](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _use_decls.values() do fn(x) end
+    for x in _type_decls.values() do fn(x) end
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Module => _create(pos', _use_decls, _type_decls, _docs)
   
@@ -483,6 +488,9 @@ class val UsePackage is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UsePackage](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_prefix)
+    fn(_package)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): UsePackage => _create(pos', _prefix, _package)
   
@@ -610,6 +618,12 @@ class val UseFFIDecl is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UseFFIDecl](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_return_type)
+    fn(_params)
+    fn(_partial)
+    fn(_guard)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): UseFFIDecl => _create(pos', _name, _return_type, _params, _partial, _guard)
   
@@ -769,6 +783,14 @@ class val TypeAlias is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeAlias](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeAlias => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -942,6 +964,14 @@ class val Interface is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Interface](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Interface => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1115,6 +1145,14 @@ class val Trait is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trait](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Trait => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1288,6 +1326,14 @@ class val Primitive is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Primitive](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Primitive => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1461,6 +1507,14 @@ class val Struct is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Struct](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Struct => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1634,6 +1688,14 @@ class val Class is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Class](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Class => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1807,6 +1869,14 @@ class val Actor is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Actor](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_provides)
+    fn(_members)
+    fn(_at)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Actor => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
   
@@ -1928,6 +1998,9 @@ class val Members is AST
     _methods = methods'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Members](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _fields.values() do fn(x) end
+    for x in _methods.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Members => _create(pos', _fields, _methods)
   
@@ -2042,6 +2115,10 @@ class val FieldLet is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLet](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_field_type)
+    fn(_default)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldLet => _create(pos', _name, _field_type, _default)
   
@@ -2150,6 +2227,10 @@ class val FieldVar is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVar](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_field_type)
+    fn(_default)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldVar => _create(pos', _name, _field_type, _default)
   
@@ -2258,6 +2339,10 @@ class val FieldEmbed is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbed](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_field_type)
+    fn(_default)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldEmbed => _create(pos', _name, _field_type, _default)
   
@@ -2423,6 +2508,16 @@ class val MethodFun is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFun](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_params)
+    fn(_return_type)
+    fn(_partial)
+    fn(_guard)
+    fn(_body)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodFun => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2630,6 +2725,16 @@ class val MethodNew is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_params)
+    fn(_return_type)
+    fn(_partial)
+    fn(_guard)
+    fn(_body)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodNew => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2837,6 +2942,16 @@ class val MethodBe is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_type_params)
+    fn(_params)
+    fn(_return_type)
+    fn(_partial)
+    fn(_guard)
+    fn(_body)
+    fn(_docs)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodBe => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   
@@ -2960,6 +3075,8 @@ class val TypeParams is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeParams => _create(pos', _list)
   
@@ -3057,6 +3174,10 @@ class val TypeParam is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParam](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_constraint)
+    fn(_default)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeParam => _create(pos', _name, _constraint, _default)
   
@@ -3138,6 +3259,8 @@ class val TypeArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeArgs => _create(pos', _list)
   
@@ -3224,6 +3347,9 @@ class val Params is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Params](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
+    fn(_ellipsis)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Params => _create(pos', _list, _ellipsis)
   
@@ -3329,6 +3455,10 @@ class val Param is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Param](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_param_type)
+    fn(_default)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Param => _create(pos', _name, _param_type, _default)
   
@@ -3410,6 +3540,8 @@ class val Sequence is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Sequence => _create(pos', _list)
   
@@ -3487,6 +3619,8 @@ class val Return is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Return => _create(pos', _value)
   
@@ -3558,6 +3692,8 @@ class val Break is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Break => _create(pos', _value)
   
@@ -3629,6 +3765,8 @@ class val Continue is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Continue => _create(pos', _value)
   
@@ -3700,6 +3838,8 @@ class val Error is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Error => _create(pos', _value)
   
@@ -3771,6 +3911,8 @@ class val CompileIntrinsic is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CompileIntrinsic => _create(pos', _value)
   
@@ -3842,6 +3984,8 @@ class val CompileError is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CompileError => _create(pos', _value)
   
@@ -3913,6 +4057,8 @@ class val IfDefFlag is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfDefFlag => _create(pos', _name)
   
@@ -3984,6 +4130,8 @@ class val IfDefNot is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfDefNot => _create(pos', _expr)
   
@@ -4068,6 +4216,9 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefAnd](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfDefAnd => _create(pos', _left, _right)
   
@@ -4159,6 +4310,9 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefOr](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfDefOr => _create(pos', _left, _right)
   
@@ -4260,6 +4414,10 @@ class val IfDef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_condition)
+    fn(_then_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfDef => _create(pos', _condition, _then_body, _else_body)
   
@@ -4381,6 +4539,11 @@ class val IfType is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_sub)
+    fn(_super)
+    fn(_then_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IfType => _create(pos', _sub, _super, _then_body, _else_body)
   
@@ -4496,6 +4659,10 @@ class val If is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[If](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_condition)
+    fn(_then_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): If => _create(pos', _condition, _then_body, _else_body)
   
@@ -4604,6 +4771,10 @@ class val While is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[While](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_condition)
+    fn(_loop_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): While => _create(pos', _condition, _loop_body, _else_body)
   
@@ -4712,6 +4883,10 @@ class val Repeat is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Repeat](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_loop_body)
+    fn(_condition)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Repeat => _create(pos', _loop_body, _condition, _else_body)
   
@@ -4833,6 +5008,11 @@ class val For is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[For](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_refs)
+    fn(_iterator)
+    fn(_loop_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): For => _create(pos', _refs, _iterator, _loop_body, _else_body)
   
@@ -4948,6 +5128,10 @@ class val With is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_assigns)
+    fn(_with_body)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): With => _create(pos', _assigns, _with_body, _else_body)
   
@@ -5029,6 +5213,8 @@ class val IdTuple is AST
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IdTuple => _create(pos', _elements)
   
@@ -5102,6 +5288,8 @@ class val AssignTuple is AST
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): AssignTuple => _create(pos', _elements)
   
@@ -5199,6 +5387,10 @@ class val Match is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Match](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
+    fn(_cases)
+    fn(_else_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Match => _create(pos', _expr, _cases, _else_body)
   
@@ -5280,6 +5472,8 @@ class val Cases is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Cases => _create(pos', _list)
   
@@ -5377,6 +5571,10 @@ class val Case is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Case](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
+    fn(_guard)
+    fn(_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Case => _create(pos', _expr, _guard, _body)
   
@@ -5482,6 +5680,10 @@ class val Try is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Try](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_body)
+    fn(_else_body)
+    fn(_then_body)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Try => _create(pos', _body, _else_body, _then_body)
   
@@ -5580,6 +5782,9 @@ class val Consume is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Consume](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_cap)
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Consume => _create(pos', _cap, _expr)
   
@@ -5671,6 +5876,9 @@ class val Recover is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Recover](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_cap)
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Recover => _create(pos', _cap, _expr)
   
@@ -5762,6 +5970,9 @@ class val As is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[As](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
+    fn(_as_type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): As => _create(pos', _expr, _as_type)
   
@@ -5853,6 +6064,9 @@ class val Add is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Add => _create(pos', _left, _right)
   
@@ -5944,6 +6158,9 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): AddUnsafe => _create(pos', _left, _right)
   
@@ -6035,6 +6252,9 @@ class val Sub is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Sub => _create(pos', _left, _right)
   
@@ -6126,6 +6346,9 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): SubUnsafe => _create(pos', _left, _right)
   
@@ -6217,6 +6440,9 @@ class val Mul is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Mul => _create(pos', _left, _right)
   
@@ -6308,6 +6534,9 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MulUnsafe => _create(pos', _left, _right)
   
@@ -6399,6 +6628,9 @@ class val Div is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Div => _create(pos', _left, _right)
   
@@ -6490,6 +6722,9 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DivUnsafe => _create(pos', _left, _right)
   
@@ -6581,6 +6816,9 @@ class val Mod is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Mod => _create(pos', _left, _right)
   
@@ -6672,6 +6910,9 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ModUnsafe => _create(pos', _left, _right)
   
@@ -6763,6 +7004,9 @@ class val LShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LShift => _create(pos', _left, _right)
   
@@ -6854,6 +7098,9 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LShiftUnsafe => _create(pos', _left, _right)
   
@@ -6945,6 +7192,9 @@ class val RShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): RShift => _create(pos', _left, _right)
   
@@ -7036,6 +7286,9 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): RShiftUnsafe => _create(pos', _left, _right)
   
@@ -7127,6 +7380,9 @@ class val Eq is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Eq => _create(pos', _left, _right)
   
@@ -7218,6 +7474,9 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): EqUnsafe => _create(pos', _left, _right)
   
@@ -7309,6 +7568,9 @@ class val NE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NE => _create(pos', _left, _right)
   
@@ -7400,6 +7662,9 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NEUnsafe => _create(pos', _left, _right)
   
@@ -7491,6 +7756,9 @@ class val LT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LT => _create(pos', _left, _right)
   
@@ -7582,6 +7850,9 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LTUnsafe => _create(pos', _left, _right)
   
@@ -7673,6 +7944,9 @@ class val LE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LE => _create(pos', _left, _right)
   
@@ -7764,6 +8038,9 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LEUnsafe => _create(pos', _left, _right)
   
@@ -7855,6 +8132,9 @@ class val GE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): GE => _create(pos', _left, _right)
   
@@ -7946,6 +8226,9 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): GEUnsafe => _create(pos', _left, _right)
   
@@ -8037,6 +8320,9 @@ class val GT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): GT => _create(pos', _left, _right)
   
@@ -8128,6 +8414,9 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): GTUnsafe => _create(pos', _left, _right)
   
@@ -8219,6 +8508,9 @@ class val Is is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Is => _create(pos', _left, _right)
   
@@ -8310,6 +8602,9 @@ class val Isnt is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Isnt => _create(pos', _left, _right)
   
@@ -8401,6 +8696,9 @@ class val And is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): And => _create(pos', _left, _right)
   
@@ -8492,6 +8790,9 @@ class val Or is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Or => _create(pos', _left, _right)
   
@@ -8583,6 +8884,9 @@ class val XOr is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): XOr => _create(pos', _left, _right)
   
@@ -8661,6 +8965,8 @@ class val Not is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Not => _create(pos', _expr)
   
@@ -8732,6 +9038,8 @@ class val Neg is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Neg => _create(pos', _expr)
   
@@ -8803,6 +9111,8 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NegUnsafe => _create(pos', _expr)
   
@@ -8874,6 +9184,8 @@ class val AddressOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): AddressOf => _create(pos', _expr)
   
@@ -8945,6 +9257,8 @@ class val DigestOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DigestOf => _create(pos', _expr)
   
@@ -9029,6 +9343,9 @@ class val LocalLet is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLet](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_local_type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LocalLet => _create(pos', _name, _local_type)
   
@@ -9120,6 +9437,9 @@ class val LocalVar is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVar](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_local_type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LocalVar => _create(pos', _name, _local_type)
   
@@ -9211,6 +9531,9 @@ class val Assign is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Assign](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Assign => _create(pos', _left, _right)
   
@@ -9302,6 +9625,9 @@ class val Dot is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Dot](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Dot => _create(pos', _left, _right)
   
@@ -9393,6 +9719,9 @@ class val Chain is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Chain](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Chain => _create(pos', _left, _right)
   
@@ -9484,6 +9813,9 @@ class val Tilde is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tilde](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Tilde => _create(pos', _left, _right)
   
@@ -9575,6 +9907,9 @@ class val Qualify is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Qualify](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Qualify => _create(pos', _left, _right)
   
@@ -9673,6 +10008,10 @@ class val Call is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_callable)
+    fn(_args)
+    fn(_named_args)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Call => _create(pos', _callable, _args, _named_args)
   
@@ -9798,6 +10137,12 @@ class val CallFFI is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CallFFI](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_type_args)
+    fn(_args)
+    fn(_named_args)
+    fn(_partial)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CallFFI => _create(pos', _name, _type_args, _args, _named_args, _partial)
   
@@ -9893,6 +10238,8 @@ class val Args is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Args => _create(pos', _list)
   
@@ -9966,6 +10313,8 @@ class val NamedArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NamedArgs => _create(pos', _list)
   
@@ -10056,6 +10405,9 @@ class val NamedArg is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArg](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NamedArg => _create(pos', _name, _value)
   
@@ -10211,6 +10563,16 @@ class val Lambda is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Lambda](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_method_cap)
+    fn(_name)
+    fn(_type_params)
+    fn(_params)
+    fn(_captures)
+    fn(_return_type)
+    fn(_partial)
+    fn(_body)
+    fn(_object_cap)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Lambda => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   
@@ -10334,6 +10696,8 @@ class val LambdaCaptures is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LambdaCaptures => _create(pos', _list)
   
@@ -10431,6 +10795,10 @@ class val LambdaCapture is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_local_type)
+    fn(_expr)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LambdaCapture => _create(pos', _name, _local_type, _expr)
   
@@ -10533,6 +10901,10 @@ class val Object is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Object](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_cap)
+    fn(_provides)
+    fn(_members)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Object => _create(pos', _cap, _provides, _members)
   
@@ -10625,6 +10997,9 @@ class val LitArray is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitArray](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_elem_type)
+    fn(_sequence)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitArray => _create(pos', _elem_type, _sequence)
   
@@ -10699,6 +11074,8 @@ class val Tuple is (AST & Expr)
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Tuple => _create(pos', _elements)
   
@@ -10760,6 +11137,7 @@ class val This is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): This => _create(pos')
   
@@ -10801,6 +11179,7 @@ class val LitTrue is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitTrue => _create(pos')
   
@@ -10842,6 +11221,7 @@ class val LitFalse is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitFalse => _create(pos')
   
@@ -10887,6 +11267,7 @@ class val LitInteger is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitInteger](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
@@ -10927,6 +11308,7 @@ class val LitFloat is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFloat](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
@@ -10967,6 +11349,7 @@ class val LitString is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitString](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
@@ -11007,6 +11390,7 @@ class val LitCharacter is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitCharacter](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
@@ -11043,6 +11427,7 @@ class val LitLocation is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LitLocation => _create(pos')
   
@@ -11100,6 +11485,8 @@ class val Reference is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Reference => _create(pos', _name)
   
@@ -11155,6 +11542,7 @@ class val DontCare is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DontCare => _create(pos')
   
@@ -11212,6 +11600,8 @@ class val PackageRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): PackageRef => _create(pos', _name)
   
@@ -11296,6 +11686,9 @@ class val MethodFunRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFunRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodFunRef => _create(pos', _receiver, _name)
   
@@ -11387,6 +11780,9 @@ class val MethodNewRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNewRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodNewRef => _create(pos', _receiver, _name)
   
@@ -11478,6 +11874,9 @@ class val MethodBeRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBeRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): MethodBeRef => _create(pos', _receiver, _name)
   
@@ -11569,6 +11968,9 @@ class val TypeRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_package)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeRef => _create(pos', _package, _name)
   
@@ -11660,6 +12062,9 @@ class val FieldLetRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLetRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldLetRef => _create(pos', _receiver, _name)
   
@@ -11751,6 +12156,9 @@ class val FieldVarRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVarRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldVarRef => _create(pos', _receiver, _name)
   
@@ -11842,6 +12250,9 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbedRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FieldEmbedRef => _create(pos', _receiver, _name)
   
@@ -11933,6 +12344,9 @@ class val TupleElementRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleElementRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_receiver)
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TupleElementRef => _create(pos', _receiver, _name)
   
@@ -12011,6 +12425,8 @@ class val LocalLetRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LocalLetRef => _create(pos', _name)
   
@@ -12082,6 +12498,8 @@ class val LocalVarRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LocalVarRef => _create(pos', _name)
   
@@ -12153,6 +12571,8 @@ class val ParamRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ParamRef => _create(pos', _name)
   
@@ -12237,6 +12657,9 @@ class val ViewpointType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ViewpointType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_left)
+    fn(_right)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ViewpointType => _create(pos', _left, _right)
   
@@ -12311,6 +12734,8 @@ class val UnionType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): UnionType => _create(pos', _list)
   
@@ -12384,6 +12809,8 @@ class val IsectType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): IsectType => _create(pos', _list)
   
@@ -12457,6 +12884,8 @@ class val TupleType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TupleType => _create(pos', _list)
   
@@ -12574,6 +13003,12 @@ class val NominalType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NominalType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_package)
+    fn(_type_args)
+    fn(_cap)
+    fn(_cap_mod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): NominalType => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
   
@@ -12703,6 +13138,11 @@ class val FunType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FunType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_cap)
+    fn(_type_params)
+    fn(_params)
+    fn(_return_type)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): FunType => _create(pos', _cap, _type_params, _params, _return_type)
   
@@ -12862,6 +13302,15 @@ class val LambdaType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_method_cap)
+    fn(_name)
+    fn(_type_params)
+    fn(_param_types)
+    fn(_return_type)
+    fn(_partial)
+    fn(_object_cap)
+    fn(_cap_mod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LambdaType => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
   
@@ -13002,6 +13451,10 @@ class val TypeParamRef is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParamRef](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_name)
+    fn(_cap)
+    fn(_cap_mod)
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): TypeParamRef => _create(pos', _name, _cap, _cap_mod)
   
@@ -13071,6 +13524,7 @@ class val ThisType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ThisType => _create(pos')
   
@@ -13112,6 +13566,7 @@ class val DontCareType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): DontCareType => _create(pos')
   
@@ -13153,6 +13608,7 @@ class val ErrorType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): ErrorType => _create(pos')
   
@@ -13194,6 +13650,7 @@ class val LiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LiteralType => _create(pos')
   
@@ -13235,6 +13692,7 @@ class val LiteralTypeBranch is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => _create(pos')
   
@@ -13276,6 +13734,7 @@ class val OpLiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): OpLiteralType => _create(pos')
   
@@ -13317,6 +13776,7 @@ class val Iso is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Iso => _create(pos')
   
@@ -13358,6 +13818,7 @@ class val Trn is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Trn => _create(pos')
   
@@ -13399,6 +13860,7 @@ class val Ref is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ref => _create(pos')
   
@@ -13440,6 +13902,7 @@ class val Val is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Val => _create(pos')
   
@@ -13481,6 +13944,7 @@ class val Box is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Box => _create(pos')
   
@@ -13522,6 +13986,7 @@ class val Tag is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Tag => _create(pos')
   
@@ -13563,6 +14028,7 @@ class val CapRead is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapRead => _create(pos')
   
@@ -13604,6 +14070,7 @@ class val CapSend is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapSend => _create(pos')
   
@@ -13645,6 +14112,7 @@ class val CapShare is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapShare => _create(pos')
   
@@ -13686,6 +14154,7 @@ class val CapAlias is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapAlias => _create(pos')
   
@@ -13727,6 +14196,7 @@ class val CapAny is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): CapAny => _create(pos')
   
@@ -13768,6 +14238,7 @@ class val Aliased is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Aliased => _create(pos')
   
@@ -13809,6 +14280,7 @@ class val Ephemeral is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ephemeral => _create(pos')
   
@@ -13850,6 +14322,7 @@ class val At is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): At => _create(pos')
   
@@ -13891,6 +14364,7 @@ class val Question is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Question => _create(pos')
   
@@ -13932,6 +14406,7 @@ class val Ellipsis is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Ellipsis => _create(pos')
   
@@ -13985,6 +14460,8 @@ class val Semicolon is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => _pos
   fun val with_pos(pos': SourcePosAny): Semicolon => _create(pos', _list)
   
@@ -14050,6 +14527,7 @@ class val Id is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Id](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => _pos
@@ -14072,6 +14550,7 @@ class val EOF is (AST & Lexeme)
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EOF](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14090,6 +14569,7 @@ class val NewLine is (AST & Lexeme)
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NewLine](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14108,6 +14588,7 @@ class val Use is (AST & Lexeme)
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Use](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14126,6 +14607,7 @@ class val Colon is (AST & Lexeme)
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Colon](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14144,6 +14626,7 @@ class val Comma is (AST & Lexeme)
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Comma](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14162,6 +14645,7 @@ class val Constant is (AST & Lexeme)
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Constant](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14180,6 +14664,7 @@ class val Pipe is (AST & Lexeme)
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Pipe](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14198,6 +14683,7 @@ class val Ampersand is (AST & Lexeme)
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ampersand](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14216,6 +14702,7 @@ class val SubType is (AST & Lexeme)
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14234,6 +14721,7 @@ class val Arrow is (AST & Lexeme)
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Arrow](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14252,6 +14740,7 @@ class val DoubleArrow is (AST & Lexeme)
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DoubleArrow](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14270,6 +14759,7 @@ class val Backslash is (AST & Lexeme)
     errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Backslash](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14288,6 +14778,7 @@ class val LParen is (AST & Lexeme)
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14306,6 +14797,7 @@ class val RParen is (AST & Lexeme)
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14324,6 +14816,7 @@ class val LBrace is (AST & Lexeme)
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBrace](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14342,6 +14835,7 @@ class val RBrace is (AST & Lexeme)
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RBrace](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14360,6 +14854,7 @@ class val LSquare is (AST & Lexeme)
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquare](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14378,6 +14873,7 @@ class val RSquare is (AST & Lexeme)
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RSquare](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14396,6 +14892,7 @@ class val LParenNew is (AST & Lexeme)
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParenNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14414,6 +14911,7 @@ class val LBraceNew is (AST & Lexeme)
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBraceNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14432,6 +14930,7 @@ class val LSquareNew is (AST & Lexeme)
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquareNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14450,6 +14949,7 @@ class val SubNew is (AST & Lexeme)
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14468,6 +14968,7 @@ class val SubUnsafeNew is (AST & Lexeme)
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafeNew](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14486,6 +14987,7 @@ class val In is (AST & Lexeme)
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[In](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14504,6 +15006,7 @@ class val Until is (AST & Lexeme)
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Until](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14522,6 +15025,7 @@ class val Do is (AST & Lexeme)
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Do](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14540,6 +15044,7 @@ class val Else is (AST & Lexeme)
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Else](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14558,6 +15063,7 @@ class val ElseIf is (AST & Lexeme)
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ElseIf](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14576,6 +15082,7 @@ class val Then is (AST & Lexeme)
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Then](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14594,6 +15101,7 @@ class val End is (AST & Lexeme)
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[End](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14612,6 +15120,7 @@ class val Var is (AST & Lexeme)
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Var](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14630,6 +15139,7 @@ class val Let is (AST & Lexeme)
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Let](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14648,6 +15158,7 @@ class val Embed is (AST & Lexeme)
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Embed](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
@@ -14666,6 +15177,7 @@ class val Where is (AST & Lexeme)
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Where](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
