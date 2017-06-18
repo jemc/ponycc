@@ -162,7 +162,7 @@ class ParserGen
         // Next token is not in restart set, error
         // Debug("Rule " + state.fn_name + ": Restart check error") // TODO: conditional compile
         
-        _error("Syntax error: Unexpected token " + _current_tk().desc() + " after " + state.desc, last_helpful_token._2)
+        _error("Parse error: Unexpected token " + _current_tk().desc() + " after " + state.desc, last_helpful_token._2)
         
         failed = true
         _ditch_restart(state)
@@ -175,12 +175,12 @@ class ParserGen
       
       fun ref _syntax_error(expected: String, tree: (TkTree | None), terminating: String) =>
         if last_matched.size() == 0 then
-          _error("Syntax error: No code found", last_helpful_token._2)
+          _error("Parse error: No code found", last_helpful_token._2)
         else
           if terminating.size() == 0 then
-            _error("Syntax error: Expected " + expected + " after " + last_matched, last_helpful_token._2)
+            _error("Parse error: Expected " + expected + " after " + last_matched, last_helpful_token._2)
           else
-            _error("Syntax error: Unterminated " + terminating,
+            _error("Parse error: Unterminated " + terminating,
               try (tree as TkTree).pos else last_helpful_token._2 end)
             _error_continue("Expected terminating " + expected + " before here", last_helpful_token._2)
           end

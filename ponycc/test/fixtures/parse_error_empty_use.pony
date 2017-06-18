@@ -1,6 +1,6 @@
 """
 $PARSE
-$ERROR Syntax error: Expected package or ffi declaration after Use
+$ERROR Parse error: Expected package or ffi declaration after Use
 use
 ^~~
 """
