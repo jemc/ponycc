@@ -61,9 +61,7 @@ primitive ParserDefs
       .> skip("None", ["Tk[At]"])
       .> token("ffi name", ["Tk[Id]"; "Tk[LitString]"])
       .> rule("return type", ["typeargs"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("ffi parameters", ["params"])
-      .> skip("None", ["Tk[RParen]"])
+      .> rule("ffi parameters", ["params"])
       .> opt_token("None", ["Tk[Question]"])
       .> if_token_then_rule_else_none("Tk[If]", "use condition", ["ifdefinfix"])
     
@@ -111,9 +109,7 @@ primitive ParserDefs
       .> opt_rule("capability", ["cap"])
       .> token("method name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["params"])
-      .> skip("None", ["Tk[RParen]"])
+      .> rule("parameters", ["params"])
       .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])
       .> opt_token("None", ["Tk[LitString]"])
@@ -164,9 +160,14 @@ primitive ParserDefs
     
     // param {COMMA (param | ellipsis)}
     g.def("params")
-      .> tree("Tk[Params]")
-      .> rule("parameter", ["param"; "ellipsis"])
+      .> token("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("parameter", ["param"; "ellipsis"])
       .> while_token_do_rule("Tk[Comma]", "parameter", ["param"; "ellipsis"])
+      .> skip("None", ["Tk[RParen]"])
+      .> map_tk([
+        ("Tk[LParen]",     "Tk[Params]")
+        ("Tk[LParenNew]",  "Tk[Params]")
+      ])
     
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
@@ -671,9 +672,7 @@ primitive ParserDefs
       .> opt_rule("receiver capability", ["cap"])
       .> opt_token("function name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
-      .> opt_rule("parameters", ["params"])
-      .> skip("None", ["Tk[RParen]"])
+      .> rule("parameters", ["params"])
       .> opt_rule("captures", ["lambdacaptures"])
       .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
       .> opt_token("None", ["Tk[Question]"])

@@ -460,21 +460,6 @@ class _Parser
     
     state.default_tk = None
     found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
-        found = true
-        last_matched = Tk[LParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[LParen].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = Tk[None]
-    found = false
     res =
       while true do
         match _parse_params("ffi parameters")
@@ -487,21 +472,6 @@ class _Parser
         
         found = false
         break _handle_not_found(state, "ffi parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RParen] =>
-        found = true
-        last_matched = Tk[RParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[RParen].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -965,21 +935,6 @@ class _Parser
     
     state.default_tk = None
     found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
-        found = true
-        last_matched = Tk[LParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[LParen].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = Tk[None]
-    found = false
     res =
       while true do
         match _parse_params("parameters")
@@ -992,21 +947,6 @@ class _Parser
         
         found = false
         break _handle_not_found(state, "parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RParen] =>
-        found = true
-        last_matched = Tk[RParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[RParen].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
     
@@ -1555,10 +1495,24 @@ class _Parser
     let state = _RuleState("params", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[Params], _current_pos()))
     
     
     state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
+        found = true
+        last_matched = Tk[LParen].desc()
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, Tk[LParen].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    
+    
+    state.default_tk = Tk[None]
     found = false
     res =
       while true do
@@ -1625,6 +1579,27 @@ class _Parser
           break _handle_not_found(state, "parameter", false)
         end
       if res isnt None then return (res, _BuildDefault) end
+    end
+    
+    
+    state.default_tk = None
+    found = false
+    while _current_tk() is Tk[NewLine] do _consume_token() end
+    res =
+      match _current_tk() | Tk[RParen] =>
+        found = true
+        last_matched = Tk[RParen].desc()
+        _handle_found(state, (_consume_token(); None), _BuildDefault)
+      else
+        found = false
+        _handle_not_found(state, Tk[RParen].desc(), false)
+      end
+    if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[LParen] => tree.tk = Tk[Params]
+      | Tk[LParenNew] => tree.tk = Tk[Params]
+      end
     end
     
     (_complete(state), _BuildDefault)
@@ -6103,21 +6078,6 @@ class _Parser
     
     state.default_tk = None
     found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
-        found = true
-        last_matched = Tk[LParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[LParen].desc(), false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = Tk[None]
-    found = false
     res =
       while true do
         match _parse_params("parameters")
@@ -6130,21 +6090,6 @@ class _Parser
         
         found = false
         break _handle_not_found(state, "parameters", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[RParen] =>
-        found = true
-        last_matched = Tk[RParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[RParen].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
     

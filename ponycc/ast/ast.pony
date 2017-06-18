@@ -286,7 +286,7 @@ trait val Method is AST
   fun val cap(): (Cap | None)
   fun val docs(): (LitString | None)
   fun val return_type(): (Type | None)
-  fun val params(): (Params | None)
+  fun val params(): Params
   fun val guard(): (Sequence | None)
   fun val with_name(name': Id): Method
   fun val with_partial(partial': (Question | None)): Method
@@ -295,7 +295,7 @@ trait val Method is AST
   fun val with_cap(cap': (Cap | None)): Method
   fun val with_docs(docs': (LitString | None)): Method
   fun val with_return_type(return_type': (Type | None)): Method
-  fun val with_params(params': (Params | None)): Method
+  fun val with_params(params': Params): Method
   fun val with_guard(guard': (Sequence | None)): Method
 
 trait val Expr is AST
@@ -534,14 +534,14 @@ class val UseFFIDecl is (AST & UseDecl)
   
   let _name: (Id | LitString)
   let _return_type: TypeArgs
-  let _params: (Params | None)
+  let _params: Params
   let _partial: (Question | None)
   let _guard: (IfDefCond | None)
   
   new val create(
     name': (Id | LitString),
     return_type': TypeArgs,
-    params': (Params | None),
+    params': Params,
     partial': (Question | None),
     guard': (IfDefCond | None) = None)
   =>_pos = SourcePosNone
@@ -554,7 +554,7 @@ class val UseFFIDecl is (AST & UseDecl)
   new val _create(pos': SourcePosAny,
     name': (Id | LitString),
     return_type': TypeArgs,
-    params': (Params | None),
+    params': Params,
     partial': (Question | None),
     guard': (IfDefCond | None))
   =>
@@ -605,7 +605,7 @@ class val UseFFIDecl is (AST & UseDecl)
       else errs.push(("UseFFIDecl got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("UseFFIDecl got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _partial =
@@ -629,13 +629,13 @@ class val UseFFIDecl is (AST & UseDecl)
   
   fun val name(): (Id | LitString) => _name
   fun val return_type(): TypeArgs => _return_type
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val partial(): (Question | None) => _partial
   fun val guard(): (IfDefCond | None) => _guard
   
   fun val with_name(name': (Id | LitString)): UseFFIDecl => _create(_pos, name', _return_type, _params, _partial, _guard)
   fun val with_return_type(return_type': TypeArgs): UseFFIDecl => _create(_pos, _name, return_type', _params, _partial, _guard)
-  fun val with_params(params': (Params | None)): UseFFIDecl => _create(_pos, _name, _return_type, params', _partial, _guard)
+  fun val with_params(params': Params): UseFFIDecl => _create(_pos, _name, _return_type, params', _partial, _guard)
   fun val with_partial(partial': (Question | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, partial', _guard)
   fun val with_guard(guard': (IfDefCond | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, _partial, guard')
   
@@ -659,7 +659,7 @@ class val UseFFIDecl is (AST & UseDecl)
         return _create(_pos, _name, replace' as TypeArgs, _params, _partial, _guard)
       end
       if child' is _params then
-        return _create(_pos, _name, _return_type, replace' as (Params | None), _partial, _guard)
+        return _create(_pos, _name, _return_type, replace' as Params, _partial, _guard)
       end
       if child' is _partial then
         return _create(_pos, _name, _return_type, _params, replace' as (Question | None), _guard)
@@ -2394,7 +2394,7 @@ class val MethodFun is (AST & Method)
   let _name: Id
   let _cap: (Cap | None)
   let _type_params: (TypeParams | None)
-  let _params: (Params | None)
+  let _params: Params
   let _return_type: (Type | None)
   let _partial: (Question | None)
   let _guard: (Sequence | None)
@@ -2405,7 +2405,7 @@ class val MethodFun is (AST & Method)
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (Params | None) = None,
+    params': Params = Params,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     guard': (Sequence | None) = None,
@@ -2426,7 +2426,7 @@ class val MethodFun is (AST & Method)
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
-    params': (Params | None),
+    params': Params,
     return_type': (Type | None),
     partial': (Question | None),
     guard': (Sequence | None),
@@ -2456,7 +2456,7 @@ class val MethodFun is (AST & Method)
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else None end
+    let params': (AST | None) = try iter.next() else Params end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
     let guard': (AST | None) = try iter.next() else None end
@@ -2483,7 +2483,7 @@ class val MethodFun is (AST & Method)
       else errs.push(("MethodFun got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("MethodFun got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
@@ -2524,7 +2524,7 @@ class val MethodFun is (AST & Method)
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
   fun val partial(): (Question | None) => _partial
   fun val guard(): (Sequence | None) => _guard
@@ -2534,7 +2534,7 @@ class val MethodFun is (AST & Method)
   fun val with_name(name': Id): MethodFun => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_cap(cap': (Cap | None)): MethodFun => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_type_params(type_params': (TypeParams | None)): MethodFun => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None)): MethodFun => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': Params): MethodFun => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
   fun val with_return_type(return_type': (Type | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
   fun val with_partial(partial': (Question | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
   fun val with_guard(guard': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
@@ -2568,7 +2568,7 @@ class val MethodFun is (AST & Method)
         return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _return_type then
         return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
@@ -2611,7 +2611,7 @@ class val MethodNew is (AST & Method)
   let _name: Id
   let _cap: (Cap | None)
   let _type_params: (TypeParams | None)
-  let _params: (Params | None)
+  let _params: Params
   let _return_type: (Type | None)
   let _partial: (Question | None)
   let _guard: (Sequence | None)
@@ -2622,7 +2622,7 @@ class val MethodNew is (AST & Method)
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (Params | None) = None,
+    params': Params = Params,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     guard': (Sequence | None) = None,
@@ -2643,7 +2643,7 @@ class val MethodNew is (AST & Method)
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
-    params': (Params | None),
+    params': Params,
     return_type': (Type | None),
     partial': (Question | None),
     guard': (Sequence | None),
@@ -2673,7 +2673,7 @@ class val MethodNew is (AST & Method)
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else None end
+    let params': (AST | None) = try iter.next() else Params end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
     let guard': (AST | None) = try iter.next() else None end
@@ -2700,7 +2700,7 @@ class val MethodNew is (AST & Method)
       else errs.push(("MethodNew got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("MethodNew got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
@@ -2741,7 +2741,7 @@ class val MethodNew is (AST & Method)
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
   fun val partial(): (Question | None) => _partial
   fun val guard(): (Sequence | None) => _guard
@@ -2751,7 +2751,7 @@ class val MethodNew is (AST & Method)
   fun val with_name(name': Id): MethodNew => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_cap(cap': (Cap | None)): MethodNew => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_type_params(type_params': (TypeParams | None)): MethodNew => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None)): MethodNew => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': Params): MethodNew => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
   fun val with_return_type(return_type': (Type | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
   fun val with_partial(partial': (Question | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
   fun val with_guard(guard': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
@@ -2785,7 +2785,7 @@ class val MethodNew is (AST & Method)
         return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _return_type then
         return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
@@ -2828,7 +2828,7 @@ class val MethodBe is (AST & Method)
   let _name: Id
   let _cap: (Cap | None)
   let _type_params: (TypeParams | None)
-  let _params: (Params | None)
+  let _params: Params
   let _return_type: (Type | None)
   let _partial: (Question | None)
   let _guard: (Sequence | None)
@@ -2839,7 +2839,7 @@ class val MethodBe is (AST & Method)
     name': Id,
     cap': (Cap | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (Params | None) = None,
+    params': Params = Params,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
     guard': (Sequence | None) = None,
@@ -2860,7 +2860,7 @@ class val MethodBe is (AST & Method)
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
-    params': (Params | None),
+    params': Params,
     return_type': (Type | None),
     partial': (Question | None),
     guard': (Sequence | None),
@@ -2890,7 +2890,7 @@ class val MethodBe is (AST & Method)
       end
     let cap': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else None end
+    let params': (AST | None) = try iter.next() else Params end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
     let guard': (AST | None) = try iter.next() else None end
@@ -2917,7 +2917,7 @@ class val MethodBe is (AST & Method)
       else errs.push(("MethodBe got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("MethodBe got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
@@ -2958,7 +2958,7 @@ class val MethodBe is (AST & Method)
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
   fun val partial(): (Question | None) => _partial
   fun val guard(): (Sequence | None) => _guard
@@ -2968,7 +2968,7 @@ class val MethodBe is (AST & Method)
   fun val with_name(name': Id): MethodBe => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_cap(cap': (Cap | None)): MethodBe => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
   fun val with_type_params(type_params': (TypeParams | None)): MethodBe => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': (Params | None)): MethodBe => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
+  fun val with_params(params': Params): MethodBe => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
   fun val with_return_type(return_type': (Type | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
   fun val with_partial(partial': (Question | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
   fun val with_guard(guard': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
@@ -3002,7 +3002,7 @@ class val MethodBe is (AST & Method)
         return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Params | None), _return_type, _partial, _guard, _body, _docs)
+        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
       end
       if child' is _return_type then
         return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
@@ -10452,7 +10452,7 @@ class val Lambda is (AST & Expr)
   let _method_cap: (Cap | None)
   let _name: (Id | None)
   let _type_params: (TypeParams | None)
-  let _params: (Params | None)
+  let _params: Params
   let _captures: (LambdaCaptures | None)
   let _return_type: (Type | None)
   let _partial: (Question | None)
@@ -10463,7 +10463,7 @@ class val Lambda is (AST & Expr)
     method_cap': (Cap | None) = None,
     name': (Id | None) = None,
     type_params': (TypeParams | None) = None,
-    params': (Params | None) = None,
+    params': Params = Params,
     captures': (LambdaCaptures | None) = None,
     return_type': (Type | None) = None,
     partial': (Question | None) = None,
@@ -10484,7 +10484,7 @@ class val Lambda is (AST & Expr)
     method_cap': (Cap | None),
     name': (Id | None),
     type_params': (TypeParams | None),
-    params': (Params | None),
+    params': Params,
     captures': (LambdaCaptures | None),
     return_type': (Type | None),
     partial': (Question | None),
@@ -10511,7 +10511,7 @@ class val Lambda is (AST & Expr)
     let method_cap': (AST | None) = try iter.next() else None end
     let name': (AST | None) = try iter.next() else None end
     let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else None end
+    let params': (AST | None) = try iter.next() else Params end
     let captures': (AST | None) = try iter.next() else None end
     let return_type': (AST | None) = try iter.next() else None end
     let partial': (AST | None) = try iter.next() else None end
@@ -10538,7 +10538,7 @@ class val Lambda is (AST & Expr)
       else errs.push(("Lambda got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("Lambda got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _captures =
@@ -10579,7 +10579,7 @@ class val Lambda is (AST & Expr)
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val captures(): (LambdaCaptures | None) => _captures
   fun val return_type(): (Type | None) => _return_type
   fun val partial(): (Question | None) => _partial
@@ -10589,7 +10589,7 @@ class val Lambda is (AST & Expr)
   fun val with_method_cap(method_cap': (Cap | None)): Lambda => _create(_pos, method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   fun val with_name(name': (Id | None)): Lambda => _create(_pos, _method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
   fun val with_type_params(type_params': (TypeParams | None)): Lambda => _create(_pos, _method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_params(params': (Params | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
+  fun val with_params(params': Params): Lambda => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
   fun val with_captures(captures': (LambdaCaptures | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap)
   fun val with_return_type(return_type': (Type | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap)
   fun val with_partial(partial': (Question | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap)
@@ -10623,7 +10623,7 @@ class val Lambda is (AST & Expr)
         return _create(_pos, _method_cap, _name, replace' as (TypeParams | None), _params, _captures, _return_type, _partial, _body, _object_cap)
       end
       if child' is _params then
-        return _create(_pos, _method_cap, _name, _type_params, replace' as (Params | None), _captures, _return_type, _partial, _body, _object_cap)
+        return _create(_pos, _method_cap, _name, _type_params, replace' as Params, _captures, _return_type, _partial, _body, _object_cap)
       end
       if child' is _captures then
         return _create(_pos, _method_cap, _name, _type_params, _params, replace' as (LambdaCaptures | None), _return_type, _partial, _body, _object_cap)
@@ -13073,13 +13073,13 @@ class val FunType is (AST & Type)
   
   let _cap: Cap
   let _type_params: (TypeParams | None)
-  let _params: (Params | None)
+  let _params: Params
   let _return_type: (Type | None)
   
   new val create(
     cap': Cap,
     type_params': (TypeParams | None) = None,
-    params': (Params | None) = None,
+    params': Params = Params,
     return_type': (Type | None) = None)
   =>_pos = SourcePosNone
     _cap = cap'
@@ -13090,7 +13090,7 @@ class val FunType is (AST & Type)
   new val _create(pos': SourcePosAny,
     cap': Cap,
     type_params': (TypeParams | None),
-    params': (Params | None),
+    params': Params,
     return_type': (Type | None))
   =>
     _pos = pos'
@@ -13110,7 +13110,7 @@ class val FunType is (AST & Type)
       else errs.push(("FunType missing required field: cap", pos')); error
       end
     let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else None end
+    let params': (AST | None) = try iter.next() else Params end
     let return_type': (AST | None) = try iter.next() else None end
     if
       try
@@ -13129,7 +13129,7 @@ class val FunType is (AST & Type)
       else errs.push(("FunType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
       end
     _params =
-      try params' as (Params | None)
+      try params' as Params
       else errs.push(("FunType got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
       end
     _return_type =
@@ -13148,12 +13148,12 @@ class val FunType is (AST & Type)
   
   fun val cap(): Cap => _cap
   fun val type_params(): (TypeParams | None) => _type_params
-  fun val params(): (Params | None) => _params
+  fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
   
   fun val with_cap(cap': Cap): FunType => _create(_pos, cap', _type_params, _params, _return_type)
   fun val with_type_params(type_params': (TypeParams | None)): FunType => _create(_pos, _cap, type_params', _params, _return_type)
-  fun val with_params(params': (Params | None)): FunType => _create(_pos, _cap, _type_params, params', _return_type)
+  fun val with_params(params': Params): FunType => _create(_pos, _cap, _type_params, params', _return_type)
   fun val with_return_type(return_type': (Type | None)): FunType => _create(_pos, _cap, _type_params, _params, return_type')
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
@@ -13175,7 +13175,7 @@ class val FunType is (AST & Type)
         return _create(_pos, _cap, replace' as (TypeParams | None), _params, _return_type)
       end
       if child' is _params then
-        return _create(_pos, _cap, _type_params, replace' as (Params | None), _return_type)
+        return _create(_pos, _cap, _type_params, replace' as Params, _return_type)
       end
       if child' is _return_type then
         return _create(_pos, _cap, _type_params, _params, replace' as (Type | None))
