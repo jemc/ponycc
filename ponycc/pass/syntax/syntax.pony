@@ -158,9 +158,13 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
-    elseif A <: Expr then
-      iftype A <: Semicolon then
+    elseif A <: Ellipsis then
+      try frame.parent(2) as UseFFIDecl else
         frame.err(ast,
-          "Use semicolons only for separating expressions on the same line.")
+          "An ellipsis may only appear in an FFI declaration.")
       end
+    
+    elseif A <: Semicolon then
+      frame.err(ast,
+        "Use semicolons only for separating expressions on the same line.")
     end
