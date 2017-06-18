@@ -157,8 +157,6 @@ primitive Syntax is FrameVisitor[Syntax]
           end
         end
       end
-      
-      // TODO: verify that in-signature docstring is not present if has a body.
     
     elseif A <: Expr then
       iftype A <: Semicolon then
