@@ -158,10 +158,19 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
-    elseif A <: Ellipsis then
-      try frame.parent(2) as UseFFIDecl else
-        frame.err(ast,
-          "An ellipsis may only appear in an FFI declaration.")
+    elseif A <: Params then
+      try frame.parent() as UseFFIDecl
+        for param in ast.list().values() do
+          try
+            frame.err(param.default() as Expr,
+              "An FFI declaration parameter may not have a default value.")
+          end
+        end
+      else
+        try
+          frame.err(ast.ellipsis() as Ellipsis,
+            "An ellipsis may only appear in FFI declaration parameters.")
+        end
       end
     
     elseif A <: Semicolon then
