@@ -35,4 +35,22 @@ primitive PostParse is FrameVisitor[PostParse]
           end
         end
       end
+    
+    elseif A <: BinaryOp then
+      if
+        match ast.left()
+        | let _: A => false
+        | let _: BinaryOp => true
+        else false
+        end
+      or
+        match ast.right()
+        | let _: A => false
+        | let _: BinaryOp => true
+        else false
+        end
+      then
+        frame.err(ast,
+          "Operator precedence is not supported. Parentheses are required.")
+      end
     end
