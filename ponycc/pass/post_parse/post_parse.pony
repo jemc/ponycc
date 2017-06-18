@@ -31,12 +31,15 @@ primitive PostParse is FrameVisitor[PostParse]
           frame.err(ast.docs() as LitString,
             "A method with a body cannot have a docstring in the signature.")
         else
+          // If the method body has more than one expression and the first
+          // expression is a string literal, we treat it as a docstring;
+          // we set it as the docs of the method and remove it from the body.
           if body.list().size() > 1 then
-            try
-              frame.replace(ast.with_docs(body.list()(0) as LitString))
-              // TODO: reassign ast here, like so:
-              // ast = ast.with_docs(body.list()(0) as LitString)
-              // frame.replace(ast)
+            try let docs = body.list()(0) as LitString
+              let ast': Method = ast // TODO: remove this when ponyc crash is fixed
+              frame.replace(ast'
+                .with_docs(docs)
+                .with_body(body.with_list(body.list().delete(0))))
             end
           end
         end
