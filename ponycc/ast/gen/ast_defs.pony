@@ -3,8 +3,8 @@ primitive ASTDefs
   fun apply(g: ASTGen) =>
     g.def("Module")
       .> with_scope()
-      .> has("use_decls",  "coll.Vec[UseDecl]",     "coll.Vec[UseDecl]")
-      .> has("type_decls", "coll.Vec[TypeDecl]",    "coll.Vec[TypeDecl]")
+      .> has("use_decls",  "coll.Vec[UseDecl]",  "coll.Vec[UseDecl]")
+      .> has("type_decls", "coll.Vec[TypeDecl]", "coll.Vec[TypeDecl]")
       .> has("docs",       "(LitString | None)", "None")
     
     g.def("UsePackage")
@@ -74,7 +74,7 @@ primitive ASTDefs
       .> has("list", "coll.Vec[Type]", "coll.Vec[Type]")
     
     g.def("Params")
-      .> has("list",     "coll.Vec[Param]",      "coll.Vec[Param]") // TODO: account for case where parser emits ellipsis in multiple argument positions
+      .> has("list",     "coll.Vec[Param]",   "coll.Vec[Param]") // TODO: account for case where parser emits ellipsis in multiple argument positions
       .> has("ellipsis", "(Ellipsis | None)", "None")
     
     g.def("Param")
