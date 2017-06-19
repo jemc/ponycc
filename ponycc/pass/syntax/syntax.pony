@@ -180,6 +180,17 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    // TODO: from syntax.c - syntax_nominal
+    // TODO: from syntax.c - syntax_tupletype (needs frame.constraint())
+    // TODO: from syntax.c - syntax_arrow     (needs frame.constraint())
+    
+    elseif A <: ThisType then
+      try
+        if not ((frame.parent() as ViewpointType).left() is ast) then error end
+      else
+        frame.err(ast, "`this` can only be used in a type as a viewpoint.")
+      end
+    
     elseif A <: Semicolon then
       frame.err(ast,
         "Use semicolons only for separating expressions on the same line.")
