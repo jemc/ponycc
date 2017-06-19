@@ -185,10 +185,16 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: Return then
+      if frame.method_body() is None then
+        frame.err(ast,
+          "A return statement can only appear in a method body.")
+      end
+    
     elseif A <: Error then
       try
         frame.err(ast.value() as Expr,
-          "An error cannot have a value expression.")
+          "An error statement cannot have a value expression.")
       end
     
     // TODO: from syntax.c - syntax_nominal

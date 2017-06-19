@@ -39,6 +39,7 @@ class _FrameTop[V: FrameVisitor[V]]
   fun module(): Module => _module
   fun type_decl(): (TypeDecl | None) => None
   fun method(): (Method | None) => None
+  fun method_body(): (Sequence | None) => None
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
@@ -113,3 +114,13 @@ class Frame[V: FrameVisitor[V]]
     Get the nearest Method above this AST node.
     """
     try _ast as Method else _upper.method() end
+  
+  fun method_body(): (Sequence | None) =>
+    """
+    Get the nearest Method body Sequence above this AST node.
+    """
+    match parent() | let m: Method =>
+      if _ast is m.body() then m.body() else None end
+    else
+      _upper.method_body()
+    end
