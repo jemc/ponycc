@@ -4598,16 +4598,24 @@ class _Parser
     found = false
     res =
       while true do
-        match _parse_term("expression")
+        match _parse_reference("identifier")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true
-          last_matched = "expression"
+          last_matched = "identifier"
+          break _handle_found(state, tree, build)
+        end
+        
+        match _parse_this("identifier")
+        | (_RuleParseError, _) => break _handle_error(state)
+        | (let tree: (TkTree | None), let build: _Build) =>
+          found = true
+          last_matched = "identifier"
           break _handle_found(state, tree, build)
         end
         
         found = false
-        break _handle_not_found(state, "expression", false)
+        break _handle_not_found(state, "identifier", false)
       end
     if res isnt None then return (res, _BuildDefault) end
     

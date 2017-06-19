@@ -475,7 +475,7 @@ primitive ParserDefs
       .> print_inline()
       .> token("consume", ["Tk[Consume]"])
       .> opt_rule("capability", ["cap"])
-      .> rule("expression", ["term"])
+      .> rule("identifier", ["reference"; "this"])
     
     // RECOVER [annotations] [CAP] seq END
     g.def("recover")

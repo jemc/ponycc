@@ -207,7 +207,7 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_type()
       .> has("cap",  "(Cap | None)")
-      .> has("expr", "Expr")
+      .> has("expr", "(Reference | This)")
     
     g.def("Recover")
       .> in_union("Expr")

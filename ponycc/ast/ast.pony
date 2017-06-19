@@ -5733,18 +5733,18 @@ class val Consume is (AST & Expr)
   let _pos: SourcePosAny
   
   let _cap: (Cap | None)
-  let _expr: Expr
+  let _expr: (Reference | This)
   
   new val create(
     cap': (Cap | None),
-    expr': Expr)
+    expr': (Reference | This))
   =>_pos = SourcePosNone
     _cap = cap'
     _expr = expr'
   
   new val _create(pos': SourcePosAny,
     cap': (Cap | None),
-    expr': Expr)
+    expr': (Reference | This))
   =>
     _pos = pos'
     _cap = cap'
@@ -5777,7 +5777,7 @@ class val Consume is (AST & Expr)
       else errs.push(("Consume got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _expr =
-      try expr' as Expr
+      try expr' as (Reference | This)
       else errs.push(("Consume got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
       end
   
@@ -5789,10 +5789,10 @@ class val Consume is (AST & Expr)
   fun val with_pos(pos': SourcePosAny): Consume => _create(pos', _cap, _expr)
   
   fun val cap(): (Cap | None) => _cap
-  fun val expr(): Expr => _expr
+  fun val expr(): (Reference | This) => _expr
   
   fun val with_cap(cap': (Cap | None)): Consume => _create(_pos, cap', _expr)
-  fun val with_expr(expr': Expr): Consume => _create(_pos, _cap, expr')
+  fun val with_expr(expr': (Reference | This)): Consume => _create(_pos, _cap, expr')
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5808,7 +5808,7 @@ class val Consume is (AST & Expr)
         return _create(_pos, replace' as (Cap | None), _expr)
       end
       if child' is _expr then
-        return _create(_pos, _cap, replace' as Expr)
+        return _create(_pos, _cap, replace' as (Reference | This))
       end
       error
     else this
