@@ -173,6 +173,11 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: CallFFI then
+      for named in ast.named_args().list().values() do
+        frame.err(named, "An FFI call may not have named arguments.")
+      end
+    
     elseif A <: Cases then
       for (idx, case) in ast.list().pairs() do
         if (idx >= (ast.list().size() - 1)) and (case.body() is None) then
