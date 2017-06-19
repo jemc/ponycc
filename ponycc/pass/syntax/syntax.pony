@@ -173,6 +173,13 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: Cases then
+      for (idx, case) in ast.list().pairs() do
+        if (idx >= (ast.list().size() - 1)) and (case.body() is None) then
+          frame.err(case, "The final case in a match block must have a body.")
+        end
+      end
+    
     elseif A <: Semicolon then
       frame.err(ast,
         "Use semicolons only for separating expressions on the same line.")
