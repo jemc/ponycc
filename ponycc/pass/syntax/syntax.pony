@@ -185,6 +185,12 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: Error then
+      try
+        frame.err(ast.value() as Expr,
+          "An error cannot have a value expression.")
+      end
+    
     // TODO: from syntax.c - syntax_nominal
     // TODO: from syntax.c - syntax_tupletype (needs frame.constraint())
     // TODO: from syntax.c - syntax_arrow     (needs frame.constraint())
