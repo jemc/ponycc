@@ -53,4 +53,11 @@ primitive PostParse is FrameVisitor[PostParse]
         frame.err(ast,
           "Operator precedence is not supported. Parentheses are required.")
       end
+    
+    elseif A <: TupleType then
+      // If the tuple type contains just one element, we unwrap it.
+      // It isn't a tuple type; just a type that was surrounded by parentheses.
+      if ast.list().size() == 1 then
+        try frame.replace(ast.list()(0)) end
+      end
     end

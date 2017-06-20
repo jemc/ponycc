@@ -797,16 +797,19 @@ primitive ParserDefs
       .> skip("None", ["Tk[Arrow]"])
       .> rule("viewpoint", ["type"])
     
-    // (LPAREN | LPAREN_NEW) infixtype [commatype] RPAREN
+    // (LPAREN | LPAREN_NEW) infixtype {COMMA type} RPAREN
     g.def("tupletype")
       .> print_inline()
-      .> tree("Tk[TupleType]") // TODO: In the parser, unwrap single-element TupleTypes, using the TupleType to ensure that parens gave explicit operator precedence.
-      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> token("None", ["Tk[LParen]"; "Tk[LParenNew]"])
       .> rule("type", ["infixtype"])
-      .> opt_no_dflt_rule("type", ["commatype"])
+      .> while_token_do_rule("Tk[Comma]", "type", ["type"])
       .> skip("None", ["Tk[RParen]"])
+      .> map_tk([
+        ("Tk[LParen]",    "Tk[TupleType]")
+        ("Tk[LParenNew]", "Tk[TupleType]")
+      ])
     
-    // infixtype [commatype]
+    // type {COMMA type}
     g.def("paramtypes")
       .> print_inline()
       .> tree("Tk[TupleType]")
@@ -833,13 +836,6 @@ primitive ParserDefs
       .> skip("None", ["Tk[Ampersand]"])
       .> rule("type", ["type"])
       .> while_token_do_rule("Tk[Ampersand]", "type", ["type"])
-    
-    // COMMA infixtype {COMMA infixtype}
-    g.def("commatype")
-      .> builder("_BuildInfix")
-      .> skip("None", ["Tk[Comma]"])
-      .> rule("type", ["infixtype"])
-      .> while_token_do_rule("Tk[Comma]", "type", ["infixtype"])
     
     // ID [DOT ID] [typeargs] [CAP] [EPHEMERAL | ALIASED]
     g.def("nominal")

@@ -7236,7 +7236,6 @@ class _Parser
     let state = _RuleState("tupletype", rule_desc)
     var res: _RuleResult = None
     var found: Bool = false
-    state.add_deferrable_ast((Tk[TupleType], _current_pos()))
     
     
     state.default_tk = None
@@ -7246,7 +7245,7 @@ class _Parser
       match _current_tk() | Tk[LParen] | Tk[LParenNew] =>
         found = true
         last_matched = Tk[LParen].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
+        _handle_found(state, TkTree(_consume_token()), _BuildDefault)
       else
         found = false
         _handle_not_found(state, Tk[LParen].desc(), false)
@@ -7270,24 +7269,42 @@ class _Parser
         break _handle_not_found(state, "type", false)
       end
     if res isnt None then return (res, _BuildDefault) end
-    
-    
-    state.default_tk = Tk[EOF]
-    found = false
-    res =
-      while true do
-        match _parse_commatype("type")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
+    while true do
+      
+      
+      state.default_tk = Tk[EOF]
+      found = false
+      while _current_tk() is Tk[NewLine] do _consume_token() end
+      res =
+        match _current_tk() | Tk[Comma] =>
           found = true
-          last_matched = "type"
-          break _handle_found(state, tree, build)
+          last_matched = Tk[Comma].desc()
+          _handle_found(state, (_consume_token(); None), _BuildDefault)
+        else
+          found = false
+          _handle_not_found(state, Tk[Comma].desc(), false)
         end
-        
-        found = false
-        break _handle_not_found(state, "type", false)
-      end
-    if res isnt None then return (res, _BuildDefault) end
+      if res isnt None then return (res, _BuildDefault) end
+      if not found then break end
+      
+      
+      state.default_tk = None
+      found = false
+      res =
+        while true do
+          match _parse_type("type")
+          | (_RuleParseError, _) => break _handle_error(state)
+          | (let tree: (TkTree | None), let build: _Build) =>
+            found = true
+            last_matched = "type"
+            break _handle_found(state, tree, build)
+          end
+          
+          found = false
+          break _handle_not_found(state, "type", false)
+        end
+      if res isnt None then return (res, _BuildDefault) end
+    end
     
     
     state.default_tk = None
@@ -7303,6 +7320,12 @@ class _Parser
         _handle_not_found(state, Tk[RParen].desc(), false)
       end
     if res isnt None then return (res, _BuildDefault) end
+    match state.tree | let tree: TkTree =>
+      match tree.tk
+      | Tk[LParen] => tree.tk = Tk[TupleType]
+      | Tk[LParenNew] => tree.tk = Tk[TupleType]
+      end
+    end
     
     (_complete(state), _BuildDefault)
   
@@ -7561,82 +7584,6 @@ class _Parser
       res =
         while true do
           match _parse_type("type")
-          | (_RuleParseError, _) => break _handle_error(state)
-          | (let tree: (TkTree | None), let build: _Build) =>
-            found = true
-            last_matched = "type"
-            break _handle_found(state, tree, build)
-          end
-          
-          found = false
-          break _handle_not_found(state, "type", false)
-        end
-      if res isnt None then return (res, _BuildInfix) end
-    end
-    
-    (_complete(state), _BuildInfix)
-  
-  fun ref _parse_commatype(rule_desc: String): (_RuleResult, _Build) =>
-    let state = _RuleState("commatype", rule_desc)
-    var res: _RuleResult = None
-    var found: Bool = false
-    
-    
-    state.default_tk = None
-    found = false
-    while _current_tk() is Tk[NewLine] do _consume_token() end
-    res =
-      match _current_tk() | Tk[Comma] =>
-        found = true
-        last_matched = Tk[Comma].desc()
-        _handle_found(state, (_consume_token(); None), _BuildDefault)
-      else
-        found = false
-        _handle_not_found(state, Tk[Comma].desc(), false)
-      end
-    if res isnt None then return (res, _BuildInfix) end
-    
-    
-    state.default_tk = None
-    found = false
-    res =
-      while true do
-        match _parse_infixtype("type")
-        | (_RuleParseError, _) => break _handle_error(state)
-        | (let tree: (TkTree | None), let build: _Build) =>
-          found = true
-          last_matched = "type"
-          break _handle_found(state, tree, build)
-        end
-        
-        found = false
-        break _handle_not_found(state, "type", false)
-      end
-    if res isnt None then return (res, _BuildInfix) end
-    while true do
-      
-      
-      state.default_tk = Tk[EOF]
-      found = false
-      while _current_tk() is Tk[NewLine] do _consume_token() end
-      res =
-        match _current_tk() | Tk[Comma] =>
-          found = true
-          last_matched = Tk[Comma].desc()
-          _handle_found(state, (_consume_token(); None), _BuildDefault)
-        else
-          found = false
-          _handle_not_found(state, Tk[Comma].desc(), false)
-        end
-      if res isnt None then return (res, _BuildInfix) end
-      if not found then break end
-      
-      
-      state.default_tk = None
-      found = false
-      res =
-        while true do
-          match _parse_infixtype("type")
           | (_RuleParseError, _) => break _handle_error(state)
           | (let tree: (TkTree | None), let build: _Build) =>
             found = true
