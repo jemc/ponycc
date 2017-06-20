@@ -362,7 +362,7 @@ class val Module is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Module got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Module got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -473,7 +473,7 @@ class val UsePackage is (AST & UseDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("UsePackage got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("UsePackage got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -591,7 +591,7 @@ class val UseFFIDecl is (AST & UseDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("UseFFIDecl got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("UseFFIDecl got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -748,7 +748,7 @@ class val TypeAlias is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("TypeAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("TypeAlias got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -929,7 +929,7 @@ class val Interface is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Interface got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Interface got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1110,7 +1110,7 @@ class val Trait is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Trait got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Trait got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1291,7 +1291,7 @@ class val Primitive is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Primitive got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Primitive got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1472,7 +1472,7 @@ class val Struct is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Struct got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Struct got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1653,7 +1653,7 @@ class val Class is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Class got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Class got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1834,7 +1834,7 @@ class val Actor is (AST & TypeDecl)
     if
       try
         let extra' = iter.next()
-        errs.push(("Actor got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Actor got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -1991,7 +1991,7 @@ class val Members is AST
     end
     if methods_next' isnt None then
       let extra' = methods_next'
-      errs.push(("Members got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Members got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _fields = fields'
@@ -2096,7 +2096,7 @@ class val FieldLet is (AST & Field)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldLet got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2208,7 +2208,7 @@ class val FieldVar is (AST & Field)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldVar got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2320,7 +2320,7 @@ class val FieldEmbed is (AST & Field)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldEmbed got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldEmbed got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2465,7 +2465,7 @@ class val MethodFun is (AST & Method)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodFun got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodFun got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2682,7 +2682,7 @@ class val MethodNew is (AST & Method)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodNew got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodNew got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -2899,7 +2899,7 @@ class val MethodBe is (AST & Method)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodBe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodBe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3069,7 +3069,7 @@ class val TypeParams is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("TypeParams got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("TypeParams got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -3155,7 +3155,7 @@ class val TypeParam is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("TypeParam got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("TypeParam got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3253,7 +3253,7 @@ class val TypeArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("TypeArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("TypeArgs got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -3335,7 +3335,7 @@ class val Params is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Params got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Params got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3436,7 +3436,7 @@ class val Param is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Param got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Param got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3534,7 +3534,7 @@ class val Sequence is (AST & Expr)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("Sequence got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Sequence got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -3608,7 +3608,7 @@ class val Return is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Return got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Return got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3681,7 +3681,7 @@ class val Break is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Break got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Break got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3754,7 +3754,7 @@ class val Continue is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Continue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Continue got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3827,7 +3827,7 @@ class val Error is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Error got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Error got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3900,7 +3900,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("CompileIntrinsic got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CompileIntrinsic got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -3973,7 +3973,7 @@ class val CompileError is (AST & Jump & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("CompileError got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CompileError got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4046,7 +4046,7 @@ class val IfDefFlag is (AST & IfDefCond)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfDefFlag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfDefFlag got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4119,7 +4119,7 @@ class val IfDefNot is (AST & IfDefCond)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfDefNot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfDefNot got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4201,7 +4201,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfDefAnd got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfDefAnd got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4295,7 +4295,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfDefOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfDefOr got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4395,7 +4395,7 @@ class val IfDef is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfDef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfDef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4516,7 +4516,7 @@ class val IfType is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("IfType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("IfType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4640,7 +4640,7 @@ class val If is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("If got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("If got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4752,7 +4752,7 @@ class val While is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("While got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("While got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4864,7 +4864,7 @@ class val Repeat is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Repeat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Repeat got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -4985,7 +4985,7 @@ class val For is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("For got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("For got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5109,7 +5109,7 @@ class val With is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("With got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("With got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5207,7 +5207,7 @@ class val IdTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      errs.push(("IdTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("IdTuple got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -5282,7 +5282,7 @@ class val AssignTuple is AST
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      errs.push(("AssignTuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("AssignTuple got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -5368,7 +5368,7 @@ class val Match is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Match got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Match got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5466,7 +5466,7 @@ class val Cases is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("Cases got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Cases got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -5552,7 +5552,7 @@ class val Case is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Case got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Case got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5661,7 +5661,7 @@ class val Try is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Try got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Try got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5767,7 +5767,7 @@ class val Consume is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Consume got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Consume got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5861,7 +5861,7 @@ class val Recover is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Recover got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Recover got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -5955,7 +5955,7 @@ class val As is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("As got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("As got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6049,7 +6049,7 @@ class val Add is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Add got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Add got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6143,7 +6143,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("AddUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("AddUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6237,7 +6237,7 @@ class val Sub is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Sub got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Sub got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6331,7 +6331,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("SubUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("SubUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6425,7 +6425,7 @@ class val Mul is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Mul got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Mul got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6519,7 +6519,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("MulUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MulUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6613,7 +6613,7 @@ class val Div is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Div got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Div got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6707,7 +6707,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("DivUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("DivUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6801,7 +6801,7 @@ class val Mod is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Mod got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Mod got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6895,7 +6895,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("ModUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("ModUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -6989,7 +6989,7 @@ class val LShift is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LShift got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7083,7 +7083,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LShiftUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7177,7 +7177,7 @@ class val RShift is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("RShift got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("RShift got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7271,7 +7271,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("RShiftUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("RShiftUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7365,7 +7365,7 @@ class val Eq is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Eq got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Eq got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7459,7 +7459,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("EqUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("EqUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7553,7 +7553,7 @@ class val NE is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("NE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("NE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7647,7 +7647,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("NEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("NEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7741,7 +7741,7 @@ class val LT is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LT got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7835,7 +7835,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LTUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -7929,7 +7929,7 @@ class val LE is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8023,7 +8023,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8117,7 +8117,7 @@ class val GE is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("GE got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("GE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8211,7 +8211,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("GEUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("GEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8305,7 +8305,7 @@ class val GT is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("GT got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("GT got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8399,7 +8399,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("GTUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("GTUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8493,7 +8493,7 @@ class val Is is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Is got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Is got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8587,7 +8587,7 @@ class val Isnt is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Isnt got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Isnt got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8681,7 +8681,7 @@ class val And is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("And got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("And got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8775,7 +8775,7 @@ class val Or is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Or got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Or got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8869,7 +8869,7 @@ class val XOr is (AST & BinaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("XOr got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("XOr got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -8954,7 +8954,7 @@ class val Not is (AST & UnaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Not got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Not got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9027,7 +9027,7 @@ class val Neg is (AST & UnaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Neg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Neg got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9100,7 +9100,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("NegUnsafe got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("NegUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9173,7 +9173,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("AddressOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("AddressOf got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9246,7 +9246,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("DigestOf got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("DigestOf got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9328,7 +9328,7 @@ class val LocalLet is (AST & Local & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LocalLet got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LocalLet got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9422,7 +9422,7 @@ class val LocalVar is (AST & Local & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LocalVar got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LocalVar got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9516,7 +9516,7 @@ class val Assign is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Assign got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Assign got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9610,7 +9610,7 @@ class val Dot is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Dot got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Dot got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9704,7 +9704,7 @@ class val Chain is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Chain got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Chain got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9798,7 +9798,7 @@ class val Tilde is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Tilde got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Tilde got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9892,7 +9892,7 @@ class val Qualify is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Qualify got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Qualify got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -9989,7 +9989,7 @@ class val Call is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Call got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Call got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10110,7 +10110,7 @@ class val CallFFI is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("CallFFI got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CallFFI got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10232,7 +10232,7 @@ class val Args is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("Args got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Args got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -10307,7 +10307,7 @@ class val NamedArgs is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("NamedArgs got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("NamedArgs got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -10390,7 +10390,7 @@ class val NamedArg is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("NamedArg got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("NamedArg got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10520,7 +10520,7 @@ class val Lambda is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Lambda got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Lambda got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10690,7 +10690,7 @@ class val LambdaCaptures is AST
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("LambdaCaptures got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("LambdaCaptures got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -10776,7 +10776,7 @@ class val LambdaCapture is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("LambdaCapture got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LambdaCapture got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10882,7 +10882,7 @@ class val Object is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Object got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Object got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -10982,7 +10982,7 @@ class val LitArray is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitArray got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitArray got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11068,7 +11068,7 @@ class val Tuple is (AST & Expr)
     end
     if elements_next' isnt None then
       let extra' = elements_next'
-      errs.push(("Tuple got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Tuple got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _elements = elements'
@@ -11131,7 +11131,7 @@ class val This is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("This got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("This got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11173,7 +11173,7 @@ class val LitTrue is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitTrue got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitTrue got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11215,7 +11215,7 @@ class val LitFalse is (AST & LitBool & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitFalse got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitFalse got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11261,7 +11261,7 @@ class val LitInteger is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitInteger got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitInteger got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11302,7 +11302,7 @@ class val LitFloat is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitFloat got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitFloat got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11343,7 +11343,7 @@ class val LitString is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitString got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitString got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11384,7 +11384,7 @@ class val LitCharacter is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitCharacter got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitCharacter got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11421,7 +11421,7 @@ class val LitLocation is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LitLocation got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LitLocation got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11474,7 +11474,7 @@ class val Reference is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("Reference got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Reference got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11536,7 +11536,7 @@ class val DontCare is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("DontCare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("DontCare got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11589,7 +11589,7 @@ class val PackageRef is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("PackageRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("PackageRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11671,7 +11671,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodFunRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodFunRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11765,7 +11765,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodNewRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodNewRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11859,7 +11859,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("MethodBeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("MethodBeRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -11953,7 +11953,7 @@ class val TypeRef is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("TypeRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("TypeRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12047,7 +12047,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldLetRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12141,7 +12141,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldVarRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12235,7 +12235,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("FieldEmbedRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FieldEmbedRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12329,7 +12329,7 @@ class val TupleElementRef is (AST & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("TupleElementRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("TupleElementRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12414,7 +12414,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LocalLetRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LocalLetRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12487,7 +12487,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("LocalVarRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LocalVarRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12560,7 +12560,7 @@ class val ParamRef is (AST & LocalRef & Expr)
     if
       try
         let extra' = iter.next()
-        errs.push(("ParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("ParamRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12642,7 +12642,7 @@ class val ViewpointType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("ViewpointType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("ViewpointType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -12728,7 +12728,7 @@ class val UnionType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("UnionType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("UnionType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -12803,7 +12803,7 @@ class val IsectType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("IsectType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("IsectType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -12878,7 +12878,7 @@ class val TupleType is (AST & Type)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("TupleType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("TupleType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -12976,7 +12976,7 @@ class val NominalType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("NominalType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("NominalType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13115,7 +13115,7 @@ class val FunType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("FunType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("FunType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13263,7 +13263,7 @@ class val LambdaType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("LambdaType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LambdaType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13432,7 +13432,7 @@ class val TypeParamRef is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("TypeParamRef got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("TypeParamRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13518,7 +13518,7 @@ class val ThisType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("ThisType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("ThisType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13560,7 +13560,7 @@ class val DontCareType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("DontCareType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("DontCareType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13602,7 +13602,7 @@ class val ErrorType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("ErrorType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("ErrorType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13644,7 +13644,7 @@ class val LiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("LiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LiteralType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13686,7 +13686,7 @@ class val LiteralTypeBranch is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("LiteralTypeBranch got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("LiteralTypeBranch got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13728,7 +13728,7 @@ class val OpLiteralType is (AST & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("OpLiteralType got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("OpLiteralType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13770,7 +13770,7 @@ class val Iso is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Iso got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Iso got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13812,7 +13812,7 @@ class val Trn is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Trn got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Trn got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13854,7 +13854,7 @@ class val Ref is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Ref got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Ref got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13896,7 +13896,7 @@ class val Val is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Val got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Val got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13938,7 +13938,7 @@ class val Box is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Box got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Box got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -13980,7 +13980,7 @@ class val Tag is (AST & Cap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("Tag got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Tag got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14022,7 +14022,7 @@ class val CapRead is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("CapRead got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CapRead got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14064,7 +14064,7 @@ class val CapSend is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("CapSend got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CapSend got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14106,7 +14106,7 @@ class val CapShare is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("CapShare got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CapShare got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14148,7 +14148,7 @@ class val CapAlias is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("CapAlias got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CapAlias got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14190,7 +14190,7 @@ class val CapAny is (AST & GenCap & Type)
     if
       try
         let extra' = iter.next()
-        errs.push(("CapAny got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("CapAny got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14232,7 +14232,7 @@ class val Aliased is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        errs.push(("Aliased got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Aliased got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14274,7 +14274,7 @@ class val Ephemeral is (AST & CapMod)
     if
       try
         let extra' = iter.next()
-        errs.push(("Ephemeral got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Ephemeral got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14316,7 +14316,7 @@ class val At is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("At got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("At got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14358,7 +14358,7 @@ class val Question is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Question got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Question got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14400,7 +14400,7 @@ class val Ellipsis is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Ellipsis got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Ellipsis got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
@@ -14454,7 +14454,7 @@ class val Semicolon is (AST & Expr)
     end
     if list_next' isnt None then
       let extra' = list_next'
-      errs.push(("Semicolon got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); error
+      errs.push(("Semicolon got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
     end
     
     _list = list'
@@ -14521,7 +14521,7 @@ class val Id is AST
     if
       try
         let extra' = iter.next()
-        errs.push(("Id got unexpected extra field", try (extra' as AST).pos() else SourcePosNone end)); true
+        errs.push(("Id got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
     then error end
