@@ -198,14 +198,18 @@ primitive Syntax is FrameVisitor[Syntax]
       end
     
     // TODO: from syntax.c - syntax_nominal
-    // TODO: from syntax.c - syntax_tupletype (needs frame.constraint())
-    // TODO: from syntax.c - syntax_arrow     (needs frame.constraint())
+    // TODO: from syntax.c - syntax_arrow
     
     elseif A <: ThisType then
       try
         if not ((frame.parent() as ViewpointType).left() is ast) then error end
       else
         frame.err(ast, "`this` can only be used in a type as a viewpoint.")
+      end
+    
+    elseif A <: TupleType then
+      if frame.constraint() isnt None then
+        frame.err(ast, "A tuple cannot be used as a type parameter constraint.")
       end
     
     elseif A <: Semicolon then

@@ -40,6 +40,7 @@ class _FrameTop[V: FrameVisitor[V]]
   fun type_decl(): (TypeDecl | None) => None
   fun method(): (Method | None) => None
   fun method_body(): (Sequence | None) => None
+  fun constraint(): (Type | None) => None
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
@@ -118,9 +119,25 @@ class Frame[V: FrameVisitor[V]]
   fun method_body(): (Sequence | None) =>
     """
     Get the nearest Method body Sequence above this AST node.
+    Stop searching through the hierarchy when a Method is reached.
     """
     match parent() | let m: Method =>
       if _ast is m.body() then m.body() else None end
     else
       _upper.method_body()
+    end
+  
+  fun constraint(): (Type | None) =>
+    """
+    Get the nearest TypeParam constraint Type above this AST node.
+    Stop searching through the hierarchy when a TypeParam is reached.
+    Also stop searching at TypeArgs - type arguments of a constraining Type
+    are not counted as being a part of the constraining Type themselves.
+    """
+    match parent()
+    | let _: TypeArgs => None
+    | let t: TypeParam =>
+      if _ast is t.constraint() then t.constraint() else None end
+    else
+      _upper.constraint()
     end
