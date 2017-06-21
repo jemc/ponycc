@@ -191,6 +191,8 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    // TODO: from syntax.c - syntax_barelambdatype
+    
     elseif A <: Cases then
       for (idx, case) in ast.list().pairs() do
         if (idx >= (ast.list().size() - 1)) and (case.body() is None) then
@@ -218,6 +220,21 @@ primitive Syntax is FrameVisitor[Syntax]
       try
         frame.err(ast.value() as Expr,
           "An error statement cannot have a value expression.")
+      end
+    
+    elseif A <: CompileIntrinsic then
+      try
+        let body = frame.method_body() as Sequence
+        if not (body.list().size() == 1) then error end
+        if not (body.list()(0) is ast) then error end
+      else
+        frame.err(ast,
+          "A compile intrinsic must be the entire method body.")
+      end
+      
+      try
+        frame.err(ast.value() as Expr,
+          "A compile intrinsic cannot have a value expression.")
       end
     
     // TODO: from syntax.c - syntax_nominal
