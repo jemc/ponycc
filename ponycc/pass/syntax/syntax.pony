@@ -183,6 +183,8 @@ primitive Syntax is FrameVisitor[Syntax]
         frame.err(named, "An FFI call may not have named arguments.")
       end
     
+    // TODO: from syntax.c - syntax_object
+    
     elseif A <: LambdaCapture then
       if ast.value() is None then
         try
@@ -191,6 +193,7 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    // TODO: from syntax.c - syntax_lambda (BareLambda only)
     // TODO: from syntax.c - syntax_barelambdatype
     
     elseif A <: Cases then
@@ -287,5 +290,31 @@ primitive Syntax is FrameVisitor[Syntax]
       // TODO: check that ast.name() is a valid type param name (uppercase).
       
       None
+    
+    elseif A <: (Cap | GenCap) then
+      if
+        match frame.parent()
+        | let t: (TypeDecl | Object)   => t.cap() isnt ast
+        | let m: Method                => m.cap() isnt ast
+        | let c: (Consume | Recover)   => c.cap() isnt ast
+        | let l: (Lambda | LambdaType) => (l.method_cap() isnt ast) and
+                                          (l.object_cap() isnt ast)
+        // TODO: (BareLambda | BareLambdaType)
+        | let n: NominalType           => n.cap() isnt ast
+        | let v: ViewpointType         => v.left() isnt ast
+        else true
+        end
+      then
+        frame.err(ast, "A type cannot be only a reference capability.")
+      end
+      
+      iftype A <: GenCap then
+        if
+          (frame.constraint() is None) and (frame.iftype_constraint() is None)
+        then
+          frame.err(ast,
+            "A reference capability set can only appear in a constraint.")
+        end
+      end
     
     end
