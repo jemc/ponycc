@@ -190,6 +190,16 @@ primitive Syntax is FrameVisitor[Syntax]
         frame.err(ast,
           "A return statement can only appear in a method body.")
       end
+      
+      try frame.method() as MethodNew
+        frame.err(ast.value() as Expr,
+          "A return statement in a constructor cannot have a value expression.")
+      end
+      
+      try frame.method() as MethodBe
+        frame.err(ast.value() as Expr,
+          "A return statement in a behaviour cannot have a value expression.")
+      end
     
     elseif A <: Error then
       try
