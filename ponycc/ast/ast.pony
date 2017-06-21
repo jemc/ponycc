@@ -10740,26 +10740,26 @@ class val LambdaCapture is AST
   
   let _name: Id
   let _local_type: (Type | None)
-  let _expr: (Expr | None)
+  let _value: (Expr | None)
   
   new val create(
     name': Id,
     local_type': (Type | None) = None,
-    expr': (Expr | None) = None)
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _name = name'
     _local_type = local_type'
-    _expr = expr'
+    _value = value'
   
   new val _create(pos': SourcePosAny,
     name': Id,
     local_type': (Type | None),
-    expr': (Expr | None))
+    value': (Expr | None))
   =>
     _pos = pos'
     _name = name'
     _local_type = local_type'
-    _expr = expr'
+    _value = value'
   
   new from_iter(
     iter: Iterator[(AST | None)],
@@ -10772,7 +10772,7 @@ class val LambdaCapture is AST
       else errs.push(("LambdaCapture missing required field: name", pos')); error
       end
     let local_type': (AST | None) = try iter.next() else None end
-    let expr': (AST | None) = try iter.next() else None end
+    let value': (AST | None) = try iter.next() else None end
     if
       try
         let extra' = iter.next()
@@ -10789,32 +10789,32 @@ class val LambdaCapture is AST
       try local_type' as (Type | None)
       else errs.push(("LambdaCapture got incompatible field: local_type", try (local_type' as AST).pos() else SourcePosNone end)); error
       end
-    _expr =
-      try expr' as (Expr | None)
-      else errs.push(("LambdaCapture got incompatible field: expr", try (expr' as AST).pos() else SourcePosNone end)); error
+    _value =
+      try value' as (Expr | None)
+      else errs.push(("LambdaCapture got incompatible field: value", try (value' as AST).pos() else SourcePosNone end)); error
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
     fn(_local_type)
-    fn(_expr)
+    fn(_value)
   fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LambdaCapture => _create(pos', _name, _local_type, _expr)
+  fun val with_pos(pos': SourcePosAny): LambdaCapture => _create(pos', _name, _local_type, _value)
   
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
-  fun val expr(): (Expr | None) => _expr
+  fun val value(): (Expr | None) => _value
   
-  fun val with_name(name': Id): LambdaCapture => _create(_pos, name', _local_type, _expr)
-  fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_pos, _name, local_type', _expr)
-  fun val with_expr(expr': (Expr | None)): LambdaCapture => _create(_pos, _name, _local_type, expr')
+  fun val with_name(name': Id): LambdaCapture => _create(_pos, name', _local_type, _value)
+  fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_pos, _name, local_type', _value)
+  fun val with_value(value': (Expr | None)): LambdaCapture => _create(_pos, _name, _local_type, value')
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "name" => _name
     | "local_type" => _local_type
-    | "expr" => _expr
+    | "value" => _value
     else error
     end
   
@@ -10822,12 +10822,12 @@ class val LambdaCapture is AST
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _local_type, _expr)
+        return _create(_pos, replace' as Id, _local_type, _value)
       end
       if child' is _local_type then
-        return _create(_pos, _name, replace' as (Type | None), _expr)
+        return _create(_pos, _name, replace' as (Type | None), _value)
       end
-      if child' is _expr then
+      if child' is _value then
         return _create(_pos, _name, _local_type, replace' as (Expr | None))
       end
       error
@@ -10840,7 +10840,7 @@ class val LambdaCapture is AST
     s.push('(')
     s.>append(_name.string()).>push(',').push(' ')
     s.>append(_local_type.string()).>push(',').push(' ')
-    s.>append(_expr.string())
+    s.>append(_value.string())
     s.push(')')
     consume s
 

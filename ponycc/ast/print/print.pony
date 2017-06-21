@@ -676,7 +676,7 @@ primitive Print
   fun _show(g: _Gen, x: LambdaCapture) =>
     _show(g, x.name())
     try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
-    try let e = x.expr() as Expr; g.write(" = "); _show(g, e) end
+    try let v = x.value() as Expr; g.write(" = "); _show(g, v) end
   
   fun _show(g: _Gen, x: Object) =>
     g.line_start()

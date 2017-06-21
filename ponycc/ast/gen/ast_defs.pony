@@ -328,7 +328,7 @@ primitive ASTDefs
     g.def("LambdaCapture")
       .> has("name",       "Id")
       .> has("local_type", "(Type | None)", "None")
-      .> has("expr",       "(Expr | None)", "None")
+      .> has("value",      "(Expr | None)", "None")
     
     g.def("Object")
       .> in_union("Expr")

@@ -84,14 +84,6 @@ primitive Syntax is FrameVisitor[Syntax]
       // TODO: syntax.c: check_provides_type
       //   but this should probably be in the Traits pass instead.
     
-    elseif A <: Field then
-      // TODO: check that ast.name() is a valid field name (lowercase).
-      
-      // TODO: if in an Object, require that fields be initialized,
-      //   though maybe this logic belongs in another pass.
-      
-      None
-    
     elseif A <: Method then
       // TODO: check that ast.name() is a valid method name (lowercase).
       
@@ -158,6 +150,19 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: Field then
+      // TODO: check that ast.name() is a valid field name (lowercase).
+      
+      // TODO: if in an Object, require that fields be initialized,
+      //   though maybe this logic belongs in another pass.
+      
+      None
+    
+    elseif A <: Local then
+      // TODO: check that ast.name() is a valid local name (lowercase).
+      
+      None
+    
     elseif A <: Params then
       try frame.parent() as UseFFIDecl
         for param in ast.list().values() do
@@ -176,6 +181,14 @@ primitive Syntax is FrameVisitor[Syntax]
     elseif A <: CallFFI then
       for named in ast.named_args().list().values() do
         frame.err(named, "An FFI call may not have named arguments.")
+      end
+    
+    elseif A <: LambdaCapture then
+      if ast.value() is None then
+        try
+          frame.err(ast.local_type() as Type,
+            "A lambda capture cannot specify a type without a value.")
+        end
       end
     
     elseif A <: Cases then
@@ -237,4 +250,10 @@ primitive Syntax is FrameVisitor[Syntax]
       if frame.constraint() isnt None then
         frame.err(ast, "A tuple cannot be used as a type parameter constraint.")
       end
+    
+    elseif A <: TypeParam then
+      // TODO: check that ast.name() is a valid type param name (uppercase).
+      
+      None
+    
     end
