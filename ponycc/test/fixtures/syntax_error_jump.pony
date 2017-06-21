@@ -21,6 +21,18 @@ $ERROR A compile intrinsic must be the entire method body.
 $ERROR A compile intrinsic cannot have a value expression.
   fun intrinsic_true() => compile_intrinsic true
                                             ^~~~
+$ERROR A compile error must have a string value explaining the error.
+    ifdef windows then compile_error end
+                       ^~~~~~~~~~~~~
+$ERROR A compile error must have a string value explaining the error.
+    ifdef windows then compile_error true end
+                                     ^~~~
+$ERROR A compile error must be in an ifdef clause.
+    compile_error "sorry"
+    ^~~~~~~~~~~~~
+$ERROR A compile error must be the entire ifdef clause body.
+    ifdef windows then true; compile_error "sorry" end
+                             ^~~~~~~~~~~~~
 $ERROR An error statement cannot have a value expression.
     error "value"
           ^~~~~~~
@@ -43,5 +55,11 @@ actor A
   fun intrinsic_true() => compile_intrinsic true
   
   fun apply() =>
+    ifdef windows then compile_error end
+    ifdef windows then compile_error "sorry" end
+    ifdef windows then compile_error true end
+    compile_error "sorry"
+    ifdef windows then true; compile_error "sorry" end
+    
     error
     error "value"

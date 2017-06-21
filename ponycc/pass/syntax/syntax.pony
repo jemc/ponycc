@@ -228,13 +228,28 @@ primitive Syntax is FrameVisitor[Syntax]
         if not (body.list().size() == 1) then error end
         if not (body.list()(0) is ast) then error end
       else
-        frame.err(ast,
-          "A compile intrinsic must be the entire method body.")
+        frame.err(ast, "A compile intrinsic must be the entire method body.")
       end
       
       try
         frame.err(ast.value() as Expr,
           "A compile intrinsic cannot have a value expression.")
+      end
+    
+    elseif A <: CompileError then
+      try
+        let body = (frame.parent(2) as IfDef).then_body()
+        if not ((body.list().size() == 1) and (body.list()(0) is ast)) then
+          frame.err(ast,
+            "A compile error must be the entire ifdef clause body.")
+        end
+      else
+        frame.err(ast, "A compile error must be in an ifdef clause.")
+      end
+      
+      try ast.value() as LitString else
+        frame.err(try ast.value() as Expr else ast end,
+          "A compile error must have a string value explaining the error.")
       end
     
     // TODO: from syntax.c - syntax_nominal
