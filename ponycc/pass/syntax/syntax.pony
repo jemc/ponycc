@@ -237,8 +237,4 @@ primitive Syntax is FrameVisitor[Syntax]
       if frame.constraint() isnt None then
         frame.err(ast, "A tuple cannot be used as a type parameter constraint.")
       end
-    
-    elseif A <: Semicolon then
-      frame.err(ast,
-        "Use semicolons only for separating expressions on the same line.")
     end

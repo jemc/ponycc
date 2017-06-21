@@ -60,4 +60,8 @@ primitive PostParse is FrameVisitor[PostParse]
       if ast.list().size() == 1 then
         try frame.replace(ast.list()(0)) end
       end
+    
+    elseif A <: Semicolon then
+      frame.err(ast,
+        "Use semicolons only for separating expressions on the same line.")
     end

@@ -1,5 +1,5 @@
 """
-$SYNTAX
+$POST_PARSE
 $ERROR Use semicolons only for separating expressions on the same line.
     3;;;
        ^
