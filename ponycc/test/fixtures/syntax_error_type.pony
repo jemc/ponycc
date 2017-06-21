@@ -3,7 +3,7 @@ $SYNTAX
 $ERROR `this` can only be used in a type as a viewpoint.
   fun this_type(): this => None
                    ^~~~
-$ERROR `this` can only be used in a type as a viewpoint.
+$ERROR `this` cannot appear on the right side of a viewpoint type.
   fun type_arrow_this(): None->this => None
                                ^~~~
 $ERROR A tuple cannot be used as a type parameter constraint.

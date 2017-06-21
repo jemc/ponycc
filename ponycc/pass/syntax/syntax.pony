@@ -198,13 +198,29 @@ primitive Syntax is FrameVisitor[Syntax]
       end
     
     // TODO: from syntax.c - syntax_nominal
-    // TODO: from syntax.c - syntax_arrow
     
     elseif A <: ThisType then
-      try
-        if not ((frame.parent() as ViewpointType).left() is ast) then error end
-      else
+      try frame.parent() as ViewpointType else
         frame.err(ast, "`this` can only be used in a type as a viewpoint.")
+      end
+    
+    elseif A <: ViewpointType then
+      if
+        (frame.constraint() isnt None) and
+        (frame.iftype_constraint() isnt None)
+      then
+        frame.err(ast, "A viewpoint type cannot be used as a constraint.")
+      end
+      
+      try
+        frame.err(ast.right() as ThisType,
+          "`this` cannot appear on the right side of a viewpoint type.")
+      end
+      
+      try
+        frame.err(ast.right() as Cap,
+          "A reference capability cannot appear on the right side of a " +
+          "viewpoint type.")
       end
     
     elseif A <: TupleType then

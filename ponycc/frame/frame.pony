@@ -41,6 +41,7 @@ class _FrameTop[V: FrameVisitor[V]]
   fun method(): (Method | None) => None
   fun method_body(): (Sequence | None) => None
   fun constraint(): (Type | None) => None
+  fun iftype_constraint(): (Type | None) => None
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
@@ -140,4 +141,19 @@ class Frame[V: FrameVisitor[V]]
       if _ast is t.constraint() then t.constraint() else None end
     else
       _upper.constraint()
+    end
+  
+  fun iftype_constraint(): (Type | None) =>
+    """
+    Get the nearest IfType constraint (super) Type above this AST node.
+    Stop searching through the hierarchy when an IfType is reached.
+    Also stop searching at TypeArgs - type arguments of a constraining Type
+    are not counted as being a part of the constraining Type themselves.
+    """
+    match parent()
+    | let _: TypeArgs => None
+    | let i: IfType =>
+      if _ast is i.super() then i.super() else None end
+    else
+      _upper.iftype_constraint()
     end
