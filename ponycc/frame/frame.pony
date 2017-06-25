@@ -56,13 +56,12 @@ class Frame[V: FrameVisitor[V]]
     _ast   = a
   
   fun ref _visit(ast: AST) =>
-    ast.apply_specialised[Frame[V]](this,
-      {[A: AST val](frame: Frame[V], a: A) =>
-        V.apply[A](Frame[V]._create_under(frame, a) .> _visit_each(a), a)
-      })
+    let frame = Frame[V]._create_under(this, ast) .> _visit_each()
+    frame._ast.apply_specialised[Frame[V]](frame,
+      {[A: AST val](frame: Frame[V], a: A) => V.apply[A](frame, a) })
   
-  fun ref _visit_each(ast: AST) =>
-    ast.each({ref (child: (AST | None))(frame = this) =>
+  fun ref _visit_each() =>
+    _ast.each({ref (child: (AST | None))(frame = this) =>
       try frame._visit(child as AST) end
     })
   
