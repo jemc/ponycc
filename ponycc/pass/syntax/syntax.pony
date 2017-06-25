@@ -168,6 +168,11 @@ primitive Syntax is FrameVisitor[Syntax]
       
       None
     
+    elseif A <: Param then
+      // TODO: check that ast.name() is a valid param name (lowercase).
+      
+      None
+    
     elseif A <: Params then
       try frame.parent() as UseFFIDecl
         for param in ast.list().values() do
