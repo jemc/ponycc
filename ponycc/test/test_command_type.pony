@@ -5,6 +5,7 @@ use "../ast/print"
 use "../frame"
 use "../pass/post_parse"
 use "../pass/syntax"
+use "../pass/sugar"
 
 trait val TestCommandType
   new val create()
@@ -77,7 +78,7 @@ primitive _Syntax is TestCommandType
       {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
         if errs.size() > 0 then
           command.print_errors(errs)
-          return command.h().fail("Unexpected syntax error(s) occurred.")
+          return command.h().fail("Unexpected post-parse error(s) occurred.")
         end
         
         FrameRunner[Syntax](module,
@@ -85,5 +86,41 @@ primitive _Syntax is TestCommandType
             command.check_errors(errs)
             command.check_checks(module)
             command.h().complete(true)
+          } val)
+      } val)
+
+primitive _Sugar is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
+    let errs = Array[(String, SourcePosAny)]
+    var module =
+      try
+        Parse(source, errs)
+      else
+        command.print_errors(errs)
+        return command.h().fail("Unexpected parser error(s) occurred.")
+      end
+    
+    command.h().long_test(2_000_000_000) // 2 second timeout
+    
+    FrameRunner[PostParse](module,
+      {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
+        if errs.size() > 0 then
+          command.print_errors(errs)
+          return command.h().fail("Unexpected post-parse error(s) occurred.")
+        end
+        
+        FrameRunner[Syntax](module,
+          {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
+            if errs.size() > 0 then
+              command.print_errors(errs)
+              return command.h().fail("Unexpected syntax error(s) occurred.")
+            end
+            
+            FrameRunner[Sugar](module,
+              {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
+                command.check_errors(errs)
+                command.check_checks(module)
+                command.h().complete(true)
+              } val)
           } val)
       } val)
