@@ -84,6 +84,9 @@ $ERROR This constructor must provide a body.
 $ERROR This behaviour must provide a body.
   be actor_behaviour_no_body()
   ^~
+$ERROR Method guards are not yet supported in this compiler.
+  fun method_with_guard() if false => None
+                             ^~~~~
 """
 
 interface InterfaceMethodsWithCap
@@ -220,3 +223,6 @@ actor ActorMethodsNoBody
   fun actor_function_no_body()
   new actor_constructor_no_body()
   be actor_behaviour_no_body()
+
+primitive P
+  fun method_with_guard() if false => None

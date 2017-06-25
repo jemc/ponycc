@@ -149,6 +149,11 @@ primitive Syntax is FrameVisitor[Syntax]
           end
         end
       end
+      
+      try
+        frame.err(ast.guard() as Sequence,
+          "Method guards are not yet supported in this compiler.")
+      end
     
     elseif A <: Field then
       // TODO: check that ast.name() is a valid field name (lowercase).
