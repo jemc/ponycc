@@ -131,4 +131,14 @@ primitive Sugar is FrameVisitor[Sugar]
       
       frame.replace(ast)
     
+    elseif A <: Return then
+      // Set the return value if none has been specified.
+      if ast'.value() is None then
+        try frame.method() as MethodNew
+          frame.replace(ast'.with_value(This))
+        else
+          frame.replace(ast'.with_value(Reference(Id("None"))))
+        end
+      end
+    
     end
