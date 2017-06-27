@@ -89,4 +89,46 @@ primitive Sugar is FrameVisitor[Sugar]
       end
       
       frame.replace(ast)
+    
+    elseif A <: MethodNew then
+      var ast: MethodNew = ast'
+      
+      // Apply a default cap to the constructor.
+      if ast.cap() is None then
+        match frame.type_decl()
+        | let _: Primitive => ast = ast.with_cap(Val)
+        | let _: Actor     => ast = ast.with_cap(Tag)
+        else                  ast = ast.with_cap(Ref)
+        end
+      end
+      
+      // Set the return type of the constructor.
+      let type_name =
+        try (frame.type_decl() as TypeDecl).name()
+        else Unreachable(frame.type_decl()); Id("")
+        end
+      ast = ast.with_return_type(
+        NominalType(type_name where cap' = ast.cap(), cap_mod' = Ephemeral))
+      
+      frame.replace(ast)
+    
+    elseif A <: MethodBe then
+      // Set the cap and the return type of the behaviour.
+      frame.replace(ast'
+        .with_cap(Tag)
+        .with_return_type(NominalType(Id("None"))))
+    
+    elseif A <: MethodFun then
+      var ast: MethodFun = ast'
+      
+      // Apply a default cap to the function.
+      if ast.cap() is None then ast = ast.with_cap(Box) end
+      
+      // Apply a default return type to the function.
+      if ast.return_type() is None then
+        ast = ast.with_return_type(NominalType(Id("None")))
+      end
+      
+      frame.replace(ast)
+    
     end

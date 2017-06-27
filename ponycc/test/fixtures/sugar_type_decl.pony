@@ -38,51 +38,63 @@ $CHECK type_decls-9.members
 Members([], [MethodNew(Id(create), Tag, None, Params([], None),
  None, None, None, Sequence([LitTrue]), None)])
 
-$CHECK type_decls-10.members
-Members([], [MethodNew(Id(create), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None);
- MethodNew(Id(other_new), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None);
- MethodFun(Id(other_fun), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None)])
-$CHECK type_decls-11.members
-Members([FieldLet(Id(a), NominalType(Id(A), None, None, None, None), LitTrue);
- FieldVar(Id(b), NominalType(Id(B), None, None, None, None), LitFalse);
- FieldEmbed(Id(c), NominalType(Id(C), None, None, None, None), None)],
- [MethodNew(Id(create), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodNew(Id(other_new), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodFun(Id(other_fun), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None)])
-$CHECK type_decls-12.members
-Members([FieldLet(Id(a), NominalType(Id(A), None, None, None, None), LitTrue);
- FieldVar(Id(b), NominalType(Id(B), None, None, None, None), LitFalse);
- FieldEmbed(Id(c), NominalType(Id(C), None, None, None, None), None)],
- [MethodNew(Id(create), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodNew(Id(other_new), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodFun(Id(other_fun), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None)])
-$CHECK type_decls-13.members
-Members([FieldLet(Id(a), NominalType(Id(A), None, None, None, None), LitTrue);
- FieldVar(Id(b), NominalType(Id(B), None, None, None, None), LitFalse);
- FieldEmbed(Id(c), NominalType(Id(C), None, None, None, None), None)],
- [MethodNew(Id(create), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodNew(Id(other_new), None, None, Params([], None),
- None, None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
- Assign(Reference(Id(b)), LitFalse); LitFalse]), None);
- MethodFun(Id(other_fun), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None);
- MethodBe(Id(other_be), None, None, Params([], None),
- None, None, None, Sequence([LitFalse]), None)])
+$CHECK type_decls-10.members.methods-0
+MethodNew(Id(create), Val, None, Params([], None),
+ NominalType(Id(PrimitiveWithMembers), None, None, Val, Ephemeral),
+ None, None, Sequence([LitFalse]), None)
+$CHECK type_decls-10.members.methods-1
+MethodNew(Id(other_new), Val, None, Params([], None),
+ NominalType(Id(PrimitiveWithMembers), None, None, Val, Ephemeral),
+ None, None, Sequence([LitFalse]), None)
+$CHECK type_decls-10.members.methods-2
+MethodFun(Id(other_fun), Box, None, Params([], None),
+ NominalType(Id(None), None, None, None, None),
+ None, None, Sequence([LitFalse]), None)
+
+$CHECK type_decls-11.members.methods-0
+MethodNew(Id(create), Ref, None, Params([], None),
+ NominalType(Id(StructWithMembers), None, None, Ref, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-11.members.methods-1
+MethodNew(Id(other_new), Ref, None, Params([], None),
+ NominalType(Id(StructWithMembers), None, None, Ref, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-11.members.methods-2
+MethodFun(Id(other_fun), Box, None, Params([], None),
+ NominalType(Id(None), None, None, None, None),
+ None, None, Sequence([LitFalse]), None)
+
+$CHECK type_decls-12.members.methods-0
+MethodNew(Id(create), Ref, None, Params([], None),
+ NominalType(Id(ClassWithMembers), None, None, Ref, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-12.members.methods-1
+MethodNew(Id(other_new), Ref, None, Params([], None),
+ NominalType(Id(ClassWithMembers), None, None, Ref, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-12.members.methods-2
+MethodFun(Id(other_fun), Box, None, Params([], None),
+ NominalType(Id(None), None, None, None, None),
+ None, None, Sequence([LitFalse]), None)
+
+$CHECK type_decls-13.members.methods-0
+MethodNew(Id(create), Tag, None, Params([], None),
+ NominalType(Id(ActorWithMembers), None, None, Tag, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-13.members.methods-1
+MethodNew(Id(other_new), Tag, None, Params([], None),
+ NominalType(Id(ActorWithMembers), None, None, Tag, Ephemeral),
+ None, None, Sequence([Assign(Reference(Id(a)), LitTrue);
+ Assign(Reference(Id(b)), LitFalse); LitFalse]), None)
+$CHECK type_decls-13.members.methods-2
+MethodFun(Id(other_fun), Box, None, Params([], None),
+ NominalType(Id(None), None, None, None, None),
+ None, None, Sequence([LitFalse]), None)
 
 """
 
