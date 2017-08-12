@@ -224,7 +224,7 @@ class ParserGenDef
       g.push_indent()
       for i in Range(0, array.size()) do
         g.line("let child_" + i.string())
-        g.add(" = try tree.children.shift() else TkTree(token) end")
+        g.add(" = try tree.children.shift()? else TkTree(token) end")
       end
       for i in array.values() do
         g.line("tree.children.push(child_" + i.string() + ")")
@@ -238,7 +238,7 @@ class ParserGenDef
       g.line("match state.tree | let tree: TkTree =>")
       g.push_indent()
       for i in Range(0, count) do
-        g.line("try tree.children.push(tree.children.shift()) end")
+        g.line("try tree.children.push(tree.children.shift()?) end")
       end
       g.pop_indent()
       g.line("end")

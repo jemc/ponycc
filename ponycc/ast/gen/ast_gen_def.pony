@@ -108,47 +108,47 @@ class ASTGenDefFixed is ASTGenDef
     g.push_indent()
     g.line("_pos = pos'")
     
-    var iter_next = "iter.next()"
+    var iter_next = "iter.next()?"
     for (field_name, field_type, field_default) in fields.values() do
       if field_type.at("coll.Vec[") then
         let elem_type: String = field_type.substring(9, -1)
         g.line("var " + field_name + "' = " + field_type)
         g.line("var " + field_name + "_next' = ")
-        if iter_next != "iter.next()" then
+        if iter_next != "iter.next()?" then
           g.add(iter_next)
         else
-          g.add("try iter.next() else None end")
+          g.add("try iter.next()? else None end")
         end
         g.line("while true do")
         g.push_indent()
         g.line("try " + field_name + "' = ")
         g.add(field_name + "'.push(" + field_name + "_next'")
         g.add(" as " + elem_type + ") else break end")
-        g.line("try " + field_name + "_next' = iter.next()")
+        g.line("try " + field_name + "_next' = iter.next()?")
         g.add(" else " + field_name + "_next' = None; break end")
         g.pop_indent()
         g.line("end")
         iter_next = field_name + "_next'"
       else
         g.line("let " + field_name + "': (AST | None) =")
-        if iter_next != "iter.next()" then
+        if iter_next != "iter.next()?" then
           g.add(" " + iter_next)
         else
           if field_default.size() > 0 then
-            g.add(" try iter.next() else " + field_default + " end")
+            g.add(" try iter.next()? else " + field_default + " end")
           else
             g.push_indent()
-            g.line("try iter.next()")
+            g.line("try iter.next()?")
             g.line("else errs.push((\"" + _name + " missing required field: " + field_name + "\", pos')); error")
             g.line("end")
             g.pop_indent()
           end
         end
-        iter_next = "iter.next()"
+        iter_next = "iter.next()?"
       end
     end
     
-    if iter_next != "iter.next()" then
+    if iter_next != "iter.next()?" then
       g.line("if " + iter_next + " isnt None then")
       g.push_indent()
       g.line("let extra' = " + iter_next)
@@ -247,7 +247,7 @@ class ASTGenDefFixed is ASTGenDef
       for (field_name, field_type, _) in fields.values() do
         g.line("| \"" + field_name + "\" => _" + field_name)
         if field_type.at("coll.Vec[", 0) then
-          g.add("(index')")
+          g.add("(index')?")
         end
       end
       g.line("else error")
@@ -271,11 +271,11 @@ class ASTGenDefFixed is ASTGenDef
         let elem_type: String = field_type.substring(9, -1)
         g.line("try")
         g.push_indent()
-        g.line("let i = _" + field_name + ".find(child' as " + elem_type + ")")
+        g.line("let i = _" + field_name + ".find(child' as " + elem_type + ")?")
         g.line("return _create(_pos")
         for (other_field_name, _, _) in fields.values() do
           if other_field_name == field_name then
-            g.add(", _" + field_name + ".update(i, replace' as " + elem_type + ")")
+            g.add(", _" + field_name + ".update(i, replace' as " + elem_type + ")?")
           else
             g.add(", _" + other_field_name)
           end
@@ -399,7 +399,7 @@ class ASTGenDefWrap is ASTGenDef
     g.push_indent()
     g.line("try")
     g.push_indent()
-    g.line(_value_parser + "(_pos)")
+    g.line(_value_parser + "(_pos)?")
     g.pop_indent()
     g.line("else")
     g.push_indent()
@@ -413,7 +413,7 @@ class ASTGenDefWrap is ASTGenDef
     g.push_indent()
     g.line("try")
     g.push_indent()
-    g.line("let extra' = iter.next()")
+    g.line("let extra' = iter.next()?")
     g.line("errs.push((\"" + _name + " got unexpected extra field: \" + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true")
     g.pop_indent()
     g.line("else false")
