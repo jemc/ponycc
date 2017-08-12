@@ -30,8 +30,8 @@ interface val SourcePosAny
   fun entire_line(): SourcePosAny =>
     let str = source().content()
     
-    let i = try (str.rfind("\n", offset().isize()) + 1).usize() else 0 end
-    let j = try str.find("\n", offset().isize()).usize() else str.size() end
+    let i = try (str.rfind("\n", offset().isize())? + 1).usize() else 0 end
+    let j = try str.find("\n", offset().isize())?.usize() else str.size() end
     
     SourcePos(source(), i, j - i)
   

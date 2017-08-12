@@ -58,17 +58,17 @@ class val TestCommand[T: TestCommandType val]
     
     for (i, expect) in errors.pairs() do
       try
-        let actual = actual_errors(i)
+        let actual = actual_errors(i)?
         try
-          actual._1.find(expect.message)
+          actual._1.find(expect.message)?
         else
           _h.fail("error did not match expected message")
           _h.fail("expected: " + expect.message)
           _h.fail("actual:   " + actual._1)
         end
         (let line_1, let line_2) = actual._2.show_in_line()
-        try _h.assert_eq[String](expect.lines(0), line_1) end
-        try _h.assert_eq[String](expect.lines(1), line_2) end
+        try _h.assert_eq[String](expect.lines(0)?, line_1) end
+        try _h.assert_eq[String](expect.lines(1)?, line_2) end
       else
         _h.fail("expected error at index " + i.string() + " is missing")
       end
@@ -92,8 +92,8 @@ class val TestCommand[T: TestCommandType val]
           
           ast =
             (ast as AST).get_child_dynamic(
-              pieces(0),
-              try pieces(1).usize() else 0 end)
+              pieces(0)?,
+              try pieces(1)?.usize()? else 0 end)?
         end
         
         _h.assert_eq[String](String.join(check.lines), ast.string())

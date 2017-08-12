@@ -14,7 +14,7 @@ class _Parser
   new create(tokens': Iterator[_Token], errs': Seq[(String, SourcePosAny)]) =>
     (tokens, errs) = (tokens', errs')
     token =
-      try tokens.next()
+      try tokens.next()?
       else (Tk[EOF], SourcePosNone)
       end
     last_helpful_token = token
@@ -35,7 +35,7 @@ class _Parser
   
   fun ref _consume_token(): _Token =>
     let new_token =
-      try tokens.next()
+      try tokens.next()?
       else (Tk[EOF], token._2)
       end
     
@@ -272,7 +272,7 @@ class _Parser
       end
     if res isnt None then return (res, _BuildDefault) end
     match state.tree | let tree: TkTree =>
-      try tree.children.push(tree.children.shift()) end
+      try tree.children.push(tree.children.shift()?) end
     end
     
     (_complete(state), _BuildDefault)
@@ -681,13 +681,13 @@ class _Parser
       end
     if res isnt None then return (res, _BuildDefault) end
     match state.tree | let tree: TkTree =>
-      let child_0 = try tree.children.shift() else TkTree(token) end
-      let child_1 = try tree.children.shift() else TkTree(token) end
-      let child_2 = try tree.children.shift() else TkTree(token) end
-      let child_3 = try tree.children.shift() else TkTree(token) end
-      let child_4 = try tree.children.shift() else TkTree(token) end
-      let child_5 = try tree.children.shift() else TkTree(token) end
-      let child_6 = try tree.children.shift() else TkTree(token) end
+      let child_0 = try tree.children.shift()? else TkTree(token) end
+      let child_1 = try tree.children.shift()? else TkTree(token) end
+      let child_2 = try tree.children.shift()? else TkTree(token) end
+      let child_3 = try tree.children.shift()? else TkTree(token) end
+      let child_4 = try tree.children.shift()? else TkTree(token) end
+      let child_5 = try tree.children.shift()? else TkTree(token) end
+      let child_6 = try tree.children.shift()? else TkTree(token) end
       tree.children.push(child_2)
       tree.children.push(child_0)
       tree.children.push(child_3)
@@ -1085,15 +1085,15 @@ class _Parser
       if res isnt None then return (res, _BuildDefault) end
     end
     match state.tree | let tree: TkTree =>
-      let child_0 = try tree.children.shift() else TkTree(token) end
-      let child_1 = try tree.children.shift() else TkTree(token) end
-      let child_2 = try tree.children.shift() else TkTree(token) end
-      let child_3 = try tree.children.shift() else TkTree(token) end
-      let child_4 = try tree.children.shift() else TkTree(token) end
-      let child_5 = try tree.children.shift() else TkTree(token) end
-      let child_6 = try tree.children.shift() else TkTree(token) end
-      let child_7 = try tree.children.shift() else TkTree(token) end
-      let child_8 = try tree.children.shift() else TkTree(token) end
+      let child_0 = try tree.children.shift()? else TkTree(token) end
+      let child_1 = try tree.children.shift()? else TkTree(token) end
+      let child_2 = try tree.children.shift()? else TkTree(token) end
+      let child_3 = try tree.children.shift()? else TkTree(token) end
+      let child_4 = try tree.children.shift()? else TkTree(token) end
+      let child_5 = try tree.children.shift()? else TkTree(token) end
+      let child_6 = try tree.children.shift()? else TkTree(token) end
+      let child_7 = try tree.children.shift()? else TkTree(token) end
+      let child_8 = try tree.children.shift()? else TkTree(token) end
       tree.children.push(child_1)
       tree.children.push(child_0)
       tree.children.push(child_2)

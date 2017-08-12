@@ -16,7 +16,7 @@ class val Parse
       let parser = _Parser(tokens.values(), errs)
       match parser.parse()
       | let tree: TkTree =>
-        let ast = tree.to_ast(errs)
+        let ast = tree.to_ast(errs)?
         match ast
         | let a: A => return a
         else

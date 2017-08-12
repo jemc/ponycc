@@ -61,7 +61,7 @@ class TkTree
   =>
     let ast_children = recover Array[(AST | None)] end
     for child in children.values() do
-      ast_children.push(child.to_ast(errs))
+      ast_children.push(child.to_ast(errs)?)
     end
     
     // TODO: is there a less convoluted way to lift the AST to val?
@@ -70,7 +70,7 @@ class TkTree
       recover val
         let errs'' = Array[(String, SourcePosAny)]
         try
-          tk._from_iter((consume ast_children).values(), pos, errs'')
+          tk._from_iter((consume ast_children).values(), pos, errs'')?
         else
           for err in errs''.values() do errs'.push(err) end
           error

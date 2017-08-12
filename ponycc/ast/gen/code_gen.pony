@@ -15,7 +15,7 @@ class CodeGen
     out
   
   fun ref add(s: String = "") =>
-    _lines.push(try _lines.pop() else "" end + s)
+    _lines.push(try _lines.pop()? else "" end + s)
   
   fun ref line(s: String = "") =>
     _lines.push(current_indent() + s)
@@ -29,10 +29,10 @@ class CodeGen
     _indents.push(current_indent() + s)
   
   fun ref pop_indent() =>
-    try _indents.pop() end
+    try _indents.pop()? end
   
   fun ref current_indent(): String =>
-    try _indents.tail()() else "" end
+    try _indents.tail()?()? else "" end
   
   fun tag string_literal(s: String box): String =>
     let out = recover trn String end

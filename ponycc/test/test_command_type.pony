@@ -20,7 +20,7 @@ primitive _Print is TestCommandType
     let errs = Array[(String, SourcePosAny)]
     let module =
       try
-        Parse(source, errs)
+        Parse(source, errs)?
       else
         command.print_errors(errs)
         return command.h().fail("Unexpected parser error(s) occurred.")
@@ -33,7 +33,7 @@ primitive _Parse is TestCommandType
     let errs = Array[(String, SourcePosAny)]
     let success =
       try
-        Parse(source, errs)
+        Parse(source, errs)?
         true
       else
         false
@@ -46,7 +46,7 @@ primitive _PostParse is TestCommandType
     let errs = Array[(String, SourcePosAny)]
     var module =
       try
-        Parse(source, errs)
+        Parse(source, errs)?
       else
         command.print_errors(errs)
         return command.h().fail("Unexpected parser error(s) occurred.")
@@ -66,7 +66,7 @@ primitive _Syntax is TestCommandType
     let errs = Array[(String, SourcePosAny)]
     var module =
       try
-        Parse(source, errs)
+        Parse(source, errs)?
       else
         command.print_errors(errs)
         return command.h().fail("Unexpected parser error(s) occurred.")
@@ -94,7 +94,7 @@ primitive _Sugar is TestCommandType
     let errs = Array[(String, SourcePosAny)]
     var module =
       try
-        Parse(source, errs)
+        Parse(source, errs)?
       else
         command.print_errors(errs)
         return command.h().fail("Unexpected parser error(s) occurred.")

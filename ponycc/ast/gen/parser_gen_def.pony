@@ -95,7 +95,7 @@ class ParserGenDef
   =>
     let desc =
       if desc' == "None" then
-        try array(0) else "Tk[EOF]" end + ".desc()"
+        try array(0)? else "Tk[EOF]" end + ".desc()"
       else
         "\"" + desc' + "\""
       end

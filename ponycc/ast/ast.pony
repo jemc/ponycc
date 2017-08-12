@@ -347,21 +347,21 @@ class val Module is AST
   =>
     _pos = pos'
     var use_decls' = coll.Vec[UseDecl]
-    var use_decls_next' = try iter.next() else None end
+    var use_decls_next' = try iter.next()? else None end
     while true do
       try use_decls' = use_decls'.push(use_decls_next' as UseDecl) else break end
-      try use_decls_next' = iter.next() else use_decls_next' = None; break end
+      try use_decls_next' = iter.next()? else use_decls_next' = None; break end
     end
     var type_decls' = coll.Vec[TypeDecl]
     var type_decls_next' = use_decls_next'
     while true do
       try type_decls' = type_decls'.push(type_decls_next' as TypeDecl) else break end
-      try type_decls_next' = iter.next() else type_decls_next' = None; break end
+      try type_decls_next' = iter.next()? else type_decls_next' = None; break end
     end
     let docs': (AST | None) = type_decls_next'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Module got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -392,8 +392,8 @@ class val Module is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "use_decls" => _use_decls(index')
-    | "type_decls" => _type_decls(index')
+    | "use_decls" => _use_decls(index')?
+    | "type_decls" => _type_decls(index')?
     | "docs" => _docs
     else error
     end
@@ -402,12 +402,12 @@ class val Module is AST
     if child' is replace' then return this end
     try
       try
-        let i = _use_decls.find(child' as UseDecl)
-        return _create(_pos, _use_decls.update(i, replace' as UseDecl), _type_decls, _docs)
+        let i = _use_decls.find(child' as UseDecl)?
+        return _create(_pos, _use_decls.update(i, replace' as UseDecl)?, _type_decls, _docs)
       end
       try
-        let i = _type_decls.find(child' as TypeDecl)
-        return _create(_pos, _use_decls, _type_decls.update(i, replace' as TypeDecl), _docs)
+        let i = _type_decls.find(child' as TypeDecl)?
+        return _create(_pos, _use_decls, _type_decls.update(i, replace' as TypeDecl)?, _docs)
       end
       if child' is _docs then
         return _create(_pos, _use_decls, _type_decls, replace' as (LitString | None))
@@ -465,14 +465,14 @@ class val UsePackage is (AST & UseDecl)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    let prefix': (AST | None) = try iter.next() else None end
+    let prefix': (AST | None) = try iter.next()? else None end
     let package': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("UsePackage missing required field: package", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("UsePackage got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -572,25 +572,25 @@ class val UseFFIDecl is (AST & UseDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("UseFFIDecl missing required field: name", pos')); error
       end
     let return_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("UseFFIDecl missing required field: return_type", pos')); error
       end
     let params': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("UseFFIDecl missing required field: params", pos')); error
       end
     let partial': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("UseFFIDecl missing required field: partial", pos')); error
       end
-    let guard': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("UseFFIDecl got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -736,18 +736,18 @@ class val TypeAlias is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TypeAlias missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("TypeAlias got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -917,18 +917,18 @@ class val Interface is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Interface missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Interface got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1098,18 +1098,18 @@ class val Trait is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Trait missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Trait got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1279,18 +1279,18 @@ class val Primitive is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Primitive missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Primitive got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1460,18 +1460,18 @@ class val Struct is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Struct missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Struct got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1641,18 +1641,18 @@ class val Class is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Class missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Class got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1822,18 +1822,18 @@ class val Actor is (AST & TypeDecl)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Actor missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else Members end
-    let at': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else Members end
+    let at': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Actor got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -1978,16 +1978,16 @@ class val Members is AST
   =>
     _pos = pos'
     var fields' = coll.Vec[Field]
-    var fields_next' = try iter.next() else None end
+    var fields_next' = try iter.next()? else None end
     while true do
       try fields' = fields'.push(fields_next' as Field) else break end
-      try fields_next' = iter.next() else fields_next' = None; break end
+      try fields_next' = iter.next()? else fields_next' = None; break end
     end
     var methods' = coll.Vec[Method]
     var methods_next' = fields_next'
     while true do
       try methods' = methods'.push(methods_next' as Method) else break end
-      try methods_next' = iter.next() else methods_next' = None; break end
+      try methods_next' = iter.next()? else methods_next' = None; break end
     end
     if methods_next' isnt None then
       let extra' = methods_next'
@@ -2012,8 +2012,8 @@ class val Members is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "fields" => _fields(index')
-    | "methods" => _methods(index')
+    | "fields" => _fields(index')?
+    | "methods" => _methods(index')?
     else error
     end
   
@@ -2021,12 +2021,12 @@ class val Members is AST
     if child' is replace' then return this end
     try
       try
-        let i = _fields.find(child' as Field)
-        return _create(_pos, _fields.update(i, replace' as Field), _methods)
+        let i = _fields.find(child' as Field)?
+        return _create(_pos, _fields.update(i, replace' as Field)?, _methods)
       end
       try
-        let i = _methods.find(child' as Method)
-        return _create(_pos, _fields, _methods.update(i, replace' as Method))
+        let i = _methods.find(child' as Method)?
+        return _create(_pos, _fields, _methods.update(i, replace' as Method)?)
       end
       error
     else this
@@ -2085,17 +2085,17 @@ class val FieldLet is (AST & Field)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldLet missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldLet missing required field: field_type", pos')); error
       end
-    let default': (AST | None) = try iter.next() else None end
+    let default': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldLet got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -2197,17 +2197,17 @@ class val FieldVar is (AST & Field)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldVar missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldVar missing required field: field_type", pos')); error
       end
-    let default': (AST | None) = try iter.next() else None end
+    let default': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldVar got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -2309,17 +2309,17 @@ class val FieldEmbed is (AST & Field)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldEmbed missing required field: name", pos')); error
       end
     let field_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldEmbed missing required field: field_type", pos')); error
       end
-    let default': (AST | None) = try iter.next() else None end
+    let default': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldEmbed got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -2451,20 +2451,20 @@ class val MethodFun is (AST & Method)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodFun missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else Params end
-    let return_type': (AST | None) = try iter.next() else None end
-    let partial': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let guard': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodFun got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -2668,20 +2668,20 @@ class val MethodNew is (AST & Method)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodNew missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else Params end
-    let return_type': (AST | None) = try iter.next() else None end
-    let partial': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let guard': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodNew got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -2885,20 +2885,20 @@ class val MethodBe is (AST & Method)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodBe missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else Params end
-    let return_type': (AST | None) = try iter.next() else None end
-    let partial': (AST | None) = try iter.next() else None end
-    let guard': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else None end
-    let docs': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let guard': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else None end
+    let docs': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodBe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3062,10 +3062,10 @@ class val TypeParams is AST
   =>
     _pos = pos'
     var list' = coll.Vec[TypeParam]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as TypeParam) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -3086,7 +3086,7 @@ class val TypeParams is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -3094,8 +3094,8 @@ class val TypeParams is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as TypeParam)
-        return _create(_pos, _list.update(i, replace' as TypeParam))
+        let i = _list.find(child' as TypeParam)?
+        return _create(_pos, _list.update(i, replace' as TypeParam)?)
       end
       error
     else this
@@ -3147,14 +3147,14 @@ class val TypeParam is AST
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TypeParam missing required field: name", pos')); error
       end
-    let constraint': (AST | None) = try iter.next() else None end
-    let default': (AST | None) = try iter.next() else None end
+    let constraint': (AST | None) = try iter.next()? else None end
+    let default': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("TypeParam got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3246,10 +3246,10 @@ class val TypeArgs is AST
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Type) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -3270,7 +3270,7 @@ class val TypeArgs is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -3278,8 +3278,8 @@ class val TypeArgs is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Type)
-        return _create(_pos, _list.update(i, replace' as Type))
+        let i = _list.find(child' as Type)?
+        return _create(_pos, _list.update(i, replace' as Type)?)
       end
       error
     else this
@@ -3326,15 +3326,15 @@ class val Params is AST
   =>
     _pos = pos'
     var list' = coll.Vec[Param]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Param) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     let ellipsis': (AST | None) = list_next'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Params got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3361,7 +3361,7 @@ class val Params is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     | "ellipsis" => _ellipsis
     else error
     end
@@ -3370,8 +3370,8 @@ class val Params is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Param)
-        return _create(_pos, _list.update(i, replace' as Param), _ellipsis)
+        let i = _list.find(child' as Param)?
+        return _create(_pos, _list.update(i, replace' as Param)?, _ellipsis)
       end
       if child' is _ellipsis then
         return _create(_pos, _list, replace' as (Ellipsis | None))
@@ -3428,14 +3428,14 @@ class val Param is AST
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Param missing required field: name", pos')); error
       end
-    let param_type': (AST | None) = try iter.next() else None end
-    let default': (AST | None) = try iter.next() else None end
+    let param_type': (AST | None) = try iter.next()? else None end
+    let default': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Param got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3527,10 +3527,10 @@ class val Sequence is (AST & Expr)
   =>
     _pos = pos'
     var list' = coll.Vec[Expr]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Expr) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -3551,7 +3551,7 @@ class val Sequence is (AST & Expr)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -3559,8 +3559,8 @@ class val Sequence is (AST & Expr)
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Expr)
-        return _create(_pos, _list.update(i, replace' as Expr))
+        let i = _list.find(child' as Expr)?
+        return _create(_pos, _list.update(i, replace' as Expr)?)
       end
       error
     else this
@@ -3602,12 +3602,12 @@ class val Return is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Return missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Return got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3675,12 +3675,12 @@ class val Break is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Break missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Break got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3748,12 +3748,12 @@ class val Continue is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Continue missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Continue got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3821,12 +3821,12 @@ class val Error is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Error missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Error got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3894,12 +3894,12 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("CompileIntrinsic missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CompileIntrinsic got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -3967,12 +3967,12 @@ class val CompileError is (AST & Jump & Expr)
   =>
     _pos = pos'
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("CompileError missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CompileError got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4040,12 +4040,12 @@ class val IfDefFlag is (AST & IfDefCond)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefFlag missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfDefFlag got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4113,12 +4113,12 @@ class val IfDefNot is (AST & IfDefCond)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefNot missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfDefNot got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4191,16 +4191,16 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefAnd missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefAnd missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfDefAnd got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4285,16 +4285,16 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefOr missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDefOr missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfDefOr got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4384,17 +4384,17 @@ class val IfDef is (AST & Expr)
   =>
     _pos = pos'
     let condition': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDef missing required field: condition", pos')); error
       end
     let then_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfDef missing required field: then_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfDef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4501,21 +4501,21 @@ class val IfType is (AST & Expr)
   =>
     _pos = pos'
     let sub': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfType missing required field: sub", pos')); error
       end
     let super': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfType missing required field: super", pos')); error
       end
     let then_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("IfType missing required field: then_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("IfType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4629,17 +4629,17 @@ class val If is (AST & Expr)
   =>
     _pos = pos'
     let condition': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("If missing required field: condition", pos')); error
       end
     let then_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("If missing required field: then_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("If got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4741,17 +4741,17 @@ class val While is (AST & Expr)
   =>
     _pos = pos'
     let condition': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("While missing required field: condition", pos')); error
       end
     let loop_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("While missing required field: loop_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("While got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4853,17 +4853,17 @@ class val Repeat is (AST & Expr)
   =>
     _pos = pos'
     let loop_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Repeat missing required field: loop_body", pos')); error
       end
     let condition': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Repeat missing required field: condition", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Repeat got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -4970,21 +4970,21 @@ class val For is (AST & Expr)
   =>
     _pos = pos'
     let refs': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("For missing required field: refs", pos')); error
       end
     let iterator': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("For missing required field: iterator", pos')); error
       end
     let loop_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("For missing required field: loop_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("For got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5098,17 +5098,17 @@ class val With is (AST & Expr)
   =>
     _pos = pos'
     let assigns': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("With missing required field: assigns", pos')); error
       end
     let with_body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("With missing required field: with_body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("With got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5200,10 +5200,10 @@ class val IdTuple is AST
   =>
     _pos = pos'
     var elements' = coll.Vec[(Id | IdTuple)]
-    var elements_next' = try iter.next() else None end
+    var elements_next' = try iter.next()? else None end
     while true do
       try elements' = elements'.push(elements_next' as (Id | IdTuple)) else break end
-      try elements_next' = iter.next() else elements_next' = None; break end
+      try elements_next' = iter.next()? else elements_next' = None; break end
     end
     if elements_next' isnt None then
       let extra' = elements_next'
@@ -5224,7 +5224,7 @@ class val IdTuple is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "elements" => _elements(index')
+    | "elements" => _elements(index')?
     else error
     end
   
@@ -5232,8 +5232,8 @@ class val IdTuple is AST
     if child' is replace' then return this end
     try
       try
-        let i = _elements.find(child' as (Id | IdTuple))
-        return _create(_pos, _elements.update(i, replace' as (Id | IdTuple)))
+        let i = _elements.find(child' as (Id | IdTuple))?
+        return _create(_pos, _elements.update(i, replace' as (Id | IdTuple))?)
       end
       error
     else this
@@ -5275,10 +5275,10 @@ class val AssignTuple is AST
   =>
     _pos = pos'
     var elements' = coll.Vec[Assign]
-    var elements_next' = try iter.next() else None end
+    var elements_next' = try iter.next()? else None end
     while true do
       try elements' = elements'.push(elements_next' as Assign) else break end
-      try elements_next' = iter.next() else elements_next' = None; break end
+      try elements_next' = iter.next()? else elements_next' = None; break end
     end
     if elements_next' isnt None then
       let extra' = elements_next'
@@ -5299,7 +5299,7 @@ class val AssignTuple is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "elements" => _elements(index')
+    | "elements" => _elements(index')?
     else error
     end
   
@@ -5307,8 +5307,8 @@ class val AssignTuple is AST
     if child' is replace' then return this end
     try
       try
-        let i = _elements.find(child' as Assign)
-        return _create(_pos, _elements.update(i, replace' as Assign))
+        let i = _elements.find(child' as Assign)?
+        return _create(_pos, _elements.update(i, replace' as Assign)?)
       end
       error
     else this
@@ -5360,14 +5360,14 @@ class val Match is (AST & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Match missing required field: expr", pos')); error
       end
-    let cases': (AST | None) = try iter.next() else Cases end
-    let else_body': (AST | None) = try iter.next() else None end
+    let cases': (AST | None) = try iter.next()? else Cases end
+    let else_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Match got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5459,10 +5459,10 @@ class val Cases is AST
   =>
     _pos = pos'
     var list' = coll.Vec[Case]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Case) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -5483,7 +5483,7 @@ class val Cases is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -5491,8 +5491,8 @@ class val Cases is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Case)
-        return _create(_pos, _list.update(i, replace' as Case))
+        let i = _list.find(child' as Case)?
+        return _create(_pos, _list.update(i, replace' as Case)?)
       end
       error
     else this
@@ -5544,14 +5544,14 @@ class val Case is AST
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Case missing required field: expr", pos')); error
       end
-    let guard': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else None end
+    let guard': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Case got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5653,14 +5653,14 @@ class val Try is (AST & Expr)
   =>
     _pos = pos'
     let body': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Try missing required field: body", pos')); error
       end
-    let else_body': (AST | None) = try iter.next() else None end
-    let then_body': (AST | None) = try iter.next() else None end
+    let else_body': (AST | None) = try iter.next()? else None end
+    let then_body': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Try got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5757,16 +5757,16 @@ class val Consume is (AST & Expr)
   =>
     _pos = pos'
     let cap': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Consume missing required field: cap", pos')); error
       end
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Consume missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Consume got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5851,16 +5851,16 @@ class val Recover is (AST & Expr)
   =>
     _pos = pos'
     let cap': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Recover missing required field: cap", pos')); error
       end
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Recover missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Recover got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -5945,16 +5945,16 @@ class val As is (AST & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("As missing required field: expr", pos')); error
       end
     let as_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("As missing required field: as_type", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("As got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6039,16 +6039,16 @@ class val Add is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Add missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Add missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Add got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6133,16 +6133,16 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("AddUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("AddUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("AddUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6227,16 +6227,16 @@ class val Sub is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Sub missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Sub missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Sub got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6321,16 +6321,16 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("SubUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("SubUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("SubUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6415,16 +6415,16 @@ class val Mul is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Mul missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Mul missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Mul got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6509,16 +6509,16 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MulUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MulUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MulUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6603,16 +6603,16 @@ class val Div is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Div missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Div missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Div got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6697,16 +6697,16 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("DivUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("DivUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("DivUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6791,16 +6791,16 @@ class val Mod is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Mod missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Mod missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Mod got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6885,16 +6885,16 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("ModUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("ModUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("ModUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -6979,16 +6979,16 @@ class val LShift is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LShift missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LShift missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LShift got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7073,16 +7073,16 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LShiftUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LShiftUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LShiftUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7167,16 +7167,16 @@ class val RShift is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("RShift missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("RShift missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("RShift got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7261,16 +7261,16 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("RShiftUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("RShiftUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("RShiftUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7355,16 +7355,16 @@ class val Eq is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Eq missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Eq missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Eq got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7449,16 +7449,16 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("EqUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("EqUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("EqUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7543,16 +7543,16 @@ class val NE is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NE missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NE missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("NE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7637,16 +7637,16 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NEUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("NEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7731,16 +7731,16 @@ class val LT is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LT missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LT missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LT got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7825,16 +7825,16 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LTUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LTUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LTUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -7919,16 +7919,16 @@ class val LE is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LE missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LE missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8013,16 +8013,16 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LEUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8107,16 +8107,16 @@ class val GE is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GE missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GE missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("GE got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8201,16 +8201,16 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GEUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GEUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("GEUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8295,16 +8295,16 @@ class val GT is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GT missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GT missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("GT got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8389,16 +8389,16 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GTUnsafe missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("GTUnsafe missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("GTUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8483,16 +8483,16 @@ class val Is is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Is missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Is missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Is got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8577,16 +8577,16 @@ class val Isnt is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Isnt missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Isnt missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Isnt got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8671,16 +8671,16 @@ class val And is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("And missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("And missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("And got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8765,16 +8765,16 @@ class val Or is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Or missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Or missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Or got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8859,16 +8859,16 @@ class val XOr is (AST & BinaryOp & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("XOr missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("XOr missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("XOr got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -8948,12 +8948,12 @@ class val Not is (AST & UnaryOp & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Not missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Not got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9021,12 +9021,12 @@ class val Neg is (AST & UnaryOp & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Neg missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Neg got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9094,12 +9094,12 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NegUnsafe missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("NegUnsafe got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9167,12 +9167,12 @@ class val AddressOf is (AST & UnaryOp & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("AddressOf missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("AddressOf got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9240,12 +9240,12 @@ class val DigestOf is (AST & UnaryOp & Expr)
   =>
     _pos = pos'
     let expr': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("DigestOf missing required field: expr", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("DigestOf got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9318,16 +9318,16 @@ class val LocalLet is (AST & Local & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalLet missing required field: name", pos')); error
       end
     let local_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalLet missing required field: local_type", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LocalLet got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9412,16 +9412,16 @@ class val LocalVar is (AST & Local & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalVar missing required field: name", pos')); error
       end
     let local_type': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalVar missing required field: local_type", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LocalVar got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9506,16 +9506,16 @@ class val Assign is (AST & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Assign missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Assign missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Assign got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9600,16 +9600,16 @@ class val Dot is (AST & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Dot missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Dot missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Dot got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9694,16 +9694,16 @@ class val Chain is (AST & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Chain missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Chain missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Chain got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9788,16 +9788,16 @@ class val Tilde is (AST & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Tilde missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Tilde missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Tilde got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9882,16 +9882,16 @@ class val Qualify is (AST & Expr)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Qualify missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Qualify missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Qualify got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -9981,14 +9981,14 @@ class val Call is (AST & Expr)
   =>
     _pos = pos'
     let callable': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Call missing required field: callable", pos')); error
       end
-    let args': (AST | None) = try iter.next() else Args end
-    let named_args': (AST | None) = try iter.next() else NamedArgs end
+    let args': (AST | None) = try iter.next()? else Args end
+    let named_args': (AST | None) = try iter.next()? else NamedArgs end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Call got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10100,16 +10100,16 @@ class val CallFFI is (AST & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("CallFFI missing required field: name", pos')); error
       end
-    let type_args': (AST | None) = try iter.next() else None end
-    let args': (AST | None) = try iter.next() else Args end
-    let named_args': (AST | None) = try iter.next() else NamedArgs end
-    let partial': (AST | None) = try iter.next() else None end
+    let type_args': (AST | None) = try iter.next()? else None end
+    let args': (AST | None) = try iter.next()? else Args end
+    let named_args': (AST | None) = try iter.next()? else NamedArgs end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CallFFI got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10225,10 +10225,10 @@ class val Args is AST
   =>
     _pos = pos'
     var list' = coll.Vec[Sequence]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Sequence) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -10249,7 +10249,7 @@ class val Args is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -10257,8 +10257,8 @@ class val Args is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Sequence)
-        return _create(_pos, _list.update(i, replace' as Sequence))
+        let i = _list.find(child' as Sequence)?
+        return _create(_pos, _list.update(i, replace' as Sequence)?)
       end
       error
     else this
@@ -10300,10 +10300,10 @@ class val NamedArgs is AST
   =>
     _pos = pos'
     var list' = coll.Vec[NamedArg]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as NamedArg) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -10324,7 +10324,7 @@ class val NamedArgs is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -10332,8 +10332,8 @@ class val NamedArgs is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as NamedArg)
-        return _create(_pos, _list.update(i, replace' as NamedArg))
+        let i = _list.find(child' as NamedArg)?
+        return _create(_pos, _list.update(i, replace' as NamedArg)?)
       end
       error
     else this
@@ -10380,16 +10380,16 @@ class val NamedArg is AST
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NamedArg missing required field: name", pos')); error
       end
     let value': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NamedArg missing required field: value", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("NamedArg got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10508,18 +10508,18 @@ class val Lambda is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    let method_cap': (AST | None) = try iter.next() else None end
-    let name': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else Params end
-    let captures': (AST | None) = try iter.next() else None end
-    let return_type': (AST | None) = try iter.next() else None end
-    let partial': (AST | None) = try iter.next() else None end
-    let body': (AST | None) = try iter.next() else Sequence end
-    let object_cap': (AST | None) = try iter.next() else None end
+    let method_cap': (AST | None) = try iter.next()? else None end
+    let name': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let captures': (AST | None) = try iter.next()? else None end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else Sequence end
+    let object_cap': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Lambda got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10683,10 +10683,10 @@ class val LambdaCaptures is AST
   =>
     _pos = pos'
     var list' = coll.Vec[LambdaCapture]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as LambdaCapture) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -10707,7 +10707,7 @@ class val LambdaCaptures is AST
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -10715,8 +10715,8 @@ class val LambdaCaptures is AST
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as LambdaCapture)
-        return _create(_pos, _list.update(i, replace' as LambdaCapture))
+        let i = _list.find(child' as LambdaCapture)?
+        return _create(_pos, _list.update(i, replace' as LambdaCapture)?)
       end
       error
     else this
@@ -10768,14 +10768,14 @@ class val LambdaCapture is AST
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LambdaCapture missing required field: name", pos')); error
       end
-    let local_type': (AST | None) = try iter.next() else None end
-    let value': (AST | None) = try iter.next() else None end
+    let local_type': (AST | None) = try iter.next()? else None end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LambdaCapture got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10876,12 +10876,12 @@ class val Object is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    let cap': (AST | None) = try iter.next() else None end
-    let provides': (AST | None) = try iter.next() else None end
-    let members': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let provides': (AST | None) = try iter.next()? else None end
+    let members': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Object got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -10977,11 +10977,11 @@ class val LitArray is (AST & Expr)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    let elem_type': (AST | None) = try iter.next() else None end
-    let sequence': (AST | None) = try iter.next() else Sequence end
+    let elem_type': (AST | None) = try iter.next()? else None end
+    let sequence': (AST | None) = try iter.next()? else Sequence end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitArray got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11061,10 +11061,10 @@ class val Tuple is (AST & Expr)
   =>
     _pos = pos'
     var elements' = coll.Vec[Sequence]
-    var elements_next' = try iter.next() else None end
+    var elements_next' = try iter.next()? else None end
     while true do
       try elements' = elements'.push(elements_next' as Sequence) else break end
-      try elements_next' = iter.next() else elements_next' = None; break end
+      try elements_next' = iter.next()? else elements_next' = None; break end
     end
     if elements_next' isnt None then
       let extra' = elements_next'
@@ -11085,7 +11085,7 @@ class val Tuple is (AST & Expr)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "elements" => _elements(index')
+    | "elements" => _elements(index')?
     else error
     end
   
@@ -11093,8 +11093,8 @@ class val Tuple is (AST & Expr)
     if child' is replace' then return this end
     try
       try
-        let i = _elements.find(child' as Sequence)
-        return _create(_pos, _elements.update(i, replace' as Sequence))
+        let i = _elements.find(child' as Sequence)?
+        return _create(_pos, _elements.update(i, replace' as Sequence)?)
       end
       error
     else this
@@ -11130,7 +11130,7 @@ class val This is (AST & Expr)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("This got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11172,7 +11172,7 @@ class val LitTrue is (AST & LitBool & Expr)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitTrue got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11214,7 +11214,7 @@ class val LitFalse is (AST & LitBool & Expr)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitFalse got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11252,7 +11252,7 @@ class val LitInteger is (AST & Expr)
     _pos = pos'
     _value =
       try
-        _ASTUtil.parse_lit_integer(_pos)
+        _ASTUtil.parse_lit_integer(_pos)?
       else
         errs.push(("LitInteger failed to parse value", _pos)); true
         error
@@ -11260,7 +11260,7 @@ class val LitInteger is (AST & Expr)
     
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitInteger got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11293,7 +11293,7 @@ class val LitFloat is (AST & Expr)
     _pos = pos'
     _value =
       try
-        _ASTUtil.parse_lit_float(_pos)
+        _ASTUtil.parse_lit_float(_pos)?
       else
         errs.push(("LitFloat failed to parse value", _pos)); true
         error
@@ -11301,7 +11301,7 @@ class val LitFloat is (AST & Expr)
     
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitFloat got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11334,7 +11334,7 @@ class val LitString is (AST & Expr)
     _pos = pos'
     _value =
       try
-        _ASTUtil.parse_lit_string(_pos)
+        _ASTUtil.parse_lit_string(_pos)?
       else
         errs.push(("LitString failed to parse value", _pos)); true
         error
@@ -11342,7 +11342,7 @@ class val LitString is (AST & Expr)
     
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitString got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11375,7 +11375,7 @@ class val LitCharacter is (AST & Expr)
     _pos = pos'
     _value =
       try
-        _ASTUtil.parse_lit_character(_pos)
+        _ASTUtil.parse_lit_character(_pos)?
       else
         errs.push(("LitCharacter failed to parse value", _pos)); true
         error
@@ -11383,7 +11383,7 @@ class val LitCharacter is (AST & Expr)
     
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitCharacter got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11420,7 +11420,7 @@ class val LitLocation is (AST & Expr)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LitLocation got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11468,12 +11468,12 @@ class val Reference is (AST & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("Reference missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Reference got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11535,7 +11535,7 @@ class val DontCare is (AST & Expr)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("DontCare got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11583,12 +11583,12 @@ class val PackageRef is (AST & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("PackageRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("PackageRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11661,16 +11661,16 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodFunRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodFunRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodFunRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11755,16 +11755,16 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodNewRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodNewRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodNewRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11849,16 +11849,16 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodBeRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("MethodBeRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("MethodBeRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -11943,16 +11943,16 @@ class val TypeRef is (AST & Expr)
   =>
     _pos = pos'
     let package': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TypeRef missing required field: package", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TypeRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("TypeRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12037,16 +12037,16 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldLetRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldLetRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldLetRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12131,16 +12131,16 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldVarRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldVarRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldVarRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12225,16 +12225,16 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldEmbedRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FieldEmbedRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FieldEmbedRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12319,16 +12319,16 @@ class val TupleElementRef is (AST & Expr)
   =>
     _pos = pos'
     let receiver': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TupleElementRef missing required field: receiver", pos')); error
       end
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TupleElementRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("TupleElementRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12408,12 +12408,12 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalLetRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LocalLetRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12481,12 +12481,12 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("LocalVarRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LocalVarRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12554,12 +12554,12 @@ class val ParamRef is (AST & LocalRef & Expr)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("ParamRef missing required field: name", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("ParamRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12632,16 +12632,16 @@ class val ViewpointType is (AST & Type)
   =>
     _pos = pos'
     let left': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("ViewpointType missing required field: left", pos')); error
       end
     let right': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("ViewpointType missing required field: right", pos')); error
       end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("ViewpointType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -12721,10 +12721,10 @@ class val UnionType is (AST & Type)
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Type) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -12745,7 +12745,7 @@ class val UnionType is (AST & Type)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -12753,8 +12753,8 @@ class val UnionType is (AST & Type)
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Type)
-        return _create(_pos, _list.update(i, replace' as Type))
+        let i = _list.find(child' as Type)?
+        return _create(_pos, _list.update(i, replace' as Type)?)
       end
       error
     else this
@@ -12796,10 +12796,10 @@ class val IsectType is (AST & Type)
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Type) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -12820,7 +12820,7 @@ class val IsectType is (AST & Type)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -12828,8 +12828,8 @@ class val IsectType is (AST & Type)
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Type)
-        return _create(_pos, _list.update(i, replace' as Type))
+        let i = _list.find(child' as Type)?
+        return _create(_pos, _list.update(i, replace' as Type)?)
       end
       error
     else this
@@ -12871,10 +12871,10 @@ class val TupleType is (AST & Type)
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Type) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -12895,7 +12895,7 @@ class val TupleType is (AST & Type)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -12903,8 +12903,8 @@ class val TupleType is (AST & Type)
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Type)
-        return _create(_pos, _list.update(i, replace' as Type))
+        let i = _list.find(child' as Type)?
+        return _create(_pos, _list.update(i, replace' as Type)?)
       end
       error
     else this
@@ -12966,16 +12966,16 @@ class val NominalType is (AST & Type)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("NominalType missing required field: name", pos')); error
       end
-    let package': (AST | None) = try iter.next() else None end
-    let type_args': (AST | None) = try iter.next() else None end
-    let cap': (AST | None) = try iter.next() else None end
-    let cap_mod': (AST | None) = try iter.next() else None end
+    let package': (AST | None) = try iter.next()? else None end
+    let type_args': (AST | None) = try iter.next()? else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let cap_mod': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("NominalType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13106,15 +13106,15 @@ class val FunType is (AST & Type)
   =>
     _pos = pos'
     let cap': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("FunType missing required field: cap", pos')); error
       end
-    let type_params': (AST | None) = try iter.next() else None end
-    let params': (AST | None) = try iter.next() else Params end
-    let return_type': (AST | None) = try iter.next() else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let return_type': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("FunType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13252,17 +13252,17 @@ class val LambdaType is (AST & Type)
     errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
   =>
     _pos = pos'
-    let method_cap': (AST | None) = try iter.next() else None end
-    let name': (AST | None) = try iter.next() else None end
-    let type_params': (AST | None) = try iter.next() else None end
-    let param_types': (AST | None) = try iter.next() else TupleType end
-    let return_type': (AST | None) = try iter.next() else None end
-    let partial': (AST | None) = try iter.next() else None end
-    let object_cap': (AST | None) = try iter.next() else None end
-    let cap_mod': (AST | None) = try iter.next() else None end
+    let method_cap': (AST | None) = try iter.next()? else None end
+    let name': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let param_types': (AST | None) = try iter.next()? else TupleType end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let object_cap': (AST | None) = try iter.next()? else None end
+    let cap_mod': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LambdaType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13424,14 +13424,14 @@ class val TypeParamRef is (AST & Type)
   =>
     _pos = pos'
     let name': (AST | None) =
-      try iter.next()
+      try iter.next()?
       else errs.push(("TypeParamRef missing required field: name", pos')); error
       end
-    let cap': (AST | None) = try iter.next() else None end
-    let cap_mod': (AST | None) = try iter.next() else None end
+    let cap': (AST | None) = try iter.next()? else None end
+    let cap_mod': (AST | None) = try iter.next()? else None end
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("TypeParamRef got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13517,7 +13517,7 @@ class val ThisType is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("ThisType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13559,7 +13559,7 @@ class val DontCareType is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("DontCareType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13601,7 +13601,7 @@ class val ErrorType is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("ErrorType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13643,7 +13643,7 @@ class val LiteralType is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LiteralType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13685,7 +13685,7 @@ class val LiteralTypeBranch is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("LiteralTypeBranch got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13727,7 +13727,7 @@ class val OpLiteralType is (AST & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("OpLiteralType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13769,7 +13769,7 @@ class val Iso is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Iso got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13811,7 +13811,7 @@ class val Trn is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Trn got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13853,7 +13853,7 @@ class val Ref is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Ref got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13895,7 +13895,7 @@ class val Val is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Val got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13937,7 +13937,7 @@ class val Box is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Box got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -13979,7 +13979,7 @@ class val Tag is (AST & Cap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Tag got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14021,7 +14021,7 @@ class val CapRead is (AST & GenCap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CapRead got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14063,7 +14063,7 @@ class val CapSend is (AST & GenCap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CapSend got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14105,7 +14105,7 @@ class val CapShare is (AST & GenCap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CapShare got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14147,7 +14147,7 @@ class val CapAlias is (AST & GenCap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CapAlias got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14189,7 +14189,7 @@ class val CapAny is (AST & GenCap & Type)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("CapAny got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14231,7 +14231,7 @@ class val Aliased is (AST & CapMod)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Aliased got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14273,7 +14273,7 @@ class val Ephemeral is (AST & CapMod)
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Ephemeral got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14315,7 +14315,7 @@ class val At is AST
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("At got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14357,7 +14357,7 @@ class val Question is AST
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Question got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14399,7 +14399,7 @@ class val Ellipsis is AST
     _pos = pos'
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Ellipsis got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end
@@ -14447,10 +14447,10 @@ class val Semicolon is (AST & Expr)
   =>
     _pos = pos'
     var list' = coll.Vec[Expr]
-    var list_next' = try iter.next() else None end
+    var list_next' = try iter.next()? else None end
     while true do
       try list' = list'.push(list_next' as Expr) else break end
-      try list_next' = iter.next() else list_next' = None; break end
+      try list_next' = iter.next()? else list_next' = None; break end
     end
     if list_next' isnt None then
       let extra' = list_next'
@@ -14471,7 +14471,7 @@ class val Semicolon is (AST & Expr)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
-    | "list" => _list(index')
+    | "list" => _list(index')?
     else error
     end
   
@@ -14479,8 +14479,8 @@ class val Semicolon is (AST & Expr)
     if child' is replace' then return this end
     try
       try
-        let i = _list.find(child' as Expr)
-        return _create(_pos, _list.update(i, replace' as Expr))
+        let i = _list.find(child' as Expr)?
+        return _create(_pos, _list.update(i, replace' as Expr)?)
       end
       error
     else this
@@ -14512,7 +14512,7 @@ class val Id is AST
     _pos = pos'
     _value =
       try
-        _ASTUtil.parse_id(_pos)
+        _ASTUtil.parse_id(_pos)?
       else
         errs.push(("Id failed to parse value", _pos)); true
         error
@@ -14520,7 +14520,7 @@ class val Id is AST
     
     if
       try
-        let extra' = iter.next()
+        let extra' = iter.next()?
         errs.push(("Id got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
       else false
       end

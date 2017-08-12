@@ -97,7 +97,7 @@ class ASTGen
                   (l._1 == r._1) and (l._2 == r._2)
                 })
             then
-              try common_fields.remove(field_name) end
+              try common_fields.remove(field_name)? end
             end
           end
         end
@@ -124,6 +124,6 @@ class ASTGen
     g.string()
   
   fun ref _add_to_union(u: String, d: ASTGenDef) =>
-    try  unions(u).set(d)
+    try  unions(u)?.set(d)
     else unions(u) = SetIs[ASTGenDef].>set(d)
     end

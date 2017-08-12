@@ -26,11 +26,11 @@ primitive PostParse is FrameVisitor[PostParse]
           // expression is a string literal, we treat it as a docstring;
           // we set it as the docs of the method and remove it from the body.
           if body.list().size() > 1 then
-            try let docs = body.list()(0) as LitString
+            try let docs = body.list()(0)? as LitString
               let ast': Method = ast // TODO: remove this when ponyc crash is fixed
               frame.replace(ast'
                 .with_docs(docs)
-                .with_body(body.with_list(body.list().delete(0))))
+                .with_body(body.with_list(body.list().delete(0)?)))
             end
           end
         end
@@ -58,7 +58,7 @@ primitive PostParse is FrameVisitor[PostParse]
       // If the tuple type contains just one element, we unwrap it.
       // It isn't a tuple type; just a type that was surrounded by parentheses.
       if ast.list().size() == 1 then
-        try frame.replace(ast.list()(0)) end
+        try frame.replace(ast.list()(0)?) end
       end
     
     elseif A <: Semicolon then

@@ -12,7 +12,7 @@ actor Main is TestList
     
     try
       let auth = env.root as AmbientAuth
-      let test_root = FilePath(auth, Path.dir(__loc.file()))
+      let test_root = FilePath(auth, Path.dir(__loc.file()))?
       let fixtures = Glob.glob(test_root, "fixtures/*.pony")
       
       for path in fixtures.values() do

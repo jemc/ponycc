@@ -239,7 +239,7 @@ primitive Syntax is FrameVisitor[Syntax]
       try
         let body = frame.method_body() as Sequence
         if not (body.list().size() == 1) then error end
-        if not (body.list()(0) is ast) then error end
+        if not (body.list()(0)? is ast) then error end
       else
         frame.err(ast, "A compile intrinsic must be the entire method body.")
       end
@@ -252,7 +252,7 @@ primitive Syntax is FrameVisitor[Syntax]
     elseif A <: CompileError then
       try
         let body = (frame.parent(2) as IfDef).then_body()
-        if not ((body.list().size() == 1) and (body.list()(0) is ast)) then
+        if not ((body.list().size() == 1) and (body.list()(0)? is ast)) then
           frame.err(ast,
             "A compile error must be the entire ifdef clause body.")
         end

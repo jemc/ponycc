@@ -46,7 +46,7 @@ class _Gen
   
   fun ref line() => _list.push(_GenNewline)
   fun ref line_start() =>
-    let last_item = try _list(_list.size() - 1) else _GenNewline end
+    let last_item = try _list(_list.size() - 1)? else _GenNewline end
     if last_item isnt _GenNewline then line() end
   
   fun ref string_triple(s: String) =>

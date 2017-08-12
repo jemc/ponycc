@@ -11,7 +11,7 @@ class TestFixture is UnitTest
   new iso create(source': Source) => source = source'
   
   fun name(): String =>
-    try Path.rel(Path.dir(__loc.file()), source.path())
+    try Path.rel(Path.dir(__loc.file()), source.path())?
     else source.path()
     end
   
@@ -21,7 +21,7 @@ class TestFixture is UnitTest
     // Confirm that the start of the source file is a docstring.
     let triple = "\"\"\""
     var i: ISize = 0
-    if (try source.content().find(triple) == 0 else false end) then
+    if (try source.content().find(triple)? == 0 else false end) then
       i = triple.size().isize()
     else
       return h.fail("Expected the start of the source file to be a docstring.")
@@ -32,7 +32,7 @@ class TestFixture is UnitTest
     try
       while true do
         i = i + 1
-        let j = source.content().find("\n", i)
+        let j = source.content().find("\n", i)?
         let line: String = source.content().substring(i, j)
         i = j
         
@@ -45,7 +45,7 @@ class TestFixture is UnitTest
           elseif line.at("$SUGAR")      then TestCommand[_Sugar](h, line.substring(7))
           elseif line.at("$ERROR")      then TestCommand[_Error](h, line.substring(7))
           elseif line.at("$CHECK")      then TestCommand[_Check](h, line.substring(7))
-          else                               commands.shift() .> add_line(line)
+          else                               commands.shift()? .> add_line(line)
           end
         )
       end
@@ -59,16 +59,16 @@ class TestFixture is UnitTest
       let checks = List[TestCommand[_Check]]
       
       for _ in Range(0, commands.size()) do
-        match commands.shift()
+        match commands.shift()?
         | let e: TestCommand[_Error] iso => errors.unshift(consume e)
         | let c: TestCommand[_Check] iso => checks.unshift(consume c)
         | let x: TestCommandAny iso =>
-          try while true do x.add_error(errors.shift()) end end
-          try while true do x.add_check(checks.shift()) end end
+          try while true do x.add_error(errors.shift()?) end end
+          try while true do x.add_check(checks.shift()?) end end
           commands.push(consume x)
         end
       end
     end
     
     // Execute the final list of commands.
-    try while true do commands.shift()(source) end end
+    try while true do commands.shift()?(source) end end
