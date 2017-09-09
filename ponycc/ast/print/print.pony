@@ -698,7 +698,7 @@ primitive Print
       _show(g, e)
     end
     g.pop_indent()
-    g.line_start()
+    if x.sequence().list().size() > 0 then g.line_start() end
     g.write("]")
   
   fun _show(g: _Gen, x: Reference) => _show(g, x.name())

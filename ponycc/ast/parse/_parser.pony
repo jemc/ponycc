@@ -6586,7 +6586,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = None
+    state.default_tk = Tk[EOF]
     found = false
     res =
       while true do
@@ -6660,7 +6660,7 @@ class _Parser
     if res isnt None then return (res, _BuildDefault) end
     
     
-    state.default_tk = None
+    state.default_tk = Tk[EOF]
     found = false
     res =
       while true do

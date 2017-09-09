@@ -707,22 +707,22 @@ primitive ParserDefs
       .> rule("object member", ["members"])
       .> terminate("object literal", ["Tk[End]"])
     
-    // (LSQUARE | LSQUARE_NEW) seq {COMMA seq} RSQUARE
+    // (LSQUARE | LSQUARE_NEW) [seq] RSQUARE
     g.def("array")
       .> print_inline()
       .> tree("Tk[LitArray]")
       .> skip("None", ["Tk[LSquare]"; "Tk[LSquareNew]"])
       .> opt_rule("element type", ["arraytype"])
-      .> rule("array elements", ["seq"])
+      .> opt_no_dflt_rule("array elements", ["seq"])
       .> terminate("array literal", ["Tk[RSquare]"])
     
-    // LSQUARE_NEW seq {COMMA seq} RSQUARE
+    // LSQUARE_NEW [seq] RSQUARE
     g.def("nextarray")
       .> print_inline()
       .> tree("Tk[LitArray]")
       .> skip("None", ["Tk[LSquareNew]"])
       .> opt_rule("element type", ["arraytype"])
-      .> rule("array elements", ["seq"])
+      .> opt_no_dflt_rule("array elements", ["seq"])
       .> terminate("array literal", ["Tk[RSquare]"])
     
     // AS type ':'
