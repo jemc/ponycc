@@ -28,7 +28,7 @@ class C[A, B = I] is (T & I)
 
 actor Main
   let _env: Env
-  embed array: Array[String] = Array[String]
+  embed array: Array[String] = []
   
   new create(env: Env) =>
     _env = env

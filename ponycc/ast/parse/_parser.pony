@@ -7,7 +7,7 @@ class _Parser
   let errs: Seq[(String, SourcePosAny)]
   var token: _Token
   var last_helpful_token: _Token
-  let errors: Array[String] = Array[String]
+  let errors: Array[String] = []
   var failed: Bool = false
   var last_matched: String = ""
   

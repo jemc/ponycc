@@ -37,7 +37,7 @@ class ASTGen
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+        errs: Array[(String, SourcePosAny)] = [])?
       """)
     g.pop_indent()
     g.line()
@@ -91,11 +91,7 @@ class ASTGen
           for (field_name, field_type) in common_fields_snapshot.values() do
             if not
               def_fixed.fields.contains((field_name, field_type, ""),
-                {(l: (String, String, String), r: (String, String, String))
-                  : Bool
-                =>
-                  (l._1 == r._1) and (l._2 == r._2)
-                })
+                {(l, r) => (l._1 == r._1) and (l._2 == r._2) })
             then
               try common_fields.remove(field_name)? end
             end

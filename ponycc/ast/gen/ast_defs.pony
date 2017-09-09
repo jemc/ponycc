@@ -93,7 +93,7 @@ primitive ASTDefs
     ].values() do
       g.def(name)
         .> in_union("Jump", "Expr")
-        .> has("value", "(Expr | None)")
+        .> has("value", "(Expr | None)", "None")
     end
     
     g.def("IfDefFlag")
@@ -170,6 +170,7 @@ primitive ASTDefs
       .> has("else_body", "(Sequence | None)", "None")
     
     g.def("IdTuple") // TODO: implement as Tuple[(Id | IdTuple)]
+      .> in_union("Expr") // TODO: remove?
       .> with_type()
       .> has("elements", "coll.Vec[(Id | IdTuple)]", "coll.Vec[(Id | IdTuple)]")
     
@@ -251,7 +252,7 @@ primitive ASTDefs
         .> in_union("Local", "Expr")
         .> with_type()
         .> has("name",       "Id")
-        .> has("local_type", "(Type | None)")
+        .> has("local_type", "(Type | None)", "None")
     end
     
     g.def("Assign")
@@ -514,6 +515,7 @@ primitive ASTDefs
       .> has("list", "coll.Vec[Expr]")
     
     g.def_wrap("Id", "String", "_ASTUtil.parse_id")
+      .> in_union("Expr") // TODO: remove?
     
     for name in [
       "EOF"

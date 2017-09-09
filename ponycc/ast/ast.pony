@@ -10,7 +10,7 @@ trait val AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   
 
 primitive ASTInfo
@@ -322,12 +322,20 @@ class val Module is AST
   let _docs: (LitString | None)
   
   new val create(
-    use_decls': coll.Vec[UseDecl] = coll.Vec[UseDecl],
-    type_decls': coll.Vec[TypeDecl] = coll.Vec[TypeDecl],
+    use_decls': (coll.Vec[UseDecl] | Array[UseDecl] val) = coll.Vec[UseDecl],
+    type_decls': (coll.Vec[TypeDecl] | Array[TypeDecl] val) = coll.Vec[TypeDecl],
     docs': (LitString | None) = None)
   =>_pos = SourcePosNone
-    _use_decls = use_decls'
-    _type_decls = type_decls'
+    _use_decls = 
+      match use_decls'
+      | let v: coll.Vec[UseDecl] => v
+      | let s: Array[UseDecl] val => coll.Vec[UseDecl].concat(s.values())
+      end
+    _type_decls = 
+      match type_decls'
+      | let v: coll.Vec[TypeDecl] => v
+      | let s: Array[TypeDecl] val => coll.Vec[TypeDecl].concat(s.values())
+      end
     _docs = docs'
   
   new val _create(pos': SourcePosAny,
@@ -343,7 +351,7 @@ class val Module is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var use_decls' = coll.Vec[UseDecl]
@@ -462,7 +470,7 @@ class val UsePackage is (AST & UseDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let prefix': (AST | None) = try iter.next()? else None end
@@ -568,7 +576,7 @@ class val UseFFIDecl is (AST & UseDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -732,7 +740,7 @@ class val TypeAlias is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -913,7 +921,7 @@ class val Interface is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1094,7 +1102,7 @@ class val Trait is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1275,7 +1283,7 @@ class val Primitive is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1456,7 +1464,7 @@ class val Struct is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1637,7 +1645,7 @@ class val Class is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1818,7 +1826,7 @@ class val Actor is (AST & TypeDecl)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -1957,11 +1965,19 @@ class val Members is AST
   let _methods: coll.Vec[Method]
   
   new val create(
-    fields': coll.Vec[Field] = coll.Vec[Field],
-    methods': coll.Vec[Method] = coll.Vec[Method])
+    fields': (coll.Vec[Field] | Array[Field] val) = coll.Vec[Field],
+    methods': (coll.Vec[Method] | Array[Method] val) = coll.Vec[Method])
   =>_pos = SourcePosNone
-    _fields = fields'
-    _methods = methods'
+    _fields = 
+      match fields'
+      | let v: coll.Vec[Field] => v
+      | let s: Array[Field] val => coll.Vec[Field].concat(s.values())
+      end
+    _methods = 
+      match methods'
+      | let v: coll.Vec[Method] => v
+      | let s: Array[Method] val => coll.Vec[Method].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     fields': coll.Vec[Field],
@@ -1974,7 +1990,7 @@ class val Members is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var fields' = coll.Vec[Field]
@@ -2081,7 +2097,7 @@ class val FieldLet is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -2193,7 +2209,7 @@ class val FieldVar is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -2305,7 +2321,7 @@ class val FieldEmbed is (AST & Field)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -2447,7 +2463,7 @@ class val MethodFun is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -2664,7 +2680,7 @@ class val MethodNew is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -2881,7 +2897,7 @@ class val MethodBe is (AST & Method)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -3045,9 +3061,13 @@ class val TypeParams is AST
   let _list: coll.Vec[TypeParam]
   
   new val create(
-    list': coll.Vec[TypeParam] = coll.Vec[TypeParam])
+    list': (coll.Vec[TypeParam] | Array[TypeParam] val) = coll.Vec[TypeParam])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[TypeParam] => v
+      | let s: Array[TypeParam] val => coll.Vec[TypeParam].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[TypeParam])
@@ -3058,7 +3078,7 @@ class val TypeParams is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[TypeParam]
@@ -3143,7 +3163,7 @@ class val TypeParam is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -3229,9 +3249,13 @@ class val TypeArgs is AST
   let _list: coll.Vec[Type]
   
   new val create(
-    list': coll.Vec[Type] = coll.Vec[Type])
+    list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Type] => v
+      | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Type])
@@ -3242,7 +3266,7 @@ class val TypeArgs is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
@@ -3305,10 +3329,14 @@ class val Params is AST
   let _ellipsis: (Ellipsis | None)
   
   new val create(
-    list': coll.Vec[Param] = coll.Vec[Param],
+    list': (coll.Vec[Param] | Array[Param] val) = coll.Vec[Param],
     ellipsis': (Ellipsis | None) = None)
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Param] => v
+      | let s: Array[Param] val => coll.Vec[Param].concat(s.values())
+      end
     _ellipsis = ellipsis'
   
   new val _create(pos': SourcePosAny,
@@ -3322,7 +3350,7 @@ class val Params is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Param]
@@ -3424,7 +3452,7 @@ class val Param is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -3510,9 +3538,13 @@ class val Sequence is (AST & Expr)
   let _list: coll.Vec[Expr]
   
   new val create(
-    list': coll.Vec[Expr] = coll.Vec[Expr])
+    list': (coll.Vec[Expr] | Array[Expr] val) = coll.Vec[Expr])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Expr] => v
+      | let s: Array[Expr] val => coll.Vec[Expr].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Expr])
@@ -3523,7 +3555,7 @@ class val Sequence is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Expr]
@@ -3585,7 +3617,7 @@ class val Return is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3598,13 +3630,10 @@ class val Return is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("Return missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -3658,7 +3687,7 @@ class val Break is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3671,13 +3700,10 @@ class val Break is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("Break missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -3731,7 +3757,7 @@ class val Continue is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3744,13 +3770,10 @@ class val Continue is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("Continue missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -3804,7 +3827,7 @@ class val Error is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3817,13 +3840,10 @@ class val Error is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("Error missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -3877,7 +3897,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3890,13 +3910,10 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("CompileIntrinsic missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -3950,7 +3967,7 @@ class val CompileError is (AST & Jump & Expr)
   let _value: (Expr | None)
   
   new val create(
-    value': (Expr | None))
+    value': (Expr | None) = None)
   =>_pos = SourcePosNone
     _value = value'
   
@@ -3963,13 +3980,10 @@ class val CompileError is (AST & Jump & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
-    let value': (AST | None) =
-      try iter.next()?
-      else errs.push(("CompileError missing required field: value", pos')); error
-      end
+    let value': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -4036,7 +4050,7 @@ class val IfDefFlag is (AST & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -4109,7 +4123,7 @@ class val IfDefNot is (AST & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -4187,7 +4201,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -4281,7 +4295,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -4380,7 +4394,7 @@ class val IfDef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let condition': (AST | None) =
@@ -4497,7 +4511,7 @@ class val IfType is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let sub': (AST | None) =
@@ -4625,7 +4639,7 @@ class val If is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let condition': (AST | None) =
@@ -4737,7 +4751,7 @@ class val While is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let condition': (AST | None) =
@@ -4849,7 +4863,7 @@ class val Repeat is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let loop_body': (AST | None) =
@@ -4966,7 +4980,7 @@ class val For is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let refs': (AST | None) =
@@ -5094,7 +5108,7 @@ class val With is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let assigns': (AST | None) =
@@ -5177,15 +5191,19 @@ class val With is (AST & Expr)
     s.push(')')
     consume s
 
-class val IdTuple is AST
+class val IdTuple is (AST & Expr)
   let _pos: SourcePosAny
   
   let _elements: coll.Vec[(Id | IdTuple)]
   
   new val create(
-    elements': coll.Vec[(Id | IdTuple)] = coll.Vec[(Id | IdTuple)])
+    elements': (coll.Vec[(Id | IdTuple)] | Array[(Id | IdTuple)] val) = coll.Vec[(Id | IdTuple)])
   =>_pos = SourcePosNone
-    _elements = elements'
+    _elements = 
+      match elements'
+      | let v: coll.Vec[(Id | IdTuple)] => v
+      | let s: Array[(Id | IdTuple)] val => coll.Vec[(Id | IdTuple)].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     elements': coll.Vec[(Id | IdTuple)])
@@ -5196,7 +5214,7 @@ class val IdTuple is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var elements' = coll.Vec[(Id | IdTuple)]
@@ -5258,9 +5276,13 @@ class val AssignTuple is AST
   let _elements: coll.Vec[Assign]
   
   new val create(
-    elements': coll.Vec[Assign] = coll.Vec[Assign])
+    elements': (coll.Vec[Assign] | Array[Assign] val) = coll.Vec[Assign])
   =>_pos = SourcePosNone
-    _elements = elements'
+    _elements = 
+      match elements'
+      | let v: coll.Vec[Assign] => v
+      | let s: Array[Assign] val => coll.Vec[Assign].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     elements': coll.Vec[Assign])
@@ -5271,7 +5293,7 @@ class val AssignTuple is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var elements' = coll.Vec[Assign]
@@ -5356,7 +5378,7 @@ class val Match is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -5442,9 +5464,13 @@ class val Cases is AST
   let _list: coll.Vec[Case]
   
   new val create(
-    list': coll.Vec[Case] = coll.Vec[Case])
+    list': (coll.Vec[Case] | Array[Case] val) = coll.Vec[Case])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Case] => v
+      | let s: Array[Case] val => coll.Vec[Case].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Case])
@@ -5455,7 +5481,7 @@ class val Cases is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Case]
@@ -5540,7 +5566,7 @@ class val Case is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -5649,7 +5675,7 @@ class val Try is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let body': (AST | None) =
@@ -5753,7 +5779,7 @@ class val Consume is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let cap': (AST | None) =
@@ -5847,7 +5873,7 @@ class val Recover is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let cap': (AST | None) =
@@ -5941,7 +5967,7 @@ class val As is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -6035,7 +6061,7 @@ class val Add is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6129,7 +6155,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6223,7 +6249,7 @@ class val Sub is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6317,7 +6343,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6411,7 +6437,7 @@ class val Mul is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6505,7 +6531,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6599,7 +6625,7 @@ class val Div is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6693,7 +6719,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6787,7 +6813,7 @@ class val Mod is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6881,7 +6907,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -6975,7 +7001,7 @@ class val LShift is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7069,7 +7095,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7163,7 +7189,7 @@ class val RShift is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7257,7 +7283,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7351,7 +7377,7 @@ class val Eq is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7445,7 +7471,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7539,7 +7565,7 @@ class val NE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7633,7 +7659,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7727,7 +7753,7 @@ class val LT is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7821,7 +7847,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -7915,7 +7941,7 @@ class val LE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8009,7 +8035,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8103,7 +8129,7 @@ class val GE is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8197,7 +8223,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8291,7 +8317,7 @@ class val GT is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8385,7 +8411,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8479,7 +8505,7 @@ class val Is is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8573,7 +8599,7 @@ class val Isnt is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8667,7 +8693,7 @@ class val And is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8761,7 +8787,7 @@ class val Or is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8855,7 +8881,7 @@ class val XOr is (AST & BinaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -8944,7 +8970,7 @@ class val Not is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -9017,7 +9043,7 @@ class val Neg is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -9090,7 +9116,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -9163,7 +9189,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -9236,7 +9262,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let expr': (AST | None) =
@@ -9298,7 +9324,7 @@ class val LocalLet is (AST & Local & Expr)
   
   new val create(
     name': Id,
-    local_type': (Type | None))
+    local_type': (Type | None) = None)
   =>_pos = SourcePosNone
     _name = name'
     _local_type = local_type'
@@ -9314,17 +9340,14 @@ class val LocalLet is (AST & Local & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalLet missing required field: name", pos')); error
       end
-    let local_type': (AST | None) =
-      try iter.next()?
-      else errs.push(("LocalLet missing required field: local_type", pos')); error
-      end
+    let local_type': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9392,7 +9415,7 @@ class val LocalVar is (AST & Local & Expr)
   
   new val create(
     name': Id,
-    local_type': (Type | None))
+    local_type': (Type | None) = None)
   =>_pos = SourcePosNone
     _name = name'
     _local_type = local_type'
@@ -9408,17 +9431,14 @@ class val LocalVar is (AST & Local & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalVar missing required field: name", pos')); error
       end
-    let local_type': (AST | None) =
-      try iter.next()?
-      else errs.push(("LocalVar missing required field: local_type", pos')); error
-      end
+    let local_type': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9502,7 +9522,7 @@ class val Assign is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -9596,7 +9616,7 @@ class val Dot is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -9690,7 +9710,7 @@ class val Chain is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -9784,7 +9804,7 @@ class val Tilde is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -9878,7 +9898,7 @@ class val Qualify is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -9977,7 +9997,7 @@ class val Call is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let callable': (AST | None) =
@@ -10096,7 +10116,7 @@ class val CallFFI is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -10208,9 +10228,13 @@ class val Args is AST
   let _list: coll.Vec[Sequence]
   
   new val create(
-    list': coll.Vec[Sequence] = coll.Vec[Sequence])
+    list': (coll.Vec[Sequence] | Array[Sequence] val) = coll.Vec[Sequence])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Sequence] => v
+      | let s: Array[Sequence] val => coll.Vec[Sequence].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Sequence])
@@ -10221,7 +10245,7 @@ class val Args is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Sequence]
@@ -10283,9 +10307,13 @@ class val NamedArgs is AST
   let _list: coll.Vec[NamedArg]
   
   new val create(
-    list': coll.Vec[NamedArg] = coll.Vec[NamedArg])
+    list': (coll.Vec[NamedArg] | Array[NamedArg] val) = coll.Vec[NamedArg])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[NamedArg] => v
+      | let s: Array[NamedArg] val => coll.Vec[NamedArg].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[NamedArg])
@@ -10296,7 +10324,7 @@ class val NamedArgs is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[NamedArg]
@@ -10376,7 +10404,7 @@ class val NamedArg is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -10505,7 +10533,7 @@ class val Lambda is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let method_cap': (AST | None) = try iter.next()? else None end
@@ -10666,9 +10694,13 @@ class val LambdaCaptures is AST
   let _list: coll.Vec[LambdaCapture]
   
   new val create(
-    list': coll.Vec[LambdaCapture] = coll.Vec[LambdaCapture])
+    list': (coll.Vec[LambdaCapture] | Array[LambdaCapture] val) = coll.Vec[LambdaCapture])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[LambdaCapture] => v
+      | let s: Array[LambdaCapture] val => coll.Vec[LambdaCapture].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[LambdaCapture])
@@ -10679,7 +10711,7 @@ class val LambdaCaptures is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[LambdaCapture]
@@ -10764,7 +10796,7 @@ class val LambdaCapture is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -10873,7 +10905,7 @@ class val Object is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let cap': (AST | None) = try iter.next()? else None end
@@ -10974,7 +11006,7 @@ class val LitArray is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let elem_type': (AST | None) = try iter.next()? else None end
@@ -11044,9 +11076,13 @@ class val Tuple is (AST & Expr)
   let _elements: coll.Vec[Sequence]
   
   new val create(
-    elements': coll.Vec[Sequence] = coll.Vec[Sequence])
+    elements': (coll.Vec[Sequence] | Array[Sequence] val) = coll.Vec[Sequence])
   =>_pos = SourcePosNone
-    _elements = elements'
+    _elements = 
+      match elements'
+      | let v: coll.Vec[Sequence] => v
+      | let s: Array[Sequence] val => coll.Vec[Sequence].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     elements': coll.Vec[Sequence])
@@ -11057,7 +11093,7 @@ class val Tuple is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var elements' = coll.Vec[Sequence]
@@ -11125,7 +11161,7 @@ class val This is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -11167,7 +11203,7 @@ class val LitTrue is (AST & LitBool & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -11209,7 +11245,7 @@ class val LitFalse is (AST & LitBool & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -11247,7 +11283,7 @@ class val LitInteger is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     _value =
@@ -11288,7 +11324,7 @@ class val LitFloat is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     _value =
@@ -11329,7 +11365,7 @@ class val LitString is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     _value =
@@ -11370,7 +11406,7 @@ class val LitCharacter is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     _value =
@@ -11415,7 +11451,7 @@ class val LitLocation is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -11464,7 +11500,7 @@ class val Reference is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -11530,7 +11566,7 @@ class val DontCare is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -11579,7 +11615,7 @@ class val PackageRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -11657,7 +11693,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -11751,7 +11787,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -11845,7 +11881,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -11939,7 +11975,7 @@ class val TypeRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let package': (AST | None) =
@@ -12033,7 +12069,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -12127,7 +12163,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -12221,7 +12257,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -12315,7 +12351,7 @@ class val TupleElementRef is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let receiver': (AST | None) =
@@ -12404,7 +12440,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -12477,7 +12513,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -12550,7 +12586,7 @@ class val ParamRef is (AST & LocalRef & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -12628,7 +12664,7 @@ class val ViewpointType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let left': (AST | None) =
@@ -12704,9 +12740,13 @@ class val UnionType is (AST & Type)
   let _list: coll.Vec[Type]
   
   new val create(
-    list': coll.Vec[Type] = coll.Vec[Type])
+    list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Type] => v
+      | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Type])
@@ -12717,7 +12757,7 @@ class val UnionType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
@@ -12779,9 +12819,13 @@ class val IsectType is (AST & Type)
   let _list: coll.Vec[Type]
   
   new val create(
-    list': coll.Vec[Type] = coll.Vec[Type])
+    list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Type] => v
+      | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Type])
@@ -12792,7 +12836,7 @@ class val IsectType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
@@ -12854,9 +12898,13 @@ class val TupleType is (AST & Type)
   let _list: coll.Vec[Type]
   
   new val create(
-    list': coll.Vec[Type] = coll.Vec[Type])
+    list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Type] => v
+      | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Type])
@@ -12867,7 +12915,7 @@ class val TupleType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Type]
@@ -12962,7 +13010,7 @@ class val NominalType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -13102,7 +13150,7 @@ class val FunType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let cap': (AST | None) =
@@ -13249,7 +13297,7 @@ class val LambdaType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let method_cap': (AST | None) = try iter.next()? else None end
@@ -13420,7 +13468,7 @@ class val TypeParamRef is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     let name': (AST | None) =
@@ -13512,7 +13560,7 @@ class val ThisType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13554,7 +13602,7 @@ class val DontCareType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13596,7 +13644,7 @@ class val ErrorType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13638,7 +13686,7 @@ class val LiteralType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13680,7 +13728,7 @@ class val LiteralTypeBranch is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13722,7 +13770,7 @@ class val OpLiteralType is (AST & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13764,7 +13812,7 @@ class val Iso is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13806,7 +13854,7 @@ class val Trn is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13848,7 +13896,7 @@ class val Ref is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13890,7 +13938,7 @@ class val Val is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13932,7 +13980,7 @@ class val Box is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -13974,7 +14022,7 @@ class val Tag is (AST & Cap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14016,7 +14064,7 @@ class val CapRead is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14058,7 +14106,7 @@ class val CapSend is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14100,7 +14148,7 @@ class val CapShare is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14142,7 +14190,7 @@ class val CapAlias is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14184,7 +14232,7 @@ class val CapAny is (AST & GenCap & Type)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14226,7 +14274,7 @@ class val Aliased is (AST & CapMod)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14268,7 +14316,7 @@ class val Ephemeral is (AST & CapMod)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14310,7 +14358,7 @@ class val At is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14352,7 +14400,7 @@ class val Question is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14394,7 +14442,7 @@ class val Ellipsis is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     if
@@ -14430,9 +14478,13 @@ class val Semicolon is (AST & Expr)
   let _list: coll.Vec[Expr]
   
   new val create(
-    list': coll.Vec[Expr])
+    list': (coll.Vec[Expr] | Array[Expr] val))
   =>_pos = SourcePosNone
-    _list = list'
+    _list = 
+      match list'
+      | let v: coll.Vec[Expr] => v
+      | let s: Array[Expr] val => coll.Vec[Expr].concat(s.values())
+      end
   
   new val _create(pos': SourcePosAny,
     list': coll.Vec[Expr])
@@ -14443,7 +14495,7 @@ class val Semicolon is (AST & Expr)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     var list' = coll.Vec[Expr]
@@ -14499,7 +14551,7 @@ class val Semicolon is (AST & Expr)
     s.push(')')
     consume s
 
-class val Id is AST
+class val Id is (AST & Expr)
   let _pos: SourcePosAny
   let _value: String
   new val create(value': String) =>(_pos, _value) = (SourcePosNone, value')
@@ -14507,7 +14559,7 @@ class val Id is AST
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     _pos = pos'
     _value =
@@ -14545,7 +14597,7 @@ class val EOF is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
@@ -14564,7 +14616,7 @@ class val NewLine is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
@@ -14583,7 +14635,7 @@ class val Use is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
@@ -14602,7 +14654,7 @@ class val Colon is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
@@ -14621,7 +14673,7 @@ class val Comma is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
@@ -14640,7 +14692,7 @@ class val Constant is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
@@ -14659,7 +14711,7 @@ class val Pipe is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
@@ -14678,7 +14730,7 @@ class val Ampersand is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
@@ -14697,7 +14749,7 @@ class val SubType is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
@@ -14716,7 +14768,7 @@ class val Arrow is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
@@ -14735,7 +14787,7 @@ class val DoubleArrow is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
@@ -14754,7 +14806,7 @@ class val Backslash is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
   
@@ -14773,7 +14825,7 @@ class val LParen is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
@@ -14792,7 +14844,7 @@ class val RParen is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
@@ -14811,7 +14863,7 @@ class val LBrace is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
@@ -14830,7 +14882,7 @@ class val RBrace is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
@@ -14849,7 +14901,7 @@ class val LSquare is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
@@ -14868,7 +14920,7 @@ class val RSquare is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
@@ -14887,7 +14939,7 @@ class val LParenNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
@@ -14906,7 +14958,7 @@ class val LBraceNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
@@ -14925,7 +14977,7 @@ class val LSquareNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
@@ -14944,7 +14996,7 @@ class val SubNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
@@ -14963,7 +15015,7 @@ class val SubUnsafeNew is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
@@ -14982,7 +15034,7 @@ class val In is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
@@ -15001,7 +15053,7 @@ class val Until is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
@@ -15020,7 +15072,7 @@ class val Do is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
@@ -15039,7 +15091,7 @@ class val Else is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
@@ -15058,7 +15110,7 @@ class val ElseIf is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
@@ -15077,7 +15129,7 @@ class val Then is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
@@ -15096,7 +15148,7 @@ class val End is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
@@ -15115,7 +15167,7 @@ class val Var is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
@@ -15134,7 +15186,7 @@ class val Let is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
@@ -15153,7 +15205,7 @@ class val Embed is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
@@ -15172,7 +15224,7 @@ class val Where is (AST & Lexeme)
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+    errs: Array[(String, SourcePosAny)] = [])?
   =>
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   

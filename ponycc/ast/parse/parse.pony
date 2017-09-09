@@ -8,7 +8,7 @@ class val Parse
   
   fun apply[A: AST = Module](
     source: Source,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
+    errs: Array[(String, SourcePosAny)] = [])
     : A ?
   =>
     match _lexer(source)

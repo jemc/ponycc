@@ -51,8 +51,7 @@ primitive Sugar is FrameVisitor[Sugar]
             end
           
           let method =
-            MethodNew(Id("create"), cap where body' =
-              Sequence(coll.Vec[Expr].concat([as Expr: LitTrue].values())))
+            MethodNew(Id("create"), cap where body' = Sequence([LitTrue]))
           
           ast = ast
             .with_members(ast.members()
@@ -141,4 +140,24 @@ primitive Sugar is FrameVisitor[Sugar]
         end
       end
     
+    // TODO: from sugar.c - sugar_else
+    // TODO: from sugar.c - sugar_try
+    
+    elseif A <: For then
+      // TODO: actual package_hygienic_id
+      // TODO: attach "nice name" to Id: "for loop iterator"
+      let iter_id = Id("$hygienic_id")
+      
+      let try_next = Try(
+        Sequence([Call(Dot(Reference(iter_id), Id("next")))]),
+        Sequence([Break])
+      )
+      
+      frame.replace(Sequence([
+        Assign(LocalLet(iter_id), ast'.iterator())
+        While(
+          Sequence([Call(Dot(Reference(iter_id), Id("has_next")))]),
+          Sequence([Assign(ast'.refs(), try_next)])
+        )
+      ]))
     end

@@ -10,7 +10,7 @@ trait val TkAny is peg.Label
   fun _from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
+    errs: Array[(String, SourcePosAny)] = [])
     : (AST ref | None) ?
 
 primitive Tk[A: (AST | None)] is TkAny
@@ -19,7 +19,7 @@ primitive Tk[A: (AST | None)] is TkAny
   fun _from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
+    errs: Array[(String, SourcePosAny)] = [])
     : (AST ref | None) ?
   =>
     if false then error end // TODO: fix ponyc, then remove this
@@ -33,7 +33,7 @@ type _Token is (TkAny, SourcePosAny)
 class TkTree
   var tk: TkAny
   var pos: SourcePosAny
-  embed children: Array[TkTree] = Array[TkTree]
+  embed children: Array[TkTree] = []
   // TODO: annotations
   
   new ref create(token: _Token) => (tk, pos) = token
@@ -56,7 +56,7 @@ class TkTree
     buf
   
   fun to_ast(
-    errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])
+    errs: Array[(String, SourcePosAny)] = [])
     : (AST | None) ?
   =>
     let ast_children = recover Array[(AST | None)] end

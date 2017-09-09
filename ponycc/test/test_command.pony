@@ -24,9 +24,9 @@ class val TestCommand[T: TestCommandType val]
   let _h: TestHelper
   
   let message:  String
-  embed lines:  Array[String]              = Array[String]
-  embed errors: Array[TestCommand[_Error]] = Array[TestCommand[_Error]]
-  embed checks: Array[TestCommand[_Check]] = Array[TestCommand[_Check]]
+  embed lines:  Array[String]              = []
+  embed errors: Array[TestCommand[_Error]] = []
+  embed checks: Array[TestCommand[_Check]] = []
   
   new iso create(h': TestHelper, m': String) =>
     (_h, message) = (h', m')
@@ -96,7 +96,7 @@ class val TestCommand[T: TestCommandType val]
               try pieces(1)?.usize()? else 0 end)?
         end
         
-        _h.assert_eq[String](String.join(check.lines), ast.string())
+        _h.assert_eq[String](String.join(check.lines.values()), ast.string())
       else
         _h.fail("Check failed to walk path: " + check.message)
         _h.log("The crumb that failed parse and/or lookup was: " + last_crumb)

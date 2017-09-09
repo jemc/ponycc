@@ -5,7 +5,7 @@ class ParserGenDef
   // TODO: docs for all DSL methods
   let _gen: ParserGen
   let _name: String
-  let _pieces: Array[{(CodeGen)}] = Array[{(CodeGen)}]
+  let _pieces: Array[{(CodeGen)}] = []
   
   var _print_inline: Bool = false // TODO
   var _annotate:     Bool = false // TODO
@@ -35,14 +35,14 @@ class ParserGenDef
   fun ref builder(builder': String) => _builder = builder'
   
   fun ref tree(s: String) =>
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       g.line("state.add_deferrable_ast((" + s + ", _current_pos()))")
-    } ref)
+    })
   
   fun ref restart(a: Array[String]) => _restart      = a    // TODO
   
   fun ref _rule_set(desc: String, array: Array[String], default_tk: String = "None") =>
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       if _gen.debug then
         g.line()
         let opt = if default_tk is "None" then "required" else "optional" end
@@ -100,7 +100,7 @@ class ParserGenDef
         "\"" + desc' + "\""
       end
     
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       if _gen.debug then
         g.line()
         let opt = if default_tk is "None" then "required" else "optional" end
@@ -155,49 +155,49 @@ class ParserGenDef
   
   fun ref not_token(desc: String, array: Array[String]) =>
     _token_set("None", array, "Tk[EOF]" where make_ast = false)
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       g.line("if found then return (_RuleNotFound, " + _builder + ") end")
-    } ref)
+    })
   
   fun ref if_token_then_rule(tk: String, desc: String, array: Array[String]) =>
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
-    _pieces.push({(g: CodeGen) => g.line("if found then"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("if found then"); g.push_indent() })
     _rule_set(desc, array)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref if_token_then_rule_else_none(tk: String, desc: String,
     array: Array[String])
   =>
     _token_set("None", [tk], "Tk[None]" where make_ast = false)
-    _pieces.push({(g: CodeGen) => g.line("if found then"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("if found then"); g.push_indent() })
     _rule_set(desc, array)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref while_token_do_rule(tk: String, desc: String, array: Array[String]) =>
-    _pieces.push({(g: CodeGen) => g.line("while true do"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("while true do"); g.push_indent() })
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
-    _pieces.push({(g: CodeGen) => g.line("if not found then break end") } ref)
+    _pieces.push({(g) => g.line("if not found then break end") })
     _rule_set(desc, array)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref if_token_then_token(tk: String, desc: String, array: Array[String]) =>
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
-    _pieces.push({(g: CodeGen) => g.line("if found then"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("if found then"); g.push_indent() })
     _token_set(desc, array)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref while_token_do_token(tk: String, desc: String, array: Array[String]) =>
-    _pieces.push({(g: CodeGen) => g.line("while true do"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("while true do"); g.push_indent() })
     _token_set("None", [tk], "Tk[EOF]" where make_ast = false)
-    _pieces.push({(g: CodeGen) => g.line("if not found then break end") } ref)
+    _pieces.push({(g) => g.line("if not found then break end") })
     _token_set(desc, array)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref seq(desc: String, array: Array[String]) =>
-    _pieces.push({(g: CodeGen) => g.line("while true do"); g.push_indent() } ref)
+    _pieces.push({(g) => g.line("while true do"); g.push_indent() })
     _rule_set(desc, array, "Tk[EOF]")
-    _pieces.push({(g: CodeGen) => g.line("if not found then break end") } ref)
-    _pieces.push({(g: CodeGen) => g.pop_indent(); g.line("end") } ref)
+    _pieces.push({(g) => g.line("if not found then break end") })
+    _pieces.push({(g) => g.pop_indent(); g.line("end") })
   
   fun ref skip(desc: String, array: Array[String]) =>
     _token_set(desc, array where make_ast = false)
@@ -206,7 +206,7 @@ class ParserGenDef
     _token_set(desc, array where make_ast = false, terminating = true)
   
   fun ref map_tk(array: Array[(String, String)]) =>
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       g.line("match state.tree | let tree: TkTree =>")
       g.push_indent()
       g.line("match tree.tk")
@@ -216,10 +216,10 @@ class ParserGenDef
       g.line("end")
       g.pop_indent()
       g.line("end")
-    } ref)
+    })
   
   fun ref reorder_children(array: Array[USize]) =>
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       g.line("match state.tree | let tree: TkTree =>")
       g.push_indent()
       for i in Range(0, array.size()) do
@@ -231,10 +231,10 @@ class ParserGenDef
       end
       g.pop_indent()
       g.line("end")
-    } ref)
+    })
   
   fun ref rotate_left_children(count: USize) =>
-    _pieces.push({(g: CodeGen) =>
+    _pieces.push({(g) =>
       g.line("match state.tree | let tree: TkTree =>")
       g.push_indent()
       for i in Range(0, count) do
@@ -242,4 +242,4 @@ class ParserGenDef
       end
       g.pop_indent()
       g.line("end")
-    } ref)
+    })

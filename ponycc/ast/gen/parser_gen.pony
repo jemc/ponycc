@@ -1,6 +1,6 @@
 
 class ParserGen
-  embed defs: Array[ParserGenDef] = Array[ParserGenDef]
+  embed defs: Array[ParserGenDef] = []
   let debug: Bool = true
   
   new ref create() => None
@@ -24,14 +24,14 @@ class ParserGen
       let errs: Seq[(String, SourcePosAny)]
       var token: _Token
       var last_helpful_token: _Token
-      let errors: Array[String] = Array[String]
+      let errors: Array[String] = []
       var failed: Bool = false
       var last_matched: String = ""
       
       new create(tokens': Iterator[_Token], errs': Seq[(String, SourcePosAny)]) =>
         (tokens, errs) = (tokens', errs')
         token =
-          try tokens.next()
+          try tokens.next()?
           else (Tk[EOF], SourcePosNone)
           end
         last_helpful_token = token
@@ -52,7 +52,7 @@ class ParserGen
       
       fun ref _consume_token(): _Token =>
         let new_token =
-          try tokens.next()
+          try tokens.next()?
           else (Tk[EOF], token._2)
           end
         

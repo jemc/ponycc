@@ -10,7 +10,7 @@ primitive _GenIndentPop
 type _GenItem is (String | _GenIndentPush | _GenIndentPop | _GenNewline)
 
 class _Gen
-  var _list: Array[_GenItem] = Array[_GenItem]
+  var _list: Array[_GenItem] = []
   new create() => None
   
   fun ref string(): String iso^ =>

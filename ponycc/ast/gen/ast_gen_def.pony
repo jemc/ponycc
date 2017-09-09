@@ -6,9 +6,9 @@ trait ASTGenDef
 class ASTGenDefFixed is ASTGenDef
   let _gen: ASTGen
   let _name: String
-  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
+  let _traits: Array[String] = [] // TODO: remove and use unions only
   
-  let fields: Array[(String, String, String)] = fields.create()
+  let fields: Array[(String, String, String)] = []
   
   var _todo:       Bool = false
   var _with_scope: Bool = false
@@ -59,7 +59,13 @@ class ASTGenDefFixed is ASTGenDef
     var iter = fields.values()
     g.push_indent()
     for (field_name, field_type, field_default) in iter do
-      g.line(field_name + "': " + field_type)
+      g.line(field_name + "': ")
+      if field_type.at("coll.Vec[") then
+        let elem_type: String = field_type.substring(9, -1)
+        g.add("(" + field_type + " | Array[" + elem_type + "] val)")
+      else
+        g.add(field_type)
+      end
       if field_default.size() > 0 then g.add(" = " + field_default) end
       if iter.has_next() then g.add(",") end
     end
@@ -72,7 +78,19 @@ class ASTGenDefFixed is ASTGenDef
       g.push_indent()
       g.add("_pos = SourcePosNone")
       for (field_name, field_type, _) in fields.values() do
-        g.line("_" + field_name + " = " + field_name + "'")
+        g.line("_" + field_name + " = ")
+        if field_type.at("coll.Vec[") then
+          let elem_type: String = field_type.substring(9, -1)
+          g.push_indent()
+          g.line("match " + field_name + "'")
+          g.line("| let v: coll.Vec[" + elem_type + "] => v")
+          g.line("| let s: Array[" + elem_type + "] val => ")
+          g.add("coll.Vec[" + elem_type + "].concat(s.values())")
+          g.line("end")
+          g.pop_indent()
+        else
+          g.add(field_name + "'")
+        end
       end
       g.pop_indent()
     end
@@ -103,7 +121,7 @@ class ASTGenDefFixed is ASTGenDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+        errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
     g.line("_pos = pos'")
@@ -343,7 +361,7 @@ class ASTGenDefWrap is ASTGenDef
   let _name: String
   let _value_type: String
   let _value_parser: String
-  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
+  let _traits: Array[String] = [] // TODO: remove and use unions only
   
   new create(g: ASTGen, n: String, t: String, p: String) =>
     (_gen, _name, _value_type, _value_parser) = (g, n, t, p)
@@ -391,7 +409,7 @@ class ASTGenDefWrap is ASTGenDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+        errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
     g.line("_pos = pos'")
@@ -457,7 +475,7 @@ class ASTGenDefWrap is ASTGenDef
 class ASTGenDefLexeme is ASTGenDef
   let _gen: ASTGen
   let _name: String
-  let _traits: Array[String] = Array[String] // TODO: remove and use unions only
+  let _traits: Array[String] = [] // TODO: remove and use unions only
   
   new create(g: ASTGen, n: String) =>
     (_gen, _name) = (g, n)
@@ -491,7 +509,7 @@ class ASTGenDefLexeme is ASTGenDef
       new from_iter(
         iter: Iterator[(AST | None)],
         pos': SourcePosAny = SourcePosNone,
-        errs: Array[(String, SourcePosAny)] = Array[(String, SourcePosAny)])?
+        errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
     g.line("errs.push((\"" + _name + " is a lexeme-only type append should never be built\", pos')); error")
