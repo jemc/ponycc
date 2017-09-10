@@ -1,6 +1,8 @@
 use coll = "collections/persistent"
 
 trait val AST
+  fun val attach[A: Any val](a: A): AST
+  fun val find_attached[A: Any val](): A?
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
   fun val each(fn: {ref ((AST | None))} ref)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?
@@ -315,7 +317,7 @@ trait val UnaryOp is AST
   fun val with_expr(expr': Expr): UnaryOp
 
 class val Module is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _use_decls: coll.Vec[UseDecl]
   let _type_decls: coll.Vec[TypeDecl]
@@ -325,7 +327,7 @@ class val Module is AST
     use_decls': (coll.Vec[UseDecl] | Array[UseDecl] val) = coll.Vec[UseDecl],
     type_decls': (coll.Vec[TypeDecl] | Array[TypeDecl] val) = coll.Vec[TypeDecl],
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _use_decls = 
       match use_decls'
       | let v: coll.Vec[UseDecl] => v
@@ -338,22 +340,23 @@ class val Module is AST
       end
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     use_decls': coll.Vec[UseDecl],
     type_decls': coll.Vec[TypeDecl],
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _use_decls = use_decls'
     _type_decls = type_decls'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var use_decls' = coll.Vec[UseDecl]
     var use_decls_next' = try iter.next()? else None end
     while true do
@@ -387,16 +390,23 @@ class val Module is AST
     for x in _use_decls.values() do fn(x) end
     for x in _type_decls.values() do fn(x) end
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Module => _create(pos', _use_decls, _type_decls, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Module => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Module => _create(_use_decls, _type_decls, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val use_decls(): coll.Vec[UseDecl] => _use_decls
   fun val type_decls(): coll.Vec[TypeDecl] => _type_decls
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_use_decls(use_decls': coll.Vec[UseDecl]): Module => _create(_pos, use_decls', _type_decls, _docs)
-  fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => _create(_pos, _use_decls, type_decls', _docs)
-  fun val with_docs(docs': (LitString | None)): Module => _create(_pos, _use_decls, _type_decls, docs')
+  fun val with_use_decls(use_decls': coll.Vec[UseDecl]): Module => _create(use_decls', _type_decls, _docs, _attachments)
+  fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => _create(_use_decls, type_decls', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Module => _create(_use_decls, _type_decls, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -411,14 +421,14 @@ class val Module is AST
     try
       try
         let i = _use_decls.find(child' as UseDecl)?
-        return _create(_pos, _use_decls.update(i, replace' as UseDecl)?, _type_decls, _docs)
+        return _create(_use_decls.update(i, replace' as UseDecl)?, _type_decls, _docs, _attachments)
       end
       try
         let i = _type_decls.find(child' as TypeDecl)?
-        return _create(_pos, _use_decls, _type_decls.update(i, replace' as TypeDecl)?, _docs)
+        return _create(_use_decls, _type_decls.update(i, replace' as TypeDecl)?, _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _use_decls, _type_decls, replace' as (LitString | None))
+        return _create(_use_decls, _type_decls, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -447,7 +457,7 @@ class val Module is AST
     consume s
 
 class val UsePackage is (AST & UseDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _prefix: (Id | None)
   let _package: LitString
@@ -455,24 +465,25 @@ class val UsePackage is (AST & UseDecl)
   new val create(
     prefix': (Id | None) = None,
     package': LitString)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _prefix = prefix'
     _package = package'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     prefix': (Id | None),
-    package': LitString)
+    package': LitString,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _prefix = prefix'
     _package = package'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let prefix': (AST | None) = try iter.next()? else None end
     let package': (AST | None) =
       try iter.next()?
@@ -499,14 +510,21 @@ class val UsePackage is (AST & UseDecl)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_prefix)
     fn(_package)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): UsePackage => _create(pos', _prefix, _package)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UsePackage => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): UsePackage => _create(_prefix, _package, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val prefix(): (Id | None) => _prefix
   fun val package(): LitString => _package
   
-  fun val with_prefix(prefix': (Id | None)): UsePackage => _create(_pos, prefix', _package)
-  fun val with_package(package': LitString): UsePackage => _create(_pos, _prefix, package')
+  fun val with_prefix(prefix': (Id | None)): UsePackage => _create(prefix', _package, _attachments)
+  fun val with_package(package': LitString): UsePackage => _create(_prefix, package', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -519,10 +537,10 @@ class val UsePackage is (AST & UseDecl)
     if child' is replace' then return this end
     try
       if child' is _prefix then
-        return _create(_pos, replace' as (Id | None), _package)
+        return _create(replace' as (Id | None), _package, _attachments)
       end
       if child' is _package then
-        return _create(_pos, _prefix, replace' as LitString)
+        return _create(_prefix, replace' as LitString, _attachments)
       end
       error
     else this
@@ -538,7 +556,7 @@ class val UsePackage is (AST & UseDecl)
     consume s
 
 class val UseFFIDecl is (AST & UseDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: (Id | LitString)
   let _return_type: TypeArgs
@@ -552,33 +570,34 @@ class val UseFFIDecl is (AST & UseDecl)
     params': Params,
     partial': (Question | None),
     guard': (IfDefCond | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _return_type = return_type'
     _params = params'
     _partial = partial'
     _guard = guard'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': (Id | LitString),
     return_type': TypeArgs,
     params': Params,
     partial': (Question | None),
-    guard': (IfDefCond | None))
+    guard': (IfDefCond | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _return_type = return_type'
     _params = params'
     _partial = partial'
     _guard = guard'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("UseFFIDecl missing required field: name", pos')); error
@@ -632,20 +651,27 @@ class val UseFFIDecl is (AST & UseDecl)
     fn(_params)
     fn(_partial)
     fn(_guard)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): UseFFIDecl => _create(pos', _name, _return_type, _params, _partial, _guard)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UseFFIDecl => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): UseFFIDecl => _create(_name, _return_type, _params, _partial, _guard, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): (Id | LitString) => _name
   fun val return_type(): TypeArgs => _return_type
   fun val params(): Params => _params
   fun val partial(): (Question | None) => _partial
   fun val guard(): (IfDefCond | None) => _guard
   
-  fun val with_name(name': (Id | LitString)): UseFFIDecl => _create(_pos, name', _return_type, _params, _partial, _guard)
-  fun val with_return_type(return_type': TypeArgs): UseFFIDecl => _create(_pos, _name, return_type', _params, _partial, _guard)
-  fun val with_params(params': Params): UseFFIDecl => _create(_pos, _name, _return_type, params', _partial, _guard)
-  fun val with_partial(partial': (Question | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, partial', _guard)
-  fun val with_guard(guard': (IfDefCond | None)): UseFFIDecl => _create(_pos, _name, _return_type, _params, _partial, guard')
+  fun val with_name(name': (Id | LitString)): UseFFIDecl => _create(name', _return_type, _params, _partial, _guard, _attachments)
+  fun val with_return_type(return_type': TypeArgs): UseFFIDecl => _create(_name, return_type', _params, _partial, _guard, _attachments)
+  fun val with_params(params': Params): UseFFIDecl => _create(_name, _return_type, params', _partial, _guard, _attachments)
+  fun val with_partial(partial': (Question | None)): UseFFIDecl => _create(_name, _return_type, _params, partial', _guard, _attachments)
+  fun val with_guard(guard': (IfDefCond | None)): UseFFIDecl => _create(_name, _return_type, _params, _partial, guard', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -661,19 +687,19 @@ class val UseFFIDecl is (AST & UseDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as (Id | LitString), _return_type, _params, _partial, _guard)
+        return _create(replace' as (Id | LitString), _return_type, _params, _partial, _guard, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _name, replace' as TypeArgs, _params, _partial, _guard)
+        return _create(_name, replace' as TypeArgs, _params, _partial, _guard, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _name, _return_type, replace' as Params, _partial, _guard)
+        return _create(_name, _return_type, replace' as Params, _partial, _guard, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _name, _return_type, _params, replace' as (Question | None), _guard)
+        return _create(_name, _return_type, _params, replace' as (Question | None), _guard, _attachments)
       end
       if child' is _guard then
-        return _create(_pos, _name, _return_type, _params, _partial, replace' as (IfDefCond | None))
+        return _create(_name, _return_type, _params, _partial, replace' as (IfDefCond | None), _attachments)
       end
       error
     else this
@@ -692,7 +718,7 @@ class val UseFFIDecl is (AST & UseDecl)
     consume s
 
 class val TypeAlias is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -710,7 +736,7 @@ class val TypeAlias is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -719,16 +745,16 @@ class val TypeAlias is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -736,13 +762,14 @@ class val TypeAlias is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeAlias missing required field: name", pos')); error
@@ -799,9 +826,16 @@ class val TypeAlias is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeAlias => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeAlias => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeAlias => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -810,13 +844,13 @@ class val TypeAlias is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): TypeAlias => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): TypeAlias => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): TypeAlias => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): TypeAlias => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): TypeAlias => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): TypeAlias => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): TypeAlias => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): TypeAlias => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): TypeAlias => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): TypeAlias => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): TypeAlias => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -834,25 +868,25 @@ class val TypeAlias is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -873,7 +907,7 @@ class val TypeAlias is (AST & TypeDecl)
     consume s
 
 class val Interface is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -891,7 +925,7 @@ class val Interface is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -900,16 +934,16 @@ class val Interface is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -917,13 +951,14 @@ class val Interface is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Interface missing required field: name", pos')); error
@@ -980,9 +1015,16 @@ class val Interface is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Interface => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Interface => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Interface => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -991,13 +1033,13 @@ class val Interface is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Interface => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Interface => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Interface => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Interface => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Interface => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Interface => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Interface => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Interface => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Interface => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Interface => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Interface => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Interface => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Interface => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1015,25 +1057,25 @@ class val Interface is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1054,7 +1096,7 @@ class val Interface is (AST & TypeDecl)
     consume s
 
 class val Trait is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -1072,7 +1114,7 @@ class val Trait is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1081,16 +1123,16 @@ class val Trait is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1098,13 +1140,14 @@ class val Trait is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Trait missing required field: name", pos')); error
@@ -1161,9 +1204,16 @@ class val Trait is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Trait => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Trait => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Trait => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1172,13 +1222,13 @@ class val Trait is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Trait => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Trait => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Trait => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Trait => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Trait => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Trait => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Trait => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Trait => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Trait => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Trait => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Trait => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Trait => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Trait => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1196,25 +1246,25 @@ class val Trait is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1235,7 +1285,7 @@ class val Trait is (AST & TypeDecl)
     consume s
 
 class val Primitive is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -1253,7 +1303,7 @@ class val Primitive is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1262,16 +1312,16 @@ class val Primitive is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1279,13 +1329,14 @@ class val Primitive is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Primitive missing required field: name", pos')); error
@@ -1342,9 +1393,16 @@ class val Primitive is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Primitive => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Primitive => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Primitive => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1353,13 +1411,13 @@ class val Primitive is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Primitive => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Primitive => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Primitive => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Primitive => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Primitive => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Primitive => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Primitive => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Primitive => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Primitive => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Primitive => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Primitive => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Primitive => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Primitive => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1377,25 +1435,25 @@ class val Primitive is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1416,7 +1474,7 @@ class val Primitive is (AST & TypeDecl)
     consume s
 
 class val Struct is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -1434,7 +1492,7 @@ class val Struct is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1443,16 +1501,16 @@ class val Struct is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1460,13 +1518,14 @@ class val Struct is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Struct missing required field: name", pos')); error
@@ -1523,9 +1582,16 @@ class val Struct is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Struct => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Struct => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Struct => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1534,13 +1600,13 @@ class val Struct is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Struct => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Struct => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Struct => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Struct => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Struct => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Struct => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Struct => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Struct => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Struct => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Struct => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Struct => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Struct => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Struct => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1558,25 +1624,25 @@ class val Struct is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1597,7 +1663,7 @@ class val Struct is (AST & TypeDecl)
     consume s
 
 class val Class is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -1615,7 +1681,7 @@ class val Class is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1624,16 +1690,16 @@ class val Class is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1641,13 +1707,14 @@ class val Class is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Class missing required field: name", pos')); error
@@ -1704,9 +1771,16 @@ class val Class is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Class => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Class => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Class => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1715,13 +1789,13 @@ class val Class is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Class => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Class => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Class => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Class => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Class => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Class => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Class => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Class => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Class => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Class => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Class => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Class => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Class => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1739,25 +1813,25 @@ class val Class is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1778,7 +1852,7 @@ class val Class is (AST & TypeDecl)
     consume s
 
 class val Actor is (AST & TypeDecl)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -1796,7 +1870,7 @@ class val Actor is (AST & TypeDecl)
     members': Members = Members,
     at': (At | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1805,16 +1879,16 @@ class val Actor is (AST & TypeDecl)
     _at = at'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
     provides': (Type | None),
     members': Members,
     at': (At | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -1822,13 +1896,14 @@ class val Actor is (AST & TypeDecl)
     _members = members'
     _at = at'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Actor missing required field: name", pos')); error
@@ -1885,9 +1960,16 @@ class val Actor is (AST & TypeDecl)
     fn(_members)
     fn(_at)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Actor => _create(pos', _name, _cap, _type_params, _provides, _members, _at, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Actor => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Actor => _create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1896,13 +1978,13 @@ class val Actor is (AST & TypeDecl)
   fun val at(): (At | None) => _at
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): Actor => _create(_pos, name', _cap, _type_params, _provides, _members, _at, _docs)
-  fun val with_cap(cap': (Cap | None)): Actor => _create(_pos, _name, cap', _type_params, _provides, _members, _at, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): Actor => _create(_pos, _name, _cap, type_params', _provides, _members, _at, _docs)
-  fun val with_provides(provides': (Type | None)): Actor => _create(_pos, _name, _cap, _type_params, provides', _members, _at, _docs)
-  fun val with_members(members': Members): Actor => _create(_pos, _name, _cap, _type_params, _provides, members', _at, _docs)
-  fun val with_at(at': (At | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, at', _docs)
-  fun val with_docs(docs': (LitString | None)): Actor => _create(_pos, _name, _cap, _type_params, _provides, _members, _at, docs')
+  fun val with_name(name': Id): Actor => _create(name', _cap, _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): Actor => _create(_name, cap', _type_params, _provides, _members, _at, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Actor => _create(_name, _cap, type_params', _provides, _members, _at, _docs, _attachments)
+  fun val with_provides(provides': (Type | None)): Actor => _create(_name, _cap, _type_params, provides', _members, _at, _docs, _attachments)
+  fun val with_members(members': Members): Actor => _create(_name, _cap, _type_params, _provides, members', _at, _docs, _attachments)
+  fun val with_at(at': (At | None)): Actor => _create(_name, _cap, _type_params, _provides, _members, at', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): Actor => _create(_name, _cap, _type_params, _provides, _members, _at, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -1920,25 +2002,25 @@ class val Actor is (AST & TypeDecl)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _provides, _members, _at, _docs)
+        return _create(replace' as Id, _cap, _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _provides, _members, _at, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _provides, _members, _at, _docs, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs)
+        return _create(_name, _cap, _type_params, replace' as (Type | None), _members, _at, _docs, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _name, _cap, _type_params, _provides, replace' as Members, _at, _docs)
+        return _create(_name, _cap, _type_params, _provides, replace' as Members, _at, _docs, _attachments)
       end
       if child' is _at then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs)
+        return _create(_name, _cap, _type_params, _provides, _members, replace' as (At | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _provides, _members, _at, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -1959,7 +2041,7 @@ class val Actor is (AST & TypeDecl)
     consume s
 
 class val Members is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _fields: coll.Vec[Field]
   let _methods: coll.Vec[Method]
@@ -1967,7 +2049,7 @@ class val Members is AST
   new val create(
     fields': (coll.Vec[Field] | Array[Field] val) = coll.Vec[Field],
     methods': (coll.Vec[Method] | Array[Method] val) = coll.Vec[Method])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _fields = 
       match fields'
       | let v: coll.Vec[Field] => v
@@ -1979,20 +2061,21 @@ class val Members is AST
       | let s: Array[Method] val => coll.Vec[Method].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     fields': coll.Vec[Field],
-    methods': coll.Vec[Method])
+    methods': coll.Vec[Method],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _fields = fields'
     _methods = methods'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var fields' = coll.Vec[Field]
     var fields_next' = try iter.next()? else None end
     while true do
@@ -2017,14 +2100,21 @@ class val Members is AST
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _fields.values() do fn(x) end
     for x in _methods.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Members => _create(pos', _fields, _methods)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Members => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Members => _create(_fields, _methods, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val fields(): coll.Vec[Field] => _fields
   fun val methods(): coll.Vec[Method] => _methods
   
-  fun val with_fields(fields': coll.Vec[Field]): Members => _create(_pos, fields', _methods)
-  fun val with_methods(methods': coll.Vec[Method]): Members => _create(_pos, _fields, methods')
+  fun val with_fields(fields': coll.Vec[Field]): Members => _create(fields', _methods, _attachments)
+  fun val with_methods(methods': coll.Vec[Method]): Members => _create(_fields, methods', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2038,11 +2128,11 @@ class val Members is AST
     try
       try
         let i = _fields.find(child' as Field)?
-        return _create(_pos, _fields.update(i, replace' as Field)?, _methods)
+        return _create(_fields.update(i, replace' as Field)?, _methods, _attachments)
       end
       try
         let i = _methods.find(child' as Method)?
-        return _create(_pos, _fields, _methods.update(i, replace' as Method)?)
+        return _create(_fields, _methods.update(i, replace' as Method)?, _attachments)
       end
       error
     else this
@@ -2069,7 +2159,7 @@ class val Members is AST
     consume s
 
 class val FieldLet is (AST & Field)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _field_type: Type
@@ -2079,27 +2169,28 @@ class val FieldLet is (AST & Field)
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     field_type': Type,
-    default': (Expr | None))
+    default': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldLet missing required field: name", pos')); error
@@ -2135,16 +2226,23 @@ class val FieldLet is (AST & Field)
     fn(_name)
     fn(_field_type)
     fn(_default)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldLet => _create(pos', _name, _field_type, _default)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldLet => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldLet => _create(_name, _field_type, _default, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id): FieldLet => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type): FieldLet => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None)): FieldLet => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldLet => _create(name', _field_type, _default, _attachments)
+  fun val with_field_type(field_type': Type): FieldLet => _create(_name, field_type', _default, _attachments)
+  fun val with_default(default': (Expr | None)): FieldLet => _create(_name, _field_type, default', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2158,13 +2256,13 @@ class val FieldLet is (AST & Field)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _field_type, _default)
+        return _create(replace' as Id, _field_type, _default, _attachments)
       end
       if child' is _field_type then
-        return _create(_pos, _name, replace' as Type, _default)
+        return _create(_name, replace' as Type, _default, _attachments)
       end
       if child' is _default then
-        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+        return _create(_name, _field_type, replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -2181,7 +2279,7 @@ class val FieldLet is (AST & Field)
     consume s
 
 class val FieldVar is (AST & Field)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _field_type: Type
@@ -2191,27 +2289,28 @@ class val FieldVar is (AST & Field)
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     field_type': Type,
-    default': (Expr | None))
+    default': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldVar missing required field: name", pos')); error
@@ -2247,16 +2346,23 @@ class val FieldVar is (AST & Field)
     fn(_name)
     fn(_field_type)
     fn(_default)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldVar => _create(pos', _name, _field_type, _default)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldVar => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldVar => _create(_name, _field_type, _default, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id): FieldVar => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type): FieldVar => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None)): FieldVar => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldVar => _create(name', _field_type, _default, _attachments)
+  fun val with_field_type(field_type': Type): FieldVar => _create(_name, field_type', _default, _attachments)
+  fun val with_default(default': (Expr | None)): FieldVar => _create(_name, _field_type, default', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2270,13 +2376,13 @@ class val FieldVar is (AST & Field)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _field_type, _default)
+        return _create(replace' as Id, _field_type, _default, _attachments)
       end
       if child' is _field_type then
-        return _create(_pos, _name, replace' as Type, _default)
+        return _create(_name, replace' as Type, _default, _attachments)
       end
       if child' is _default then
-        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+        return _create(_name, _field_type, replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -2293,7 +2399,7 @@ class val FieldVar is (AST & Field)
     consume s
 
 class val FieldEmbed is (AST & Field)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _field_type: Type
@@ -2303,27 +2409,28 @@ class val FieldEmbed is (AST & Field)
     name': Id,
     field_type': Type,
     default': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _field_type = field_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     field_type': Type,
-    default': (Expr | None))
+    default': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _field_type = field_type'
     _default = default'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldEmbed missing required field: name", pos')); error
@@ -2359,16 +2466,23 @@ class val FieldEmbed is (AST & Field)
     fn(_name)
     fn(_field_type)
     fn(_default)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldEmbed => _create(pos', _name, _field_type, _default)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldEmbed => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldEmbed => _create(_name, _field_type, _default, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id): FieldEmbed => _create(_pos, name', _field_type, _default)
-  fun val with_field_type(field_type': Type): FieldEmbed => _create(_pos, _name, field_type', _default)
-  fun val with_default(default': (Expr | None)): FieldEmbed => _create(_pos, _name, _field_type, default')
+  fun val with_name(name': Id): FieldEmbed => _create(name', _field_type, _default, _attachments)
+  fun val with_field_type(field_type': Type): FieldEmbed => _create(_name, field_type', _default, _attachments)
+  fun val with_default(default': (Expr | None)): FieldEmbed => _create(_name, _field_type, default', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2382,13 +2496,13 @@ class val FieldEmbed is (AST & Field)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _field_type, _default)
+        return _create(replace' as Id, _field_type, _default, _attachments)
       end
       if child' is _field_type then
-        return _create(_pos, _name, replace' as Type, _default)
+        return _create(_name, replace' as Type, _default, _attachments)
       end
       if child' is _default then
-        return _create(_pos, _name, _field_type, replace' as (Expr | None))
+        return _create(_name, _field_type, replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -2405,7 +2519,7 @@ class val FieldEmbed is (AST & Field)
     consume s
 
 class val MethodFun is (AST & Method)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -2427,7 +2541,7 @@ class val MethodFun is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2438,7 +2552,7 @@ class val MethodFun is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
@@ -2447,9 +2561,9 @@ class val MethodFun is (AST & Method)
     partial': (Question | None),
     guard': (Sequence | None),
     body': (Sequence | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2459,13 +2573,14 @@ class val MethodFun is (AST & Method)
     _guard = guard'
     _body = body'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodFun missing required field: name", pos')); error
@@ -2534,9 +2649,16 @@ class val MethodFun is (AST & Method)
     fn(_guard)
     fn(_body)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodFun => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodFun => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodFun => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2547,15 +2669,15 @@ class val MethodFun is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): MethodFun => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None)): MethodFun => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): MethodFun => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': Params): MethodFun => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None)): MethodFun => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodFun => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): MethodFun => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodFun => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_params(params': Params): MethodFun => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_return_type(return_type': (Type | None)): MethodFun => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
+  fun val with_partial(partial': (Question | None)): MethodFun => _create(_name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs, _attachments)
+  fun val with_guard(guard': (Sequence | None)): MethodFun => _create(_name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs, _attachments)
+  fun val with_body(body': (Sequence | None)): MethodFun => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): MethodFun => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2575,31 +2697,31 @@ class val MethodFun is (AST & Method)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs, _attachments)
       end
       if child' is _guard then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs, _attachments)
       end
       if child' is _body then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -2622,7 +2744,7 @@ class val MethodFun is (AST & Method)
     consume s
 
 class val MethodNew is (AST & Method)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -2644,7 +2766,7 @@ class val MethodNew is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2655,7 +2777,7 @@ class val MethodNew is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
@@ -2664,9 +2786,9 @@ class val MethodNew is (AST & Method)
     partial': (Question | None),
     guard': (Sequence | None),
     body': (Sequence | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2676,13 +2798,14 @@ class val MethodNew is (AST & Method)
     _guard = guard'
     _body = body'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodNew missing required field: name", pos')); error
@@ -2751,9 +2874,16 @@ class val MethodNew is (AST & Method)
     fn(_guard)
     fn(_body)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodNew => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodNew => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodNew => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2764,15 +2894,15 @@ class val MethodNew is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): MethodNew => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None)): MethodNew => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): MethodNew => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': Params): MethodNew => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None)): MethodNew => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodNew => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): MethodNew => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodNew => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_params(params': Params): MethodNew => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_return_type(return_type': (Type | None)): MethodNew => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
+  fun val with_partial(partial': (Question | None)): MethodNew => _create(_name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs, _attachments)
+  fun val with_guard(guard': (Sequence | None)): MethodNew => _create(_name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs, _attachments)
+  fun val with_body(body': (Sequence | None)): MethodNew => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): MethodNew => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -2792,31 +2922,31 @@ class val MethodNew is (AST & Method)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs, _attachments)
       end
       if child' is _guard then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs, _attachments)
       end
       if child' is _body then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -2839,7 +2969,7 @@ class val MethodNew is (AST & Method)
     consume s
 
 class val MethodBe is (AST & Method)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | None)
@@ -2861,7 +2991,7 @@ class val MethodBe is (AST & Method)
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None,
     docs': (LitString | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2872,7 +3002,7 @@ class val MethodBe is (AST & Method)
     _body = body'
     _docs = docs'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | None),
     type_params': (TypeParams | None),
@@ -2881,9 +3011,9 @@ class val MethodBe is (AST & Method)
     partial': (Question | None),
     guard': (Sequence | None),
     body': (Sequence | None),
-    docs': (LitString | None))
+    docs': (LitString | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _type_params = type_params'
@@ -2893,13 +3023,14 @@ class val MethodBe is (AST & Method)
     _guard = guard'
     _body = body'
     _docs = docs'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodBe missing required field: name", pos')); error
@@ -2968,9 +3099,16 @@ class val MethodBe is (AST & Method)
     fn(_guard)
     fn(_body)
     fn(_docs)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodBe => _create(pos', _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodBe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodBe => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2981,15 +3119,15 @@ class val MethodBe is (AST & Method)
   fun val body(): (Sequence | None) => _body
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_name(name': Id): MethodBe => _create(_pos, name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_cap(cap': (Cap | None)): MethodBe => _create(_pos, _name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_type_params(type_params': (TypeParams | None)): MethodBe => _create(_pos, _name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs)
-  fun val with_params(params': Params): MethodBe => _create(_pos, _name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs)
-  fun val with_return_type(return_type': (Type | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs)
-  fun val with_partial(partial': (Question | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs)
-  fun val with_guard(guard': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs)
-  fun val with_body(body': (Sequence | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs)
-  fun val with_docs(docs': (LitString | None)): MethodBe => _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs')
+  fun val with_name(name': Id): MethodBe => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | None)): MethodBe => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): MethodBe => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_params(params': Params): MethodBe => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_return_type(return_type': (Type | None)): MethodBe => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
+  fun val with_partial(partial': (Question | None)): MethodBe => _create(_name, _cap, _type_params, _params, _return_type, partial', _guard, _body, _docs, _attachments)
+  fun val with_guard(guard': (Sequence | None)): MethodBe => _create(_name, _cap, _type_params, _params, _return_type, _partial, guard', _body, _docs, _attachments)
+  fun val with_body(body': (Sequence | None)): MethodBe => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, body', _docs, _attachments)
+  fun val with_docs(docs': (LitString | None)): MethodBe => _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, docs', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3009,31 +3147,31 @@ class val MethodBe is (AST & Method)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, replace' as Params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, replace' as (Type | None), _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, replace' as (Question | None), _guard, _body, _docs, _attachments)
       end
       if child' is _guard then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, replace' as (Sequence | None), _body, _docs, _attachments)
       end
       if child' is _body then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs)
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, replace' as (Sequence | None), _docs, _attachments)
       end
       if child' is _docs then
-        return _create(_pos, _name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None))
+        return _create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, replace' as (LitString | None), _attachments)
       end
       error
     else this
@@ -3056,31 +3194,32 @@ class val MethodBe is (AST & Method)
     consume s
 
 class val TypeParams is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[TypeParam]
   
   new val create(
     list': (coll.Vec[TypeParam] | Array[TypeParam] val) = coll.Vec[TypeParam])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[TypeParam] => v
       | let s: Array[TypeParam] val => coll.Vec[TypeParam].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[TypeParam])
+  new val _create(
+    list': coll.Vec[TypeParam],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[TypeParam]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3097,12 +3236,19 @@ class val TypeParams is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeParams => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParams => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeParams => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[TypeParam] => _list
   
-  fun val with_list(list': coll.Vec[TypeParam]): TypeParams => _create(_pos, list')
+  fun val with_list(list': coll.Vec[TypeParam]): TypeParams => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3115,7 +3261,7 @@ class val TypeParams is AST
     try
       try
         let i = _list.find(child' as TypeParam)?
-        return _create(_pos, _list.update(i, replace' as TypeParam)?)
+        return _create(_list.update(i, replace' as TypeParam)?, _attachments)
       end
       error
     else this
@@ -3135,7 +3281,7 @@ class val TypeParams is AST
     consume s
 
 class val TypeParam is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _constraint: (Type | None)
@@ -3145,27 +3291,28 @@ class val TypeParam is AST
     name': Id,
     constraint': (Type | None) = None,
     default': (Type | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _constraint = constraint'
     _default = default'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     constraint': (Type | None),
-    default': (Type | None))
+    default': (Type | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _constraint = constraint'
     _default = default'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeParam missing required field: name", pos')); error
@@ -3198,16 +3345,23 @@ class val TypeParam is AST
     fn(_name)
     fn(_constraint)
     fn(_default)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeParam => _create(pos', _name, _constraint, _default)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParam => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeParam => _create(_name, _constraint, _default, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val constraint(): (Type | None) => _constraint
   fun val default(): (Type | None) => _default
   
-  fun val with_name(name': Id): TypeParam => _create(_pos, name', _constraint, _default)
-  fun val with_constraint(constraint': (Type | None)): TypeParam => _create(_pos, _name, constraint', _default)
-  fun val with_default(default': (Type | None)): TypeParam => _create(_pos, _name, _constraint, default')
+  fun val with_name(name': Id): TypeParam => _create(name', _constraint, _default, _attachments)
+  fun val with_constraint(constraint': (Type | None)): TypeParam => _create(_name, constraint', _default, _attachments)
+  fun val with_default(default': (Type | None)): TypeParam => _create(_name, _constraint, default', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3221,13 +3375,13 @@ class val TypeParam is AST
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _constraint, _default)
+        return _create(replace' as Id, _constraint, _default, _attachments)
       end
       if child' is _constraint then
-        return _create(_pos, _name, replace' as (Type | None), _default)
+        return _create(_name, replace' as (Type | None), _default, _attachments)
       end
       if child' is _default then
-        return _create(_pos, _name, _constraint, replace' as (Type | None))
+        return _create(_name, _constraint, replace' as (Type | None), _attachments)
       end
       error
     else this
@@ -3244,31 +3398,32 @@ class val TypeParam is AST
     consume s
 
 class val TypeArgs is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Type]
   
   new val create(
     list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Type] => v
       | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Type])
+  new val _create(
+    list': coll.Vec[Type],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3285,12 +3440,19 @@ class val TypeArgs is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeArgs => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeArgs => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeArgs => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): TypeArgs => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): TypeArgs => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3303,7 +3465,7 @@ class val TypeArgs is AST
     try
       try
         let i = _list.find(child' as Type)?
-        return _create(_pos, _list.update(i, replace' as Type)?)
+        return _create(_list.update(i, replace' as Type)?, _attachments)
       end
       error
     else this
@@ -3323,7 +3485,7 @@ class val TypeArgs is AST
     consume s
 
 class val Params is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Param]
   let _ellipsis: (Ellipsis | None)
@@ -3331,7 +3493,7 @@ class val Params is AST
   new val create(
     list': (coll.Vec[Param] | Array[Param] val) = coll.Vec[Param],
     ellipsis': (Ellipsis | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Param] => v
@@ -3339,20 +3501,21 @@ class val Params is AST
       end
     _ellipsis = ellipsis'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     list': coll.Vec[Param],
-    ellipsis': (Ellipsis | None))
+    ellipsis': (Ellipsis | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
     _ellipsis = ellipsis'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Param]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3378,14 +3541,21 @@ class val Params is AST
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
     fn(_ellipsis)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Params => _create(pos', _list, _ellipsis)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Params => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Params => _create(_list, _ellipsis, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Param] => _list
   fun val ellipsis(): (Ellipsis | None) => _ellipsis
   
-  fun val with_list(list': coll.Vec[Param]): Params => _create(_pos, list', _ellipsis)
-  fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => _create(_pos, _list, ellipsis')
+  fun val with_list(list': coll.Vec[Param]): Params => _create(list', _ellipsis, _attachments)
+  fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => _create(_list, ellipsis', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3399,10 +3569,10 @@ class val Params is AST
     try
       try
         let i = _list.find(child' as Param)?
-        return _create(_pos, _list.update(i, replace' as Param)?, _ellipsis)
+        return _create(_list.update(i, replace' as Param)?, _ellipsis, _attachments)
       end
       if child' is _ellipsis then
-        return _create(_pos, _list, replace' as (Ellipsis | None))
+        return _create(_list, replace' as (Ellipsis | None), _attachments)
       end
       error
     else this
@@ -3424,7 +3594,7 @@ class val Params is AST
     consume s
 
 class val Param is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _param_type: (Type | None)
@@ -3434,27 +3604,28 @@ class val Param is AST
     name': Id,
     param_type': (Type | None) = None,
     default': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _param_type = param_type'
     _default = default'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     param_type': (Type | None),
-    default': (Expr | None))
+    default': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _param_type = param_type'
     _default = default'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Param missing required field: name", pos')); error
@@ -3487,16 +3658,23 @@ class val Param is AST
     fn(_name)
     fn(_param_type)
     fn(_default)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Param => _create(pos', _name, _param_type, _default)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Param => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Param => _create(_name, _param_type, _default, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val param_type(): (Type | None) => _param_type
   fun val default(): (Expr | None) => _default
   
-  fun val with_name(name': Id): Param => _create(_pos, name', _param_type, _default)
-  fun val with_param_type(param_type': (Type | None)): Param => _create(_pos, _name, param_type', _default)
-  fun val with_default(default': (Expr | None)): Param => _create(_pos, _name, _param_type, default')
+  fun val with_name(name': Id): Param => _create(name', _param_type, _default, _attachments)
+  fun val with_param_type(param_type': (Type | None)): Param => _create(_name, param_type', _default, _attachments)
+  fun val with_default(default': (Expr | None)): Param => _create(_name, _param_type, default', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3510,13 +3688,13 @@ class val Param is AST
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _param_type, _default)
+        return _create(replace' as Id, _param_type, _default, _attachments)
       end
       if child' is _param_type then
-        return _create(_pos, _name, replace' as (Type | None), _default)
+        return _create(_name, replace' as (Type | None), _default, _attachments)
       end
       if child' is _default then
-        return _create(_pos, _name, _param_type, replace' as (Expr | None))
+        return _create(_name, _param_type, replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3533,31 +3711,32 @@ class val Param is AST
     consume s
 
 class val Sequence is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Expr]
   
   new val create(
     list': (coll.Vec[Expr] | Array[Expr] val) = coll.Vec[Expr])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Expr] => v
       | let s: Array[Expr] val => coll.Vec[Expr].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Expr])
+  new val _create(
+    list': coll.Vec[Expr],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Expr]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3574,12 +3753,19 @@ class val Sequence is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Sequence => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Sequence => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Sequence => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Expr] => _list
   
-  fun val with_list(list': coll.Vec[Expr]): Sequence => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Expr]): Sequence => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3592,7 +3778,7 @@ class val Sequence is (AST & Expr)
     try
       try
         let i = _list.find(child' as Expr)?
-        return _create(_pos, _list.update(i, replace' as Expr)?)
+        return _create(_list.update(i, replace' as Expr)?, _attachments)
       end
       error
     else this
@@ -3612,27 +3798,28 @@ class val Sequence is (AST & Expr)
     consume s
 
 class val Return is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3650,12 +3837,19 @@ class val Return is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Return => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Return => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Return => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): Return => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Return => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3667,7 +3861,7 @@ class val Return is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3682,27 +3876,28 @@ class val Return is (AST & Jump & Expr)
     consume s
 
 class val Break is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3720,12 +3915,19 @@ class val Break is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Break => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Break => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Break => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): Break => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Break => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3737,7 +3939,7 @@ class val Break is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3752,27 +3954,28 @@ class val Break is (AST & Jump & Expr)
     consume s
 
 class val Continue is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3790,12 +3993,19 @@ class val Continue is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Continue => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Continue => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Continue => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): Continue => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Continue => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3807,7 +4017,7 @@ class val Continue is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3822,27 +4032,28 @@ class val Continue is (AST & Jump & Expr)
     consume s
 
 class val Error is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3860,12 +4071,19 @@ class val Error is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Error => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Error => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Error => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): Error => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): Error => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3877,7 +4095,7 @@ class val Error is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3892,27 +4110,28 @@ class val Error is (AST & Jump & Expr)
     consume s
 
 class val CompileIntrinsic is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3930,12 +4149,19 @@ class val CompileIntrinsic is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CompileIntrinsic => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CompileIntrinsic => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CompileIntrinsic => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): CompileIntrinsic => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): CompileIntrinsic => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3947,7 +4173,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -3962,27 +4188,28 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     consume s
 
 class val CompileError is (AST & Jump & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _value: (Expr | None)
   
   new val create(
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _value = value'
   
-  new val _create(pos': SourcePosAny,
-    value': (Expr | None))
+  new val _create(
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -4000,12 +4227,19 @@ class val CompileError is (AST & Jump & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CompileError => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CompileError => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CompileError => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val value(): (Expr | None) => _value
   
-  fun val with_value(value': (Expr | None)): CompileError => _create(_pos, value')
+  fun val with_value(value': (Expr | None)): CompileError => _create(value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4017,7 +4251,7 @@ class val CompileError is (AST & Jump & Expr)
     if child' is replace' then return this end
     try
       if child' is _value then
-        return _create(_pos, replace' as (Expr | None))
+        return _create(replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -4032,27 +4266,28 @@ class val CompileError is (AST & Jump & Expr)
     consume s
 
 class val IfDefFlag is (AST & IfDefCond)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: (Id | LitString)
   
   new val create(
     name': (Id | LitString))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': (Id | LitString))
+  new val _create(
+    name': (Id | LitString),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefFlag missing required field: name", pos')); error
@@ -4073,12 +4308,19 @@ class val IfDefFlag is (AST & IfDefCond)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfDefFlag => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefFlag => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfDefFlag => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): (Id | LitString) => _name
   
-  fun val with_name(name': (Id | LitString)): IfDefFlag => _create(_pos, name')
+  fun val with_name(name': (Id | LitString)): IfDefFlag => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4090,7 +4332,7 @@ class val IfDefFlag is (AST & IfDefCond)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as (Id | LitString))
+        return _create(replace' as (Id | LitString), _attachments)
       end
       error
     else this
@@ -4105,27 +4347,28 @@ class val IfDefFlag is (AST & IfDefCond)
     consume s
 
 class val IfDefNot is (AST & IfDefCond)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: IfDefCond
   
   new val create(
     expr': IfDefCond)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': IfDefCond)
+  new val _create(
+    expr': IfDefCond,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefNot missing required field: expr", pos')); error
@@ -4146,12 +4389,19 @@ class val IfDefNot is (AST & IfDefCond)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfDefNot => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefNot => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfDefNot => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): IfDefCond => _expr
   
-  fun val with_expr(expr': IfDefCond): IfDefNot => _create(_pos, expr')
+  fun val with_expr(expr': IfDefCond): IfDefNot => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4163,7 +4413,7 @@ class val IfDefNot is (AST & IfDefCond)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as IfDefCond)
+        return _create(replace' as IfDefCond, _attachments)
       end
       error
     else this
@@ -4178,7 +4428,7 @@ class val IfDefNot is (AST & IfDefCond)
     consume s
 
 class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: IfDefCond
   let _right: IfDefCond
@@ -4186,24 +4436,25 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   new val create(
     left': IfDefCond,
     right': IfDefCond)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': IfDefCond,
-    right': IfDefCond)
+    right': IfDefCond,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefAnd missing required field: left", pos')); error
@@ -4233,14 +4484,21 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfDefAnd => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefAnd => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfDefAnd => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
-  fun val with_left(left': IfDefCond): IfDefAnd => _create(_pos, left', _right)
-  fun val with_right(right': IfDefCond): IfDefAnd => _create(_pos, _left, right')
+  fun val with_left(left': IfDefCond): IfDefAnd => _create(left', _right, _attachments)
+  fun val with_right(right': IfDefCond): IfDefAnd => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4253,10 +4511,10 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as IfDefCond, _right)
+        return _create(replace' as IfDefCond, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as IfDefCond)
+        return _create(_left, replace' as IfDefCond, _attachments)
       end
       error
     else this
@@ -4272,7 +4530,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     consume s
 
 class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: IfDefCond
   let _right: IfDefCond
@@ -4280,24 +4538,25 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   new val create(
     left': IfDefCond,
     right': IfDefCond)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': IfDefCond,
-    right': IfDefCond)
+    right': IfDefCond,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefOr missing required field: left", pos')); error
@@ -4327,14 +4586,21 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfDefOr => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefOr => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfDefOr => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
-  fun val with_left(left': IfDefCond): IfDefOr => _create(_pos, left', _right)
-  fun val with_right(right': IfDefCond): IfDefOr => _create(_pos, _left, right')
+  fun val with_left(left': IfDefCond): IfDefOr => _create(left', _right, _attachments)
+  fun val with_right(right': IfDefCond): IfDefOr => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4347,10 +4613,10 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as IfDefCond, _right)
+        return _create(replace' as IfDefCond, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as IfDefCond)
+        return _create(_left, replace' as IfDefCond, _attachments)
       end
       error
     else this
@@ -4366,7 +4632,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     consume s
 
 class val IfDef is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _condition: IfDefCond
   let _then_body: Sequence
@@ -4376,27 +4642,28 @@ class val IfDef is (AST & Expr)
     condition': IfDefCond,
     then_body': Sequence,
     else_body': (Sequence | IfDef | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     condition': IfDefCond,
     then_body': Sequence,
-    else_body': (Sequence | IfDef | None))
+    else_body': (Sequence | IfDef | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("IfDef missing required field: condition", pos')); error
@@ -4432,16 +4699,23 @@ class val IfDef is (AST & Expr)
     fn(_condition)
     fn(_then_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfDef => _create(pos', _condition, _then_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfDef => _create(_condition, _then_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val condition(): IfDefCond => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | IfDef | None) => _else_body
   
-  fun val with_condition(condition': IfDefCond): IfDef => _create(_pos, condition', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence): IfDef => _create(_pos, _condition, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | IfDef | None)): IfDef => _create(_pos, _condition, _then_body, else_body')
+  fun val with_condition(condition': IfDefCond): IfDef => _create(condition', _then_body, _else_body, _attachments)
+  fun val with_then_body(then_body': Sequence): IfDef => _create(_condition, then_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | IfDef | None)): IfDef => _create(_condition, _then_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4455,13 +4729,13 @@ class val IfDef is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _condition then
-        return _create(_pos, replace' as IfDefCond, _then_body, _else_body)
+        return _create(replace' as IfDefCond, _then_body, _else_body, _attachments)
       end
       if child' is _then_body then
-        return _create(_pos, _condition, replace' as Sequence, _else_body)
+        return _create(_condition, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _condition, _then_body, replace' as (Sequence | IfDef | None))
+        return _create(_condition, _then_body, replace' as (Sequence | IfDef | None), _attachments)
       end
       error
     else this
@@ -4478,7 +4752,7 @@ class val IfDef is (AST & Expr)
     consume s
 
 class val IfType is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _sub: Type
   let _super: Type
@@ -4490,30 +4764,31 @@ class val IfType is (AST & Expr)
     super': Type,
     then_body': Sequence,
     else_body': (Sequence | IfType | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _sub = sub'
     _super = super'
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     sub': Type,
     super': Type,
     then_body': Sequence,
-    else_body': (Sequence | IfType | None))
+    else_body': (Sequence | IfType | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _sub = sub'
     _super = super'
     _then_body = then_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let sub': (AST | None) =
       try iter.next()?
       else errs.push(("IfType missing required field: sub", pos')); error
@@ -4558,18 +4833,25 @@ class val IfType is (AST & Expr)
     fn(_super)
     fn(_then_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IfType => _create(pos', _sub, _super, _then_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IfType => _create(_sub, _super, _then_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val sub(): Type => _sub
   fun val super(): Type => _super
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | IfType | None) => _else_body
   
-  fun val with_sub(sub': Type): IfType => _create(_pos, sub', _super, _then_body, _else_body)
-  fun val with_super(super': Type): IfType => _create(_pos, _sub, super', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence): IfType => _create(_pos, _sub, _super, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | IfType | None)): IfType => _create(_pos, _sub, _super, _then_body, else_body')
+  fun val with_sub(sub': Type): IfType => _create(sub', _super, _then_body, _else_body, _attachments)
+  fun val with_super(super': Type): IfType => _create(_sub, super', _then_body, _else_body, _attachments)
+  fun val with_then_body(then_body': Sequence): IfType => _create(_sub, _super, then_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | IfType | None)): IfType => _create(_sub, _super, _then_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4584,16 +4866,16 @@ class val IfType is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _sub then
-        return _create(_pos, replace' as Type, _super, _then_body, _else_body)
+        return _create(replace' as Type, _super, _then_body, _else_body, _attachments)
       end
       if child' is _super then
-        return _create(_pos, _sub, replace' as Type, _then_body, _else_body)
+        return _create(_sub, replace' as Type, _then_body, _else_body, _attachments)
       end
       if child' is _then_body then
-        return _create(_pos, _sub, _super, replace' as Sequence, _else_body)
+        return _create(_sub, _super, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _sub, _super, _then_body, replace' as (Sequence | IfType | None))
+        return _create(_sub, _super, _then_body, replace' as (Sequence | IfType | None), _attachments)
       end
       error
     else this
@@ -4611,7 +4893,7 @@ class val IfType is (AST & Expr)
     consume s
 
 class val If is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _condition: Sequence
   let _then_body: Sequence
@@ -4621,27 +4903,28 @@ class val If is (AST & Expr)
     condition': Sequence,
     then_body': Sequence,
     else_body': (Sequence | If | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     condition': Sequence,
     then_body': Sequence,
-    else_body': (Sequence | If | None))
+    else_body': (Sequence | If | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _condition = condition'
     _then_body = then_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("If missing required field: condition", pos')); error
@@ -4677,16 +4960,23 @@ class val If is (AST & Expr)
     fn(_condition)
     fn(_then_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): If => _create(pos', _condition, _then_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): If => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): If => _create(_condition, _then_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val condition(): Sequence => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | If | None) => _else_body
   
-  fun val with_condition(condition': Sequence): If => _create(_pos, condition', _then_body, _else_body)
-  fun val with_then_body(then_body': Sequence): If => _create(_pos, _condition, then_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | If | None)): If => _create(_pos, _condition, _then_body, else_body')
+  fun val with_condition(condition': Sequence): If => _create(condition', _then_body, _else_body, _attachments)
+  fun val with_then_body(then_body': Sequence): If => _create(_condition, then_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | If | None)): If => _create(_condition, _then_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4700,13 +4990,13 @@ class val If is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _condition then
-        return _create(_pos, replace' as Sequence, _then_body, _else_body)
+        return _create(replace' as Sequence, _then_body, _else_body, _attachments)
       end
       if child' is _then_body then
-        return _create(_pos, _condition, replace' as Sequence, _else_body)
+        return _create(_condition, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _condition, _then_body, replace' as (Sequence | If | None))
+        return _create(_condition, _then_body, replace' as (Sequence | If | None), _attachments)
       end
       error
     else this
@@ -4723,7 +5013,7 @@ class val If is (AST & Expr)
     consume s
 
 class val While is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _condition: Sequence
   let _loop_body: Sequence
@@ -4733,27 +5023,28 @@ class val While is (AST & Expr)
     condition': Sequence,
     loop_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _condition = condition'
     _loop_body = loop_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     condition': Sequence,
     loop_body': Sequence,
-    else_body': (Sequence | None))
+    else_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _condition = condition'
     _loop_body = loop_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("While missing required field: condition", pos')); error
@@ -4789,16 +5080,23 @@ class val While is (AST & Expr)
     fn(_condition)
     fn(_loop_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): While => _create(pos', _condition, _loop_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): While => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): While => _create(_condition, _loop_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val condition(): Sequence => _condition
   fun val loop_body(): Sequence => _loop_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_condition(condition': Sequence): While => _create(_pos, condition', _loop_body, _else_body)
-  fun val with_loop_body(loop_body': Sequence): While => _create(_pos, _condition, loop_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None)): While => _create(_pos, _condition, _loop_body, else_body')
+  fun val with_condition(condition': Sequence): While => _create(condition', _loop_body, _else_body, _attachments)
+  fun val with_loop_body(loop_body': Sequence): While => _create(_condition, loop_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): While => _create(_condition, _loop_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4812,13 +5110,13 @@ class val While is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _condition then
-        return _create(_pos, replace' as Sequence, _loop_body, _else_body)
+        return _create(replace' as Sequence, _loop_body, _else_body, _attachments)
       end
       if child' is _loop_body then
-        return _create(_pos, _condition, replace' as Sequence, _else_body)
+        return _create(_condition, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _condition, _loop_body, replace' as (Sequence | None))
+        return _create(_condition, _loop_body, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -4835,7 +5133,7 @@ class val While is (AST & Expr)
     consume s
 
 class val Repeat is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _loop_body: Sequence
   let _condition: Sequence
@@ -4845,27 +5143,28 @@ class val Repeat is (AST & Expr)
     loop_body': Sequence,
     condition': Sequence,
     else_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _loop_body = loop_body'
     _condition = condition'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     loop_body': Sequence,
     condition': Sequence,
-    else_body': (Sequence | None))
+    else_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _loop_body = loop_body'
     _condition = condition'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let loop_body': (AST | None) =
       try iter.next()?
       else errs.push(("Repeat missing required field: loop_body", pos')); error
@@ -4901,16 +5200,23 @@ class val Repeat is (AST & Expr)
     fn(_loop_body)
     fn(_condition)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Repeat => _create(pos', _loop_body, _condition, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Repeat => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Repeat => _create(_loop_body, _condition, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val loop_body(): Sequence => _loop_body
   fun val condition(): Sequence => _condition
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_loop_body(loop_body': Sequence): Repeat => _create(_pos, loop_body', _condition, _else_body)
-  fun val with_condition(condition': Sequence): Repeat => _create(_pos, _loop_body, condition', _else_body)
-  fun val with_else_body(else_body': (Sequence | None)): Repeat => _create(_pos, _loop_body, _condition, else_body')
+  fun val with_loop_body(loop_body': Sequence): Repeat => _create(loop_body', _condition, _else_body, _attachments)
+  fun val with_condition(condition': Sequence): Repeat => _create(_loop_body, condition', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): Repeat => _create(_loop_body, _condition, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -4924,13 +5230,13 @@ class val Repeat is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _loop_body then
-        return _create(_pos, replace' as Sequence, _condition, _else_body)
+        return _create(replace' as Sequence, _condition, _else_body, _attachments)
       end
       if child' is _condition then
-        return _create(_pos, _loop_body, replace' as Sequence, _else_body)
+        return _create(_loop_body, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _loop_body, _condition, replace' as (Sequence | None))
+        return _create(_loop_body, _condition, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -4947,7 +5253,7 @@ class val Repeat is (AST & Expr)
     consume s
 
 class val For is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _refs: (Id | IdTuple)
   let _iterator: Sequence
@@ -4959,30 +5265,31 @@ class val For is (AST & Expr)
     iterator': Sequence,
     loop_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _refs = refs'
     _iterator = iterator'
     _loop_body = loop_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     refs': (Id | IdTuple),
     iterator': Sequence,
     loop_body': Sequence,
-    else_body': (Sequence | None))
+    else_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _refs = refs'
     _iterator = iterator'
     _loop_body = loop_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let refs': (AST | None) =
       try iter.next()?
       else errs.push(("For missing required field: refs", pos')); error
@@ -5027,18 +5334,25 @@ class val For is (AST & Expr)
     fn(_iterator)
     fn(_loop_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): For => _create(pos', _refs, _iterator, _loop_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): For => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): For => _create(_refs, _iterator, _loop_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val refs(): (Id | IdTuple) => _refs
   fun val iterator(): Sequence => _iterator
   fun val loop_body(): Sequence => _loop_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_refs(refs': (Id | IdTuple)): For => _create(_pos, refs', _iterator, _loop_body, _else_body)
-  fun val with_iterator(iterator': Sequence): For => _create(_pos, _refs, iterator', _loop_body, _else_body)
-  fun val with_loop_body(loop_body': Sequence): For => _create(_pos, _refs, _iterator, loop_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None)): For => _create(_pos, _refs, _iterator, _loop_body, else_body')
+  fun val with_refs(refs': (Id | IdTuple)): For => _create(refs', _iterator, _loop_body, _else_body, _attachments)
+  fun val with_iterator(iterator': Sequence): For => _create(_refs, iterator', _loop_body, _else_body, _attachments)
+  fun val with_loop_body(loop_body': Sequence): For => _create(_refs, _iterator, loop_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): For => _create(_refs, _iterator, _loop_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5053,16 +5367,16 @@ class val For is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _refs then
-        return _create(_pos, replace' as (Id | IdTuple), _iterator, _loop_body, _else_body)
+        return _create(replace' as (Id | IdTuple), _iterator, _loop_body, _else_body, _attachments)
       end
       if child' is _iterator then
-        return _create(_pos, _refs, replace' as Sequence, _loop_body, _else_body)
+        return _create(_refs, replace' as Sequence, _loop_body, _else_body, _attachments)
       end
       if child' is _loop_body then
-        return _create(_pos, _refs, _iterator, replace' as Sequence, _else_body)
+        return _create(_refs, _iterator, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _refs, _iterator, _loop_body, replace' as (Sequence | None))
+        return _create(_refs, _iterator, _loop_body, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5080,7 +5394,7 @@ class val For is (AST & Expr)
     consume s
 
 class val With is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _assigns: AssignTuple
   let _with_body: Sequence
@@ -5090,27 +5404,28 @@ class val With is (AST & Expr)
     assigns': AssignTuple,
     with_body': Sequence,
     else_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _assigns = assigns'
     _with_body = with_body'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     assigns': AssignTuple,
     with_body': Sequence,
-    else_body': (Sequence | None))
+    else_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _assigns = assigns'
     _with_body = with_body'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let assigns': (AST | None) =
       try iter.next()?
       else errs.push(("With missing required field: assigns", pos')); error
@@ -5146,16 +5461,23 @@ class val With is (AST & Expr)
     fn(_assigns)
     fn(_with_body)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): With => _create(pos', _assigns, _with_body, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): With => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): With => _create(_assigns, _with_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val assigns(): AssignTuple => _assigns
   fun val with_body(): Sequence => _with_body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_assigns(assigns': AssignTuple): With => _create(_pos, assigns', _with_body, _else_body)
-  fun val with_with_body(with_body': Sequence): With => _create(_pos, _assigns, with_body', _else_body)
-  fun val with_else_body(else_body': (Sequence | None)): With => _create(_pos, _assigns, _with_body, else_body')
+  fun val with_assigns(assigns': AssignTuple): With => _create(assigns', _with_body, _else_body, _attachments)
+  fun val with_with_body(with_body': Sequence): With => _create(_assigns, with_body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): With => _create(_assigns, _with_body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5169,13 +5491,13 @@ class val With is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _assigns then
-        return _create(_pos, replace' as AssignTuple, _with_body, _else_body)
+        return _create(replace' as AssignTuple, _with_body, _else_body, _attachments)
       end
       if child' is _with_body then
-        return _create(_pos, _assigns, replace' as Sequence, _else_body)
+        return _create(_assigns, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _assigns, _with_body, replace' as (Sequence | None))
+        return _create(_assigns, _with_body, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5192,31 +5514,32 @@ class val With is (AST & Expr)
     consume s
 
 class val IdTuple is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _elements: coll.Vec[(Id | IdTuple)]
   
   new val create(
     elements': (coll.Vec[(Id | IdTuple)] | Array[(Id | IdTuple)] val) = coll.Vec[(Id | IdTuple)])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _elements = 
       match elements'
       | let v: coll.Vec[(Id | IdTuple)] => v
       | let s: Array[(Id | IdTuple)] val => coll.Vec[(Id | IdTuple)].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    elements': coll.Vec[(Id | IdTuple)])
+  new val _create(
+    elements': coll.Vec[(Id | IdTuple)],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _elements = elements'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var elements' = coll.Vec[(Id | IdTuple)]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -5233,12 +5556,19 @@ class val IdTuple is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _elements.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IdTuple => _create(pos', _elements)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IdTuple => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IdTuple => _create(_elements, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val elements(): coll.Vec[(Id | IdTuple)] => _elements
   
-  fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => _create(elements', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5251,7 +5581,7 @@ class val IdTuple is (AST & Expr)
     try
       try
         let i = _elements.find(child' as (Id | IdTuple))?
-        return _create(_pos, _elements.update(i, replace' as (Id | IdTuple))?)
+        return _create(_elements.update(i, replace' as (Id | IdTuple))?, _attachments)
       end
       error
     else this
@@ -5271,31 +5601,32 @@ class val IdTuple is (AST & Expr)
     consume s
 
 class val AssignTuple is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _elements: coll.Vec[Assign]
   
   new val create(
     elements': (coll.Vec[Assign] | Array[Assign] val) = coll.Vec[Assign])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _elements = 
       match elements'
       | let v: coll.Vec[Assign] => v
       | let s: Array[Assign] val => coll.Vec[Assign].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    elements': coll.Vec[Assign])
+  new val _create(
+    elements': coll.Vec[Assign],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _elements = elements'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var elements' = coll.Vec[Assign]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -5312,12 +5643,19 @@ class val AssignTuple is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _elements.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): AssignTuple => _create(pos', _elements)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AssignTuple => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): AssignTuple => _create(_elements, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val elements(): coll.Vec[Assign] => _elements
   
-  fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => _create(elements', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5330,7 +5668,7 @@ class val AssignTuple is AST
     try
       try
         let i = _elements.find(child' as Assign)?
-        return _create(_pos, _elements.update(i, replace' as Assign)?)
+        return _create(_elements.update(i, replace' as Assign)?, _attachments)
       end
       error
     else this
@@ -5350,7 +5688,7 @@ class val AssignTuple is AST
     consume s
 
 class val Match is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Sequence
   let _cases: Cases
@@ -5360,27 +5698,28 @@ class val Match is (AST & Expr)
     expr': Sequence,
     cases': Cases = Cases,
     else_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
     _cases = cases'
     _else_body = else_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     expr': Sequence,
     cases': Cases,
-    else_body': (Sequence | None))
+    else_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
     _cases = cases'
     _else_body = else_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Match missing required field: expr", pos')); error
@@ -5413,16 +5752,23 @@ class val Match is (AST & Expr)
     fn(_expr)
     fn(_cases)
     fn(_else_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Match => _create(pos', _expr, _cases, _else_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Match => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Match => _create(_expr, _cases, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Sequence => _expr
   fun val cases(): Cases => _cases
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_expr(expr': Sequence): Match => _create(_pos, expr', _cases, _else_body)
-  fun val with_cases(cases': Cases): Match => _create(_pos, _expr, cases', _else_body)
-  fun val with_else_body(else_body': (Sequence | None)): Match => _create(_pos, _expr, _cases, else_body')
+  fun val with_expr(expr': Sequence): Match => _create(expr', _cases, _else_body, _attachments)
+  fun val with_cases(cases': Cases): Match => _create(_expr, cases', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): Match => _create(_expr, _cases, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5436,13 +5782,13 @@ class val Match is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Sequence, _cases, _else_body)
+        return _create(replace' as Sequence, _cases, _else_body, _attachments)
       end
       if child' is _cases then
-        return _create(_pos, _expr, replace' as Cases, _else_body)
+        return _create(_expr, replace' as Cases, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _expr, _cases, replace' as (Sequence | None))
+        return _create(_expr, _cases, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5459,31 +5805,32 @@ class val Match is (AST & Expr)
     consume s
 
 class val Cases is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Case]
   
   new val create(
     list': (coll.Vec[Case] | Array[Case] val) = coll.Vec[Case])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Case] => v
       | let s: Array[Case] val => coll.Vec[Case].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Case])
+  new val _create(
+    list': coll.Vec[Case],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Case]
     var list_next' = try iter.next()? else None end
     while true do
@@ -5500,12 +5847,19 @@ class val Cases is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Cases => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Cases => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Cases => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Case] => _list
   
-  fun val with_list(list': coll.Vec[Case]): Cases => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Case]): Cases => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5518,7 +5872,7 @@ class val Cases is AST
     try
       try
         let i = _list.find(child' as Case)?
-        return _create(_pos, _list.update(i, replace' as Case)?)
+        return _create(_list.update(i, replace' as Case)?, _attachments)
       end
       error
     else this
@@ -5538,7 +5892,7 @@ class val Cases is AST
     consume s
 
 class val Case is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   let _guard: (Sequence | None)
@@ -5548,27 +5902,28 @@ class val Case is AST
     expr': Expr,
     guard': (Sequence | None) = None,
     body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
     _guard = guard'
     _body = body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     expr': Expr,
     guard': (Sequence | None),
-    body': (Sequence | None))
+    body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
     _guard = guard'
     _body = body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Case missing required field: expr", pos')); error
@@ -5601,16 +5956,23 @@ class val Case is AST
     fn(_expr)
     fn(_guard)
     fn(_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Case => _create(pos', _expr, _guard, _body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Case => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Case => _create(_expr, _guard, _body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   fun val guard(): (Sequence | None) => _guard
   fun val body(): (Sequence | None) => _body
   
-  fun val with_expr(expr': Expr): Case => _create(_pos, expr', _guard, _body)
-  fun val with_guard(guard': (Sequence | None)): Case => _create(_pos, _expr, guard', _body)
-  fun val with_body(body': (Sequence | None)): Case => _create(_pos, _expr, _guard, body')
+  fun val with_expr(expr': Expr): Case => _create(expr', _guard, _body, _attachments)
+  fun val with_guard(guard': (Sequence | None)): Case => _create(_expr, guard', _body, _attachments)
+  fun val with_body(body': (Sequence | None)): Case => _create(_expr, _guard, body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5624,13 +5986,13 @@ class val Case is AST
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr, _guard, _body)
+        return _create(replace' as Expr, _guard, _body, _attachments)
       end
       if child' is _guard then
-        return _create(_pos, _expr, replace' as (Sequence | None), _body)
+        return _create(_expr, replace' as (Sequence | None), _body, _attachments)
       end
       if child' is _body then
-        return _create(_pos, _expr, _guard, replace' as (Sequence | None))
+        return _create(_expr, _guard, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5647,7 +6009,7 @@ class val Case is AST
     consume s
 
 class val Try is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _body: Sequence
   let _else_body: (Sequence | None)
@@ -5657,27 +6019,28 @@ class val Try is (AST & Expr)
     body': Sequence,
     else_body': (Sequence | None) = None,
     then_body': (Sequence | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _body = body'
     _else_body = else_body'
     _then_body = then_body'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     body': Sequence,
     else_body': (Sequence | None),
-    then_body': (Sequence | None))
+    then_body': (Sequence | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _body = body'
     _else_body = else_body'
     _then_body = then_body'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let body': (AST | None) =
       try iter.next()?
       else errs.push(("Try missing required field: body", pos')); error
@@ -5710,16 +6073,23 @@ class val Try is (AST & Expr)
     fn(_body)
     fn(_else_body)
     fn(_then_body)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Try => _create(pos', _body, _else_body, _then_body)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Try => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Try => _create(_body, _else_body, _then_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val body(): Sequence => _body
   fun val else_body(): (Sequence | None) => _else_body
   fun val then_body(): (Sequence | None) => _then_body
   
-  fun val with_body(body': Sequence): Try => _create(_pos, body', _else_body, _then_body)
-  fun val with_else_body(else_body': (Sequence | None)): Try => _create(_pos, _body, else_body', _then_body)
-  fun val with_then_body(then_body': (Sequence | None)): Try => _create(_pos, _body, _else_body, then_body')
+  fun val with_body(body': Sequence): Try => _create(body', _else_body, _then_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): Try => _create(_body, else_body', _then_body, _attachments)
+  fun val with_then_body(then_body': (Sequence | None)): Try => _create(_body, _else_body, then_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5733,13 +6103,13 @@ class val Try is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _body then
-        return _create(_pos, replace' as Sequence, _else_body, _then_body)
+        return _create(replace' as Sequence, _else_body, _then_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_pos, _body, replace' as (Sequence | None), _then_body)
+        return _create(_body, replace' as (Sequence | None), _then_body, _attachments)
       end
       if child' is _then_body then
-        return _create(_pos, _body, _else_body, replace' as (Sequence | None))
+        return _create(_body, _else_body, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5756,7 +6126,7 @@ class val Try is (AST & Expr)
     consume s
 
 class val Consume is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _cap: (Cap | None)
   let _expr: (Reference | This)
@@ -5764,24 +6134,25 @@ class val Consume is (AST & Expr)
   new val create(
     cap': (Cap | None),
     expr': (Reference | This))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _cap = cap'
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     cap': (Cap | None),
-    expr': (Reference | This))
+    expr': (Reference | This),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _cap = cap'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("Consume missing required field: cap", pos')); error
@@ -5811,14 +6182,21 @@ class val Consume is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_cap)
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Consume => _create(pos', _cap, _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Consume => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Consume => _create(_cap, _expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val cap(): (Cap | None) => _cap
   fun val expr(): (Reference | This) => _expr
   
-  fun val with_cap(cap': (Cap | None)): Consume => _create(_pos, cap', _expr)
-  fun val with_expr(expr': (Reference | This)): Consume => _create(_pos, _cap, expr')
+  fun val with_cap(cap': (Cap | None)): Consume => _create(cap', _expr, _attachments)
+  fun val with_expr(expr': (Reference | This)): Consume => _create(_cap, expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5831,10 +6209,10 @@ class val Consume is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _cap then
-        return _create(_pos, replace' as (Cap | None), _expr)
+        return _create(replace' as (Cap | None), _expr, _attachments)
       end
       if child' is _expr then
-        return _create(_pos, _cap, replace' as (Reference | This))
+        return _create(_cap, replace' as (Reference | This), _attachments)
       end
       error
     else this
@@ -5850,7 +6228,7 @@ class val Consume is (AST & Expr)
     consume s
 
 class val Recover is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _cap: (Cap | None)
   let _expr: Sequence
@@ -5858,24 +6236,25 @@ class val Recover is (AST & Expr)
   new val create(
     cap': (Cap | None),
     expr': Sequence)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _cap = cap'
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     cap': (Cap | None),
-    expr': Sequence)
+    expr': Sequence,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _cap = cap'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("Recover missing required field: cap", pos')); error
@@ -5905,14 +6284,21 @@ class val Recover is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_cap)
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Recover => _create(pos', _cap, _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Recover => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Recover => _create(_cap, _expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val cap(): (Cap | None) => _cap
   fun val expr(): Sequence => _expr
   
-  fun val with_cap(cap': (Cap | None)): Recover => _create(_pos, cap', _expr)
-  fun val with_expr(expr': Sequence): Recover => _create(_pos, _cap, expr')
+  fun val with_cap(cap': (Cap | None)): Recover => _create(cap', _expr, _attachments)
+  fun val with_expr(expr': Sequence): Recover => _create(_cap, expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5925,10 +6311,10 @@ class val Recover is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _cap then
-        return _create(_pos, replace' as (Cap | None), _expr)
+        return _create(replace' as (Cap | None), _expr, _attachments)
       end
       if child' is _expr then
-        return _create(_pos, _cap, replace' as Sequence)
+        return _create(_cap, replace' as Sequence, _attachments)
       end
       error
     else this
@@ -5944,7 +6330,7 @@ class val Recover is (AST & Expr)
     consume s
 
 class val As is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   let _as_type: Type
@@ -5952,24 +6338,25 @@ class val As is (AST & Expr)
   new val create(
     expr': Expr,
     as_type': Type)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
     _as_type = as_type'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     expr': Expr,
-    as_type': Type)
+    as_type': Type,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
     _as_type = as_type'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("As missing required field: expr", pos')); error
@@ -5999,14 +6386,21 @@ class val As is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
     fn(_as_type)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): As => _create(pos', _expr, _as_type)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): As => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): As => _create(_expr, _as_type, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   fun val as_type(): Type => _as_type
   
-  fun val with_expr(expr': Expr): As => _create(_pos, expr', _as_type)
-  fun val with_as_type(as_type': Type): As => _create(_pos, _expr, as_type')
+  fun val with_expr(expr': Expr): As => _create(expr', _as_type, _attachments)
+  fun val with_as_type(as_type': Type): As => _create(_expr, as_type', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6019,10 +6413,10 @@ class val As is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr, _as_type)
+        return _create(replace' as Expr, _as_type, _attachments)
       end
       if child' is _as_type then
-        return _create(_pos, _expr, replace' as Type)
+        return _create(_expr, replace' as Type, _attachments)
       end
       error
     else this
@@ -6038,7 +6432,7 @@ class val As is (AST & Expr)
     consume s
 
 class val Add is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6046,24 +6440,25 @@ class val Add is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Add missing required field: left", pos')); error
@@ -6093,14 +6488,21 @@ class val Add is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Add => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Add => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Add => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Add => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Add => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Add => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Add => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6113,10 +6515,10 @@ class val Add is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6132,7 +6534,7 @@ class val Add is (AST & BinaryOp & Expr)
     consume s
 
 class val AddUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6140,24 +6542,25 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("AddUnsafe missing required field: left", pos')); error
@@ -6187,14 +6590,21 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): AddUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AddUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): AddUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): AddUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): AddUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): AddUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): AddUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6207,10 +6617,10 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6226,7 +6636,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Sub is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6234,24 +6644,25 @@ class val Sub is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Sub missing required field: left", pos')); error
@@ -6281,14 +6692,21 @@ class val Sub is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Sub => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Sub => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Sub => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Sub => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Sub => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Sub => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Sub => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6301,10 +6719,10 @@ class val Sub is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6320,7 +6738,7 @@ class val Sub is (AST & BinaryOp & Expr)
     consume s
 
 class val SubUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6328,24 +6746,25 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("SubUnsafe missing required field: left", pos')); error
@@ -6375,14 +6794,21 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): SubUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): SubUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): SubUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): SubUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): SubUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): SubUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): SubUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6395,10 +6821,10 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6414,7 +6840,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Mul is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6422,24 +6848,25 @@ class val Mul is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Mul missing required field: left", pos')); error
@@ -6469,14 +6896,21 @@ class val Mul is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Mul => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Mul => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Mul => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Mul => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Mul => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Mul => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Mul => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6489,10 +6923,10 @@ class val Mul is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6508,7 +6942,7 @@ class val Mul is (AST & BinaryOp & Expr)
     consume s
 
 class val MulUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6516,24 +6950,25 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("MulUnsafe missing required field: left", pos')); error
@@ -6563,14 +6998,21 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MulUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MulUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MulUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): MulUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): MulUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): MulUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): MulUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6583,10 +7025,10 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6602,7 +7044,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Div is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6610,24 +7052,25 @@ class val Div is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Div missing required field: left", pos')); error
@@ -6657,14 +7100,21 @@ class val Div is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Div => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Div => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Div => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Div => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Div => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Div => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Div => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6677,10 +7127,10 @@ class val Div is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6696,7 +7146,7 @@ class val Div is (AST & BinaryOp & Expr)
     consume s
 
 class val DivUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6704,24 +7154,25 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("DivUnsafe missing required field: left", pos')); error
@@ -6751,14 +7202,21 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): DivUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DivUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): DivUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): DivUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): DivUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): DivUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): DivUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6771,10 +7229,10 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6790,7 +7248,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Mod is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6798,24 +7256,25 @@ class val Mod is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Mod missing required field: left", pos')); error
@@ -6845,14 +7304,21 @@ class val Mod is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Mod => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Mod => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Mod => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Mod => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Mod => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Mod => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Mod => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6865,10 +7331,10 @@ class val Mod is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6884,7 +7350,7 @@ class val Mod is (AST & BinaryOp & Expr)
     consume s
 
 class val ModUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6892,24 +7358,25 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("ModUnsafe missing required field: left", pos')); error
@@ -6939,14 +7406,21 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): ModUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ModUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): ModUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): ModUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): ModUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): ModUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): ModUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -6959,10 +7433,10 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -6978,7 +7452,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LShift is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -6986,24 +7460,25 @@ class val LShift is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LShift missing required field: left", pos')); error
@@ -7033,14 +7508,21 @@ class val LShift is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LShift => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LShift => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LShift => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LShift => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LShift => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LShift => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LShift => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7053,10 +7535,10 @@ class val LShift is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7072,7 +7554,7 @@ class val LShift is (AST & BinaryOp & Expr)
     consume s
 
 class val LShiftUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7080,24 +7562,25 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LShiftUnsafe missing required field: left", pos')); error
@@ -7127,14 +7610,21 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LShiftUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LShiftUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LShiftUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LShiftUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LShiftUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LShiftUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LShiftUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7147,10 +7637,10 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7166,7 +7656,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val RShift is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7174,24 +7664,25 @@ class val RShift is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("RShift missing required field: left", pos')); error
@@ -7221,14 +7712,21 @@ class val RShift is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): RShift => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): RShift => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): RShift => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): RShift => _create(_pos, left', _right)
-  fun val with_right(right': Expr): RShift => _create(_pos, _left, right')
+  fun val with_left(left': Expr): RShift => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): RShift => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7241,10 +7739,10 @@ class val RShift is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7260,7 +7758,7 @@ class val RShift is (AST & BinaryOp & Expr)
     consume s
 
 class val RShiftUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7268,24 +7766,25 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("RShiftUnsafe missing required field: left", pos')); error
@@ -7315,14 +7814,21 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): RShiftUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): RShiftUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): RShiftUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): RShiftUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): RShiftUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): RShiftUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): RShiftUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7335,10 +7841,10 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7354,7 +7860,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Eq is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7362,24 +7868,25 @@ class val Eq is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Eq missing required field: left", pos')); error
@@ -7409,14 +7916,21 @@ class val Eq is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Eq => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Eq => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Eq => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Eq => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Eq => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Eq => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Eq => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7429,10 +7943,10 @@ class val Eq is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7448,7 +7962,7 @@ class val Eq is (AST & BinaryOp & Expr)
     consume s
 
 class val EqUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7456,24 +7970,25 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("EqUnsafe missing required field: left", pos')); error
@@ -7503,14 +8018,21 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): EqUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): EqUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): EqUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): EqUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): EqUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): EqUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): EqUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7523,10 +8045,10 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7542,7 +8064,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val NE is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7550,24 +8072,25 @@ class val NE is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("NE missing required field: left", pos')); error
@@ -7597,14 +8120,21 @@ class val NE is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NE => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NE => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): NE => _create(_pos, left', _right)
-  fun val with_right(right': Expr): NE => _create(_pos, _left, right')
+  fun val with_left(left': Expr): NE => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): NE => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7617,10 +8147,10 @@ class val NE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7636,7 +8166,7 @@ class val NE is (AST & BinaryOp & Expr)
     consume s
 
 class val NEUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7644,24 +8174,25 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("NEUnsafe missing required field: left", pos')); error
@@ -7691,14 +8222,21 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NEUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NEUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): NEUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): NEUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): NEUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): NEUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7711,10 +8249,10 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7730,7 +8268,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LT is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7738,24 +8276,25 @@ class val LT is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LT missing required field: left", pos')); error
@@ -7785,14 +8324,21 @@ class val LT is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LT => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LT => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LT => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LT => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LT => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LT => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LT => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7805,10 +8351,10 @@ class val LT is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7824,7 +8370,7 @@ class val LT is (AST & BinaryOp & Expr)
     consume s
 
 class val LTUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7832,24 +8378,25 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LTUnsafe missing required field: left", pos')); error
@@ -7879,14 +8426,21 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LTUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LTUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LTUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LTUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LTUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LTUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LTUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7899,10 +8453,10 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -7918,7 +8472,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val LE is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -7926,24 +8480,25 @@ class val LE is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LE missing required field: left", pos')); error
@@ -7973,14 +8528,21 @@ class val LE is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LE => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LE => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LE => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LE => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LE => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LE => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -7993,10 +8555,10 @@ class val LE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8012,7 +8574,7 @@ class val LE is (AST & BinaryOp & Expr)
     consume s
 
 class val LEUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8020,24 +8582,25 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LEUnsafe missing required field: left", pos')); error
@@ -8067,14 +8630,21 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LEUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LEUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): LEUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): LEUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): LEUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): LEUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8087,10 +8657,10 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8106,7 +8676,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val GE is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8114,24 +8684,25 @@ class val GE is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GE missing required field: left", pos')); error
@@ -8161,14 +8732,21 @@ class val GE is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): GE => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GE => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): GE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): GE => _create(_pos, left', _right)
-  fun val with_right(right': Expr): GE => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GE => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): GE => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8181,10 +8759,10 @@ class val GE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8200,7 +8778,7 @@ class val GE is (AST & BinaryOp & Expr)
     consume s
 
 class val GEUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8208,24 +8786,25 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GEUnsafe missing required field: left", pos')); error
@@ -8255,14 +8834,21 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): GEUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GEUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): GEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): GEUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): GEUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GEUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): GEUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8275,10 +8861,10 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8294,7 +8880,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val GT is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8302,24 +8888,25 @@ class val GT is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GT missing required field: left", pos')); error
@@ -8349,14 +8936,21 @@ class val GT is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): GT => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GT => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): GT => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): GT => _create(_pos, left', _right)
-  fun val with_right(right': Expr): GT => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GT => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): GT => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8369,10 +8963,10 @@ class val GT is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8388,7 +8982,7 @@ class val GT is (AST & BinaryOp & Expr)
     consume s
 
 class val GTUnsafe is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8396,24 +8990,25 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GTUnsafe missing required field: left", pos')); error
@@ -8443,14 +9038,21 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): GTUnsafe => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GTUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): GTUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): GTUnsafe => _create(_pos, left', _right)
-  fun val with_right(right': Expr): GTUnsafe => _create(_pos, _left, right')
+  fun val with_left(left': Expr): GTUnsafe => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): GTUnsafe => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8463,10 +9065,10 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8482,7 +9084,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     consume s
 
 class val Is is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8490,24 +9092,25 @@ class val Is is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Is missing required field: left", pos')); error
@@ -8537,14 +9140,21 @@ class val Is is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Is => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Is => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Is => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Is => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Is => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Is => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Is => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8557,10 +9167,10 @@ class val Is is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8576,7 +9186,7 @@ class val Is is (AST & BinaryOp & Expr)
     consume s
 
 class val Isnt is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8584,24 +9194,25 @@ class val Isnt is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Isnt missing required field: left", pos')); error
@@ -8631,14 +9242,21 @@ class val Isnt is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Isnt => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Isnt => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Isnt => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Isnt => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Isnt => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Isnt => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Isnt => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8651,10 +9269,10 @@ class val Isnt is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8670,7 +9288,7 @@ class val Isnt is (AST & BinaryOp & Expr)
     consume s
 
 class val And is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8678,24 +9296,25 @@ class val And is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("And missing required field: left", pos')); error
@@ -8725,14 +9344,21 @@ class val And is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): And => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): And => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): And => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): And => _create(_pos, left', _right)
-  fun val with_right(right': Expr): And => _create(_pos, _left, right')
+  fun val with_left(left': Expr): And => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): And => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8745,10 +9371,10 @@ class val And is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8764,7 +9390,7 @@ class val And is (AST & BinaryOp & Expr)
     consume s
 
 class val Or is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8772,24 +9398,25 @@ class val Or is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Or missing required field: left", pos')); error
@@ -8819,14 +9446,21 @@ class val Or is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Or => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Or => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Or => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Or => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Or => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Or => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Or => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8839,10 +9473,10 @@ class val Or is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8858,7 +9492,7 @@ class val Or is (AST & BinaryOp & Expr)
     consume s
 
 class val XOr is (AST & BinaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -8866,24 +9500,25 @@ class val XOr is (AST & BinaryOp & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("XOr missing required field: left", pos')); error
@@ -8913,14 +9548,21 @@ class val XOr is (AST & BinaryOp & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): XOr => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): XOr => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): XOr => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): XOr => _create(_pos, left', _right)
-  fun val with_right(right': Expr): XOr => _create(_pos, _left, right')
+  fun val with_left(left': Expr): XOr => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): XOr => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -8933,10 +9575,10 @@ class val XOr is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -8952,27 +9594,28 @@ class val XOr is (AST & BinaryOp & Expr)
     consume s
 
 class val Not is (AST & UnaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': Expr)
+  new val _create(
+    expr': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Not missing required field: expr", pos')); error
@@ -8993,12 +9636,19 @@ class val Not is (AST & UnaryOp & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Not => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Not => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Not => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr): Not => _create(_pos, expr')
+  fun val with_expr(expr': Expr): Not => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9010,7 +9660,7 @@ class val Not is (AST & UnaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr)
+        return _create(replace' as Expr, _attachments)
       end
       error
     else this
@@ -9025,27 +9675,28 @@ class val Not is (AST & UnaryOp & Expr)
     consume s
 
 class val Neg is (AST & UnaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': Expr)
+  new val _create(
+    expr': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Neg missing required field: expr", pos')); error
@@ -9066,12 +9717,19 @@ class val Neg is (AST & UnaryOp & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Neg => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Neg => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Neg => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr): Neg => _create(_pos, expr')
+  fun val with_expr(expr': Expr): Neg => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9083,7 +9741,7 @@ class val Neg is (AST & UnaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr)
+        return _create(replace' as Expr, _attachments)
       end
       error
     else this
@@ -9098,27 +9756,28 @@ class val Neg is (AST & UnaryOp & Expr)
     consume s
 
 class val NegUnsafe is (AST & UnaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': Expr)
+  new val _create(
+    expr': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("NegUnsafe missing required field: expr", pos')); error
@@ -9139,12 +9798,19 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NegUnsafe => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NegUnsafe => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NegUnsafe => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr): NegUnsafe => _create(_pos, expr')
+  fun val with_expr(expr': Expr): NegUnsafe => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9156,7 +9822,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr)
+        return _create(replace' as Expr, _attachments)
       end
       error
     else this
@@ -9171,27 +9837,28 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     consume s
 
 class val AddressOf is (AST & UnaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': Expr)
+  new val _create(
+    expr': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("AddressOf missing required field: expr", pos')); error
@@ -9212,12 +9879,19 @@ class val AddressOf is (AST & UnaryOp & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): AddressOf => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AddressOf => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): AddressOf => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr): AddressOf => _create(_pos, expr')
+  fun val with_expr(expr': Expr): AddressOf => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9229,7 +9903,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr)
+        return _create(replace' as Expr, _attachments)
       end
       error
     else this
@@ -9244,27 +9918,28 @@ class val AddressOf is (AST & UnaryOp & Expr)
     consume s
 
 class val DigestOf is (AST & UnaryOp & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _expr: Expr
   
   new val create(
     expr': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _expr = expr'
   
-  new val _create(pos': SourcePosAny,
-    expr': Expr)
+  new val _create(
+    expr': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _expr = expr'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("DigestOf missing required field: expr", pos')); error
@@ -9285,12 +9960,19 @@ class val DigestOf is (AST & UnaryOp & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_expr)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): DigestOf => _create(pos', _expr)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DigestOf => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): DigestOf => _create(_expr, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val expr(): Expr => _expr
   
-  fun val with_expr(expr': Expr): DigestOf => _create(_pos, expr')
+  fun val with_expr(expr': Expr): DigestOf => _create(expr', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9302,7 +9984,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _expr then
-        return _create(_pos, replace' as Expr)
+        return _create(replace' as Expr, _attachments)
       end
       error
     else this
@@ -9317,7 +9999,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
     consume s
 
 class val LocalLet is (AST & Local & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _local_type: (Type | None)
@@ -9325,24 +10007,25 @@ class val LocalLet is (AST & Local & Expr)
   new val create(
     name': Id,
     local_type': (Type | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _local_type = local_type'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
-    local_type': (Type | None))
+    local_type': (Type | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _local_type = local_type'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalLet missing required field: name", pos')); error
@@ -9369,14 +10052,21 @@ class val LocalLet is (AST & Local & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
     fn(_local_type)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LocalLet => _create(pos', _name, _local_type)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalLet => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LocalLet => _create(_name, _local_type, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
-  fun val with_name(name': Id): LocalLet => _create(_pos, name', _local_type)
-  fun val with_local_type(local_type': (Type | None)): LocalLet => _create(_pos, _name, local_type')
+  fun val with_name(name': Id): LocalLet => _create(name', _local_type, _attachments)
+  fun val with_local_type(local_type': (Type | None)): LocalLet => _create(_name, local_type', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9389,10 +10079,10 @@ class val LocalLet is (AST & Local & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _local_type)
+        return _create(replace' as Id, _local_type, _attachments)
       end
       if child' is _local_type then
-        return _create(_pos, _name, replace' as (Type | None))
+        return _create(_name, replace' as (Type | None), _attachments)
       end
       error
     else this
@@ -9408,7 +10098,7 @@ class val LocalLet is (AST & Local & Expr)
     consume s
 
 class val LocalVar is (AST & Local & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _local_type: (Type | None)
@@ -9416,24 +10106,25 @@ class val LocalVar is (AST & Local & Expr)
   new val create(
     name': Id,
     local_type': (Type | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _local_type = local_type'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
-    local_type': (Type | None))
+    local_type': (Type | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _local_type = local_type'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalVar missing required field: name", pos')); error
@@ -9460,14 +10151,21 @@ class val LocalVar is (AST & Local & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
     fn(_local_type)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LocalVar => _create(pos', _name, _local_type)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalVar => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LocalVar => _create(_name, _local_type, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
-  fun val with_name(name': Id): LocalVar => _create(_pos, name', _local_type)
-  fun val with_local_type(local_type': (Type | None)): LocalVar => _create(_pos, _name, local_type')
+  fun val with_name(name': Id): LocalVar => _create(name', _local_type, _attachments)
+  fun val with_local_type(local_type': (Type | None)): LocalVar => _create(_name, local_type', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9480,10 +10178,10 @@ class val LocalVar is (AST & Local & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _local_type)
+        return _create(replace' as Id, _local_type, _attachments)
       end
       if child' is _local_type then
-        return _create(_pos, _name, replace' as (Type | None))
+        return _create(_name, replace' as (Type | None), _attachments)
       end
       error
     else this
@@ -9499,7 +10197,7 @@ class val LocalVar is (AST & Local & Expr)
     consume s
 
 class val Assign is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Expr
@@ -9507,24 +10205,25 @@ class val Assign is (AST & Expr)
   new val create(
     left': Expr,
     right': Expr)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Assign missing required field: left", pos')); error
@@ -9554,14 +10253,21 @@ class val Assign is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Assign => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Assign => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Assign => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
-  fun val with_left(left': Expr): Assign => _create(_pos, left', _right)
-  fun val with_right(right': Expr): Assign => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Assign => _create(left', _right, _attachments)
+  fun val with_right(right': Expr): Assign => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9574,10 +10280,10 @@ class val Assign is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Expr)
+        return _create(_left, replace' as Expr, _attachments)
       end
       error
     else this
@@ -9593,7 +10299,7 @@ class val Assign is (AST & Expr)
     consume s
 
 class val Dot is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Id
@@ -9601,24 +10307,25 @@ class val Dot is (AST & Expr)
   new val create(
     left': Expr,
     right': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Id)
+    right': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Dot missing required field: left", pos')); error
@@ -9648,14 +10355,21 @@ class val Dot is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Dot => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Dot => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Dot => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr): Dot => _create(_pos, left', _right)
-  fun val with_right(right': Id): Dot => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Dot => _create(left', _right, _attachments)
+  fun val with_right(right': Id): Dot => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9668,10 +10382,10 @@ class val Dot is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Id)
+        return _create(_left, replace' as Id, _attachments)
       end
       error
     else this
@@ -9687,7 +10401,7 @@ class val Dot is (AST & Expr)
     consume s
 
 class val Chain is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Id
@@ -9695,24 +10409,25 @@ class val Chain is (AST & Expr)
   new val create(
     left': Expr,
     right': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Id)
+    right': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Chain missing required field: left", pos')); error
@@ -9742,14 +10457,21 @@ class val Chain is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Chain => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Chain => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Chain => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr): Chain => _create(_pos, left', _right)
-  fun val with_right(right': Id): Chain => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Chain => _create(left', _right, _attachments)
+  fun val with_right(right': Id): Chain => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9762,10 +10484,10 @@ class val Chain is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Id)
+        return _create(_left, replace' as Id, _attachments)
       end
       error
     else this
@@ -9781,7 +10503,7 @@ class val Chain is (AST & Expr)
     consume s
 
 class val Tilde is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: Id
@@ -9789,24 +10511,25 @@ class val Tilde is (AST & Expr)
   new val create(
     left': Expr,
     right': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': Id)
+    right': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Tilde missing required field: left", pos')); error
@@ -9836,14 +10559,21 @@ class val Tilde is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Tilde => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tilde => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Tilde => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
-  fun val with_left(left': Expr): Tilde => _create(_pos, left', _right)
-  fun val with_right(right': Id): Tilde => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Tilde => _create(left', _right, _attachments)
+  fun val with_right(right': Id): Tilde => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9856,10 +10586,10 @@ class val Tilde is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Id)
+        return _create(_left, replace' as Id, _attachments)
       end
       error
     else this
@@ -9875,7 +10605,7 @@ class val Tilde is (AST & Expr)
     consume s
 
 class val Qualify is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Expr
   let _right: TypeArgs
@@ -9883,24 +10613,25 @@ class val Qualify is (AST & Expr)
   new val create(
     left': Expr,
     right': TypeArgs)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Expr,
-    right': TypeArgs)
+    right': TypeArgs,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Qualify missing required field: left", pos')); error
@@ -9930,14 +10661,21 @@ class val Qualify is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Qualify => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Qualify => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Qualify => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Expr => _left
   fun val right(): TypeArgs => _right
   
-  fun val with_left(left': Expr): Qualify => _create(_pos, left', _right)
-  fun val with_right(right': TypeArgs): Qualify => _create(_pos, _left, right')
+  fun val with_left(left': Expr): Qualify => _create(left', _right, _attachments)
+  fun val with_right(right': TypeArgs): Qualify => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -9950,10 +10688,10 @@ class val Qualify is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Expr, _right)
+        return _create(replace' as Expr, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as TypeArgs)
+        return _create(_left, replace' as TypeArgs, _attachments)
       end
       error
     else this
@@ -9969,7 +10707,7 @@ class val Qualify is (AST & Expr)
     consume s
 
 class val Call is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _callable: Expr
   let _args: Args
@@ -9979,27 +10717,28 @@ class val Call is (AST & Expr)
     callable': Expr,
     args': Args = Args,
     named_args': NamedArgs = NamedArgs)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _callable = callable'
     _args = args'
     _named_args = named_args'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     callable': Expr,
     args': Args,
-    named_args': NamedArgs)
+    named_args': NamedArgs,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _callable = callable'
     _args = args'
     _named_args = named_args'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let callable': (AST | None) =
       try iter.next()?
       else errs.push(("Call missing required field: callable", pos')); error
@@ -10032,16 +10771,23 @@ class val Call is (AST & Expr)
     fn(_callable)
     fn(_args)
     fn(_named_args)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Call => _create(pos', _callable, _args, _named_args)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Call => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Call => _create(_callable, _args, _named_args, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val callable(): Expr => _callable
   fun val args(): Args => _args
   fun val named_args(): NamedArgs => _named_args
   
-  fun val with_callable(callable': Expr): Call => _create(_pos, callable', _args, _named_args)
-  fun val with_args(args': Args): Call => _create(_pos, _callable, args', _named_args)
-  fun val with_named_args(named_args': NamedArgs): Call => _create(_pos, _callable, _args, named_args')
+  fun val with_callable(callable': Expr): Call => _create(callable', _args, _named_args, _attachments)
+  fun val with_args(args': Args): Call => _create(_callable, args', _named_args, _attachments)
+  fun val with_named_args(named_args': NamedArgs): Call => _create(_callable, _args, named_args', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10055,13 +10801,13 @@ class val Call is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _callable then
-        return _create(_pos, replace' as Expr, _args, _named_args)
+        return _create(replace' as Expr, _args, _named_args, _attachments)
       end
       if child' is _args then
-        return _create(_pos, _callable, replace' as Args, _named_args)
+        return _create(_callable, replace' as Args, _named_args, _attachments)
       end
       if child' is _named_args then
-        return _create(_pos, _callable, _args, replace' as NamedArgs)
+        return _create(_callable, _args, replace' as NamedArgs, _attachments)
       end
       error
     else this
@@ -10078,7 +10824,7 @@ class val Call is (AST & Expr)
     consume s
 
 class val CallFFI is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: (Id | LitString)
   let _type_args: (TypeArgs | None)
@@ -10092,33 +10838,34 @@ class val CallFFI is (AST & Expr)
     args': Args = Args,
     named_args': NamedArgs = NamedArgs,
     partial': (Question | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _type_args = type_args'
     _args = args'
     _named_args = named_args'
     _partial = partial'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': (Id | LitString),
     type_args': (TypeArgs | None),
     args': Args,
     named_args': NamedArgs,
-    partial': (Question | None))
+    partial': (Question | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _type_args = type_args'
     _args = args'
     _named_args = named_args'
     _partial = partial'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("CallFFI missing required field: name", pos')); error
@@ -10163,20 +10910,27 @@ class val CallFFI is (AST & Expr)
     fn(_args)
     fn(_named_args)
     fn(_partial)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CallFFI => _create(pos', _name, _type_args, _args, _named_args, _partial)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CallFFI => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CallFFI => _create(_name, _type_args, _args, _named_args, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): (Id | LitString) => _name
   fun val type_args(): (TypeArgs | None) => _type_args
   fun val args(): Args => _args
   fun val named_args(): NamedArgs => _named_args
   fun val partial(): (Question | None) => _partial
   
-  fun val with_name(name': (Id | LitString)): CallFFI => _create(_pos, name', _type_args, _args, _named_args, _partial)
-  fun val with_type_args(type_args': (TypeArgs | None)): CallFFI => _create(_pos, _name, type_args', _args, _named_args, _partial)
-  fun val with_args(args': Args): CallFFI => _create(_pos, _name, _type_args, args', _named_args, _partial)
-  fun val with_named_args(named_args': NamedArgs): CallFFI => _create(_pos, _name, _type_args, _args, named_args', _partial)
-  fun val with_partial(partial': (Question | None)): CallFFI => _create(_pos, _name, _type_args, _args, _named_args, partial')
+  fun val with_name(name': (Id | LitString)): CallFFI => _create(name', _type_args, _args, _named_args, _partial, _attachments)
+  fun val with_type_args(type_args': (TypeArgs | None)): CallFFI => _create(_name, type_args', _args, _named_args, _partial, _attachments)
+  fun val with_args(args': Args): CallFFI => _create(_name, _type_args, args', _named_args, _partial, _attachments)
+  fun val with_named_args(named_args': NamedArgs): CallFFI => _create(_name, _type_args, _args, named_args', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): CallFFI => _create(_name, _type_args, _args, _named_args, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10192,19 +10946,19 @@ class val CallFFI is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as (Id | LitString), _type_args, _args, _named_args, _partial)
+        return _create(replace' as (Id | LitString), _type_args, _args, _named_args, _partial, _attachments)
       end
       if child' is _type_args then
-        return _create(_pos, _name, replace' as (TypeArgs | None), _args, _named_args, _partial)
+        return _create(_name, replace' as (TypeArgs | None), _args, _named_args, _partial, _attachments)
       end
       if child' is _args then
-        return _create(_pos, _name, _type_args, replace' as Args, _named_args, _partial)
+        return _create(_name, _type_args, replace' as Args, _named_args, _partial, _attachments)
       end
       if child' is _named_args then
-        return _create(_pos, _name, _type_args, _args, replace' as NamedArgs, _partial)
+        return _create(_name, _type_args, _args, replace' as NamedArgs, _partial, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _name, _type_args, _args, _named_args, replace' as (Question | None))
+        return _create(_name, _type_args, _args, _named_args, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -10223,31 +10977,32 @@ class val CallFFI is (AST & Expr)
     consume s
 
 class val Args is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Sequence]
   
   new val create(
     list': (coll.Vec[Sequence] | Array[Sequence] val) = coll.Vec[Sequence])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Sequence] => v
       | let s: Array[Sequence] val => coll.Vec[Sequence].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Sequence])
+  new val _create(
+    list': coll.Vec[Sequence],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Sequence]
     var list_next' = try iter.next()? else None end
     while true do
@@ -10264,12 +11019,19 @@ class val Args is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Args => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Args => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Args => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Sequence] => _list
   
-  fun val with_list(list': coll.Vec[Sequence]): Args => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Sequence]): Args => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10282,7 +11044,7 @@ class val Args is AST
     try
       try
         let i = _list.find(child' as Sequence)?
-        return _create(_pos, _list.update(i, replace' as Sequence)?)
+        return _create(_list.update(i, replace' as Sequence)?, _attachments)
       end
       error
     else this
@@ -10302,31 +11064,32 @@ class val Args is AST
     consume s
 
 class val NamedArgs is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[NamedArg]
   
   new val create(
     list': (coll.Vec[NamedArg] | Array[NamedArg] val) = coll.Vec[NamedArg])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[NamedArg] => v
       | let s: Array[NamedArg] val => coll.Vec[NamedArg].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[NamedArg])
+  new val _create(
+    list': coll.Vec[NamedArg],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[NamedArg]
     var list_next' = try iter.next()? else None end
     while true do
@@ -10343,12 +11106,19 @@ class val NamedArgs is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NamedArgs => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NamedArgs => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NamedArgs => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[NamedArg] => _list
   
-  fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => _create(_pos, list')
+  fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10361,7 +11131,7 @@ class val NamedArgs is AST
     try
       try
         let i = _list.find(child' as NamedArg)?
-        return _create(_pos, _list.update(i, replace' as NamedArg)?)
+        return _create(_list.update(i, replace' as NamedArg)?, _attachments)
       end
       error
     else this
@@ -10381,7 +11151,7 @@ class val NamedArgs is AST
     consume s
 
 class val NamedArg is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _value: Sequence
@@ -10389,24 +11159,25 @@ class val NamedArg is AST
   new val create(
     name': Id,
     value': Sequence)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _value = value'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
-    value': Sequence)
+    value': Sequence,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("NamedArg missing required field: name", pos')); error
@@ -10436,14 +11207,21 @@ class val NamedArg is AST
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NamedArg => _create(pos', _name, _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NamedArg => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NamedArg => _create(_name, _value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val value(): Sequence => _value
   
-  fun val with_name(name': Id): NamedArg => _create(_pos, name', _value)
-  fun val with_value(value': Sequence): NamedArg => _create(_pos, _name, value')
+  fun val with_name(name': Id): NamedArg => _create(name', _value, _attachments)
+  fun val with_value(value': Sequence): NamedArg => _create(_name, value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10456,10 +11234,10 @@ class val NamedArg is AST
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _value)
+        return _create(replace' as Id, _value, _attachments)
       end
       if child' is _value then
-        return _create(_pos, _name, replace' as Sequence)
+        return _create(_name, replace' as Sequence, _attachments)
       end
       error
     else this
@@ -10475,7 +11253,7 @@ class val NamedArg is AST
     consume s
 
 class val Lambda is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _method_cap: (Cap | None)
   let _name: (Id | None)
@@ -10497,7 +11275,7 @@ class val Lambda is (AST & Expr)
     partial': (Question | None) = None,
     body': Sequence = Sequence,
     object_cap': (Cap | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -10508,7 +11286,7 @@ class val Lambda is (AST & Expr)
     _body = body'
     _object_cap = object_cap'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     method_cap': (Cap | None),
     name': (Id | None),
     type_params': (TypeParams | None),
@@ -10517,9 +11295,9 @@ class val Lambda is (AST & Expr)
     return_type': (Type | None),
     partial': (Question | None),
     body': Sequence,
-    object_cap': (Cap | None))
+    object_cap': (Cap | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -10529,13 +11307,14 @@ class val Lambda is (AST & Expr)
     _partial = partial'
     _body = body'
     _object_cap = object_cap'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -10601,9 +11380,16 @@ class val Lambda is (AST & Expr)
     fn(_partial)
     fn(_body)
     fn(_object_cap)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Lambda => _create(pos', _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Lambda => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Lambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -10614,15 +11400,15 @@ class val Lambda is (AST & Expr)
   fun val body(): Sequence => _body
   fun val object_cap(): (Cap | None) => _object_cap
   
-  fun val with_method_cap(method_cap': (Cap | None)): Lambda => _create(_pos, method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_name(name': (Id | None)): Lambda => _create(_pos, _method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_type_params(type_params': (TypeParams | None)): Lambda => _create(_pos, _method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_params(params': Params): Lambda => _create(_pos, _method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap)
-  fun val with_captures(captures': (LambdaCaptures | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap)
-  fun val with_return_type(return_type': (Type | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap)
-  fun val with_partial(partial': (Question | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap)
-  fun val with_body(body': Sequence): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap)
-  fun val with_object_cap(object_cap': (Cap | None)): Lambda => _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap')
+  fun val with_method_cap(method_cap': (Cap | None)): Lambda => _create(method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_name(name': (Id | None)): Lambda => _create(_method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): Lambda => _create(_method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_params(params': Params): Lambda => _create(_method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_captures(captures': (LambdaCaptures | None)): Lambda => _create(_method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_return_type(return_type': (Type | None)): Lambda => _create(_method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap, _attachments)
+  fun val with_partial(partial': (Question | None)): Lambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap, _attachments)
+  fun val with_body(body': Sequence): Lambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap, _attachments)
+  fun val with_object_cap(object_cap': (Cap | None)): Lambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10642,31 +11428,31 @@ class val Lambda is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _method_cap then
-        return _create(_pos, replace' as (Cap | None), _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+        return _create(replace' as (Cap | None), _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _method_cap, replace' as (Id | None), _type_params, _params, _captures, _return_type, _partial, _body, _object_cap)
+        return _create(_method_cap, replace' as (Id | None), _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _method_cap, _name, replace' as (TypeParams | None), _params, _captures, _return_type, _partial, _body, _object_cap)
+        return _create(_method_cap, _name, replace' as (TypeParams | None), _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _method_cap, _name, _type_params, replace' as Params, _captures, _return_type, _partial, _body, _object_cap)
+        return _create(_method_cap, _name, _type_params, replace' as Params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
       end
       if child' is _captures then
-        return _create(_pos, _method_cap, _name, _type_params, _params, replace' as (LambdaCaptures | None), _return_type, _partial, _body, _object_cap)
+        return _create(_method_cap, _name, _type_params, _params, replace' as (LambdaCaptures | None), _return_type, _partial, _body, _object_cap, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, replace' as (Type | None), _partial, _body, _object_cap)
+        return _create(_method_cap, _name, _type_params, _params, _captures, replace' as (Type | None), _partial, _body, _object_cap, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, replace' as (Question | None), _body, _object_cap)
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, replace' as (Question | None), _body, _object_cap, _attachments)
       end
       if child' is _body then
-        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, replace' as Sequence, _object_cap)
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, replace' as Sequence, _object_cap, _attachments)
       end
       if child' is _object_cap then
-        return _create(_pos, _method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, replace' as (Cap | None))
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, replace' as (Cap | None), _attachments)
       end
       error
     else this
@@ -10689,31 +11475,32 @@ class val Lambda is (AST & Expr)
     consume s
 
 class val LambdaCaptures is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[LambdaCapture]
   
   new val create(
     list': (coll.Vec[LambdaCapture] | Array[LambdaCapture] val) = coll.Vec[LambdaCapture])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[LambdaCapture] => v
       | let s: Array[LambdaCapture] val => coll.Vec[LambdaCapture].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[LambdaCapture])
+  new val _create(
+    list': coll.Vec[LambdaCapture],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[LambdaCapture]
     var list_next' = try iter.next()? else None end
     while true do
@@ -10730,12 +11517,19 @@ class val LambdaCaptures is AST
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LambdaCaptures => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaCaptures => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LambdaCaptures => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[LambdaCapture] => _list
   
-  fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => _create(_pos, list')
+  fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10748,7 +11542,7 @@ class val LambdaCaptures is AST
     try
       try
         let i = _list.find(child' as LambdaCapture)?
-        return _create(_pos, _list.update(i, replace' as LambdaCapture)?)
+        return _create(_list.update(i, replace' as LambdaCapture)?, _attachments)
       end
       error
     else this
@@ -10768,7 +11562,7 @@ class val LambdaCaptures is AST
     consume s
 
 class val LambdaCapture is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _local_type: (Type | None)
@@ -10778,27 +11572,28 @@ class val LambdaCapture is AST
     name': Id,
     local_type': (Type | None) = None,
     value': (Expr | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _local_type = local_type'
     _value = value'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     local_type': (Type | None),
-    value': (Expr | None))
+    value': (Expr | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _local_type = local_type'
     _value = value'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LambdaCapture missing required field: name", pos')); error
@@ -10831,16 +11626,23 @@ class val LambdaCapture is AST
     fn(_name)
     fn(_local_type)
     fn(_value)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LambdaCapture => _create(pos', _name, _local_type, _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaCapture => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LambdaCapture => _create(_name, _local_type, _value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   fun val value(): (Expr | None) => _value
   
-  fun val with_name(name': Id): LambdaCapture => _create(_pos, name', _local_type, _value)
-  fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_pos, _name, local_type', _value)
-  fun val with_value(value': (Expr | None)): LambdaCapture => _create(_pos, _name, _local_type, value')
+  fun val with_name(name': Id): LambdaCapture => _create(name', _local_type, _value, _attachments)
+  fun val with_local_type(local_type': (Type | None)): LambdaCapture => _create(_name, local_type', _value, _attachments)
+  fun val with_value(value': (Expr | None)): LambdaCapture => _create(_name, _local_type, value', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10854,13 +11656,13 @@ class val LambdaCapture is AST
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _local_type, _value)
+        return _create(replace' as Id, _local_type, _value, _attachments)
       end
       if child' is _local_type then
-        return _create(_pos, _name, replace' as (Type | None), _value)
+        return _create(_name, replace' as (Type | None), _value, _attachments)
       end
       if child' is _value then
-        return _create(_pos, _name, _local_type, replace' as (Expr | None))
+        return _create(_name, _local_type, replace' as (Expr | None), _attachments)
       end
       error
     else this
@@ -10877,7 +11679,7 @@ class val LambdaCapture is AST
     consume s
 
 class val Object is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _cap: (Cap | None)
   let _provides: (Type | None)
@@ -10887,27 +11689,28 @@ class val Object is (AST & Expr)
     cap': (Cap | None) = None,
     provides': (Type | None) = None,
     members': (Members | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _cap = cap'
     _provides = provides'
     _members = members'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     cap': (Cap | None),
     provides': (Type | None),
-    members': (Members | None))
+    members': (Members | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _cap = cap'
     _provides = provides'
     _members = members'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let cap': (AST | None) = try iter.next()? else None end
     let provides': (AST | None) = try iter.next()? else None end
     let members': (AST | None) = try iter.next()? else None end
@@ -10937,16 +11740,23 @@ class val Object is (AST & Expr)
     fn(_cap)
     fn(_provides)
     fn(_members)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Object => _create(pos', _cap, _provides, _members)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Object => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Object => _create(_cap, _provides, _members, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val cap(): (Cap | None) => _cap
   fun val provides(): (Type | None) => _provides
   fun val members(): (Members | None) => _members
   
-  fun val with_cap(cap': (Cap | None)): Object => _create(_pos, cap', _provides, _members)
-  fun val with_provides(provides': (Type | None)): Object => _create(_pos, _cap, provides', _members)
-  fun val with_members(members': (Members | None)): Object => _create(_pos, _cap, _provides, members')
+  fun val with_cap(cap': (Cap | None)): Object => _create(cap', _provides, _members, _attachments)
+  fun val with_provides(provides': (Type | None)): Object => _create(_cap, provides', _members, _attachments)
+  fun val with_members(members': (Members | None)): Object => _create(_cap, _provides, members', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -10960,13 +11770,13 @@ class val Object is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _cap then
-        return _create(_pos, replace' as (Cap | None), _provides, _members)
+        return _create(replace' as (Cap | None), _provides, _members, _attachments)
       end
       if child' is _provides then
-        return _create(_pos, _cap, replace' as (Type | None), _members)
+        return _create(_cap, replace' as (Type | None), _members, _attachments)
       end
       if child' is _members then
-        return _create(_pos, _cap, _provides, replace' as (Members | None))
+        return _create(_cap, _provides, replace' as (Members | None), _attachments)
       end
       error
     else this
@@ -10983,7 +11793,7 @@ class val Object is (AST & Expr)
     consume s
 
 class val LitArray is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _elem_type: (Type | None)
   let _sequence: Sequence
@@ -10991,24 +11801,25 @@ class val LitArray is (AST & Expr)
   new val create(
     elem_type': (Type | None) = None,
     sequence': Sequence = Sequence)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _elem_type = elem_type'
     _sequence = sequence'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     elem_type': (Type | None),
-    sequence': Sequence)
+    sequence': Sequence,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _elem_type = elem_type'
     _sequence = sequence'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let elem_type': (AST | None) = try iter.next()? else None end
     let sequence': (AST | None) = try iter.next()? else Sequence end
     if
@@ -11032,14 +11843,21 @@ class val LitArray is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_elem_type)
     fn(_sequence)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitArray => _create(pos', _elem_type, _sequence)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitArray => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LitArray => _create(_elem_type, _sequence, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val elem_type(): (Type | None) => _elem_type
   fun val sequence(): Sequence => _sequence
   
-  fun val with_elem_type(elem_type': (Type | None)): LitArray => _create(_pos, elem_type', _sequence)
-  fun val with_sequence(sequence': Sequence): LitArray => _create(_pos, _elem_type, sequence')
+  fun val with_elem_type(elem_type': (Type | None)): LitArray => _create(elem_type', _sequence, _attachments)
+  fun val with_sequence(sequence': Sequence): LitArray => _create(_elem_type, sequence', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11052,10 +11870,10 @@ class val LitArray is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _elem_type then
-        return _create(_pos, replace' as (Type | None), _sequence)
+        return _create(replace' as (Type | None), _sequence, _attachments)
       end
       if child' is _sequence then
-        return _create(_pos, _elem_type, replace' as Sequence)
+        return _create(_elem_type, replace' as Sequence, _attachments)
       end
       error
     else this
@@ -11071,31 +11889,32 @@ class val LitArray is (AST & Expr)
     consume s
 
 class val Tuple is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _elements: coll.Vec[Sequence]
   
   new val create(
     elements': (coll.Vec[Sequence] | Array[Sequence] val) = coll.Vec[Sequence])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _elements = 
       match elements'
       | let v: coll.Vec[Sequence] => v
       | let s: Array[Sequence] val => coll.Vec[Sequence].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    elements': coll.Vec[Sequence])
+  new val _create(
+    elements': coll.Vec[Sequence],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _elements = elements'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var elements' = coll.Vec[Sequence]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -11112,12 +11931,19 @@ class val Tuple is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _elements.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Tuple => _create(pos', _elements)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tuple => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Tuple => _create(_elements, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val elements(): coll.Vec[Sequence] => _elements
   
-  fun val with_elements(elements': coll.Vec[Sequence]): Tuple => _create(_pos, elements')
+  fun val with_elements(elements': coll.Vec[Sequence]): Tuple => _create(elements', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11130,7 +11956,7 @@ class val Tuple is (AST & Expr)
     try
       try
         let i = _elements.find(child' as Sequence)?
-        return _create(_pos, _elements.update(i, replace' as Sequence)?)
+        return _create(_elements.update(i, replace' as Sequence)?, _attachments)
       end
       error
     else this
@@ -11150,20 +11976,21 @@ class val Tuple is (AST & Expr)
     consume s
 
 class val This is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -11174,9 +12001,16 @@ class val This is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): This => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): This => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): This => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11192,20 +12026,21 @@ class val This is (AST & Expr)
     consume s
 
 class val LitTrue is (AST & LitBool & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -11216,9 +12051,16 @@ class val LitTrue is (AST & LitBool & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitTrue => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitTrue => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LitTrue => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11234,20 +12076,21 @@ class val LitTrue is (AST & LitBool & Expr)
     consume s
 
 class val LitFalse is (AST & LitBool & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -11258,9 +12101,16 @@ class val LitFalse is (AST & LitBool & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitFalse => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitFalse => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LitFalse => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11276,21 +12126,26 @@ class val LitFalse is (AST & LitBool & Expr)
     consume s
 
 class val LitInteger is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   let _value: U128
-  new val create(value': U128) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': U128) =>(_pos, _value) = (pos', value')
+  new val create(value': U128) =>
+    _value = value'
+    _attachments = None
+  new val _create(value': U128, attachments': (coll.Vec[Any val] | None) = None) =>
+    _value = value'
+    _attachments = attachments'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     _value =
       try
-        _ASTUtil.parse_lit_integer(_pos)?
+        _ASTUtil.parse_lit_integer(pos')?
       else
-        errs.push(("LitInteger failed to parse value", _pos)); true
+        errs.push(("LitInteger failed to parse value", pos')); true
         error
       end
     
@@ -11306,32 +12161,44 @@ class val LitInteger is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitInteger => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitInteger => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): LitInteger => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   
   fun val value(): U128 => _value
-  fun val with_value(value': U128): LitInteger => _create(_pos, value')
+  fun val with_value(value': U128): LitInteger => _create(value', _attachments)
   fun string(): String iso^ =>
     recover
       String.>append("LitInteger(").>append(_value.string()).>push(')')
     end
 
 class val LitFloat is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   let _value: F64
-  new val create(value': F64) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': F64) =>(_pos, _value) = (pos', value')
+  new val create(value': F64) =>
+    _value = value'
+    _attachments = None
+  new val _create(value': F64, attachments': (coll.Vec[Any val] | None) = None) =>
+    _value = value'
+    _attachments = attachments'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     _value =
       try
-        _ASTUtil.parse_lit_float(_pos)?
+        _ASTUtil.parse_lit_float(pos')?
       else
-        errs.push(("LitFloat failed to parse value", _pos)); true
+        errs.push(("LitFloat failed to parse value", pos')); true
         error
       end
     
@@ -11347,32 +12214,44 @@ class val LitFloat is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitFloat => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitFloat => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): LitFloat => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   
   fun val value(): F64 => _value
-  fun val with_value(value': F64): LitFloat => _create(_pos, value')
+  fun val with_value(value': F64): LitFloat => _create(value', _attachments)
   fun string(): String iso^ =>
     recover
       String.>append("LitFloat(").>append(_value.string()).>push(')')
     end
 
 class val LitString is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   let _value: String
-  new val create(value': String) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': String) =>(_pos, _value) = (pos', value')
+  new val create(value': String) =>
+    _value = value'
+    _attachments = None
+  new val _create(value': String, attachments': (coll.Vec[Any val] | None) = None) =>
+    _value = value'
+    _attachments = attachments'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     _value =
       try
-        _ASTUtil.parse_lit_string(_pos)?
+        _ASTUtil.parse_lit_string(pos')?
       else
-        errs.push(("LitString failed to parse value", _pos)); true
+        errs.push(("LitString failed to parse value", pos')); true
         error
       end
     
@@ -11388,32 +12267,44 @@ class val LitString is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitString => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitString => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): LitString => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   
   fun val value(): String => _value
-  fun val with_value(value': String): LitString => _create(_pos, value')
+  fun val with_value(value': String): LitString => _create(value', _attachments)
   fun string(): String iso^ =>
     recover
       String.>append("LitString(").>append(_value.string()).>push(')')
     end
 
 class val LitCharacter is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   let _value: U8
-  new val create(value': U8) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': U8) =>(_pos, _value) = (pos', value')
+  new val create(value': U8) =>
+    _value = value'
+    _attachments = None
+  new val _create(value': U8, attachments': (coll.Vec[Any val] | None) = None) =>
+    _value = value'
+    _attachments = attachments'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     _value =
       try
-        _ASTUtil.parse_lit_character(_pos)?
+        _ASTUtil.parse_lit_character(pos')?
       else
-        errs.push(("LitCharacter failed to parse value", _pos)); true
+        errs.push(("LitCharacter failed to parse value", pos')); true
         error
       end
     
@@ -11429,31 +12320,39 @@ class val LitCharacter is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitCharacter => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitCharacter => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): LitCharacter => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   
   fun val value(): U8 => _value
-  fun val with_value(value': U8): LitCharacter => _create(_pos, value')
+  fun val with_value(value': U8): LitCharacter => _create(value', _attachments)
   fun string(): String iso^ =>
     recover
       String.>append("LitCharacter(").>append(_value.string()).>push(')')
     end
 
 class val LitLocation is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -11464,9 +12363,16 @@ class val LitLocation is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LitLocation => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitLocation => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LitLocation => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11482,27 +12388,28 @@ class val LitLocation is (AST & Expr)
     consume s
 
 class val Reference is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   
   new val create(
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': Id)
+  new val _create(
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Reference missing required field: name", pos')); error
@@ -11523,12 +12430,19 @@ class val Reference is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Reference => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Reference => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Reference => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   
-  fun val with_name(name': Id): Reference => _create(_pos, name')
+  fun val with_name(name': Id): Reference => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11540,7 +12454,7 @@ class val Reference is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id)
+        return _create(replace' as Id, _attachments)
       end
       error
     else this
@@ -11555,20 +12469,21 @@ class val Reference is (AST & Expr)
     consume s
 
 class val DontCare is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -11579,9 +12494,16 @@ class val DontCare is (AST & Expr)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): DontCare => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DontCare => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): DontCare => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11597,27 +12519,28 @@ class val DontCare is (AST & Expr)
     consume s
 
 class val PackageRef is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   
   new val create(
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': Id)
+  new val _create(
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("PackageRef missing required field: name", pos')); error
@@ -11638,12 +12561,19 @@ class val PackageRef is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): PackageRef => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): PackageRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): PackageRef => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   
-  fun val with_name(name': Id): PackageRef => _create(_pos, name')
+  fun val with_name(name': Id): PackageRef => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11655,7 +12585,7 @@ class val PackageRef is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id)
+        return _create(replace' as Id, _attachments)
       end
       error
     else this
@@ -11670,7 +12600,7 @@ class val PackageRef is (AST & Expr)
     consume s
 
 class val MethodFunRef is (AST & MethodRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: (Id | TypeArgs)
@@ -11678,24 +12608,25 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': (Id | TypeArgs))
+    name': (Id | TypeArgs),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodFunRef missing required field: receiver", pos')); error
@@ -11725,14 +12656,21 @@ class val MethodFunRef is (AST & MethodRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodFunRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodFunRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodFunRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr): MethodFunRef => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)): MethodFunRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodFunRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': (Id | TypeArgs)): MethodFunRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11745,10 +12683,10 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+        return _create(_receiver, replace' as (Id | TypeArgs), _attachments)
       end
       error
     else this
@@ -11764,7 +12702,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     consume s
 
 class val MethodNewRef is (AST & MethodRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: (Id | TypeArgs)
@@ -11772,24 +12710,25 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': (Id | TypeArgs))
+    name': (Id | TypeArgs),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodNewRef missing required field: receiver", pos')); error
@@ -11819,14 +12758,21 @@ class val MethodNewRef is (AST & MethodRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodNewRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodNewRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodNewRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr): MethodNewRef => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)): MethodNewRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodNewRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': (Id | TypeArgs)): MethodNewRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11839,10 +12785,10 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+        return _create(_receiver, replace' as (Id | TypeArgs), _attachments)
       end
       error
     else this
@@ -11858,7 +12804,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     consume s
 
 class val MethodBeRef is (AST & MethodRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: (Id | TypeArgs)
@@ -11866,24 +12812,25 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   new val create(
     receiver': Expr,
     name': (Id | TypeArgs))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': (Id | TypeArgs))
+    name': (Id | TypeArgs),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodBeRef missing required field: receiver", pos')); error
@@ -11913,14 +12860,21 @@ class val MethodBeRef is (AST & MethodRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): MethodBeRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodBeRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): MethodBeRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_receiver(receiver': Expr): MethodBeRef => _create(_pos, receiver', _name)
-  fun val with_name(name': (Id | TypeArgs)): MethodBeRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): MethodBeRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': (Id | TypeArgs)): MethodBeRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11933,10 +12887,10 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as (Id | TypeArgs))
+        return _create(_receiver, replace' as (Id | TypeArgs), _attachments)
       end
       error
     else this
@@ -11952,7 +12906,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     consume s
 
 class val TypeRef is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _package: Expr
   let _name: (Id | TypeArgs)
@@ -11960,24 +12914,25 @@ class val TypeRef is (AST & Expr)
   new val create(
     package': Expr,
     name': (Id | TypeArgs))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _package = package'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     package': Expr,
-    name': (Id | TypeArgs))
+    name': (Id | TypeArgs),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _package = package'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let package': (AST | None) =
       try iter.next()?
       else errs.push(("TypeRef missing required field: package", pos')); error
@@ -12007,14 +12962,21 @@ class val TypeRef is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_package)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeRef => _create(pos', _package, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeRef => _create(_package, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val package(): Expr => _package
   fun val name(): (Id | TypeArgs) => _name
   
-  fun val with_package(package': Expr): TypeRef => _create(_pos, package', _name)
-  fun val with_name(name': (Id | TypeArgs)): TypeRef => _create(_pos, _package, name')
+  fun val with_package(package': Expr): TypeRef => _create(package', _name, _attachments)
+  fun val with_name(name': (Id | TypeArgs)): TypeRef => _create(_package, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12027,10 +12989,10 @@ class val TypeRef is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _package then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _package, replace' as (Id | TypeArgs))
+        return _create(_package, replace' as (Id | TypeArgs), _attachments)
       end
       error
     else this
@@ -12046,7 +13008,7 @@ class val TypeRef is (AST & Expr)
     consume s
 
 class val FieldLetRef is (AST & FieldRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: Id
@@ -12054,24 +13016,25 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   new val create(
     receiver': Expr,
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': Id)
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldLetRef missing required field: receiver", pos')); error
@@ -12101,14 +13064,21 @@ class val FieldLetRef is (AST & FieldRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldLetRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldLetRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldLetRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr): FieldLetRef => _create(_pos, receiver', _name)
-  fun val with_name(name': Id): FieldLetRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldLetRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': Id): FieldLetRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12121,10 +13091,10 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as Id)
+        return _create(_receiver, replace' as Id, _attachments)
       end
       error
     else this
@@ -12140,7 +13110,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     consume s
 
 class val FieldVarRef is (AST & FieldRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: Id
@@ -12148,24 +13118,25 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   new val create(
     receiver': Expr,
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': Id)
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldVarRef missing required field: receiver", pos')); error
@@ -12195,14 +13166,21 @@ class val FieldVarRef is (AST & FieldRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldVarRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldVarRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldVarRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr): FieldVarRef => _create(_pos, receiver', _name)
-  fun val with_name(name': Id): FieldVarRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldVarRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': Id): FieldVarRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12215,10 +13193,10 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as Id)
+        return _create(_receiver, replace' as Id, _attachments)
       end
       error
     else this
@@ -12234,7 +13212,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     consume s
 
 class val FieldEmbedRef is (AST & FieldRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: Id
@@ -12242,24 +13220,25 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   new val create(
     receiver': Expr,
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': Id)
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldEmbedRef missing required field: receiver", pos')); error
@@ -12289,14 +13268,21 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FieldEmbedRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldEmbedRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FieldEmbedRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
-  fun val with_receiver(receiver': Expr): FieldEmbedRef => _create(_pos, receiver', _name)
-  fun val with_name(name': Id): FieldEmbedRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): FieldEmbedRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': Id): FieldEmbedRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12309,10 +13295,10 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as Id)
+        return _create(_receiver, replace' as Id, _attachments)
       end
       error
     else this
@@ -12328,7 +13314,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     consume s
 
 class val TupleElementRef is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _receiver: Expr
   let _name: LitInteger
@@ -12336,24 +13322,25 @@ class val TupleElementRef is (AST & Expr)
   new val create(
     receiver': Expr,
     name': LitInteger)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _receiver = receiver'
     _name = name'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     receiver': Expr,
-    name': LitInteger)
+    name': LitInteger,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _receiver = receiver'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("TupleElementRef missing required field: receiver", pos')); error
@@ -12383,14 +13370,21 @@ class val TupleElementRef is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_receiver)
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TupleElementRef => _create(pos', _receiver, _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TupleElementRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TupleElementRef => _create(_receiver, _name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val receiver(): Expr => _receiver
   fun val name(): LitInteger => _name
   
-  fun val with_receiver(receiver': Expr): TupleElementRef => _create(_pos, receiver', _name)
-  fun val with_name(name': LitInteger): TupleElementRef => _create(_pos, _receiver, name')
+  fun val with_receiver(receiver': Expr): TupleElementRef => _create(receiver', _name, _attachments)
+  fun val with_name(name': LitInteger): TupleElementRef => _create(_receiver, name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12403,10 +13397,10 @@ class val TupleElementRef is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _receiver then
-        return _create(_pos, replace' as Expr, _name)
+        return _create(replace' as Expr, _name, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _receiver, replace' as LitInteger)
+        return _create(_receiver, replace' as LitInteger, _attachments)
       end
       error
     else this
@@ -12422,27 +13416,28 @@ class val TupleElementRef is (AST & Expr)
     consume s
 
 class val LocalLetRef is (AST & LocalRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   
   new val create(
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': Id)
+  new val _create(
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalLetRef missing required field: name", pos')); error
@@ -12463,12 +13458,19 @@ class val LocalLetRef is (AST & LocalRef & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LocalLetRef => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalLetRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LocalLetRef => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   
-  fun val with_name(name': Id): LocalLetRef => _create(_pos, name')
+  fun val with_name(name': Id): LocalLetRef => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12480,7 +13482,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id)
+        return _create(replace' as Id, _attachments)
       end
       error
     else this
@@ -12495,27 +13497,28 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     consume s
 
 class val LocalVarRef is (AST & LocalRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   
   new val create(
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': Id)
+  new val _create(
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalVarRef missing required field: name", pos')); error
@@ -12536,12 +13539,19 @@ class val LocalVarRef is (AST & LocalRef & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LocalVarRef => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalVarRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LocalVarRef => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   
-  fun val with_name(name': Id): LocalVarRef => _create(_pos, name')
+  fun val with_name(name': Id): LocalVarRef => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12553,7 +13563,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id)
+        return _create(replace' as Id, _attachments)
       end
       error
     else this
@@ -12568,27 +13578,28 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     consume s
 
 class val ParamRef is (AST & LocalRef & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   
   new val create(
     name': Id)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
   
-  new val _create(pos': SourcePosAny,
-    name': Id)
+  new val _create(
+    name': Id,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("ParamRef missing required field: name", pos')); error
@@ -12609,12 +13620,19 @@ class val ParamRef is (AST & LocalRef & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_name)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): ParamRef => _create(pos', _name)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ParamRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): ParamRef => _create(_name, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   
-  fun val with_name(name': Id): ParamRef => _create(_pos, name')
+  fun val with_name(name': Id): ParamRef => _create(name', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12626,7 +13644,7 @@ class val ParamRef is (AST & LocalRef & Expr)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id)
+        return _create(replace' as Id, _attachments)
       end
       error
     else this
@@ -12641,7 +13659,7 @@ class val ParamRef is (AST & LocalRef & Expr)
     consume s
 
 class val ViewpointType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _left: Type
   let _right: Type
@@ -12649,24 +13667,25 @@ class val ViewpointType is (AST & Type)
   new val create(
     left': Type,
     right': Type)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _left = left'
     _right = right'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     left': Type,
-    right': Type)
+    right': Type,
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _left = left'
     _right = right'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("ViewpointType missing required field: left", pos')); error
@@ -12696,14 +13715,21 @@ class val ViewpointType is (AST & Type)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): ViewpointType => _create(pos', _left, _right)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ViewpointType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): ViewpointType => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val left(): Type => _left
   fun val right(): Type => _right
   
-  fun val with_left(left': Type): ViewpointType => _create(_pos, left', _right)
-  fun val with_right(right': Type): ViewpointType => _create(_pos, _left, right')
+  fun val with_left(left': Type): ViewpointType => _create(left', _right, _attachments)
+  fun val with_right(right': Type): ViewpointType => _create(_left, right', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12716,10 +13742,10 @@ class val ViewpointType is (AST & Type)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(_pos, replace' as Type, _right)
+        return _create(replace' as Type, _right, _attachments)
       end
       if child' is _right then
-        return _create(_pos, _left, replace' as Type)
+        return _create(_left, replace' as Type, _attachments)
       end
       error
     else this
@@ -12735,31 +13761,32 @@ class val ViewpointType is (AST & Type)
     consume s
 
 class val UnionType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Type]
   
   new val create(
     list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Type] => v
       | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Type])
+  new val _create(
+    list': coll.Vec[Type],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -12776,12 +13803,19 @@ class val UnionType is (AST & Type)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): UnionType => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UnionType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): UnionType => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): UnionType => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): UnionType => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12794,7 +13828,7 @@ class val UnionType is (AST & Type)
     try
       try
         let i = _list.find(child' as Type)?
-        return _create(_pos, _list.update(i, replace' as Type)?)
+        return _create(_list.update(i, replace' as Type)?, _attachments)
       end
       error
     else this
@@ -12814,31 +13848,32 @@ class val UnionType is (AST & Type)
     consume s
 
 class val IsectType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Type]
   
   new val create(
     list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Type] => v
       | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Type])
+  new val _create(
+    list': coll.Vec[Type],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -12855,12 +13890,19 @@ class val IsectType is (AST & Type)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): IsectType => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IsectType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): IsectType => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): IsectType => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): IsectType => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12873,7 +13915,7 @@ class val IsectType is (AST & Type)
     try
       try
         let i = _list.find(child' as Type)?
-        return _create(_pos, _list.update(i, replace' as Type)?)
+        return _create(_list.update(i, replace' as Type)?, _attachments)
       end
       error
     else this
@@ -12893,31 +13935,32 @@ class val IsectType is (AST & Type)
     consume s
 
 class val TupleType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Type]
   
   new val create(
     list': (coll.Vec[Type] | Array[Type] val) = coll.Vec[Type])
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Type] => v
       | let s: Array[Type] val => coll.Vec[Type].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Type])
+  new val _create(
+    list': coll.Vec[Type],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -12934,12 +13977,19 @@ class val TupleType is (AST & Type)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TupleType => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TupleType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TupleType => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): TupleType => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Type]): TupleType => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12952,7 +14002,7 @@ class val TupleType is (AST & Type)
     try
       try
         let i = _list.find(child' as Type)?
-        return _create(_pos, _list.update(i, replace' as Type)?)
+        return _create(_list.update(i, replace' as Type)?, _attachments)
       end
       error
     else this
@@ -12972,7 +14022,7 @@ class val TupleType is (AST & Type)
     consume s
 
 class val NominalType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _package: (Id | None)
@@ -12986,33 +14036,34 @@ class val NominalType is (AST & Type)
     type_args': (TypeArgs | None) = None,
     cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _package = package'
     _type_args = type_args'
     _cap = cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     package': (Id | None),
     type_args': (TypeArgs | None),
     cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    cap_mod': (CapMod | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _package = package'
     _type_args = type_args'
     _cap = cap'
     _cap_mod = cap_mod'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("NominalType missing required field: name", pos')); error
@@ -13057,20 +14108,27 @@ class val NominalType is (AST & Type)
     fn(_type_args)
     fn(_cap)
     fn(_cap_mod)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): NominalType => _create(pos', _name, _package, _type_args, _cap, _cap_mod)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NominalType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): NominalType => _create(_name, _package, _type_args, _cap, _cap_mod, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val package(): (Id | None) => _package
   fun val type_args(): (TypeArgs | None) => _type_args
   fun val cap(): (Cap | GenCap | None) => _cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_name(name': Id): NominalType => _create(_pos, name', _package, _type_args, _cap, _cap_mod)
-  fun val with_package(package': (Id | None)): NominalType => _create(_pos, _name, package', _type_args, _cap, _cap_mod)
-  fun val with_type_args(type_args': (TypeArgs | None)): NominalType => _create(_pos, _name, _package, type_args', _cap, _cap_mod)
-  fun val with_cap(cap': (Cap | GenCap | None)): NominalType => _create(_pos, _name, _package, _type_args, cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None)): NominalType => _create(_pos, _name, _package, _type_args, _cap, cap_mod')
+  fun val with_name(name': Id): NominalType => _create(name', _package, _type_args, _cap, _cap_mod, _attachments)
+  fun val with_package(package': (Id | None)): NominalType => _create(_name, package', _type_args, _cap, _cap_mod, _attachments)
+  fun val with_type_args(type_args': (TypeArgs | None)): NominalType => _create(_name, _package, type_args', _cap, _cap_mod, _attachments)
+  fun val with_cap(cap': (Cap | GenCap | None)): NominalType => _create(_name, _package, _type_args, cap', _cap_mod, _attachments)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): NominalType => _create(_name, _package, _type_args, _cap, cap_mod', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -13086,19 +14144,19 @@ class val NominalType is (AST & Type)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _package, _type_args, _cap, _cap_mod)
+        return _create(replace' as Id, _package, _type_args, _cap, _cap_mod, _attachments)
       end
       if child' is _package then
-        return _create(_pos, _name, replace' as (Id | None), _type_args, _cap, _cap_mod)
+        return _create(_name, replace' as (Id | None), _type_args, _cap, _cap_mod, _attachments)
       end
       if child' is _type_args then
-        return _create(_pos, _name, _package, replace' as (TypeArgs | None), _cap, _cap_mod)
+        return _create(_name, _package, replace' as (TypeArgs | None), _cap, _cap_mod, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, _package, _type_args, replace' as (Cap | GenCap | None), _cap_mod)
+        return _create(_name, _package, _type_args, replace' as (Cap | GenCap | None), _cap_mod, _attachments)
       end
       if child' is _cap_mod then
-        return _create(_pos, _name, _package, _type_args, _cap, replace' as (CapMod | None))
+        return _create(_name, _package, _type_args, _cap, replace' as (CapMod | None), _attachments)
       end
       error
     else this
@@ -13117,7 +14175,7 @@ class val NominalType is (AST & Type)
     consume s
 
 class val FunType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _cap: Cap
   let _type_params: (TypeParams | None)
@@ -13129,30 +14187,31 @@ class val FunType is (AST & Type)
     type_params': (TypeParams | None) = None,
     params': Params = Params,
     return_type': (Type | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _cap = cap'
     _type_params = type_params'
     _params = params'
     _return_type = return_type'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     cap': Cap,
     type_params': (TypeParams | None),
     params': Params,
-    return_type': (Type | None))
+    return_type': (Type | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _cap = cap'
     _type_params = type_params'
     _params = params'
     _return_type = return_type'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("FunType missing required field: cap", pos')); error
@@ -13191,18 +14250,25 @@ class val FunType is (AST & Type)
     fn(_type_params)
     fn(_params)
     fn(_return_type)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): FunType => _create(pos', _cap, _type_params, _params, _return_type)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FunType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): FunType => _create(_cap, _type_params, _params, _return_type, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val cap(): Cap => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
   
-  fun val with_cap(cap': Cap): FunType => _create(_pos, cap', _type_params, _params, _return_type)
-  fun val with_type_params(type_params': (TypeParams | None)): FunType => _create(_pos, _cap, type_params', _params, _return_type)
-  fun val with_params(params': Params): FunType => _create(_pos, _cap, _type_params, params', _return_type)
-  fun val with_return_type(return_type': (Type | None)): FunType => _create(_pos, _cap, _type_params, _params, return_type')
+  fun val with_cap(cap': Cap): FunType => _create(cap', _type_params, _params, _return_type, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): FunType => _create(_cap, type_params', _params, _return_type, _attachments)
+  fun val with_params(params': Params): FunType => _create(_cap, _type_params, params', _return_type, _attachments)
+  fun val with_return_type(return_type': (Type | None)): FunType => _create(_cap, _type_params, _params, return_type', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -13217,16 +14283,16 @@ class val FunType is (AST & Type)
     if child' is replace' then return this end
     try
       if child' is _cap then
-        return _create(_pos, replace' as Cap, _type_params, _params, _return_type)
+        return _create(replace' as Cap, _type_params, _params, _return_type, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _cap, replace' as (TypeParams | None), _params, _return_type)
+        return _create(_cap, replace' as (TypeParams | None), _params, _return_type, _attachments)
       end
       if child' is _params then
-        return _create(_pos, _cap, _type_params, replace' as Params, _return_type)
+        return _create(_cap, _type_params, replace' as Params, _return_type, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _cap, _type_params, _params, replace' as (Type | None))
+        return _create(_cap, _type_params, _params, replace' as (Type | None), _attachments)
       end
       error
     else this
@@ -13244,7 +14310,7 @@ class val FunType is (AST & Type)
     consume s
 
 class val LambdaType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _method_cap: (Cap | None)
   let _name: (Id | None)
@@ -13264,7 +14330,7 @@ class val LambdaType is (AST & Type)
     partial': (Question | None) = None,
     object_cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -13274,7 +14340,7 @@ class val LambdaType is (AST & Type)
     _object_cap = object_cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     method_cap': (Cap | None),
     name': (Id | None),
     type_params': (TypeParams | None),
@@ -13282,9 +14348,9 @@ class val LambdaType is (AST & Type)
     return_type': (Type | None),
     partial': (Question | None),
     object_cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    cap_mod': (CapMod | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _method_cap = method_cap'
     _name = name'
     _type_params = type_params'
@@ -13293,13 +14359,14 @@ class val LambdaType is (AST & Type)
     _partial = partial'
     _object_cap = object_cap'
     _cap_mod = cap_mod'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -13359,9 +14426,16 @@ class val LambdaType is (AST & Type)
     fn(_partial)
     fn(_object_cap)
     fn(_cap_mod)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LambdaType => _create(pos', _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -13371,14 +14445,14 @@ class val LambdaType is (AST & Type)
   fun val object_cap(): (Cap | GenCap | None) => _object_cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_method_cap(method_cap': (Cap | None)): LambdaType => _create(_pos, method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_name(name': (Id | None)): LambdaType => _create(_pos, _method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_type_params(type_params': (TypeParams | None)): LambdaType => _create(_pos, _method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_param_types(param_types': TupleType): LambdaType => _create(_pos, _method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod)
-  fun val with_return_type(return_type': (Type | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod)
-  fun val with_partial(partial': (Question | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod)
-  fun val with_object_cap(object_cap': (Cap | GenCap | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None)): LambdaType => _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod')
+  fun val with_method_cap(method_cap': (Cap | None)): LambdaType => _create(method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_name(name': (Id | None)): LambdaType => _create(_method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): LambdaType => _create(_method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_param_types(param_types': TupleType): LambdaType => _create(_method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_return_type(return_type': (Type | None)): LambdaType => _create(_method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_partial(partial': (Question | None)): LambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod, _attachments)
+  fun val with_object_cap(object_cap': (Cap | GenCap | None)): LambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod, _attachments)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): LambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -13397,28 +14471,28 @@ class val LambdaType is (AST & Type)
     if child' is replace' then return this end
     try
       if child' is _method_cap then
-        return _create(_pos, replace' as (Cap | None), _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+        return _create(replace' as (Cap | None), _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
       end
       if child' is _name then
-        return _create(_pos, _method_cap, replace' as (Id | None), _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod)
+        return _create(_method_cap, replace' as (Id | None), _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
       end
       if child' is _type_params then
-        return _create(_pos, _method_cap, _name, replace' as (TypeParams | None), _param_types, _return_type, _partial, _object_cap, _cap_mod)
+        return _create(_method_cap, _name, replace' as (TypeParams | None), _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
       end
       if child' is _param_types then
-        return _create(_pos, _method_cap, _name, _type_params, replace' as TupleType, _return_type, _partial, _object_cap, _cap_mod)
+        return _create(_method_cap, _name, _type_params, replace' as TupleType, _return_type, _partial, _object_cap, _cap_mod, _attachments)
       end
       if child' is _return_type then
-        return _create(_pos, _method_cap, _name, _type_params, _param_types, replace' as (Type | None), _partial, _object_cap, _cap_mod)
+        return _create(_method_cap, _name, _type_params, _param_types, replace' as (Type | None), _partial, _object_cap, _cap_mod, _attachments)
       end
       if child' is _partial then
-        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, replace' as (Question | None), _object_cap, _cap_mod)
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, replace' as (Question | None), _object_cap, _cap_mod, _attachments)
       end
       if child' is _object_cap then
-        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, replace' as (Cap | GenCap | None), _cap_mod)
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, replace' as (Cap | GenCap | None), _cap_mod, _attachments)
       end
       if child' is _cap_mod then
-        return _create(_pos, _method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, replace' as (CapMod | None))
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, replace' as (CapMod | None), _attachments)
       end
       error
     else this
@@ -13440,7 +14514,7 @@ class val LambdaType is (AST & Type)
     consume s
 
 class val TypeParamRef is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
   let _cap: (Cap | GenCap | None)
@@ -13450,27 +14524,28 @@ class val TypeParamRef is (AST & Type)
     name': Id,
     cap': (Cap | GenCap | None) = None,
     cap_mod': (CapMod | None) = None)
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _name = name'
     _cap = cap'
     _cap_mod = cap_mod'
   
-  new val _create(pos': SourcePosAny,
+  new val _create(
     name': Id,
     cap': (Cap | GenCap | None),
-    cap_mod': (CapMod | None))
+    cap_mod': (CapMod | None),
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _name = name'
     _cap = cap'
     _cap_mod = cap_mod'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeParamRef missing required field: name", pos')); error
@@ -13503,16 +14578,23 @@ class val TypeParamRef is (AST & Type)
     fn(_name)
     fn(_cap)
     fn(_cap_mod)
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): TypeParamRef => _create(pos', _name, _cap, _cap_mod)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParamRef => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): TypeParamRef => _create(_name, _cap, _cap_mod, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val name(): Id => _name
   fun val cap(): (Cap | GenCap | None) => _cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
   
-  fun val with_name(name': Id): TypeParamRef => _create(_pos, name', _cap, _cap_mod)
-  fun val with_cap(cap': (Cap | GenCap | None)): TypeParamRef => _create(_pos, _name, cap', _cap_mod)
-  fun val with_cap_mod(cap_mod': (CapMod | None)): TypeParamRef => _create(_pos, _name, _cap, cap_mod')
+  fun val with_name(name': Id): TypeParamRef => _create(name', _cap, _cap_mod, _attachments)
+  fun val with_cap(cap': (Cap | GenCap | None)): TypeParamRef => _create(_name, cap', _cap_mod, _attachments)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): TypeParamRef => _create(_name, _cap, cap_mod', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -13526,13 +14608,13 @@ class val TypeParamRef is (AST & Type)
     if child' is replace' then return this end
     try
       if child' is _name then
-        return _create(_pos, replace' as Id, _cap, _cap_mod)
+        return _create(replace' as Id, _cap, _cap_mod, _attachments)
       end
       if child' is _cap then
-        return _create(_pos, _name, replace' as (Cap | GenCap | None), _cap_mod)
+        return _create(_name, replace' as (Cap | GenCap | None), _cap_mod, _attachments)
       end
       if child' is _cap_mod then
-        return _create(_pos, _name, _cap, replace' as (CapMod | None))
+        return _create(_name, _cap, replace' as (CapMod | None), _attachments)
       end
       error
     else this
@@ -13549,20 +14631,21 @@ class val TypeParamRef is (AST & Type)
     consume s
 
 class val ThisType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13573,9 +14656,16 @@ class val ThisType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): ThisType => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ThisType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): ThisType => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13591,20 +14681,21 @@ class val ThisType is (AST & Type)
     consume s
 
 class val DontCareType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13615,9 +14706,16 @@ class val DontCareType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): DontCareType => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DontCareType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): DontCareType => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13633,20 +14731,21 @@ class val DontCareType is (AST & Type)
     consume s
 
 class val ErrorType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13657,9 +14756,16 @@ class val ErrorType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): ErrorType => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ErrorType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): ErrorType => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13675,20 +14781,21 @@ class val ErrorType is (AST & Type)
     consume s
 
 class val LiteralType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13699,9 +14806,16 @@ class val LiteralType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LiteralType => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LiteralType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LiteralType => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13717,20 +14831,21 @@ class val LiteralType is (AST & Type)
     consume s
 
 class val LiteralTypeBranch is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13741,9 +14856,16 @@ class val LiteralTypeBranch is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): LiteralTypeBranch => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13759,20 +14881,21 @@ class val LiteralTypeBranch is (AST & Type)
     consume s
 
 class val OpLiteralType is (AST & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13783,9 +14906,16 @@ class val OpLiteralType is (AST & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): OpLiteralType => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): OpLiteralType => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): OpLiteralType => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13801,20 +14931,21 @@ class val OpLiteralType is (AST & Type)
     consume s
 
 class val Iso is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13825,9 +14956,16 @@ class val Iso is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Iso => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Iso => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Iso => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13843,20 +14981,21 @@ class val Iso is (AST & Cap & Type)
     consume s
 
 class val Trn is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13867,9 +15006,16 @@ class val Trn is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Trn => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Trn => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Trn => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13885,20 +15031,21 @@ class val Trn is (AST & Cap & Type)
     consume s
 
 class val Ref is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13909,9 +15056,16 @@ class val Ref is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Ref => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ref => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Ref => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13927,20 +15081,21 @@ class val Ref is (AST & Cap & Type)
     consume s
 
 class val Val is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13951,9 +15106,16 @@ class val Val is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Val => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Val => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Val => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -13969,20 +15131,21 @@ class val Val is (AST & Cap & Type)
     consume s
 
 class val Box is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -13993,9 +15156,16 @@ class val Box is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Box => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Box => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Box => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14011,20 +15181,21 @@ class val Box is (AST & Cap & Type)
     consume s
 
 class val Tag is (AST & Cap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14035,9 +15206,16 @@ class val Tag is (AST & Cap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Tag => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tag => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Tag => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14053,20 +15231,21 @@ class val Tag is (AST & Cap & Type)
     consume s
 
 class val CapRead is (AST & GenCap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14077,9 +15256,16 @@ class val CapRead is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CapRead => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapRead => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CapRead => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14095,20 +15281,21 @@ class val CapRead is (AST & GenCap & Type)
     consume s
 
 class val CapSend is (AST & GenCap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14119,9 +15306,16 @@ class val CapSend is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CapSend => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapSend => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CapSend => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14137,20 +15331,21 @@ class val CapSend is (AST & GenCap & Type)
     consume s
 
 class val CapShare is (AST & GenCap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14161,9 +15356,16 @@ class val CapShare is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CapShare => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapShare => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CapShare => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14179,20 +15381,21 @@ class val CapShare is (AST & GenCap & Type)
     consume s
 
 class val CapAlias is (AST & GenCap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14203,9 +15406,16 @@ class val CapAlias is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CapAlias => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapAlias => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CapAlias => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14221,20 +15431,21 @@ class val CapAlias is (AST & GenCap & Type)
     consume s
 
 class val CapAny is (AST & GenCap & Type)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14245,9 +15456,16 @@ class val CapAny is (AST & GenCap & Type)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): CapAny => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapAny => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): CapAny => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14263,20 +15481,21 @@ class val CapAny is (AST & GenCap & Type)
     consume s
 
 class val Aliased is (AST & CapMod)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14287,9 +15506,16 @@ class val Aliased is (AST & CapMod)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Aliased => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Aliased => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Aliased => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14305,20 +15531,21 @@ class val Aliased is (AST & CapMod)
     consume s
 
 class val Ephemeral is (AST & CapMod)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14329,9 +15556,16 @@ class val Ephemeral is (AST & CapMod)
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Ephemeral => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ephemeral => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Ephemeral => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14347,20 +15581,21 @@ class val Ephemeral is (AST & CapMod)
     consume s
 
 class val At is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14371,9 +15606,16 @@ class val At is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): At => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): At => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): At => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14389,20 +15631,21 @@ class val At is AST
     consume s
 
 class val Question is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14413,9 +15656,16 @@ class val Question is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Question => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Question => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Question => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14431,20 +15681,21 @@ class val Question is AST
     consume s
 
 class val Ellipsis is AST
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
-  new val create() => _pos = SourcePosNone
+  new val create() => _attachments = None
   
-  new val _create(pos': SourcePosAny)
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     if
       try
         let extra' = iter.next()?
@@ -14455,9 +15706,16 @@ class val Ellipsis is AST
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Ellipsis => _create(pos')
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ellipsis => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Ellipsis => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14473,31 +15731,32 @@ class val Ellipsis is AST
     consume s
 
 class val Semicolon is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   
   let _list: coll.Vec[Expr]
   
   new val create(
     list': (coll.Vec[Expr] | Array[Expr] val))
-  =>_pos = SourcePosNone
+  =>_attachments = None
     _list = 
       match list'
       | let v: coll.Vec[Expr] => v
       | let s: Array[Expr] val => coll.Vec[Expr].concat(s.values())
       end
   
-  new val _create(pos': SourcePosAny,
-    list': coll.Vec[Expr])
+  new val _create(
+    list': coll.Vec[Expr],
+    attachments': (coll.Vec[Any val] | None) = None)
   =>
-    _pos = pos'
     _list = list'
+    _attachments = attachments'
   
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     var list' = coll.Vec[Expr]
     var list_next' = try iter.next()? else None end
     while true do
@@ -14514,12 +15773,19 @@ class val Semicolon is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     for x in _list.values() do fn(x) end
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Semicolon => _create(pos', _list)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Semicolon => attach[SourcePosAny](pos')
   
+  fun val attach[A: Any val](a: A): Semicolon => _create(_list, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   fun val list(): coll.Vec[Expr] => _list
   
-  fun val with_list(list': coll.Vec[Expr]): Semicolon => _create(_pos, list')
+  fun val with_list(list': coll.Vec[Expr]): Semicolon => _create(list', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -14532,7 +15798,7 @@ class val Semicolon is (AST & Expr)
     try
       try
         let i = _list.find(child' as Expr)?
-        return _create(_pos, _list.update(i, replace' as Expr)?)
+        return _create(_list.update(i, replace' as Expr)?, _attachments)
       end
       error
     else this
@@ -14552,21 +15818,26 @@ class val Semicolon is (AST & Expr)
     consume s
 
 class val Id is (AST & Expr)
-  let _pos: SourcePosAny
+  let _attachments: (coll.Vec[Any val] | None)
   let _value: String
-  new val create(value': String) =>(_pos, _value) = (SourcePosNone, value')
-  new val _create(pos': SourcePosAny, value': String) =>(_pos, _value) = (pos', value')
+  new val create(value': String) =>
+    _value = value'
+    _attachments = None
+  new val _create(value': String, attachments': (coll.Vec[Any val] | None) = None) =>
+    _value = value'
+    _attachments = attachments'
+  
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _pos = pos'
+    _attachments = coll.Vec[Any val].push(pos')
     _value =
       try
-        _ASTUtil.parse_id(_pos)?
+        _ASTUtil.parse_id(pos')?
       else
-        errs.push(("Id failed to parse value", _pos)); true
+        errs.push(("Id failed to parse value", pos')); true
         error
       end
     
@@ -14582,11 +15853,18 @@ class val Id is (AST & Expr)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => _pos
-  fun val with_pos(pos': SourcePosAny): Id => _create(pos', _value)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Id => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): Id => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
   
   fun val value(): String => _value
-  fun val with_value(value': String): Id => _create(_pos, value')
+  fun val with_value(value': String): Id => _create(value', _attachments)
   fun string(): String iso^ =>
     recover
       String.>append("Id(").>append(_value.string()).>push(')')
@@ -14608,6 +15886,9 @@ class val EOF is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): EOF => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("EOF") end
 
@@ -14626,6 +15907,9 @@ class val NewLine is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): NewLine => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("NewLine") end
@@ -14646,6 +15930,9 @@ class val Use is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Use => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Use") end
 
@@ -14664,6 +15951,9 @@ class val Colon is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Colon => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Colon") end
@@ -14684,6 +15974,9 @@ class val Comma is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Comma => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Comma") end
 
@@ -14702,6 +15995,9 @@ class val Constant is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Constant => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Constant") end
@@ -14722,6 +16018,9 @@ class val Pipe is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Pipe => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Pipe") end
 
@@ -14740,6 +16039,9 @@ class val Ampersand is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Ampersand => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Ampersand") end
@@ -14760,6 +16062,9 @@ class val SubType is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubType => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("SubType") end
 
@@ -14778,6 +16083,9 @@ class val Arrow is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Arrow => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Arrow") end
@@ -14798,6 +16106,9 @@ class val DoubleArrow is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("DoubleArrow") end
 
@@ -14816,6 +16127,9 @@ class val Backslash is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Backslash => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Backslash") end
@@ -14836,6 +16150,9 @@ class val LParen is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParen => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("LParen") end
 
@@ -14854,6 +16171,9 @@ class val RParen is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RParen => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RParen") end
@@ -14874,6 +16194,9 @@ class val LBrace is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBrace => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("LBrace") end
 
@@ -14892,6 +16215,9 @@ class val RBrace is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RBrace => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RBrace") end
@@ -14912,6 +16238,9 @@ class val LSquare is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquare => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("LSquare") end
 
@@ -14930,6 +16259,9 @@ class val RSquare is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RSquare => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RSquare") end
@@ -14950,6 +16282,9 @@ class val LParenNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParenNew => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("LParenNew") end
 
@@ -14968,6 +16303,9 @@ class val LBraceNew is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBraceNew => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LBraceNew") end
@@ -14988,6 +16326,9 @@ class val LSquareNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquareNew => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("LSquareNew") end
 
@@ -15006,6 +16347,9 @@ class val SubNew is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubNew => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("SubNew") end
@@ -15026,6 +16370,9 @@ class val SubUnsafeNew is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("SubUnsafeNew") end
 
@@ -15044,6 +16391,9 @@ class val In is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): In => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("In") end
@@ -15064,6 +16414,9 @@ class val Until is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Until => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Until") end
 
@@ -15082,6 +16435,9 @@ class val Do is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Do => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Do") end
@@ -15102,6 +16458,9 @@ class val Else is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Else => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Else") end
 
@@ -15120,6 +16479,9 @@ class val ElseIf is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): ElseIf => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("ElseIf") end
@@ -15140,6 +16502,9 @@ class val Then is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Then => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Then") end
 
@@ -15158,6 +16523,9 @@ class val End is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): End => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("End") end
@@ -15178,6 +16546,9 @@ class val Var is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Var => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Var") end
 
@@ -15196,6 +16567,9 @@ class val Let is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Let => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Let") end
@@ -15216,6 +16590,9 @@ class val Embed is (AST & Lexeme)
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Embed => create()
   
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
   fun string(): String iso^ =>
     recover String.>append("Embed") end
 
@@ -15234,6 +16611,9 @@ class val Where is (AST & Lexeme)
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Where => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Where") end

@@ -26,6 +26,8 @@ class ASTGen
     // Declare the AST trait
     g.line("trait val AST")
     g.push_indent()
+    g.line("fun val attach[A: Any val](a: A): AST")
+    g.line("fun val find_attached[A: Any val](): A?")
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)")
     g.line("fun val each(fn: {ref ((AST | None))} ref)")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?")
