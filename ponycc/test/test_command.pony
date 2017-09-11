@@ -95,8 +95,8 @@ class val TestCommand[T: TestCommandType val]
               pieces(0)?,
               try pieces(1)?.usize()? else 0 end)?
         end
-        
-        _h.assert_eq[String](String.join(check.lines), ast.string())
+
+        _h.assert_eq[String](String.join(check.lines.values()), ast.string())
       else
         _h.fail("Check failed to walk path: " + check.message)
         _h.log("The crumb that failed parse and/or lookup was: " + last_crumb)
