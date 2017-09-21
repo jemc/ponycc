@@ -102,12 +102,16 @@ primitive Sugar is FrameVisitor[Sugar]
       end
       
       // Set the return type of the constructor.
-      let type_name =
-        try (frame.type_decl() as TypeDecl).name()
-        else Unreachable(frame.type_decl()); Id("")
-        end
-      ast = ast.with_return_type(
-        NominalType(type_name where cap' = ast.cap(), cap_mod' = Ephemeral))
+      match ast.cap() | let cap: Cap =>
+        let type_name =
+          try (frame.type_decl() as TypeDecl).name()
+          else Unreachable(frame.type_decl()); Id("")
+          end
+        ast = ast.with_return_type(
+          NominalType(type_name where cap' = cap, cap_mod' = Ephemeral))
+      else
+        Unreachable(ast.cap())
+      end
       
       frame.replace(ast)
     

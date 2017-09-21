@@ -116,6 +116,7 @@ primitive ASTInfo
     elseif A <: NamedArgs then "NamedArgs"
     elseif A <: NamedArg then "NamedArg"
     elseif A <: Lambda then "Lambda"
+    elseif A <: BareLambda then "BareLambda"
     elseif A <: LambdaCaptures then "LambdaCaptures"
     elseif A <: LambdaCapture then "LambdaCapture"
     elseif A <: Object then "Object"
@@ -150,6 +151,7 @@ primitive ASTInfo
     elseif A <: NominalType then "NominalType"
     elseif A <: FunType then "FunType"
     elseif A <: LambdaType then "LambdaType"
+    elseif A <: BareLambdaType then "BareLambdaType"
     elseif A <: TypeParamRef then "TypeParamRef"
     elseif A <: ThisType then "ThisType"
     elseif A <: DontCareType then "DontCareType"
@@ -173,6 +175,7 @@ primitive ASTInfo
     elseif A <: At then "At"
     elseif A <: Question then "Question"
     elseif A <: Ellipsis then "Ellipsis"
+    elseif A <: Annotation then "Annotation"
     elseif A <: Semicolon then "Semicolon"
     elseif A <: Id then "Id"
     elseif A <: EOF then "EOF"
@@ -186,11 +189,11 @@ primitive ASTInfo
     elseif A <: SubType then "SubType"
     elseif A <: Arrow then "Arrow"
     elseif A <: DoubleArrow then "DoubleArrow"
-    elseif A <: Backslash then "Backslash"
-    elseif A <: LParen then "LParen"
-    elseif A <: RParen then "RParen"
+    elseif A <: AtLBrace then "AtLBrace"
     elseif A <: LBrace then "LBrace"
     elseif A <: RBrace then "RBrace"
+    elseif A <: LParen then "LParen"
+    elseif A <: RParen then "RParen"
     elseif A <: LSquare then "LSquare"
     elseif A <: RSquare then "RSquare"
     elseif A <: LParenNew then "LParenNew"
@@ -213,8 +216,10 @@ primitive ASTInfo
     end
 
 trait val BinaryOp is AST
+  fun val partial(): (Question | None)
   fun val left(): Expr
   fun val right(): Expr
+  fun val with_partial(partial': (Question | None)): BinaryOp
   fun val with_left(left': Expr): BinaryOp
   fun val with_right(right': Expr): BinaryOp
 
@@ -285,7 +290,7 @@ trait val Method is AST
   fun val partial(): (Question | None)
   fun val type_params(): (TypeParams | None)
   fun val body(): (Sequence | None)
-  fun val cap(): (Cap | None)
+  fun val cap(): (Cap | At | None)
   fun val docs(): (LitString | None)
   fun val return_type(): (Type | None)
   fun val params(): Params
@@ -294,7 +299,7 @@ trait val Method is AST
   fun val with_partial(partial': (Question | None)): Method
   fun val with_type_params(type_params': (TypeParams | None)): Method
   fun val with_body(body': (Sequence | None)): Method
-  fun val with_cap(cap': (Cap | None)): Method
+  fun val with_cap(cap': (Cap | At | None)): Method
   fun val with_docs(docs': (LitString | None)): Method
   fun val with_return_type(return_type': (Type | None)): Method
   fun val with_params(params': Params): Method
@@ -2522,7 +2527,7 @@ class val MethodFun is (AST & Method)
   let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
-  let _cap: (Cap | None)
+  let _cap: (Cap | At | None)
   let _type_params: (TypeParams | None)
   let _params: Params
   let _return_type: (Type | None)
@@ -2533,7 +2538,7 @@ class val MethodFun is (AST & Method)
   
   new val create(
     name': Id,
-    cap': (Cap | None) = None,
+    cap': (Cap | At | None) = None,
     type_params': (TypeParams | None) = None,
     params': Params = Params,
     return_type': (Type | None) = None,
@@ -2554,7 +2559,7 @@ class val MethodFun is (AST & Method)
   
   new val _create(
     name': Id,
-    cap': (Cap | None),
+    cap': (Cap | At | None),
     type_params': (TypeParams | None),
     params': Params,
     return_type': (Type | None),
@@ -2606,7 +2611,7 @@ class val MethodFun is (AST & Method)
       else errs.push(("MethodFun got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
-      try cap' as (Cap | None)
+      try cap' as (Cap | At | None)
       else errs.push(("MethodFun got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
@@ -2660,7 +2665,7 @@ class val MethodFun is (AST & Method)
     end
     error
   fun val name(): Id => _name
-  fun val cap(): (Cap | None) => _cap
+  fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
@@ -2670,7 +2675,7 @@ class val MethodFun is (AST & Method)
   fun val docs(): (LitString | None) => _docs
   
   fun val with_name(name': Id): MethodFun => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
-  fun val with_cap(cap': (Cap | None)): MethodFun => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | At | None)): MethodFun => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_type_params(type_params': (TypeParams | None)): MethodFun => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_params(params': Params): MethodFun => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_return_type(return_type': (Type | None)): MethodFun => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
@@ -2700,7 +2705,7 @@ class val MethodFun is (AST & Method)
         return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+        return _create(_name, replace' as (Cap | At | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
         return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
@@ -2747,7 +2752,7 @@ class val MethodNew is (AST & Method)
   let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
-  let _cap: (Cap | None)
+  let _cap: (Cap | At | None)
   let _type_params: (TypeParams | None)
   let _params: Params
   let _return_type: (Type | None)
@@ -2758,7 +2763,7 @@ class val MethodNew is (AST & Method)
   
   new val create(
     name': Id,
-    cap': (Cap | None) = None,
+    cap': (Cap | At | None) = None,
     type_params': (TypeParams | None) = None,
     params': Params = Params,
     return_type': (Type | None) = None,
@@ -2779,7 +2784,7 @@ class val MethodNew is (AST & Method)
   
   new val _create(
     name': Id,
-    cap': (Cap | None),
+    cap': (Cap | At | None),
     type_params': (TypeParams | None),
     params': Params,
     return_type': (Type | None),
@@ -2831,7 +2836,7 @@ class val MethodNew is (AST & Method)
       else errs.push(("MethodNew got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
-      try cap' as (Cap | None)
+      try cap' as (Cap | At | None)
       else errs.push(("MethodNew got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
@@ -2885,7 +2890,7 @@ class val MethodNew is (AST & Method)
     end
     error
   fun val name(): Id => _name
-  fun val cap(): (Cap | None) => _cap
+  fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
@@ -2895,7 +2900,7 @@ class val MethodNew is (AST & Method)
   fun val docs(): (LitString | None) => _docs
   
   fun val with_name(name': Id): MethodNew => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
-  fun val with_cap(cap': (Cap | None)): MethodNew => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | At | None)): MethodNew => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_type_params(type_params': (TypeParams | None)): MethodNew => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_params(params': Params): MethodNew => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_return_type(return_type': (Type | None)): MethodNew => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
@@ -2925,7 +2930,7 @@ class val MethodNew is (AST & Method)
         return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+        return _create(_name, replace' as (Cap | At | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
         return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
@@ -2972,7 +2977,7 @@ class val MethodBe is (AST & Method)
   let _attachments: (coll.Vec[Any val] | None)
   
   let _name: Id
-  let _cap: (Cap | None)
+  let _cap: (Cap | At | None)
   let _type_params: (TypeParams | None)
   let _params: Params
   let _return_type: (Type | None)
@@ -2983,7 +2988,7 @@ class val MethodBe is (AST & Method)
   
   new val create(
     name': Id,
-    cap': (Cap | None) = None,
+    cap': (Cap | At | None) = None,
     type_params': (TypeParams | None) = None,
     params': Params = Params,
     return_type': (Type | None) = None,
@@ -3004,7 +3009,7 @@ class val MethodBe is (AST & Method)
   
   new val _create(
     name': Id,
-    cap': (Cap | None),
+    cap': (Cap | At | None),
     type_params': (TypeParams | None),
     params': Params,
     return_type': (Type | None),
@@ -3056,7 +3061,7 @@ class val MethodBe is (AST & Method)
       else errs.push(("MethodBe got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
       end
     _cap =
-      try cap' as (Cap | None)
+      try cap' as (Cap | At | None)
       else errs.push(("MethodBe got incompatible field: cap", try (cap' as AST).pos() else SourcePosNone end)); error
       end
     _type_params =
@@ -3110,7 +3115,7 @@ class val MethodBe is (AST & Method)
     end
     error
   fun val name(): Id => _name
-  fun val cap(): (Cap | None) => _cap
+  fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): Params => _params
   fun val return_type(): (Type | None) => _return_type
@@ -3120,7 +3125,7 @@ class val MethodBe is (AST & Method)
   fun val docs(): (LitString | None) => _docs
   
   fun val with_name(name': Id): MethodBe => _create(name', _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
-  fun val with_cap(cap': (Cap | None)): MethodBe => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+  fun val with_cap(cap': (Cap | At | None)): MethodBe => _create(_name, cap', _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_type_params(type_params': (TypeParams | None)): MethodBe => _create(_name, _cap, type_params', _params, _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_params(params': Params): MethodBe => _create(_name, _cap, _type_params, params', _return_type, _partial, _guard, _body, _docs, _attachments)
   fun val with_return_type(return_type': (Type | None)): MethodBe => _create(_name, _cap, _type_params, _params, return_type', _partial, _guard, _body, _docs, _attachments)
@@ -3150,7 +3155,7 @@ class val MethodBe is (AST & Method)
         return _create(replace' as Id, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _cap then
-        return _create(_name, replace' as (Cap | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
+        return _create(_name, replace' as (Cap | At | None), _type_params, _params, _return_type, _partial, _guard, _body, _docs, _attachments)
       end
       if child' is _type_params then
         return _create(_name, _cap, replace' as (TypeParams | None), _params, _return_type, _partial, _guard, _body, _docs, _attachments)
@@ -6436,21 +6441,26 @@ class val Add is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6467,6 +6477,7 @@ class val Add is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Add missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6483,15 +6494,20 @@ class val Add is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Add got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Add got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Add => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Add => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Add => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -6500,14 +6516,17 @@ class val Add is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Add => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Add => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Add => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Add => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Add => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -6515,10 +6534,13 @@ class val Add is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -6529,7 +6551,8 @@ class val Add is (AST & BinaryOp & Expr)
     s.append("Add")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -6538,21 +6561,26 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6569,6 +6597,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("AddUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6585,15 +6614,20 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("AddUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("AddUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): AddUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): AddUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): AddUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -6602,14 +6636,17 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): AddUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): AddUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): AddUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): AddUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): AddUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -6617,10 +6654,13 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -6631,7 +6671,8 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     s.append("AddUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -6640,21 +6681,26 @@ class val Sub is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6671,6 +6717,7 @@ class val Sub is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Sub missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6687,15 +6734,20 @@ class val Sub is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Sub got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Sub got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Sub => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Sub => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Sub => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -6704,14 +6756,17 @@ class val Sub is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Sub => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Sub => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Sub => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Sub => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Sub => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -6719,10 +6774,13 @@ class val Sub is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -6733,7 +6791,8 @@ class val Sub is (AST & BinaryOp & Expr)
     s.append("Sub")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -6742,21 +6801,26 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6773,6 +6837,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("SubUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6789,15 +6854,20 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("SubUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("SubUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): SubUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): SubUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): SubUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -6806,14 +6876,17 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): SubUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): SubUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): SubUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): SubUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): SubUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -6821,10 +6894,13 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -6835,7 +6911,8 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     s.append("SubUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -6844,21 +6921,26 @@ class val Mul is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6875,6 +6957,7 @@ class val Mul is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Mul missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6891,15 +6974,20 @@ class val Mul is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Mul got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Mul got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Mul => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Mul => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Mul => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -6908,14 +6996,17 @@ class val Mul is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Mul => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Mul => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Mul => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Mul => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Mul => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -6923,10 +7014,13 @@ class val Mul is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -6937,7 +7031,8 @@ class val Mul is (AST & BinaryOp & Expr)
     s.append("Mul")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -6946,21 +7041,26 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -6977,6 +7077,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("MulUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -6993,15 +7094,20 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("MulUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("MulUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MulUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): MulUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): MulUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7010,14 +7116,17 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): MulUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): MulUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): MulUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): MulUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): MulUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7025,10 +7134,13 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7039,7 +7151,8 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     s.append("MulUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7048,21 +7161,26 @@ class val Div is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7079,6 +7197,7 @@ class val Div is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Div missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7095,15 +7214,20 @@ class val Div is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Div got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Div got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Div => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Div => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Div => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7112,14 +7236,17 @@ class val Div is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Div => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Div => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Div => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Div => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Div => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7127,10 +7254,13 @@ class val Div is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7141,7 +7271,8 @@ class val Div is (AST & BinaryOp & Expr)
     s.append("Div")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7150,21 +7281,26 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7181,6 +7317,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("DivUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7197,15 +7334,20 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("DivUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("DivUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): DivUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): DivUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): DivUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7214,14 +7356,17 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): DivUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): DivUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): DivUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): DivUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): DivUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7229,10 +7374,13 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7243,7 +7391,8 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     s.append("DivUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7252,21 +7401,26 @@ class val Mod is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7283,6 +7437,7 @@ class val Mod is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Mod missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7299,15 +7454,20 @@ class val Mod is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Mod got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Mod got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Mod => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Mod => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Mod => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7316,14 +7476,17 @@ class val Mod is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Mod => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Mod => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Mod => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Mod => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Mod => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7331,10 +7494,13 @@ class val Mod is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7345,7 +7511,8 @@ class val Mod is (AST & BinaryOp & Expr)
     s.append("Mod")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7354,21 +7521,26 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7385,6 +7557,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("ModUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7401,15 +7574,20 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("ModUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("ModUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ModUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): ModUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): ModUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7418,14 +7596,17 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): ModUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): ModUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): ModUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): ModUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): ModUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7433,10 +7614,13 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7447,7 +7631,8 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     s.append("ModUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7456,21 +7641,26 @@ class val LShift is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7487,6 +7677,7 @@ class val LShift is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LShift missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7503,15 +7694,20 @@ class val LShift is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LShift got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LShift => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LShift => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LShift => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7520,14 +7716,17 @@ class val LShift is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LShift => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LShift => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LShift => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LShift => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LShift => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7535,10 +7734,13 @@ class val LShift is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7549,7 +7751,8 @@ class val LShift is (AST & BinaryOp & Expr)
     s.append("LShift")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7558,21 +7761,26 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7589,6 +7797,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LShiftUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7605,15 +7814,20 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LShiftUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LShiftUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LShiftUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LShiftUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7622,14 +7836,17 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LShiftUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LShiftUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LShiftUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LShiftUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LShiftUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7637,10 +7854,13 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7651,7 +7871,8 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     s.append("LShiftUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7660,21 +7881,26 @@ class val RShift is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7691,6 +7917,7 @@ class val RShift is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("RShift missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7707,15 +7934,20 @@ class val RShift is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("RShift got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("RShift got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): RShift => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): RShift => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): RShift => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7724,14 +7956,17 @@ class val RShift is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): RShift => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): RShift => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): RShift => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): RShift => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): RShift => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7739,10 +7974,13 @@ class val RShift is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7753,7 +7991,8 @@ class val RShift is (AST & BinaryOp & Expr)
     s.append("RShift")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7762,21 +8001,26 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7793,6 +8037,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("RShiftUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7809,15 +8054,20 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("RShiftUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("RShiftUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): RShiftUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): RShiftUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): RShiftUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7826,14 +8076,17 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): RShiftUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): RShiftUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): RShiftUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): RShiftUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): RShiftUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7841,10 +8094,13 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7855,7 +8111,8 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     s.append("RShiftUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7864,21 +8121,26 @@ class val Eq is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7895,6 +8157,7 @@ class val Eq is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Eq missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -7911,15 +8174,20 @@ class val Eq is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Eq got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Eq got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Eq => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Eq => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Eq => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -7928,14 +8196,17 @@ class val Eq is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Eq => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Eq => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Eq => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Eq => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Eq => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -7943,10 +8214,13 @@ class val Eq is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -7957,7 +8231,8 @@ class val Eq is (AST & BinaryOp & Expr)
     s.append("Eq")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -7966,21 +8241,26 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -7997,6 +8277,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("EqUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8013,15 +8294,20 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("EqUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("EqUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): EqUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): EqUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): EqUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8030,14 +8316,17 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): EqUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): EqUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): EqUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): EqUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): EqUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8045,10 +8334,13 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8059,7 +8351,8 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     s.append("EqUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8068,21 +8361,26 @@ class val NE is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8099,6 +8397,7 @@ class val NE is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("NE missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8115,15 +8414,20 @@ class val NE is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("NE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("NE got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NE => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): NE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): NE => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8132,14 +8436,17 @@ class val NE is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): NE => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): NE => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): NE => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): NE => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): NE => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8147,10 +8454,13 @@ class val NE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8161,7 +8471,8 @@ class val NE is (AST & BinaryOp & Expr)
     s.append("NE")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8170,21 +8481,26 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8201,6 +8517,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("NEUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8217,15 +8534,20 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("NEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("NEUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NEUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): NEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): NEUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8234,14 +8556,17 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): NEUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): NEUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): NEUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): NEUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): NEUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8249,10 +8574,13 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8263,7 +8591,8 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     s.append("NEUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8272,21 +8601,26 @@ class val LT is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8303,6 +8637,7 @@ class val LT is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LT missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8319,15 +8654,20 @@ class val LT is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LT got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LT => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LT => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LT => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8336,14 +8676,17 @@ class val LT is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LT => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LT => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LT => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LT => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LT => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8351,10 +8694,13 @@ class val LT is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8365,7 +8711,8 @@ class val LT is (AST & BinaryOp & Expr)
     s.append("LT")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8374,21 +8721,26 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8405,6 +8757,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LTUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8421,15 +8774,20 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LTUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LTUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LTUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LTUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8438,14 +8796,17 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LTUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LTUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LTUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LTUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LTUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8453,10 +8814,13 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8467,7 +8831,8 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     s.append("LTUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8476,21 +8841,26 @@ class val LE is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8507,6 +8877,7 @@ class val LE is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LE missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8523,15 +8894,20 @@ class val LE is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LE got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LE => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LE => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8540,14 +8916,17 @@ class val LE is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LE => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LE => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LE => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LE => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LE => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8555,10 +8934,13 @@ class val LE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8569,7 +8951,8 @@ class val LE is (AST & BinaryOp & Expr)
     s.append("LE")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8578,21 +8961,26 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8609,6 +8997,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("LEUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8625,15 +9014,20 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("LEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("LEUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LEUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): LEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): LEUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8642,14 +9036,17 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): LEUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): LEUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): LEUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): LEUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): LEUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8657,10 +9054,13 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8671,7 +9071,8 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     s.append("LEUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8680,21 +9081,26 @@ class val GE is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8711,6 +9117,7 @@ class val GE is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("GE missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8727,15 +9134,20 @@ class val GE is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("GE got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("GE got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GE => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): GE => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): GE => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8744,14 +9156,17 @@ class val GE is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): GE => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): GE => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): GE => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): GE => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): GE => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8759,10 +9174,13 @@ class val GE is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8773,7 +9191,8 @@ class val GE is (AST & BinaryOp & Expr)
     s.append("GE")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8782,21 +9201,26 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8813,6 +9237,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("GEUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8829,15 +9254,20 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("GEUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("GEUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GEUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): GEUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): GEUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8846,14 +9276,17 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): GEUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): GEUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): GEUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): GEUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): GEUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8861,10 +9294,13 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8875,7 +9311,8 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     s.append("GEUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8884,21 +9321,26 @@ class val GT is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -8915,6 +9357,7 @@ class val GT is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("GT missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -8931,15 +9374,20 @@ class val GT is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("GT got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("GT got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GT => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): GT => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): GT => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -8948,14 +9396,17 @@ class val GT is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): GT => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): GT => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): GT => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): GT => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): GT => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -8963,10 +9414,13 @@ class val GT is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -8977,7 +9431,8 @@ class val GT is (AST & BinaryOp & Expr)
     s.append("GT")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -8986,21 +9441,26 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9017,6 +9477,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("GTUnsafe missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9033,15 +9494,20 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("GTUnsafe got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("GTUnsafe got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GTUnsafe => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): GTUnsafe => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): GTUnsafe => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9050,14 +9516,17 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): GTUnsafe => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): GTUnsafe => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): GTUnsafe => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): GTUnsafe => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): GTUnsafe => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9065,10 +9534,13 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9079,7 +9551,8 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     s.append("GTUnsafe")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -9088,21 +9561,26 @@ class val Is is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9119,6 +9597,7 @@ class val Is is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Is missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9135,15 +9614,20 @@ class val Is is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Is got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Is got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Is => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Is => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Is => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9152,14 +9636,17 @@ class val Is is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Is => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Is => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Is => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Is => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Is => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9167,10 +9654,13 @@ class val Is is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9181,7 +9671,8 @@ class val Is is (AST & BinaryOp & Expr)
     s.append("Is")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -9190,21 +9681,26 @@ class val Isnt is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9221,6 +9717,7 @@ class val Isnt is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Isnt missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9237,15 +9734,20 @@ class val Isnt is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Isnt got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Isnt got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Isnt => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Isnt => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Isnt => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9254,14 +9756,17 @@ class val Isnt is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Isnt => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Isnt => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Isnt => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Isnt => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Isnt => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9269,10 +9774,13 @@ class val Isnt is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9283,7 +9791,8 @@ class val Isnt is (AST & BinaryOp & Expr)
     s.append("Isnt")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -9292,21 +9801,26 @@ class val And is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9323,6 +9837,7 @@ class val And is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("And missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9339,15 +9854,20 @@ class val And is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("And got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("And got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): And => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): And => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): And => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9356,14 +9876,17 @@ class val And is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): And => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): And => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): And => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): And => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): And => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9371,10 +9894,13 @@ class val And is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9385,7 +9911,8 @@ class val And is (AST & BinaryOp & Expr)
     s.append("And")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -9394,21 +9921,26 @@ class val Or is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9425,6 +9957,7 @@ class val Or is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("Or missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9441,15 +9974,20 @@ class val Or is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("Or got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Or got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Or => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Or => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Or => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9458,14 +9996,17 @@ class val Or is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): Or => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): Or => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): Or => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): Or => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Or => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9473,10 +10014,13 @@ class val Or is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9487,7 +10031,8 @@ class val Or is (AST & BinaryOp & Expr)
     s.append("Or")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -9496,21 +10041,26 @@ class val XOr is (AST & BinaryOp & Expr)
   
   let _left: Expr
   let _right: Expr
+  let _partial: (Question | None)
   
   new val create(
     left': Expr,
-    right': Expr)
+    right': Expr,
+    partial': (Question | None) = None)
   =>_attachments = None
     _left = left'
     _right = right'
+    _partial = partial'
   
   new val _create(
     left': Expr,
     right': Expr,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _left = left'
     _right = right'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -9527,6 +10077,7 @@ class val XOr is (AST & BinaryOp & Expr)
       try iter.next()?
       else errs.push(("XOr missing required field: right", pos')); error
       end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -9543,15 +10094,20 @@ class val XOr is (AST & BinaryOp & Expr)
       try right' as Expr
       else errs.push(("XOr got incompatible field: right", try (right' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("XOr got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_left)
     fn(_right)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): XOr => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): XOr => _create(_left, _right, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): XOr => _create(_left, _right, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -9560,14 +10116,17 @@ class val XOr is (AST & BinaryOp & Expr)
     error
   fun val left(): Expr => _left
   fun val right(): Expr => _right
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_left(left': Expr): XOr => _create(left', _right, _attachments)
-  fun val with_right(right': Expr): XOr => _create(_left, right', _attachments)
+  fun val with_left(left': Expr): XOr => _create(left', _right, _partial, _attachments)
+  fun val with_right(right': Expr): XOr => _create(_left, right', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): XOr => _create(_left, _right, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "left" => _left
     | "right" => _right
+    | "partial" => _partial
     else error
     end
   
@@ -9575,10 +10134,13 @@ class val XOr is (AST & BinaryOp & Expr)
     if child' is replace' then return this end
     try
       if child' is _left then
-        return _create(replace' as Expr, _right, _attachments)
+        return _create(replace' as Expr, _right, _partial, _attachments)
       end
       if child' is _right then
-        return _create(_left, replace' as Expr, _attachments)
+        return _create(_left, replace' as Expr, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_left, _right, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -9589,7 +10151,8 @@ class val XOr is (AST & BinaryOp & Expr)
     s.append("XOr")
     s.push('(')
     s.>append(_left.string()).>push(',').push(' ')
-    s.>append(_right.string())
+    s.>append(_right.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -10712,25 +11275,30 @@ class val Call is (AST & Expr)
   let _callable: Expr
   let _args: Args
   let _named_args: NamedArgs
+  let _partial: (Question | None)
   
   new val create(
     callable': Expr,
     args': Args = Args,
-    named_args': NamedArgs = NamedArgs)
+    named_args': NamedArgs = NamedArgs,
+    partial': (Question | None) = None)
   =>_attachments = None
     _callable = callable'
     _args = args'
     _named_args = named_args'
+    _partial = partial'
   
   new val _create(
     callable': Expr,
     args': Args,
     named_args': NamedArgs,
+    partial': (Question | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _callable = callable'
     _args = args'
     _named_args = named_args'
+    _partial = partial'
     _attachments = attachments'
   
   new from_iter(
@@ -10745,6 +11313,7 @@ class val Call is (AST & Expr)
       end
     let args': (AST | None) = try iter.next()? else Args end
     let named_args': (AST | None) = try iter.next()? else NamedArgs end
+    let partial': (AST | None) = try iter.next()? else None end
     if
       try
         let extra' = iter.next()?
@@ -10765,16 +11334,21 @@ class val Call is (AST & Expr)
       try named_args' as NamedArgs
       else errs.push(("Call got incompatible field: named_args", try (named_args' as AST).pos() else SourcePosNone end)); error
       end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("Call got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_callable)
     fn(_args)
     fn(_named_args)
+    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Call => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): Call => _create(_callable, _args, _named_args, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): Call => _create(_callable, _args, _named_args, _partial, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -10784,16 +11358,19 @@ class val Call is (AST & Expr)
   fun val callable(): Expr => _callable
   fun val args(): Args => _args
   fun val named_args(): NamedArgs => _named_args
+  fun val partial(): (Question | None) => _partial
   
-  fun val with_callable(callable': Expr): Call => _create(callable', _args, _named_args, _attachments)
-  fun val with_args(args': Args): Call => _create(_callable, args', _named_args, _attachments)
-  fun val with_named_args(named_args': NamedArgs): Call => _create(_callable, _args, named_args', _attachments)
+  fun val with_callable(callable': Expr): Call => _create(callable', _args, _named_args, _partial, _attachments)
+  fun val with_args(args': Args): Call => _create(_callable, args', _named_args, _partial, _attachments)
+  fun val with_named_args(named_args': NamedArgs): Call => _create(_callable, _args, named_args', _partial, _attachments)
+  fun val with_partial(partial': (Question | None)): Call => _create(_callable, _args, _named_args, partial', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "callable" => _callable
     | "args" => _args
     | "named_args" => _named_args
+    | "partial" => _partial
     else error
     end
   
@@ -10801,13 +11378,16 @@ class val Call is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _callable then
-        return _create(replace' as Expr, _args, _named_args, _attachments)
+        return _create(replace' as Expr, _args, _named_args, _partial, _attachments)
       end
       if child' is _args then
-        return _create(_callable, replace' as Args, _named_args, _attachments)
+        return _create(_callable, replace' as Args, _named_args, _partial, _attachments)
       end
       if child' is _named_args then
-        return _create(_callable, _args, replace' as NamedArgs, _attachments)
+        return _create(_callable, _args, replace' as NamedArgs, _partial, _attachments)
+      end
+      if child' is _partial then
+        return _create(_callable, _args, _named_args, replace' as (Question | None), _attachments)
       end
       error
     else this
@@ -10819,7 +11399,8 @@ class val Call is (AST & Expr)
     s.push('(')
     s.>append(_callable.string()).>push(',').push(' ')
     s.>append(_args.string()).>push(',').push(' ')
-    s.>append(_named_args.string())
+    s.>append(_named_args.string()).>push(',').push(' ')
+    s.>append(_partial.string())
     s.push(')')
     consume s
 
@@ -11461,6 +12042,228 @@ class val Lambda is (AST & Expr)
   fun string(): String iso^ =>
     let s = recover iso String end
     s.append("Lambda")
+    s.push('(')
+    s.>append(_method_cap.string()).>push(',').push(' ')
+    s.>append(_name.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
+    s.>append(_params.string()).>push(',').push(' ')
+    s.>append(_captures.string()).>push(',').push(' ')
+    s.>append(_return_type.string()).>push(',').push(' ')
+    s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_body.string()).>push(',').push(' ')
+    s.>append(_object_cap.string())
+    s.push(')')
+    consume s
+
+class val BareLambda is (AST & Expr)
+  let _attachments: (coll.Vec[Any val] | None)
+  
+  let _method_cap: (Cap | None)
+  let _name: (Id | None)
+  let _type_params: (TypeParams | None)
+  let _params: Params
+  let _captures: (LambdaCaptures | None)
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _body: Sequence
+  let _object_cap: (Cap | None)
+  
+  new val create(
+    method_cap': (Cap | None) = None,
+    name': (Id | None) = None,
+    type_params': (TypeParams | None) = None,
+    params': Params = Params,
+    captures': (LambdaCaptures | None) = None,
+    return_type': (Type | None) = None,
+    partial': (Question | None) = None,
+    body': Sequence = Sequence,
+    object_cap': (Cap | None) = None)
+  =>_attachments = None
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _params = params'
+    _captures = captures'
+    _return_type = return_type'
+    _partial = partial'
+    _body = body'
+    _object_cap = object_cap'
+  
+  new val _create(
+    method_cap': (Cap | None),
+    name': (Id | None),
+    type_params': (TypeParams | None),
+    params': Params,
+    captures': (LambdaCaptures | None),
+    return_type': (Type | None),
+    partial': (Question | None),
+    body': Sequence,
+    object_cap': (Cap | None),
+    attachments': (coll.Vec[Any val] | None) = None)
+  =>
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _params = params'
+    _captures = captures'
+    _return_type = return_type'
+    _partial = partial'
+    _body = body'
+    _object_cap = object_cap'
+    _attachments = attachments'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    _attachments = coll.Vec[Any val].push(pos')
+    let method_cap': (AST | None) = try iter.next()? else None end
+    let name': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let params': (AST | None) = try iter.next()? else Params end
+    let captures': (AST | None) = try iter.next()? else None end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let body': (AST | None) = try iter.next()? else Sequence end
+    let object_cap': (AST | None) = try iter.next()? else None end
+    if
+      try
+        let extra' = iter.next()?
+        errs.push(("BareLambda got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
+      else false
+      end
+    then error end
+    
+    _method_cap =
+      try method_cap' as (Cap | None)
+      else errs.push(("BareLambda got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end)); error
+      end
+    _name =
+      try name' as (Id | None)
+      else errs.push(("BareLambda got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else errs.push(("BareLambda got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
+      end
+    _params =
+      try params' as Params
+      else errs.push(("BareLambda got incompatible field: params", try (params' as AST).pos() else SourcePosNone end)); error
+      end
+    _captures =
+      try captures' as (LambdaCaptures | None)
+      else errs.push(("BareLambda got incompatible field: captures", try (captures' as AST).pos() else SourcePosNone end)); error
+      end
+    _return_type =
+      try return_type' as (Type | None)
+      else errs.push(("BareLambda got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
+      end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("BareLambda got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
+    _body =
+      try body' as Sequence
+      else errs.push(("BareLambda got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
+      end
+    _object_cap =
+      try object_cap' as (Cap | None)
+      else errs.push(("BareLambda got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
+      end
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambda](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_method_cap)
+    fn(_name)
+    fn(_type_params)
+    fn(_params)
+    fn(_captures)
+    fn(_return_type)
+    fn(_partial)
+    fn(_body)
+    fn(_object_cap)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): BareLambda => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): BareLambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
+  fun val method_cap(): (Cap | None) => _method_cap
+  fun val name(): (Id | None) => _name
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val params(): Params => _params
+  fun val captures(): (LambdaCaptures | None) => _captures
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val body(): Sequence => _body
+  fun val object_cap(): (Cap | None) => _object_cap
+  
+  fun val with_method_cap(method_cap': (Cap | None)): BareLambda => _create(method_cap', _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_name(name': (Id | None)): BareLambda => _create(_method_cap, name', _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): BareLambda => _create(_method_cap, _name, type_params', _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_params(params': Params): BareLambda => _create(_method_cap, _name, _type_params, params', _captures, _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_captures(captures': (LambdaCaptures | None)): BareLambda => _create(_method_cap, _name, _type_params, _params, captures', _return_type, _partial, _body, _object_cap, _attachments)
+  fun val with_return_type(return_type': (Type | None)): BareLambda => _create(_method_cap, _name, _type_params, _params, _captures, return_type', _partial, _body, _object_cap, _attachments)
+  fun val with_partial(partial': (Question | None)): BareLambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, partial', _body, _object_cap, _attachments)
+  fun val with_body(body': Sequence): BareLambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, body', _object_cap, _attachments)
+  fun val with_object_cap(object_cap': (Cap | None)): BareLambda => _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, object_cap', _attachments)
+  
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
+    match child'
+    | "method_cap" => _method_cap
+    | "name" => _name
+    | "type_params" => _type_params
+    | "params" => _params
+    | "captures" => _captures
+    | "return_type" => _return_type
+    | "partial" => _partial
+    | "body" => _body
+    | "object_cap" => _object_cap
+    else error
+    end
+  
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _method_cap then
+        return _create(replace' as (Cap | None), _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _name then
+        return _create(_method_cap, replace' as (Id | None), _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _type_params then
+        return _create(_method_cap, _name, replace' as (TypeParams | None), _params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _params then
+        return _create(_method_cap, _name, _type_params, replace' as Params, _captures, _return_type, _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _captures then
+        return _create(_method_cap, _name, _type_params, _params, replace' as (LambdaCaptures | None), _return_type, _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _return_type then
+        return _create(_method_cap, _name, _type_params, _params, _captures, replace' as (Type | None), _partial, _body, _object_cap, _attachments)
+      end
+      if child' is _partial then
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, replace' as (Question | None), _body, _object_cap, _attachments)
+      end
+      if child' is _body then
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, replace' as Sequence, _object_cap, _attachments)
+      end
+      if child' is _object_cap then
+        return _create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, replace' as (Cap | None), _attachments)
+      end
+      error
+    else this
+    end
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("BareLambda")
     s.push('(')
     s.>append(_method_cap.string()).>push(',').push(' ')
     s.>append(_name.string()).>push(',').push(' ')
@@ -14513,6 +15316,210 @@ class val LambdaType is (AST & Type)
     s.push(')')
     consume s
 
+class val BareLambdaType is (AST & Type)
+  let _attachments: (coll.Vec[Any val] | None)
+  
+  let _method_cap: (Cap | None)
+  let _name: (Id | None)
+  let _type_params: (TypeParams | None)
+  let _param_types: TupleType
+  let _return_type: (Type | None)
+  let _partial: (Question | None)
+  let _object_cap: (Cap | GenCap | None)
+  let _cap_mod: (CapMod | None)
+  
+  new val create(
+    method_cap': (Cap | None) = None,
+    name': (Id | None) = None,
+    type_params': (TypeParams | None) = None,
+    param_types': TupleType = TupleType,
+    return_type': (Type | None) = None,
+    partial': (Question | None) = None,
+    object_cap': (Cap | GenCap | None) = None,
+    cap_mod': (CapMod | None) = None)
+  =>_attachments = None
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _param_types = param_types'
+    _return_type = return_type'
+    _partial = partial'
+    _object_cap = object_cap'
+    _cap_mod = cap_mod'
+  
+  new val _create(
+    method_cap': (Cap | None),
+    name': (Id | None),
+    type_params': (TypeParams | None),
+    param_types': TupleType,
+    return_type': (Type | None),
+    partial': (Question | None),
+    object_cap': (Cap | GenCap | None),
+    cap_mod': (CapMod | None),
+    attachments': (coll.Vec[Any val] | None) = None)
+  =>
+    _method_cap = method_cap'
+    _name = name'
+    _type_params = type_params'
+    _param_types = param_types'
+    _return_type = return_type'
+    _partial = partial'
+    _object_cap = object_cap'
+    _cap_mod = cap_mod'
+    _attachments = attachments'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    _attachments = coll.Vec[Any val].push(pos')
+    let method_cap': (AST | None) = try iter.next()? else None end
+    let name': (AST | None) = try iter.next()? else None end
+    let type_params': (AST | None) = try iter.next()? else None end
+    let param_types': (AST | None) = try iter.next()? else TupleType end
+    let return_type': (AST | None) = try iter.next()? else None end
+    let partial': (AST | None) = try iter.next()? else None end
+    let object_cap': (AST | None) = try iter.next()? else None end
+    let cap_mod': (AST | None) = try iter.next()? else None end
+    if
+      try
+        let extra' = iter.next()?
+        errs.push(("BareLambdaType got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
+      else false
+      end
+    then error end
+    
+    _method_cap =
+      try method_cap' as (Cap | None)
+      else errs.push(("BareLambdaType got incompatible field: method_cap", try (method_cap' as AST).pos() else SourcePosNone end)); error
+      end
+    _name =
+      try name' as (Id | None)
+      else errs.push(("BareLambdaType got incompatible field: name", try (name' as AST).pos() else SourcePosNone end)); error
+      end
+    _type_params =
+      try type_params' as (TypeParams | None)
+      else errs.push(("BareLambdaType got incompatible field: type_params", try (type_params' as AST).pos() else SourcePosNone end)); error
+      end
+    _param_types =
+      try param_types' as TupleType
+      else errs.push(("BareLambdaType got incompatible field: param_types", try (param_types' as AST).pos() else SourcePosNone end)); error
+      end
+    _return_type =
+      try return_type' as (Type | None)
+      else errs.push(("BareLambdaType got incompatible field: return_type", try (return_type' as AST).pos() else SourcePosNone end)); error
+      end
+    _partial =
+      try partial' as (Question | None)
+      else errs.push(("BareLambdaType got incompatible field: partial", try (partial' as AST).pos() else SourcePosNone end)); error
+      end
+    _object_cap =
+      try object_cap' as (Cap | GenCap | None)
+      else errs.push(("BareLambdaType got incompatible field: object_cap", try (object_cap' as AST).pos() else SourcePosNone end)); error
+      end
+    _cap_mod =
+      try cap_mod' as (CapMod | None)
+      else errs.push(("BareLambdaType got incompatible field: cap_mod", try (cap_mod' as AST).pos() else SourcePosNone end)); error
+      end
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambdaType](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    fn(_method_cap)
+    fn(_name)
+    fn(_type_params)
+    fn(_param_types)
+    fn(_return_type)
+    fn(_partial)
+    fn(_object_cap)
+    fn(_cap_mod)
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): BareLambdaType => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): BareLambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
+  fun val method_cap(): (Cap | None) => _method_cap
+  fun val name(): (Id | None) => _name
+  fun val type_params(): (TypeParams | None) => _type_params
+  fun val param_types(): TupleType => _param_types
+  fun val return_type(): (Type | None) => _return_type
+  fun val partial(): (Question | None) => _partial
+  fun val object_cap(): (Cap | GenCap | None) => _object_cap
+  fun val cap_mod(): (CapMod | None) => _cap_mod
+  
+  fun val with_method_cap(method_cap': (Cap | None)): BareLambdaType => _create(method_cap', _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_name(name': (Id | None)): BareLambdaType => _create(_method_cap, name', _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_type_params(type_params': (TypeParams | None)): BareLambdaType => _create(_method_cap, _name, type_params', _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_param_types(param_types': TupleType): BareLambdaType => _create(_method_cap, _name, _type_params, param_types', _return_type, _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_return_type(return_type': (Type | None)): BareLambdaType => _create(_method_cap, _name, _type_params, _param_types, return_type', _partial, _object_cap, _cap_mod, _attachments)
+  fun val with_partial(partial': (Question | None)): BareLambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, partial', _object_cap, _cap_mod, _attachments)
+  fun val with_object_cap(object_cap': (Cap | GenCap | None)): BareLambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, object_cap', _cap_mod, _attachments)
+  fun val with_cap_mod(cap_mod': (CapMod | None)): BareLambdaType => _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, cap_mod', _attachments)
+  
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
+    match child'
+    | "method_cap" => _method_cap
+    | "name" => _name
+    | "type_params" => _type_params
+    | "param_types" => _param_types
+    | "return_type" => _return_type
+    | "partial" => _partial
+    | "object_cap" => _object_cap
+    | "cap_mod" => _cap_mod
+    else error
+    end
+  
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      if child' is _method_cap then
+        return _create(replace' as (Cap | None), _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _name then
+        return _create(_method_cap, replace' as (Id | None), _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _type_params then
+        return _create(_method_cap, _name, replace' as (TypeParams | None), _param_types, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _param_types then
+        return _create(_method_cap, _name, _type_params, replace' as TupleType, _return_type, _partial, _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _return_type then
+        return _create(_method_cap, _name, _type_params, _param_types, replace' as (Type | None), _partial, _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _partial then
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, replace' as (Question | None), _object_cap, _cap_mod, _attachments)
+      end
+      if child' is _object_cap then
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, replace' as (Cap | GenCap | None), _cap_mod, _attachments)
+      end
+      if child' is _cap_mod then
+        return _create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, replace' as (CapMod | None), _attachments)
+      end
+      error
+    else this
+    end
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("BareLambdaType")
+    s.push('(')
+    s.>append(_method_cap.string()).>push(',').push(' ')
+    s.>append(_name.string()).>push(',').push(' ')
+    s.>append(_type_params.string()).>push(',').push(' ')
+    s.>append(_param_types.string()).>push(',').push(' ')
+    s.>append(_return_type.string()).>push(',').push(' ')
+    s.>append(_partial.string()).>push(',').push(' ')
+    s.>append(_object_cap.string()).>push(',').push(' ')
+    s.>append(_cap_mod.string())
+    s.push(')')
+    consume s
+
 class val TypeParamRef is (AST & Type)
   let _attachments: (coll.Vec[Any val] | None)
   
@@ -15730,6 +16737,56 @@ class val Ellipsis is AST
     s.append("Ellipsis")
     consume s
 
+class val Annotation is AST
+  let _attachments: (coll.Vec[Any val] | None)
+  
+  new val create() => _attachments = None
+  
+  new val _create(
+    attachments': (coll.Vec[Any val] | None) = None)
+  =>
+    _attachments = attachments'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    _attachments = coll.Vec[Any val].push(pos')
+    if
+      try
+        let extra' = iter.next()?
+        errs.push(("Annotation got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); true
+      else false
+      end
+    then error end
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Annotation](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Annotation => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): Annotation => _create((try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
+  
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      error
+    else this
+    end
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Annotation")
+    consume s
+
 class val Semicolon is (AST & Expr)
   let _attachments: (coll.Vec[Any val] | None)
   
@@ -16112,71 +17169,27 @@ class val DoubleArrow is (AST & Lexeme)
   fun string(): String iso^ =>
     recover String.>append("DoubleArrow") end
 
-class val Backslash is (AST & Lexeme)
+class val AtLBrace is (AST & Lexeme)
   new val create() => None
   new from_iter(
     iter: Iterator[(AST | None)],
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    errs.push(("Backslash is a lexeme-only type append should never be built", pos')); error
+    errs.push(("AtLBrace is a lexeme-only type append should never be built", pos')); error
   
-  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Backslash](consume c, this)
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AtLBrace](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
-  fun val with_pos(pos': SourcePosAny): Backslash => create()
+  fun val with_pos(pos': SourcePosAny): AtLBrace => create()
   
   fun val attach[A: Any val](a: A): AST => this
   fun val find_attached[A: Any val](): A? => error
   
   fun string(): String iso^ =>
-    recover String.>append("Backslash") end
-
-class val LParen is (AST & Lexeme)
-  new val create() => None
-  new from_iter(
-    iter: Iterator[(AST | None)],
-    pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = [])?
-  =>
-    errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
-  
-  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
-  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => SourcePosNone
-  fun val with_pos(pos': SourcePosAny): LParen => create()
-  
-  fun val attach[A: Any val](a: A): AST => this
-  fun val find_attached[A: Any val](): A? => error
-  
-  fun string(): String iso^ =>
-    recover String.>append("LParen") end
-
-class val RParen is (AST & Lexeme)
-  new val create() => None
-  new from_iter(
-    iter: Iterator[(AST | None)],
-    pos': SourcePosAny = SourcePosNone,
-    errs: Array[(String, SourcePosAny)] = [])?
-  =>
-    errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
-  
-  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
-  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
-  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => SourcePosNone
-  fun val with_pos(pos': SourcePosAny): RParen => create()
-  
-  fun val attach[A: Any val](a: A): AST => this
-  fun val find_attached[A: Any val](): A? => error
-  
-  fun string(): String iso^ =>
-    recover String.>append("RParen") end
+    recover String.>append("AtLBrace") end
 
 class val LBrace is (AST & Lexeme)
   new val create() => None
@@ -16221,6 +17234,50 @@ class val RBrace is (AST & Lexeme)
   
   fun string(): String iso^ =>
     recover String.>append("RBrace") end
+
+class val LParen is (AST & Lexeme)
+  new val create() => None
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): LParen => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
+  fun string(): String iso^ =>
+    recover String.>append("LParen") end
+
+class val RParen is (AST & Lexeme)
+  new val create() => None
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) => None
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
+  fun val pos(): SourcePosAny => SourcePosNone
+  fun val with_pos(pos': SourcePosAny): RParen => create()
+  
+  fun val attach[A: Any val](a: A): AST => this
+  fun val find_attached[A: Any val](): A? => error
+  
+  fun string(): String iso^ =>
+    recover String.>append("RParen") end
 
 class val LSquare is (AST & Lexeme)
   new val create() => None

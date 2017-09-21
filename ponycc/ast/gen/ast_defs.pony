@@ -52,7 +52,7 @@ primitive ASTDefs
         .> in_union("Method")
         .> with_scope()
         .> has("name",        "Id")
-        .> has("cap",         "(Cap | None)",        "None")
+        .> has("cap",         "(Cap | At | None)",   "None")
         .> has("type_params", "(TypeParams | None)", "None")
         .> has("params",      "Params",              "Params")
         .> has("return_type", "(Type | None)",       "None")
@@ -234,8 +234,9 @@ primitive ASTDefs
       g.def(name)
         .> in_union("BinaryOp", "Expr")
         .> with_type()
-        .> has("left",  "Expr")
-        .> has("right", "Expr")
+        .> has("left",    "Expr")
+        .> has("right",   "Expr")
+        .> has("partial", "(Question | None)", "None")
     end
     
     for name in [
@@ -288,8 +289,9 @@ primitive ASTDefs
       .> in_union("Expr")
       .> with_type()
       .> has("callable",   "Expr")
-      .> has("args",       "Args",      "Args")
-      .> has("named_args", "NamedArgs", "NamedArgs")
+      .> has("args",       "Args",              "Args")
+      .> has("named_args", "NamedArgs",         "NamedArgs")
+      .> has("partial",    "(Question | None)", "None")
     
     g.def("CallFFI")
       .> in_union("Expr")
@@ -311,6 +313,19 @@ primitive ASTDefs
       .> has("value", "Sequence")
     
     g.def("Lambda")
+      .> in_union("Expr")
+      .> with_type()
+      .> has("method_cap",  "(Cap | None)",            "None")
+      .> has("name",        "(Id | None)",             "None")
+      .> has("type_params", "(TypeParams | None)",     "None")
+      .> has("params",      "Params",                  "Params")
+      .> has("captures",    "(LambdaCaptures | None)", "None")
+      .> has("return_type", "(Type | None)",           "None")
+      .> has("partial",     "(Question | None)",       "None")
+      .> has("body",        "Sequence",                "Sequence")
+      .> has("object_cap",  "(Cap | None)",            "None")
+    
+    g.def("BareLambda")
       .> in_union("Expr")
       .> with_type()
       .> has("method_cap",  "(Cap | None)",            "None")
@@ -463,6 +478,17 @@ primitive ASTDefs
       .> has("object_cap",  "(Cap | GenCap | None)", "None")
       .> has("cap_mod",     "(CapMod | None)",       "None")
     
+    g.def("BareLambdaType")
+      .> in_union("Type")
+      .> has("method_cap",  "(Cap | None)",          "None")
+      .> has("name",        "(Id | None)",           "None")
+      .> has("type_params", "(TypeParams | None)",   "None")
+      .> has("param_types", "TupleType",             "TupleType")
+      .> has("return_type", "(Type | None)",         "None")
+      .> has("partial",     "(Question | None)",     "None")
+      .> has("object_cap",  "(Cap | GenCap | None)", "None")
+      .> has("cap_mod",     "(CapMod | None)",       "None")
+    
     g.def("TypeParamRef")
       .> in_union("Type")
       .> has("name",    "Id")
@@ -510,6 +536,8 @@ primitive ASTDefs
     
     g.def("Ellipsis")
     
+    g.def("Annotation")
+    
     g.def("Semicolon")
       .> in_union("Expr") // only so we can nicely error for semicolon at EOL.
       .> has("list", "coll.Vec[Expr]")
@@ -529,11 +557,11 @@ primitive ASTDefs
       "SubType"
       "Arrow"
       "DoubleArrow"
-      "Backslash"
-      "LParen"
-      "RParen"
+      "AtLBrace"
       "LBrace"
       "RBrace"
+      "LParen"
+      "RParen"
       "LSquare"
       "RSquare"
       "LParenNew"

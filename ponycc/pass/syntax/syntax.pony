@@ -100,11 +100,10 @@ primitive Syntax is FrameVisitor[Syntax]
             "Only functions can specify a return type.")
         end
         
-        // TODO: add this check when bare functions are implemented:
-        // try
-        //   frame.err(ast.bare() as At,
-        //     "Only functions can be bare.")
-        // end
+        try
+          frame.err(ast.cap() as At,
+            "Only functions can be bare.")
+        end
       end
       
       iftype A <: MethodNew then
@@ -203,6 +202,27 @@ primitive Syntax is FrameVisitor[Syntax]
         end
       end
     
+    elseif A <: BareLambda then
+      try
+        frame.err(ast.method_cap() as Cap,
+          "A bare lambda cannot specify a receiver capability.")
+      end
+      
+      try
+        frame.err(ast.type_params() as TypeParams,
+          "A bare lambda cannot have type parameters.")
+      end
+      
+      try
+        frame.err(ast.captures() as LambdaCaptures,
+          "A bare lambda cannot have captures.")
+      end
+      
+      try
+        frame.err(ast.object_cap() as (Iso | Trn | Ref | Box | Tag),
+          "A bare lambda can only have the `val` capability.")
+      end
+    
     // TODO: from syntax.c - syntax_lambda (BareLambda only)
     // TODO: from syntax.c - syntax_barelambdatype
     
@@ -296,6 +316,22 @@ primitive Syntax is FrameVisitor[Syntax]
         frame.err(ast, "A tuple cannot be used as a type parameter constraint.")
       end
     
+    elseif A <: BareLambdaType then
+      try
+        frame.err(ast.method_cap() as Cap,
+          "A bare lambda type cannot specify a receiver capability.")
+      end
+      
+      try
+        frame.err(ast.type_params() as TypeParams,
+          "A bare lambda type cannot have type parameters.")
+      end
+      
+      try
+        frame.err(ast.object_cap() as (Iso | Trn | Ref | Box | Tag),
+          "A bare lambda type can only have the `val` capability.")
+      end
+    
     elseif A <: TypeParam then
       // TODO: check that ast.name() is a valid type param name (uppercase).
       
@@ -304,14 +340,16 @@ primitive Syntax is FrameVisitor[Syntax]
     elseif A <: (Cap | GenCap) then
       if
         match frame.parent()
-        | let t: (TypeDecl | Object)   => t.cap() isnt ast
-        | let m: Method                => m.cap() isnt ast
-        | let c: (Consume | Recover)   => c.cap() isnt ast
-        | let l: (Lambda | LambdaType) => (l.method_cap() isnt ast) and
-                                          (l.object_cap() isnt ast)
-        // TODO: (BareLambda | BareLambdaType)
-        | let n: NominalType           => n.cap() isnt ast
-        | let v: ViewpointType         => v.left() isnt ast
+        | let t: (TypeDecl | Object) => t.cap() isnt ast
+        | let m: Method              => m.cap() isnt ast
+        | let c: (Consume | Recover) => c.cap() isnt ast
+        | let n: NominalType         => n.cap() isnt ast
+        | let v: ViewpointType       => v.left() isnt ast
+        | let l: ( Lambda
+                 | LambdaType
+                 | BareLambda
+                 | BareLambdaType)   => (l.method_cap() isnt ast) and
+                                        (l.object_cap() isnt ast)
         else true
         end
       then

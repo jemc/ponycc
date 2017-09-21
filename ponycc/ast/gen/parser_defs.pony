@@ -101,12 +101,12 @@ primitive ParserDefs
       .> rule("field type", ["type"])
       .> if_token_then_rule_else_none("Tk[Assign]", "field value", ["infix"])
     
-    // (FUN | BE | NEW) [annotations] [CAP] ID [typeparams] (LPAREN | LPAREN_NEW)
-    // [params] RPAREN [COLON type] [QUESTION] [ARROW seq]
+    // (FUN | BE | NEW) [annotations] [CAP | AT] ID [typeparams]
+    // (LPAREN | LPAREN_NEW) [params] RPAREN [COLON type] [QUESTION] [ARROW seq]
     g.def("method")
       .> token("None", ["Tk[MethodFun]"; "Tk[MethodBe]"; "Tk[MethodNew]"])
       .> annotate()
-      .> opt_rule("capability", ["cap"])
+      .> opt_rule("capability", ["cap"; "bare"])
       .> token("method name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
       .> rule("parameters", ["params"])
@@ -169,12 +169,16 @@ primitive ParserDefs
         ("Tk[LParenNew]",  "Tk[Params]")
       ])
     
+    // infix
+    g.def("defaultarg")
+      .> rule("default value", ["infix"])
+    
     // postfix [COLON type] [ASSIGN infix]
     g.def("param")
       .> tree("Tk[Param]")
       .> token("parameter name", ["Tk[Id]"])
       .> if_token_then_rule_else_none("Tk[Colon]", "parameter type", ["type"])
-      .> if_token_then_rule_else_none("Tk[Assign]", "default value", ["infix"])
+      .> if_token_then_rule_else_none("Tk[Assign]", "default value", ["defaultarg"])
     
     // (assignment | jump) {semiexpr | assignment | jump}
     g.def("seq")
@@ -226,15 +230,15 @@ primitive ParserDefs
       .> rule("value", ["nextinfix"])
       .> opt_no_dflt_rule("value", ["assignop"])
     
-    // term {binop | asop}
+    // term {binop | isop | asop}
     g.def("infix")
       .> rule("value", ["term"])
-      .> seq("value", ["binop"; "asop"])
+      .> seq("value", ["binop"; "isop"; "asop"])
     
-    // term {binop | asop}
+    // term {binop | isop | asop}
     g.def("nextinfix")
       .> rule("value", ["nextterm"])
-      .> seq("value", ["binop"; "asop"])
+      .> seq("value", ["binop"; "isop"; "asop"])
     
     // ifdef | iftype | if | while | repeat | for | with | match | 
     // try | consume | recover | pattern | const_expr
@@ -503,8 +507,16 @@ primitive ParserDefs
         "Tk[Eq]"; "Tk[EqUnsafe]"; "Tk[NE]"; "Tk[NEUnsafe]"
         "Tk[LT]"; "Tk[LTUnsafe]"; "Tk[LE]"; "Tk[LEUnsafe]"
         "Tk[GE]"; "Tk[GEUnsafe]"; "Tk[GT]"; "Tk[GTUnsafe]"
-        "Tk[Is]"; "Tk[Isnt]"; "Tk[And]"; "Tk[Or]"; "Tk[XOr]"
+        "Tk[And]"; "Tk[Or]"; "Tk[XOr]"
       ])
+      .> opt_token("None", ["Tk[Question]"])
+      .> rule("value", ["term"])
+      .> reorder_children([1; 0])
+    
+    // [IS | ISNT] term
+    g.def("isop")
+      .> builder("_BuildInfix")
+      .> token("binary operator", ["Tk[Is]"; "Tk[Isnt]"])
       .> rule("value", ["term"])
     
     // (NOT | ADDRESSOF | DIGESTOF | SUB | SUB_TILDE | SUB_NEW | SUB_TILDE_NEW)
@@ -604,7 +616,7 @@ primitive ParserDefs
       .> tree("Tk[Qualify]")
       .> rule("type arguments", ["typeargs"])
     
-    // LPAREN [args] [namedargs] RPAREN
+    // LPAREN [args] [namedargs] RPAREN [QUESTION]
     g.def("call")
       .> builder("_BuildInfix")
       .> tree("Tk[Call]")
@@ -612,6 +624,7 @@ primitive ParserDefs
       .> opt_rule("argument", ["args"], "Tk[Args]")
       .> opt_rule("argument", ["namedargs"], "Tk[NamedArgs]")
       .> terminate("call arguments", ["Tk[RParen]"])
+      .> opt_token("None", ["Tk[Question]"])
     
     // AT (ID | STRING) typeargs (LPAREN | LPAREN_NEW) [args] RPAREN [QUESTION]
     g.def("callffi")
@@ -646,20 +659,20 @@ primitive ParserDefs
       .> skip("None", ["Tk[Assign]"])
       .> rule("argument value", ["seq"])
     
-    // callffi | lambda | object | array | tuple | this |
+    // callffi | lambda | barelambda | object | array | tuple | this |
     // literal | location | reference | dontcare
     g.def("atom")
       .> rule("value", [
-        "callffi"; "lambda"; "object"; "array"; "groupedexpr"; "this"
-        "literal"; "location"; "reference"; "dontcare"
+        "callffi"; "lambda"; "barelambda"; "object"; "array"; "groupedexpr"
+        "this"; "literal"; "location"; "reference"; "dontcare"
       ])
     
-    // callffi | lambda | object | array | tuple | this |
+    // callffi | lambda | barelambda | object | array | tuple | this |
     // literal | location | reference | dontcare
     g.def("nextatom")
       .> rule("value", [
-        "callffi"; "lambda"; "object"; "nextarray"; "nextgroupedexpr"; "this"
-        "literal"; "location"; "reference"; "dontcare"
+        "callffi"; "lambda"; "barelambda"; "object"; "nextarray"; "nextgroupedexpr"
+        "this"; "literal"; "location"; "reference"; "dontcare"
       ])
     
     // LBRACE [annotations] [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [params]
@@ -668,6 +681,25 @@ primitive ParserDefs
       .> print_inline()
       .> tree("Tk[Lambda]")
       .> skip("None", ["Tk[LBrace]"])
+      .> annotate()
+      .> opt_rule("receiver capability", ["cap"])
+      .> opt_token("function name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> rule("parameters", ["params"])
+      .> opt_rule("captures", ["lambdacaptures"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> skip("None", ["Tk[DoubleArrow]"])
+      .> rule("lambda body", ["seq"])
+      .> terminate("lambda expression", ["Tk[RBrace]"])
+      .> opt_rule("reference capability", ["cap"])
+    
+    // AT_LBRACE [annotations] [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [params]
+    // RPAREN [lambdacaptures] [COLON type] [QUESTION] ARROW seq RBRACE [CAP]
+    g.def("barelambda")
+      .> print_inline()
+      .> tree("Tk[BareLambda]")
+      .> skip("None", ["Tk[AtLBrace]"])
       .> annotate()
       .> opt_rule("receiver capability", ["cap"])
       .> opt_token("function name", ["Tk[Id]"])
@@ -787,7 +819,7 @@ primitive ParserDefs
     
     // (tupletype | nominal | lambdatype | thistype | cap | gencap)
     g.def("atomtype")
-      .> rule("type", ["tupletype"; "nominal"; "lambdatype"; "thistype"; "cap"; "gencap"])
+      .> rule("type", ["tupletype"; "nominal"; "lambdatype"; "barelambdatype"; "thistype"; "cap"; "gencap"])
     
     // ARROW type
     g.def("viewpoint")
@@ -837,6 +869,10 @@ primitive ParserDefs
       .> rule("type", ["type"])
       .> while_token_do_rule("Tk[Ampersand]", "type", ["type"])
     
+    // AT
+    g.def("bare")
+      .> token("@", ["Tk[At]"])
+    
     // ID [DOT ID] [typeargs] [CAP] [EPHEMERAL | ALIASED]
     g.def("nominal")
       .> tree("Tk[NominalType]")
@@ -856,6 +892,23 @@ primitive ParserDefs
     g.def("lambdatype")
       .> tree("Tk[LambdaType]")
       .> skip("None", ["Tk[LBrace]"])
+      .> opt_rule("capability", ["cap"])
+      .> opt_token("function name", ["Tk[Id]"])
+      .> opt_rule("type parameters", ["typeparams"])
+      .> skip("None", ["Tk[LParen]"; "Tk[LParenNew]"])
+      .> opt_rule("parameters", ["paramtypes"], "Tk[TupleType]")
+      .> skip("None", ["Tk[RParen]"])
+      .> if_token_then_rule_else_none("Tk[Colon]", "return type", ["type"])
+      .> opt_token("None", ["Tk[Question]"])
+      .> skip("None", ["Tk[RBrace]"])
+      .> opt_rule("capability", ["cap"; "gencap"])
+      .> opt_token("None", ["Tk[Ephemeral]"; "Tk[Aliased]"])
+    
+    // AT_LBRACE [CAP] [ID] [typeparams] (LPAREN | LPAREN_NEW) [typelist] RPAREN
+    // [COLON type] [QUESTION] RBRACE [CAP] [EPHEMERAL | ALIASED]
+    g.def("barelambdatype")
+      .> tree("Tk[BareLambdaType]")
+      .> skip("None", ["Tk[AtLBrace]"])
       .> opt_rule("capability", ["cap"])
       .> opt_token("function name", ["Tk[Id]"])
       .> opt_rule("type parameters", ["typeparams"])
@@ -889,7 +942,7 @@ primitive ParserDefs
     // '\' ID {COMMA ID} '\'
     g.def("annotations")
       .> print_inline()
-      .> token("None", ["Tk[Backslash]"])
+      .> token("None", ["Tk[Annotation]"])
       .> token("annotation", ["Tk[Id]"])
       .> while_token_do_token("Tk[Comma]", "annotation", ["Tk[Id]"])
-      .> terminate("annotations", ["Tk[Backslash]"])
+      .> terminate("annotations", ["Tk[Annotation]"])

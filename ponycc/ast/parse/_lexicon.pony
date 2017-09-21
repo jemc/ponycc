@@ -125,6 +125,7 @@ class val _Lexicon
     / peg.L("<").term(Tk[LT])
     / peg.L(">").term(Tk[GT])
     
+    / peg.L("@{").term(Tk[AtLBrace])
     / peg.L("{").term(Tk[LBrace])
     / peg.L("}").term(Tk[RBrace])
     / peg.L("(").term(Tk[LParen])
@@ -147,7 +148,7 @@ class val _Lexicon
     
     / peg.L("?").term(Tk[Question])
     / peg.L("#").term(Tk[Constant])
-    / peg.L("\\").term(Tk[Backslash])
+    / peg.L("\\").term(Tk[Annotation])
   end
   
   // Note that for symbols where one symbol starts with another,

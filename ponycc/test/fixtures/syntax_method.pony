@@ -12,6 +12,12 @@ $ERROR A primitive constructor cannot specify a receiver capability.
 $ERROR A behaviour cannot specify a receiver capability.
   be val actor_behaviour_with_cap() => None
      ^~~
+$ERROR Only functions can be bare.
+  new @actor_constructor_bare() => None
+      ^
+$ERROR Only functions can be bare.
+  be @actor_behaviour_bare() => None
+     ^
 $ERROR Only functions can specify a return type.
   new interface_constructor_with_return_type(): X
                                                 ^
@@ -115,6 +121,11 @@ actor ActorMethodsWithCap
   fun box actor_function_with_cap() => None
   new iso actor_constructor_with_cap() => None
   be val actor_behaviour_with_cap() => None
+
+actor ActorMethodsBare
+  fun @actor_function_bare() => None
+  new @actor_constructor_bare() => None
+  be @actor_behaviour_bare() => None
 
 interface InterfaceMethodsWithReturnType
   fun interface_function_with_return_type(): X
