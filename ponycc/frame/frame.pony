@@ -1,27 +1,30 @@
 
 use "../ast"
+use "../pass"
 
 interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
-  fun apply[A: AST val](frame: Frame[V], a: A)
+  fun visit[A: AST val](frame: Frame[V], a: A)
 
-actor _FrameErrors
-  embed _errs: Array[(String, SourcePosAny)] = _errs.create()
-  be err(a: AST, s: String) => _errs.push((s, a.pos()))
-  be complete(fn: {(Array[(String, SourcePosAny)] val)} val) =>
-    let copy = recover Array[(String, SourcePosAny)] end
-    for e in _errs.values() do copy.push(e) end
-    fn(consume copy)
+primitive FrameVisitorNone is FrameVisitor[FrameVisitorNone]
+  fun visit[A: AST val](frame: Frame[FrameVisitorNone], a: A) => None
 
 actor FrameRunner[V: FrameVisitor[V]]
-  new create(ast: Module, fn: {(Module, Array[(String, SourcePosAny)] val)} val)
-  =>
+  new create(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
     let errors = _FrameErrors
     let frame  = Frame[V](ast, errors)
     frame._visit(ast)
-    let module = frame.module()
     
+    let module = frame.module()
     errors.complete({(errs) => fn(module, errs) })
+
+actor _FrameErrors
+  embed _errs: Array[PassError] = _errs.create()
+  be err(a: AST, s: String) => _errs.push((s, a.pos()))
+  be complete(fn: {(Array[PassError] val)} val) =>
+    let copy = recover Array[PassError] end
+    for e in _errs.values() do copy.push(e) end
+    fn(consume copy)
 
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: _FrameErrors
@@ -56,7 +59,7 @@ class Frame[V: FrameVisitor[V]]
   fun ref _visit(ast: AST) =>
     let frame = Frame[V]._create_under(this, ast) .> _visit_each()
     frame._ast.apply_specialised[Frame[V]](frame,
-      {[A: AST val](frame, a: A) => V.apply[A](frame, a) })
+      {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
   
   fun ref _visit_each() =>
     _ast.each({(child)(frame = this) => try frame._visit(child as AST) end })

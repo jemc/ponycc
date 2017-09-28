@@ -1,7 +1,7 @@
 
 use "collections"
 use ".."
-use "inspect"
+use "../../pass"
 
 primitive _GenNewline
 primitive _GenIndentPush
@@ -54,11 +54,13 @@ class _Gen
     write(s) // TODO: split on newline and add indent to each line.
     line(); write("\"\"\"")
 
-primitive Print
-  fun apply(x: Module): String iso^ =>
+primitive Print is Pass[Module, String]
+  fun name(): String => "print"
+  
+  fun apply(x: Module, fn: {(String, Array[PassError] val)} val) =>
     let g = _Gen
     _show(g, x)
-    g.string()
+    fn.apply(g.string(), []) // TODO: use apply sugar
   
   fun _show(g: _Gen, x: Module) =>
     try

@@ -1,11 +1,12 @@
 
+use ".."
 use "../../ast"
 use "../../frame"
 use "../../unreachable"
 
 use coll = "collections/persistent"
 
-primitive Sugar is FrameVisitor[Sugar]
+primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
   """
   The purpose of the Sugar pass is to fill in implicit details and expand
   abbreviated forms to their more verbose equivalents.
@@ -15,16 +16,20 @@ primitive Sugar is FrameVisitor[Sugar]
   
   This pass changes the AST, but it is idempotent.
   """
+  fun name(): String => "sugar"
   
-  fun find_member(members: Members, name: String): (Method | Field | None) =>
+  fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
+    FrameRunner[Sugar](ast, fn)
+  
+  fun _find_member(members: Members, name': String): (Method | Field | None) =>
     for method in members.methods().values() do
-      if method.name().value() == name then return method end
+      if method.name().value() == name' then return method end
     end
     for field in members.fields().values() do
-      if field.name().value() == name then return field end
+      if field.name().value() == name' then return field end
     end
   
-  fun apply[A: AST val](frame: Frame[Sugar], ast': A) =>
+  fun visit[A: AST val](frame: Frame[Sugar], ast': A) =>
     // TODO: from sugar.c - sugar_module
     // TODO: from sugar.c - sugar_typeparam
     
@@ -42,7 +47,7 @@ primitive Sugar is FrameVisitor[Sugar]
       
       // Add a default constructor if there is no `create` member.
       iftype A <: (Primitive | Struct | Class | Actor) then
-        if find_member(ast.members(), "create") is None then
+        if _find_member(ast.members(), "create") is None then
           let cap =
             iftype A <: (Struct | Class) then Iso
             elseif A <: Primitive        then Val

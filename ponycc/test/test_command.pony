@@ -14,9 +14,7 @@ interface val TestCommandAny
   
   fun print_errors(actual_errors: Array[(String, SourcePosAny)] box)
   
-  fun check_errors(
-    actual_errors: Array[(String, SourcePosAny)] box,
-    success: Bool = true)
+  fun check_errors(actual_errors: Array[(String, SourcePosAny)] box)
   
   fun check_checks(module: Module)
 
@@ -37,7 +35,9 @@ class val TestCommand[T: TestCommandType val]
   fun ref add_error(e: TestCommand[_Error]) => errors.push(e); e
   fun ref add_check(c: TestCommand[_Check]) => checks.push(c); c
   
-  fun val apply(source: Source) => T(this, source)
+  fun val apply(source: Source) =>
+    _h.long_test(5_000_000_000) // 5 second timeout
+    T(this, source)
   
   fun print_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
     for (err, pos) in actual_errors.values() do
@@ -47,14 +47,8 @@ class val TestCommand[T: TestCommandType val]
       _h.log(pos2)
     end
   
-  fun check_errors(
-    actual_errors: Array[(String, SourcePosAny)] box,
-    success: Bool = true)
-  =>
-    _h.assert_eq[Bool](
-      success and (actual_errors.size() == 0),
-      errors.size() == 0,
-      "Success")
+  fun check_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
+    _h.assert_eq[Bool](actual_errors.size() == 0, errors.size() == 0, "Success")
     
     for (i, expect) in errors.pairs() do
       try

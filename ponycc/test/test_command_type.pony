@@ -1,4 +1,5 @@
 
+use ".."
 use "../ast"
 use "../ast/parse"
 use "../ast/print"
@@ -17,110 +18,87 @@ primitive _Check is TestCommandType
 
 primitive _Print is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let module =
-      try
-        Parse(source, errs)?
-      else
+    BuildCompiler[Source, Module](Parse)
+      .next[String](Print)
+      .on_errors({(pass, errs) =>
         command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    command.h().assert_eq[String](source.content(), Print(module))
+        command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
+      })
+      .on_complete({(string) =>
+        command.h().assert_eq[String](source.content(), string)
+        command.h().complete(true)
+      })
+      .apply(source)
 
 primitive _Parse is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    let success =
-      try
-        Parse(source, errs)?
-        true
-      else
-        false
-      end
-    
-    command.check_errors(errs, success)
+    BuildCompiler[Source, Module](Parse)
+      .on_errors({(pass, errs) =>
+        command.check_errors(errs)
+        command.h().complete(true)
+      })
+      .on_complete({(module) =>
+        command.check_errors([])
+        command.h().complete(true)
+      })
+      .apply(source)
 
 primitive _PostParse is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    var module =
-      try
-        Parse(source, errs)?
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    command.h().long_test(2_000_000_000) // 2 second timeout
-    
-    FrameRunner[PostParse](module,
-      {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
-        command.check_errors(errs)
+    BuildCompiler[Source, Module](Parse)
+      .next[Module](PostParse)
+      .on_errors({(pass, errs) =>
+        match pass | PostParse =>
+          command.check_errors(errs)
+          command.h().complete(true)
+        else
+          command.print_errors(errs)
+          command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
+        end
+      })
+      .on_complete({(module) =>
         command.check_checks(module)
         command.h().complete(true)
-      } val)
+      })
+      .apply(source)
 
 primitive _Syntax is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    var module =
-      try
-        Parse(source, errs)?
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    command.h().long_test(2_000_000_000) // 2 second timeout
-    
-    FrameRunner[PostParse](module,
-      {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
-        if errs.size() > 0 then
+    BuildCompiler[Source, Module](Parse)
+      .next[Module](PostParse)
+      .next[Module](Syntax)
+      .on_errors({(pass, errs) =>
+        match pass | Syntax =>
+          command.check_errors(errs)
+          command.h().complete(true)
+        else
           command.print_errors(errs)
-          return command.h().fail("Unexpected post-parse error(s) occurred.")
+          command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
         end
-        
-        FrameRunner[Syntax](module,
-          {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
-            command.check_errors(errs)
-            command.check_checks(module)
-            command.h().complete(true)
-          } val)
-      } val)
+      })
+      .on_complete({(module) =>
+        command.check_checks(module)
+        command.h().complete(true)
+      })
+      .apply(source)
 
 primitive _Sugar is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    let errs = Array[(String, SourcePosAny)]
-    var module =
-      try
-        Parse(source, errs)?
-      else
-        command.print_errors(errs)
-        return command.h().fail("Unexpected parser error(s) occurred.")
-      end
-    
-    command.h().long_test(2_000_000_000) // 2 second timeout
-    
-    FrameRunner[PostParse](module,
-      {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
-        if errs.size() > 0 then
+    BuildCompiler[Source, Module](Parse)
+      .next[Module](PostParse)
+      .next[Module](Syntax)
+      .next[Module](Sugar)
+      .on_errors({(pass, errs) =>
+        match pass | Sugar =>
+          command.check_errors(errs)
+          command.h().complete(true)
+        else
           command.print_errors(errs)
-          return command.h().fail("Unexpected post-parse error(s) occurred.")
+          command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
         end
-        
-        FrameRunner[Syntax](module,
-          {(module: Module, errs: Array[(String, SourcePosAny)] val)(command) =>
-            if errs.size() > 0 then
-              command.print_errors(errs)
-              return command.h().fail("Unexpected syntax error(s) occurred.")
-            end
-            
-            FrameRunner[Sugar](module,
-              {(module: Module, errs: Array[(String, SourcePosAny)] val) =>
-                command.check_errors(errs)
-                command.check_checks(module)
-                command.h().complete(true)
-              } val)
-          } val)
-      } val)
+      })
+      .on_complete({(module) =>
+        command.check_checks(module)
+        command.h().complete(true)
+      })
+      .apply(source)

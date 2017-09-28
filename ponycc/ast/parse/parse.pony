@@ -1,7 +1,20 @@
 
 use ".."
+use "../../pass"
 
-class val Parse
+primitive Parse is Pass[Source, Module]
+  fun name(): String => "parse"
+  
+  fun apply(source: Source, fn: {(Module, Array[PassError] val)} val) =>
+    var module = Module
+    let errs = recover val
+      let errs: Array[(String, SourcePosAny)] = []
+      module = try Parser(source, errs)? else Module end
+      errs
+    end
+    fn(module, errs)
+
+class val Parser
   let _lexer: _Lexer = _Lexer
   
   new val create() => None

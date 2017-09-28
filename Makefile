@@ -19,12 +19,9 @@ ponycc/ast/ast.pony: ponycc/ast/gen/gen
 ponycc/ast/parse/_parser.pony: ponycc/ast/gen/gen
 	ponycc/ast/gen/gen parser > $@
 
-ponycc/test/test: ponycc/ast/ast.pony ponycc/ast/parse/_parser.pony \
-	$(shell find ponycc/ast/*.pony) \
-	$(shell find ponycc/ast/parse/*.pony) \
-	$(shell find ponycc/ast/print/*.pony) \
-	$(shell find ponycc/frame/*.pony) \
-	$(shell find ponycc/pass/*/*.pony) \
-	$(shell find ponycc/unreachable/*.pony) \
-	$(shell find ponycc/test/*.pony)
+ponycc/test/test: \
+	ponycc/ast/ast.pony \
+	ponycc/ast/parse/_parser.pony \
+	$(shell find ponycc) \
+
 	stable env ponyc --debug -o ponycc/test ponycc/test

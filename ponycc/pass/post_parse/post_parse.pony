@@ -1,9 +1,10 @@
 
+use ".."
 use "../../ast"
 use "../../frame"
 use "../../unreachable"
 
-primitive PostParse is FrameVisitor[PostParse]
+primitive PostParse is (Pass[Module, Module] & FrameVisitor[PostParse])
   """
   The purpose of the PostParse pass is to check and/or clean up any oddities
   in the AST related to the specific implementation of the parser or grammar.
@@ -14,8 +15,12 @@ primitive PostParse is FrameVisitor[PostParse]
   
   This pass changes the AST, and is not idempotent.
   """
+  fun name(): String => "post-parse"
   
-  fun apply[A: AST val](frame: Frame[PostParse], ast: A) =>
+  fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
+    FrameRunner[PostParse](ast, fn)
+  
+  fun visit[A: AST val](frame: Frame[PostParse], ast: A) =>
     iftype A <: Method then
       match ast.body() | let body: Sequence =>
         try
