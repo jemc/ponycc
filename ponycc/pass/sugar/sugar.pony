@@ -209,4 +209,27 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
           Sequence(consume then_body)
         )
       )))
+    
+    elseif A <: Match then
+      var has_changes = false
+      let cases: Array[Case] trn = []
+      
+      // If any cases have no body, they get the body of the next case.
+      var next_body: (Sequence | None) = None
+      for case in ast'.cases().list().reverse().values() do // TODO: use rvalues()
+        try next_body = case.body() as Sequence end
+        
+        cases.unshift(
+          if case.body() is None then
+            has_changes = true
+            case.with_body(next_body)
+          else
+            case
+          end
+        )
+      end
+      
+      if has_changes then
+        frame.replace(ast'.with_cases(Cases(consume cases)))
+      end
     end

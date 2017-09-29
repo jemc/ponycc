@@ -370,4 +370,6 @@ primitive Syntax is (Pass[Module, Module] & FrameVisitor[Syntax])
         end
       end
     
+    // TODO: from sugar.c - sugar_match_capture validations
+    
     end
