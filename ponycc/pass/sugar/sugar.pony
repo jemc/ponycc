@@ -29,6 +29,39 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
       if field.name().value() == name' then return field end
     end
   
+  fun _binary_op_method_id[A: BinaryOp val](): (Id | None) =>
+    iftype A <: Add          then Id("add")
+    elseif A <: AddUnsafe    then Id("add_unsafe")
+    elseif A <: Sub          then Id("sub")
+    elseif A <: SubUnsafe    then Id("sub_unsafe")
+    elseif A <: Mul          then Id("mul")
+    elseif A <: MulUnsafe    then Id("mul_unsafe")
+    elseif A <: Div          then Id("div")
+    elseif A <: DivUnsafe    then Id("div_unsafe")
+    elseif A <: Mod          then Id("mod")
+    elseif A <: ModUnsafe    then Id("mod_unsafe")
+    elseif A <: LShift       then Id("shl")
+    elseif A <: LShiftUnsafe then Id("shl_unsafe")
+    elseif A <: RShift       then Id("shr")
+    elseif A <: RShiftUnsafe then Id("shr_unsafe")
+    elseif A <: Eq           then Id("eq")
+    elseif A <: EqUnsafe     then Id("eq_unsafe")
+    elseif A <: NE           then Id("ne")
+    elseif A <: NEUnsafe     then Id("ne_unsafe")
+    elseif A <: LT           then Id("lt")
+    elseif A <: LTUnsafe     then Id("lt_unsafe")
+    elseif A <: LE           then Id("le")
+    elseif A <: LEUnsafe     then Id("le_unsafe")
+    elseif A <: GE           then Id("ge")
+    elseif A <: GEUnsafe     then Id("ge_unsafe")
+    elseif A <: GT           then Id("gt")
+    elseif A <: GTUnsafe     then Id("gt_unsafe")
+    elseif A <: And          then Id("op_and")
+    elseif A <: Or           then Id("op_or")
+    elseif A <: XOr          then Id("op_xor")
+    else                          None
+    end
+  
   fun visit[A: AST val](frame: Frame[Sugar], ast': A) =>
     // TODO: from sugar.c - sugar_module
     // TODO: from sugar.c - sugar_typeparam
@@ -241,6 +274,19 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
           .with_named_args(call.named_args().with_list_push(
             NamedArg(Id("value"), Sequence([ast'.right()]))
           ))
+        )
+      end
+    
+    elseif A <: BinaryOp then
+      match _binary_op_method_id[A]() | let method_id: Id =>
+        let args =
+          match ast'.right()
+          | let tuple: Tuple => Args(tuple.elements())
+          | let expr: Expr => Args([Sequence([expr])])
+          end
+        
+        frame.replace(
+          Call(Dot(ast'.left(), method_id), args, NamedArgs, ast'.partial())
         )
       end
     end
