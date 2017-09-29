@@ -29,6 +29,13 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
       if field.name().value() == name' then return field end
     end
   
+  fun _unary_op_method_id[A: UnaryOp val](): (Id | None) =>
+    iftype A <: Not       then Id("op_not")
+    elseif A <: Neg       then Id("neg")
+    elseif A <: NegUnsafe then Id("neg_unsafe")
+    else                       None
+    end
+  
   fun _binary_op_method_id[A: BinaryOp val](): (Id | None) =>
     iftype A <: Add          then Id("add")
     elseif A <: AddUnsafe    then Id("add_unsafe")
@@ -275,6 +282,11 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
             NamedArg(Id("value"), Sequence([ast'.right()]))
           ))
         )
+      end
+    
+    elseif A <: UnaryOp then
+      match _unary_op_method_id[A]() | let method_id: Id =>
+        frame.replace(Call(Dot(ast'.expr(), method_id)))
       end
     
     elseif A <: BinaryOp then
