@@ -370,6 +370,35 @@ primitive Syntax is (Pass[Module, Module] & FrameVisitor[Syntax])
         end
       end
     
-    // TODO: from sugar.c - sugar_match_capture validations
-    
+    elseif A <: Case then
+      let pattern_exprs = [ast.expr()]
+      
+      try while true do
+        match pattern_exprs.shift()?
+        | let local: LocalVar =>
+          frame.err(local,
+            "A match capture cannot be declared as `var`; use `let` instead.")
+        | let local: LocalLet =>
+          match local.local_type()
+          | None =>
+            frame.err(local,
+              "The type of a match capture must be explicitly declared.")
+          | let tuple_type: TupleType =>
+            frame.err(tuple_type,
+              "A match cannot capture a tuple; use a tuple of match " + 
+              "captures instead.")
+          end
+        | let tuple: Tuple =>
+          for seq in tuple.elements().values() do
+            pattern_exprs.push(seq)
+          end
+        | let seq: Sequence =>
+          if seq.list().size() > 1 then
+            frame.err(seq,
+              "A sequence inside a match capture must have only one element.")
+          else
+            try pattern_exprs.push(seq.list()(0)?) end
+          end
+        end
+      end end
     end
