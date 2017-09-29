@@ -5402,26 +5402,26 @@ class val With is (AST & Expr)
   let _attachments: (coll.Vec[Any val] | None)
   
   let _assigns: AssignTuple
-  let _with_body: Sequence
+  let _body: Sequence
   let _else_body: (Sequence | None)
   
   new val create(
     assigns': AssignTuple,
-    with_body': Sequence,
+    body': Sequence,
     else_body': (Sequence | None) = None)
   =>_attachments = None
     _assigns = assigns'
-    _with_body = with_body'
+    _body = body'
     _else_body = else_body'
   
   new val _create(
     assigns': AssignTuple,
-    with_body': Sequence,
+    body': Sequence,
     else_body': (Sequence | None),
     attachments': (coll.Vec[Any val] | None) = None)
   =>
     _assigns = assigns'
-    _with_body = with_body'
+    _body = body'
     _else_body = else_body'
     _attachments = attachments'
   
@@ -5435,9 +5435,9 @@ class val With is (AST & Expr)
       try iter.next()?
       else errs.push(("With missing required field: assigns", pos')); error
       end
-    let with_body': (AST | None) =
+    let body': (AST | None) =
       try iter.next()?
-      else errs.push(("With missing required field: with_body", pos')); error
+      else errs.push(("With missing required field: body", pos')); error
       end
     let else_body': (AST | None) = try iter.next()? else None end
     if
@@ -5452,9 +5452,9 @@ class val With is (AST & Expr)
       try assigns' as AssignTuple
       else errs.push(("With got incompatible field: assigns", try (assigns' as AST).pos() else SourcePosNone end)); error
       end
-    _with_body =
-      try with_body' as Sequence
-      else errs.push(("With got incompatible field: with_body", try (with_body' as AST).pos() else SourcePosNone end)); error
+    _body =
+      try body' as Sequence
+      else errs.push(("With got incompatible field: body", try (body' as AST).pos() else SourcePosNone end)); error
       end
     _else_body =
       try else_body' as (Sequence | None)
@@ -5464,12 +5464,12 @@ class val With is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
   fun val each(fn: {ref ((AST | None))} ref) =>
     fn(_assigns)
-    fn(_with_body)
+    fn(_body)
     fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): With => attach[SourcePosAny](pos')
   
-  fun val attach[A: Any val](a: A): With => _create(_assigns, _with_body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  fun val attach[A: Any val](a: A): With => _create(_assigns, _body, _else_body, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
   
   fun val find_attached[A: Any val](): A? =>
     for a in (_attachments as coll.Vec[Any val]).values() do
@@ -5477,17 +5477,17 @@ class val With is (AST & Expr)
     end
     error
   fun val assigns(): AssignTuple => _assigns
-  fun val with_body(): Sequence => _with_body
+  fun val body(): Sequence => _body
   fun val else_body(): (Sequence | None) => _else_body
   
-  fun val with_assigns(assigns': AssignTuple): With => _create(assigns', _with_body, _else_body, _attachments)
-  fun val with_with_body(with_body': Sequence): With => _create(_assigns, with_body', _else_body, _attachments)
-  fun val with_else_body(else_body': (Sequence | None)): With => _create(_assigns, _with_body, else_body', _attachments)
+  fun val with_assigns(assigns': AssignTuple): With => _create(assigns', _body, _else_body, _attachments)
+  fun val with_body(body': Sequence): With => _create(_assigns, body', _else_body, _attachments)
+  fun val with_else_body(else_body': (Sequence | None)): With => _create(_assigns, _body, else_body', _attachments)
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "assigns" => _assigns
-    | "with_body" => _with_body
+    | "body" => _body
     | "else_body" => _else_body
     else error
     end
@@ -5496,13 +5496,13 @@ class val With is (AST & Expr)
     if child' is replace' then return this end
     try
       if child' is _assigns then
-        return _create(replace' as AssignTuple, _with_body, _else_body, _attachments)
+        return _create(replace' as AssignTuple, _body, _else_body, _attachments)
       end
-      if child' is _with_body then
+      if child' is _body then
         return _create(_assigns, replace' as Sequence, _else_body, _attachments)
       end
       if child' is _else_body then
-        return _create(_assigns, _with_body, replace' as (Sequence | None), _attachments)
+        return _create(_assigns, _body, replace' as (Sequence | None), _attachments)
       end
       error
     else this
@@ -5513,7 +5513,7 @@ class val With is (AST & Expr)
     s.append("With")
     s.push('(')
     s.>append(_assigns.string()).>push(',').push(' ')
-    s.>append(_with_body.string()).>push(',').push(' ')
+    s.>append(_body.string()).>push(',').push(' ')
     s.>append(_else_body.string())
     s.push(')')
     consume s

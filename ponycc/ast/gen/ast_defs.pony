@@ -166,7 +166,7 @@ primitive ASTDefs
       .> with_scope()
       .> with_type()
       .> has("assigns",   "AssignTuple")
-      .> has("with_body", "Sequence")
+      .> has("body",      "Sequence")
       .> has("else_body", "(Sequence | None)", "None")
     
     g.def("IdTuple") // TODO: implement as Tuple[(Id | IdTuple)]

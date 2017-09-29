@@ -567,7 +567,7 @@ primitive Print is Pass[Module, String]
     g.write(" do")
     g.push_indent()
     g.line_start()
-    _show_bare(g, x.with_body())
+    _show_bare(g, x.body())
     g.pop_indent()
     g.line_start()
     match x.else_body() | let s: Sequence =>

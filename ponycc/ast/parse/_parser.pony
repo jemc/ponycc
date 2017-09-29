@@ -4121,7 +4121,7 @@ class _Parser
     found = false
     res =
       while true do
-        match _parse_infix("with name")
+        match _parse_reference("with name")
         | (_RuleParseError, _) => break _handle_error(state)
         | (let tree: (TkTree | None), let build: _Build) =>
           found = true

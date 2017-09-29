@@ -149,12 +149,9 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
         end
       end
     
-    // TODO: from sugar.c - sugar_else
-    // TODO: from sugar.c - sugar_try
-    
     elseif A <: For then
-      // TODO: actual package_hygienic_id
-      // TODO: attach "nice name" to Id: "for loop iterator"
+      // TODO: actual hygienic id
+      // TODO: attach "nice name" to Id: "for loop iterator"?
       let iter_id = Id("$hygienic_id")
       
       let try_next = Try(
@@ -169,4 +166,47 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
           Sequence([Assign(ast'.refs(), try_next)])
         )
       ]))
+    
+    elseif A <: With then
+      let preamble:  Array[Expr] trn = []
+      let try_body:  Array[Expr] trn = []
+      let else_body: Array[Expr] trn = []
+      let then_body: Array[Expr] trn = []
+      
+      // Set up the preamble, and the preamble of each body section.
+      // These contain assignments related to the "with expression",
+      // and the final section contains calls to the "dispose" method.
+      for assign in ast'.assigns().elements().values() do
+        // TODO: actual hygienic id
+        let hyg_id = Id("$hygienic_id")
+        let id =
+          try (assign.left() as Reference).name()
+          else Unreachable(assign); Id("")
+          end
+        
+        let local_assign = Assign(LocalLet(id), Reference(hyg_id))
+        
+        preamble.push(Assign(LocalLet(hyg_id), assign.right()))
+        try_body.push(local_assign)
+        else_body.push(local_assign)
+        then_body.push(Call(Dot(Reference(hyg_id), Id("dispose"))))
+      end
+      
+      // Add the actual body and else body contents.
+      for expr in ast'.body().list().values() do
+        try_body.push(expr)
+      end
+      try
+        for expr in (ast'.else_body() as Sequence).list().values() do
+          else_body.push(expr)
+        end
+      end
+      
+      frame.replace(Sequence((consume preamble) .> push(
+        Try(
+          Sequence(consume try_body),
+          Sequence(consume else_body),
+          Sequence(consume then_body)
+        )
+      )))
     end
