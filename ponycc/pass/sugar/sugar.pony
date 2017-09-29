@@ -232,4 +232,15 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
       if has_changes then
         frame.replace(ast'.with_cases(Cases(consume cases)))
       end
+    
+    elseif A <: Assign then
+      match ast'.left() | let call: Call =>
+        // Sugar as an update method call, with the right side as a named arg.
+        frame.replace(call
+          .with_callable(Dot(call.callable(), Id("update")))
+          .with_named_args(call.named_args().with_list_push(
+            NamedArg(Id("value"), Sequence([ast'.right()]))
+          ))
+        )
+      end
     end
