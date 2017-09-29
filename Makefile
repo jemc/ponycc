@@ -10,7 +10,7 @@ clean:
 	rm -f ponycc/ast/parse/_parser.pony
 	rm -f ponycc/test/test
 
-ponycc/ast/gen/gen: $(shell find ponycc/ast/gen/*.pony)
+ponycc/ast/gen/gen: $(shell ls ponycc/ast/gen/*.pony)
 	stable env ponyc --debug -o ponycc/ast/gen ponycc/ast/gen
 
 ponycc/ast/ast.pony: ponycc/ast/gen/gen
@@ -22,6 +22,6 @@ ponycc/ast/parse/_parser.pony: ponycc/ast/gen/gen
 ponycc/test/test: \
 	ponycc/ast/ast.pony \
 	ponycc/ast/parse/_parser.pony \
-	$(shell find ponycc) \
+	$(shell sh -c "find ponycc | grep .pony | grep -v fixtures") \
 
 	stable env ponyc --debug -o ponycc/test ponycc/test
