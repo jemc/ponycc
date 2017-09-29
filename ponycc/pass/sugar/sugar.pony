@@ -301,4 +301,12 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
           Call(Dot(ast'.left(), method_id), args, NamedArgs, ast'.partial())
         )
       end
+    
+    // TODO: from sugar.c - sugar_ffi
+    // TODO: from sugar.c - sugar_ifdef
+    // TODO: from sugar.c - sugar_use
+    // TODO: from sugar.c - sugar_lambdatype
+    // TODO: from sugar.c - sugar_barelambda
+    // TODO: from sugar.c - sugar_location
+    
     end
