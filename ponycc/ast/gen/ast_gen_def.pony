@@ -266,6 +266,19 @@ class ASTGenDefFixed is ASTGenDef
     end
     if fields.size() > 0 then g.line() end
     
+    // Declare push methods for list fields.
+    for (field_name, field_type, _) in fields.values() do
+      if field_type.at("coll.Vec[", 0) then
+        let elem_type: String = field_type.substring(9, -1)
+        
+        g.line("fun val with_" + field_name + "_push(")
+        g.add("x: val->" + elem_type + "): " + _name)
+        g.add(" => with_" + field_name)
+        g.add("(_" + field_name + ".push(x))")
+        g.line()
+      end
+    end
+    
     // Declare a method that supports lookup of children by String name and
     // optional USize index number (only supported by coll.Vec fields).
     // Any invalid lookup is an error.

@@ -413,6 +413,10 @@ class val Module is AST
   fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => _create(_use_decls, type_decls', _docs, _attachments)
   fun val with_docs(docs': (LitString | None)): Module => _create(_use_decls, _type_decls, docs', _attachments)
   
+  fun val with_use_decls_push(x: val->UseDecl): Module => with_use_decls(_use_decls.push(x))
+  
+  fun val with_type_decls_push(x: val->TypeDecl): Module => with_type_decls(_type_decls.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "use_decls" => _use_decls(index')?
@@ -2121,6 +2125,10 @@ class val Members is AST
   fun val with_fields(fields': coll.Vec[Field]): Members => _create(fields', _methods, _attachments)
   fun val with_methods(methods': coll.Vec[Method]): Members => _create(_fields, methods', _attachments)
   
+  fun val with_fields_push(x: val->Field): Members => with_fields(_fields.push(x))
+  
+  fun val with_methods_push(x: val->Method): Members => with_methods(_methods.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "fields" => _fields(index')?
@@ -3255,6 +3263,8 @@ class val TypeParams is AST
   
   fun val with_list(list': coll.Vec[TypeParam]): TypeParams => _create(list', _attachments)
   
+  fun val with_list_push(x: val->TypeParam): TypeParams => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -3459,6 +3469,8 @@ class val TypeArgs is AST
   
   fun val with_list(list': coll.Vec[Type]): TypeArgs => _create(list', _attachments)
   
+  fun val with_list_push(x: val->Type): TypeArgs => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -3561,6 +3573,8 @@ class val Params is AST
   
   fun val with_list(list': coll.Vec[Param]): Params => _create(list', _ellipsis, _attachments)
   fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => _create(_list, ellipsis', _attachments)
+  
+  fun val with_list_push(x: val->Param): Params => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -3771,6 +3785,8 @@ class val Sequence is (AST & Expr)
   fun val list(): coll.Vec[Expr] => _list
   
   fun val with_list(list': coll.Vec[Expr]): Sequence => _create(list', _attachments)
+  
+  fun val with_list_push(x: val->Expr): Sequence => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5575,6 +5591,8 @@ class val IdTuple is (AST & Expr)
   
   fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => _create(elements', _attachments)
   
+  fun val with_elements_push(x: val->(Id | IdTuple)): IdTuple => with_elements(_elements.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "elements" => _elements(index')?
@@ -5661,6 +5679,8 @@ class val AssignTuple is AST
   fun val elements(): coll.Vec[Assign] => _elements
   
   fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => _create(elements', _attachments)
+  
+  fun val with_elements_push(x: val->Assign): AssignTuple => with_elements(_elements.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -5865,6 +5885,8 @@ class val Cases is AST
   fun val list(): coll.Vec[Case] => _list
   
   fun val with_list(list': coll.Vec[Case]): Cases => _create(list', _attachments)
+  
+  fun val with_list_push(x: val->Case): Cases => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -11614,6 +11636,8 @@ class val Args is AST
   
   fun val with_list(list': coll.Vec[Sequence]): Args => _create(list', _attachments)
   
+  fun val with_list_push(x: val->Sequence): Args => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -11700,6 +11724,8 @@ class val NamedArgs is AST
   fun val list(): coll.Vec[NamedArg] => _list
   
   fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => _create(list', _attachments)
+  
+  fun val with_list_push(x: val->NamedArg): NamedArgs => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -12334,6 +12360,8 @@ class val LambdaCaptures is AST
   
   fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => _create(list', _attachments)
   
+  fun val with_list_push(x: val->LambdaCapture): LambdaCaptures => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -12747,6 +12775,8 @@ class val Tuple is (AST & Expr)
   fun val elements(): coll.Vec[Sequence] => _elements
   
   fun val with_elements(elements': coll.Vec[Sequence]): Tuple => _create(elements', _attachments)
+  
+  fun val with_elements_push(x: val->Sequence): Tuple => with_elements(_elements.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -14620,6 +14650,8 @@ class val UnionType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type]): UnionType => _create(list', _attachments)
   
+  fun val with_list_push(x: val->Type): UnionType => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -14707,6 +14739,8 @@ class val IsectType is (AST & Type)
   
   fun val with_list(list': coll.Vec[Type]): IsectType => _create(list', _attachments)
   
+  fun val with_list_push(x: val->Type): IsectType => with_list(_list.push(x))
+  
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
     | "list" => _list(index')?
@@ -14793,6 +14827,8 @@ class val TupleType is (AST & Type)
   fun val list(): coll.Vec[Type] => _list
   
   fun val with_list(list': coll.Vec[Type]): TupleType => _create(list', _attachments)
+  
+  fun val with_list_push(x: val->Type): TupleType => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
@@ -16843,6 +16879,8 @@ class val Semicolon is (AST & Expr)
   fun val list(): coll.Vec[Expr] => _list
   
   fun val with_list(list': coll.Vec[Expr]): Semicolon => _create(list', _attachments)
+  
+  fun val with_list_push(x: val->Expr): Semicolon => with_list(_list.push(x))
   
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
     match child'
