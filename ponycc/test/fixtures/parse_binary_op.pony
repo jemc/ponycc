@@ -1,5 +1,5 @@
 """
-$POST_PARSE
+$PARSE
 $ERROR Operator precedence is not supported. Parentheses are required.
   fun apple(): U64 => 1 + 2 * 3 + 4 + 5
                             ^

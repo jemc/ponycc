@@ -37,15 +37,14 @@ class TestFixture is UnitTest
         i = j
         
         commands.unshift(
-          if line.at(triple)            then break
-          elseif line.at("$PRINT")      then TestCommand[_Print](h, line.substring(7))
-          elseif line.at("$PARSE")      then TestCommand[_Parse](h, line.substring(7))
-          elseif line.at("$POST_PARSE") then TestCommand[_PostParse](h, line.substring(11))
-          elseif line.at("$SYNTAX")     then TestCommand[_Syntax](h, line.substring(8))
-          elseif line.at("$SUGAR")      then TestCommand[_Sugar](h, line.substring(7))
-          elseif line.at("$ERROR")      then TestCommand[_Error](h, line.substring(7))
-          elseif line.at("$CHECK")      then TestCommand[_Check](h, line.substring(7))
-          else                               commands.shift()? .> add_line(line)
+          if line.at(triple)        then break
+          elseif line.at("$PRINT")  then TestCommand[_Print](h, line.substring(7))?
+          elseif line.at("$PARSE")  then TestCommand[_Parse](h, line.substring(7))?
+          elseif line.at("$SYNTAX") then TestCommand[_Syntax](h, line.substring(8))?
+          elseif line.at("$SUGAR")  then TestCommand[_Sugar](h, line.substring(7))?
+          elseif line.at("$ERROR")  then TestCommand[_Error](h, line.substring(7))?
+          elseif line.at("$CHECK")  then TestCommand[_Check](h, line.substring(7))?
+          else                           commands.shift()? .> add_line(line)
           end
         )
       end

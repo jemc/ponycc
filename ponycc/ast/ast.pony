@@ -18,6 +18,8 @@ trait val AST
 primitive ASTInfo
   fun name[A: (AST | None)](): String =>
     iftype A <: None then "x"
+    elseif A <: Program then "Program"
+    elseif A <: Package then "Package"
     elseif A <: Module then "Module"
     elseif A <: UsePackage then "UsePackage"
     elseif A <: UseFFIDecl then "UseFFIDecl"
@@ -320,6 +322,184 @@ trait val LocalRef is AST
 trait val UnaryOp is AST
   fun val expr(): Expr
   fun val with_expr(expr': Expr): UnaryOp
+
+class val Program is AST
+  let _attachments: (coll.Vec[Any val] | None)
+  
+  let _packages: coll.Vec[Package]
+  
+  new val create(
+    packages': (coll.Vec[Package] | Array[Package] val) = coll.Vec[Package])
+  =>_attachments = None
+    _packages = 
+      match packages'
+      | let v: coll.Vec[Package] => v
+      | let s: Array[Package] val => coll.Vec[Package].concat(s.values())
+      end
+  
+  new val _create(
+    packages': coll.Vec[Package],
+    attachments': (coll.Vec[Any val] | None) = None)
+  =>
+    _packages = packages'
+    _attachments = attachments'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    _attachments = coll.Vec[Any val].push(pos')
+    var packages' = coll.Vec[Package]
+    var packages_next' = try iter.next()? else None end
+    while true do
+      try packages' = packages'.push(packages_next' as Package) else break end
+      try packages_next' = iter.next()? else packages_next' = None; break end
+    end
+    if packages_next' isnt None then
+      let extra' = packages_next'
+      errs.push(("Program got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
+    end
+    
+    _packages = packages'
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Program](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _packages.values() do fn(x) end
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Program => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): Program => _create(_packages, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
+  fun val packages(): coll.Vec[Package] => _packages
+  
+  fun val with_packages(packages': coll.Vec[Package]): Program => _create(packages', _attachments)
+  
+  fun val with_packages_push(x: val->Package): Program => with_packages(_packages.push(x))
+  
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
+    match child'
+    | "packages" => _packages(index')?
+    else error
+    end
+  
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _packages.find(child' as Package)?
+        return _create(_packages.update(i, replace' as Package)?, _attachments)
+      end
+      error
+    else this
+    end
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Program")
+    s.push('(')
+    s.push('[')
+    for (i, v) in _packages.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
+      s.append(v.string())
+    end
+    s.push(']')
+    s.push(')')
+    consume s
+
+class val Package is AST
+  let _attachments: (coll.Vec[Any val] | None)
+  
+  let _modules: coll.Vec[Module]
+  
+  new val create(
+    modules': (coll.Vec[Module] | Array[Module] val) = coll.Vec[Module])
+  =>_attachments = None
+    _modules = 
+      match modules'
+      | let v: coll.Vec[Module] => v
+      | let s: Array[Module] val => coll.Vec[Module].concat(s.values())
+      end
+  
+  new val _create(
+    modules': coll.Vec[Module],
+    attachments': (coll.Vec[Any val] | None) = None)
+  =>
+    _modules = modules'
+    _attachments = attachments'
+  
+  new from_iter(
+    iter: Iterator[(AST | None)],
+    pos': SourcePosAny = SourcePosNone,
+    errs: Array[(String, SourcePosAny)] = [])?
+  =>
+    _attachments = coll.Vec[Any val].push(pos')
+    var modules' = coll.Vec[Module]
+    var modules_next' = try iter.next()? else None end
+    while true do
+      try modules' = modules'.push(modules_next' as Module) else break end
+      try modules_next' = iter.next()? else modules_next' = None; break end
+    end
+    if modules_next' isnt None then
+      let extra' = modules_next'
+      errs.push(("Package got unexpected extra field: " + extra'.string(), try (extra' as AST).pos() else SourcePosNone end)); error
+    end
+    
+    _modules = modules'
+  
+  fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Package](consume c, this)
+  fun val each(fn: {ref ((AST | None))} ref) =>
+    for x in _modules.values() do fn(x) end
+  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Package => attach[SourcePosAny](pos')
+  
+  fun val attach[A: Any val](a: A): Package => _create(_modules, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))
+  
+  fun val find_attached[A: Any val](): A? =>
+    for a in (_attachments as coll.Vec[Any val]).values() do
+      try return a as A end
+    end
+    error
+  fun val modules(): coll.Vec[Module] => _modules
+  
+  fun val with_modules(modules': coll.Vec[Module]): Package => _create(modules', _attachments)
+  
+  fun val with_modules_push(x: val->Module): Package => with_modules(_modules.push(x))
+  
+  fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? =>
+    match child'
+    | "modules" => _modules(index')?
+    else error
+    end
+  
+  fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
+    if child' is replace' then return this end
+    try
+      try
+        let i = _modules.find(child' as Module)?
+        return _create(_modules.update(i, replace' as Module)?, _attachments)
+      end
+      error
+    else this
+    end
+  
+  fun string(): String iso^ =>
+    let s = recover iso String end
+    s.append("Package")
+    s.push('(')
+    s.push('[')
+    for (i, v) in _modules.pairs() do
+      if i > 0 then s.>push(';').push(' ') end
+      s.append(v.string())
+    end
+    s.push(']')
+    s.push(')')
+    consume s
 
 class val Module is AST
   let _attachments: (coll.Vec[Any val] | None)

@@ -1,5 +1,5 @@
 """
-$POST_PARSE
+$PARSE
 $ERROR A method with a body cannot have a docstring in the signature.
   fun apple(): Bool "one bad docstring" => true
                     ^~~~~~~~~~~~~~~~~~~

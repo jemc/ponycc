@@ -6,7 +6,7 @@ use "../../unreachable"
 
 use coll = "collections/persistent"
 
-primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
+primitive Sugar is (Pass[Program, Program] & FrameVisitor[Sugar])
   """
   The purpose of the Sugar pass is to fill in implicit details and expand
   abbreviated forms to their more verbose equivalents.
@@ -18,7 +18,7 @@ primitive Sugar is (Pass[Module, Module] & FrameVisitor[Sugar])
   """
   fun name(): String => "sugar"
   
-  fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
+  fun apply(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
     FrameRunner[Sugar](ast, fn)
   
   fun _find_member(members: Members, name': String): (Method | Field | None) =>

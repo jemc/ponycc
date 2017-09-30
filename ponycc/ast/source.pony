@@ -1,13 +1,15 @@
 
 use "collections"
 
+type Sources is ReadSeq[Source] val
+
 interface val SourceAny
   fun content(): String
   fun path():    String
 
 primitive SourceNone is SourceAny
   fun content(): String => ""
-  fun path():    String => "(none)"
+  fun path():    String => ""
 
 class val Source is SourceAny
   let _content: String

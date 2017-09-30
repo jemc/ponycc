@@ -10,13 +10,13 @@ primitive FrameVisitorNone is FrameVisitor[FrameVisitorNone]
   fun visit[A: AST val](frame: Frame[FrameVisitorNone], a: A) => None
 
 actor FrameRunner[V: FrameVisitor[V]]
-  new create(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
+  new create(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
     let errors = _FrameErrors
     let frame  = Frame[V](ast, errors)
     frame._visit(ast)
     
-    let module = frame.module()
-    errors.complete({(errs) => fn(module, errs) })
+    let program = frame.program()
+    errors.complete({(errs) => fn(program, errs) })
 
 actor _FrameErrors
   embed _errs: Array[PassError] = _errs.create()
@@ -28,16 +28,18 @@ actor _FrameErrors
 
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: _FrameErrors
-  var _module: Module
+  var _program: Program
   
-  new create(module': Module, errors': _FrameErrors) =>
-    (_module, _errors) = (module', errors')
+  new create(program': Program, errors': _FrameErrors) =>
+    (_program, _errors) = (program', errors')
   
   fun err(a: AST, s: String) => _errors.err(a, s)
   
-  fun parent(n: USize): AST => _module // ignore n - we can't go any higher
-  fun ref replace(a: AST) => try _module = a as Module end
-  fun module(): Module => _module
+  fun parent(n: USize): AST => _program // ignore n - we can't go any higher
+  fun ref replace(a: AST) => try _program = a as Program end
+  fun program(): Program => _program
+  fun package(): (Package | None) => None
+  fun module(): (Module | None) => None
   fun type_decl(): (TypeDecl | None) => None
   fun method(): (Method | None) => None
   fun method_body(): (Sequence | None) => None
@@ -48,9 +50,9 @@ class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
   var _ast: AST
   
-  new create(module': Module, errors': _FrameErrors) =>
-    _upper = _FrameTop[V](module', errors')
-    _ast   = module'
+  new create(program': Program, errors': _FrameErrors) =>
+    _upper = _FrameTop[V](program', errors')
+    _ast   = program'
   
   new _create_under(upper': Frame[V], a: AST) =>
     _upper = upper'
@@ -97,11 +99,23 @@ class Frame[V: FrameVisitor[V]]
       _ast = replace'
     end
   
-  fun module(): Module =>
+  fun program(): Program =>
+    """
+    Get the nearest Program above this AST node.
+    """
+    _upper.program()
+  
+  fun package(): (Package | None) =>
+    """
+    Get the nearest Package above this AST node.
+    """
+    try _ast as Package else _upper.package() end
+  
+  fun module(): (Module | None) =>
     """
     Get the nearest Module above this AST node.
     """
-    _upper.module()
+    try _ast as Module else _upper.module() end
   
   fun type_decl(): (TypeDecl | None) =>
     """

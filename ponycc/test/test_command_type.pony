@@ -4,7 +4,6 @@ use "../ast"
 use "../ast/parse"
 use "../ast/print"
 use "../frame"
-use "../pass/post_parse"
 use "../pass/syntax"
 use "../pass/sugar"
 
@@ -43,30 +42,10 @@ primitive _Parse is TestCommandType
       })
       .apply(source)
 
-primitive _PostParse is TestCommandType
-  fun apply(command: TestCommandAny, source: Source) =>
-    BuildCompiler[Source, Module](Parse)
-      .next[Module](PostParse)
-      .on_errors({(pass, errs) =>
-        match pass | PostParse =>
-          command.check_errors(errs)
-          command.h().complete(true)
-        else
-          command.print_errors(errs)
-          command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
-        end
-      })
-      .on_complete({(module) =>
-        command.check_checks(module)
-        command.h().complete(true)
-      })
-      .apply(source)
-
 primitive _Syntax is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    BuildCompiler[Source, Module](Parse)
-      .next[Module](PostParse)
-      .next[Module](Syntax)
+    BuildCompiler[Sources, Program](ParseProgramFiles(command.auth()))
+      .next[Program](Syntax)
       .on_errors({(pass, errs) =>
         match pass | Syntax =>
           command.check_errors(errs)
@@ -80,14 +59,13 @@ primitive _Syntax is TestCommandType
         command.check_checks(module)
         command.h().complete(true)
       })
-      .apply(source)
+      .apply([source])
 
 primitive _Sugar is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    BuildCompiler[Source, Module](Parse)
-      .next[Module](PostParse)
-      .next[Module](Syntax)
-      .next[Module](Sugar)
+    BuildCompiler[Sources, Program](ParseProgramFiles(command.auth()))
+      .next[Program](Syntax)
+      .next[Program](Sugar)
       .on_errors({(pass, errs) =>
         match pass | Sugar =>
           command.check_errors(errs)
@@ -101,4 +79,4 @@ primitive _Sugar is TestCommandType
         command.check_checks(module)
         command.h().complete(true)
       })
-      .apply(source)
+      .apply([source])

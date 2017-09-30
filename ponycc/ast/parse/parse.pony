@@ -12,7 +12,12 @@ primitive Parse is Pass[Source, Module]
       module = try Parser(source, errs)? else Module end
       errs
     end
-    fn(module, errs)
+    
+    if errs.size() > 0 then
+      fn(module, errs)
+    else
+      ParseCleanup(module, fn)
+    end
 
 class val Parser
   let _lexer: _Lexer = _Lexer

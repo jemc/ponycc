@@ -1,5 +1,5 @@
 """
-$POST_PARSE
+$PARSE
 $CHECK type_decls-0.members.methods-0.return_type
 NominalType(Id(T), None, None, None, None)
 

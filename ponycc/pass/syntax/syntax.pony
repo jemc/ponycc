@@ -4,7 +4,7 @@ use "../../ast"
 use "../../frame"
 use "../../unreachable"
 
-primitive Syntax is (Pass[Module, Module] & FrameVisitor[Syntax])
+primitive Syntax is (Pass[Program, Program] & FrameVisitor[Syntax])
   """
   The purpose of the Syntax pass is to impose some extra limitation on the
   forms that are allowed in the Pony compiler, even when they are allowed
@@ -17,7 +17,7 @@ primitive Syntax is (Pass[Module, Module] & FrameVisitor[Syntax])
   """
   fun name(): String => "syntax"
   
-  fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
+  fun apply(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
     FrameRunner[Syntax](ast, fn)
   
   fun visit[A: AST val](frame: Frame[Syntax], ast: A) =>

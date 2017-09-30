@@ -5,6 +5,7 @@ use "../ast"
 
 interface val TestCommandAny
   fun h(): TestHelper
+  fun auth(): AmbientAuth
   
   fun ref add_line(l: String)
   fun ref add_error(e: TestCommand[_Error])
@@ -16,20 +17,22 @@ interface val TestCommandAny
   
   fun check_errors(actual_errors: Array[(String, SourcePosAny)] box)
   
-  fun check_checks(module: Module)
+  fun check_checks(program: Program)
 
 class val TestCommand[T: TestCommandType val]
-  let _h: TestHelper
+  let _h:    TestHelper
+  let _auth: AmbientAuth
   
   let message:  String
   embed lines:  Array[String]              = []
   embed errors: Array[TestCommand[_Error]] = []
   embed checks: Array[TestCommand[_Check]] = []
   
-  new iso create(h': TestHelper, m': String) =>
-    (_h, message) = (h', m')
+  new iso create(h': TestHelper, m': String)? =>
+    (_h, message, _auth) = (h', m', h'.env.root as AmbientAuth)
   
   fun h(): TestHelper => _h
+  fun auth(): AmbientAuth => _auth
   
   fun ref add_line(l: String) => lines.push(l)
   fun ref add_error(e: TestCommand[_Error]) => errors.push(e); e
@@ -75,7 +78,8 @@ class val TestCommand[T: TestCommandType val]
       print_errors(actual_errors)
     end
   
-  fun check_checks(module: Module) =>
+  fun check_checks(program: Program) =>
+    let module = try program.packages()(0)?.modules()(0)? end
     for check in checks.values() do
       var ast: (AST | None) = module
       var last_crumb: String = ""

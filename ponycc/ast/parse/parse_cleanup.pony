@@ -1,12 +1,12 @@
 
 use ".."
-use "../../ast"
 use "../../frame"
+use "../../pass"
 use "../../unreachable"
 
-primitive PostParse is (Pass[Module, Module] & FrameVisitor[PostParse])
+primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
   """
-  The purpose of the PostParse pass is to check and/or clean up any oddities
+  The purpose of the ParseCleanup pass is to check and/or clean up any oddities
   in the AST related to the specific implementation of the parser or grammar.
   
   Checks or cleanup operations that would also need to also be done for AST
@@ -15,12 +15,15 @@ primitive PostParse is (Pass[Module, Module] & FrameVisitor[PostParse])
   
   This pass changes the AST, and is not idempotent.
   """
-  fun name(): String => "post-parse"
+  fun name(): String => "parse-cleanup"
   
   fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
-    FrameRunner[PostParse](ast, fn)
+    let program = Program([Package([ast])])
+    FrameRunner[ParseCleanup](program, {(program, errs)(fn) =>
+      fn(try program.packages()(0)?.modules()(0)? else Module end, errs)
+    })
   
-  fun visit[A: AST val](frame: Frame[PostParse], ast: A) =>
+  fun visit[A: AST val](frame: Frame[ParseCleanup], ast: A) =>
     iftype A <: Method then
       match ast.body() | let body: Sequence =>
         try
