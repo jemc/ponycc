@@ -1,7 +1,7 @@
 
 use coll = "collections/persistent"
 use peg = "peg"
-use ".."
+use "../../ast"
 
 trait val TkAny is peg.Label
   fun text(): String => string() // Required for peg library, but otherwise unused.

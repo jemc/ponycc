@@ -1,6 +1,6 @@
 
 use ".."
-use "../../pass"
+use "../../ast"
 use "collections"
 
 class val ParseProgramFiles is Pass[Sources, Program]

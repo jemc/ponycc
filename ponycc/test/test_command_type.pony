@@ -1,9 +1,9 @@
 
 use ".."
 use "../ast"
-use "../ast/parse"
-use "../ast/print"
 use "../frame"
+use "../pass/print"
+use "../pass/parse"
 use "../pass/syntax"
 use "../pass/sugar"
 

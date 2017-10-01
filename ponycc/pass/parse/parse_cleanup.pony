@@ -1,7 +1,7 @@
 
 use ".."
+use "../../ast"
 use "../../frame"
-use "../../pass"
 use "../../unreachable"
 
 primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])

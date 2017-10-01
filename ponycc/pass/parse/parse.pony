@@ -1,6 +1,6 @@
 
 use ".."
-use "../../pass"
+use "../../ast"
 
 primitive Parse is Pass[Source, Module]
   fun name(): String => "parse"

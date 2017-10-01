@@ -1,5 +1,5 @@
 use peg = "peg"
-use ".."
+use "../../ast"
 use "debug"
 
 class _Parser

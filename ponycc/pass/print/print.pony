@@ -1,7 +1,7 @@
 
 use "collections"
 use ".."
-use "../../pass"
+use "../../ast"
 
 primitive _GenNewline
 primitive _GenIndentPush
