@@ -10,6 +10,13 @@ primitive FrameVisitorNone is FrameVisitor[FrameVisitorNone]
   fun visit[A: AST val](frame: Frame[FrameVisitorNone], a: A) => None
 
 actor FrameRunner[V: FrameVisitor[V]]
+  """
+  Visit all of the AST nodes in the given Program, using the given FrameVisitor.
+  
+  The order of visitation is depth-first, with children being visited before
+  their parent node is visited. Children have no knowledge of their parent,
+  other than through the separate Frame object that is part of the visitation.
+  """
   new create(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
     let errors = _FrameErrors
     let frame  = Frame[V](ast, errors)
@@ -59,11 +66,18 @@ class Frame[V: FrameVisitor[V]]
     _ast   = a
   
   fun ref _visit(ast: AST) =>
-    let frame = Frame[V]._create_under(this, ast) .> _visit_each()
+    """
+    Visit the given AST node in a new frame, after visiting its children.
+    """
+    let frame = Frame[V]._create_under(this, ast)
+    frame._visit_each()
     frame._ast.apply_specialised[Frame[V]](frame,
       {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
   
   fun ref _visit_each() =>
+    """
+    Visit each child of the current AST node.
+    """
     _ast.each({(child)(frame = this) => try frame._visit(child as AST) end })
   
   fun err(a: AST, s: String) =>
