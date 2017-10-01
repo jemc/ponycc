@@ -44,7 +44,8 @@ primitive _Parse is TestCommandType
 
 primitive _Syntax is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    BuildCompiler[Sources, Program](ParseProgramFiles(command.auth()))
+    let resolve_sources = ResolveSourceFiles(command.auth())
+    BuildCompiler[Sources, Program](ParseProgramFiles(resolve_sources))
       .next[Program](Syntax)
       .on_errors({(pass, errs) =>
         match pass | Syntax =>
@@ -63,7 +64,8 @@ primitive _Syntax is TestCommandType
 
 primitive _Sugar is TestCommandType
   fun apply(command: TestCommandAny, source: Source) =>
-    BuildCompiler[Sources, Program](ParseProgramFiles(command.auth()))
+    let resolve_sources = ResolveSourceFiles(command.auth())
+    BuildCompiler[Sources, Program](ParseProgramFiles(resolve_sources))
       .next[Program](Syntax)
       .next[Program](Sugar)
       .on_errors({(pass, errs) =>
