@@ -67,49 +67,28 @@ class ASTGenDefFixed is ASTGenDef
         g.add(field_type)
       end
       if field_default.size() > 0 then g.add(" = " + field_default) end
-      if iter.has_next() then g.add(",") end
-    end
-    g.add(")")
-    g.pop_indent()
-    if fields.size() == 0 then
-      g.add(" => _attachments = None")
-    else
-      g.line("=>")
-      g.push_indent()
-      g.add("_attachments = None")
-      for (field_name, field_type, _) in fields.values() do
-        g.line("_" + field_name + " = ")
-        if field_type.at("coll.Vec[") then
-          let elem_type: String = field_type.substring(9, -1)
-          g.push_indent()
-          g.line("match " + field_name + "'")
-          g.line("| let v: coll.Vec[" + elem_type + "] => v")
-          g.line("| let s: Array[" + elem_type + "] val => ")
-          g.add("coll.Vec[" + elem_type + "].concat(s.values())")
-          g.line("end")
-          g.pop_indent()
-        else
-          g.add(field_name + "'")
-        end
-      end
-      g.pop_indent()
-    end
-    g.line()
-    
-    // Declare a constructor that sets all fields (and _attachments).
-    g.line("new val _create(")
-    g.push_indent()
-    for (field_name, field_type, _) in fields.values() do
-      g.line(field_name + "': " + field_type + ",")
+      g.add(",")
     end
     g.line("attachments': (coll.Vec[Any val] | None) = None)")
     g.pop_indent()
     g.line("=>")
     g.push_indent()
+    g.add("_attachments = attachments'")
     for (field_name, field_type, _) in fields.values() do
-      g.line("_" + field_name + " = " + field_name + "'")
+      g.line("_" + field_name + " = ")
+      if field_type.at("coll.Vec[") then
+        let elem_type: String = field_type.substring(9, -1)
+        g.push_indent()
+        g.line("match " + field_name + "'")
+        g.line("| let v: coll.Vec[" + elem_type + "] => v")
+        g.line("| let s: Array[" + elem_type + "] val => ")
+        g.add("coll.Vec[" + elem_type + "].concat(s.values())")
+        g.line("end")
+        g.pop_indent()
+      else
+        g.add(field_name + "'")
+      end
     end
-    g.line("_attachments = attachments'")
     g.pop_indent()
     g.line()
     
@@ -226,7 +205,7 @@ class ASTGenDefFixed is ASTGenDef
     g.line()
     
     g.line("fun val attach[A: Any val](a: A): " + _name)
-    g.add(" => _create(")
+    g.add(" => create(")
     for (field_name, _, _) in fields.values() do
       g.add("_" + field_name + ", ")
     end
@@ -254,7 +233,7 @@ class ASTGenDefFixed is ASTGenDef
     for (field_name, field_type, _) in fields.values() do
       g.line("fun val with_" + field_name + "(")
       g.add(field_name + "': " + field_type + "): " + _name)
-      g.add(" => _create(")
+      g.add(" => create(")
       for (other_field_name, _, _) in fields.values() do
         if other_field_name == field_name then
           g.add(field_name + "', ")
@@ -316,7 +295,7 @@ class ASTGenDefFixed is ASTGenDef
         g.line("try")
         g.push_indent()
         g.line("let i = _" + field_name + ".find(child' as " + elem_type + ")?")
-        g.line("return _create(")
+        g.line("return create(")
         for (other_field_name, _, _) in fields.values() do
           if other_field_name == field_name then
             g.add("_" + field_name + ".update(i, replace' as " + elem_type + ")?, ")
@@ -330,7 +309,7 @@ class ASTGenDefFixed is ASTGenDef
       else
         g.line("if child' is _" + field_name + " then")
         g.push_indent()
-        g.line("return _create(")
+        g.line("return create(")
         for (other_field_name, _, _) in fields.values() do
           if other_field_name == field_name then
             g.add("replace' as " + field_type + ", ")
@@ -418,15 +397,8 @@ class ASTGenDefWrap is ASTGenDef
     // Declare the value field.
     g.line("let _value: " + _value_type)
     
-    // Declare a constructor that initializes the value field from a parameter.
-    g.line("new val create(value': " + _value_type + ") =>")
-    g.push_indent()
-    g.line("_value = value'")
-    g.line("_attachments = None")
-    g.pop_indent()
-    
     // Declare a constructor that initializes the value and pos from parameters.
-    g.line("new val _create(value': " + _value_type + ", ")
+    g.line("new val create(value': " + _value_type + ", ")
     g.add("attachments': (coll.Vec[Any val] | None) = None) =>")
     g.push_indent()
     g.line("_value = value'")
@@ -485,7 +457,7 @@ class ASTGenDefWrap is ASTGenDef
     g.line()
     
     g.line("fun val attach[A: Any val](a: A): " + _name)
-    g.add(" => _create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))")
+    g.add(" => create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))")
     
     g.line("fun val find_attached[A: Any val](): A? =>")
     g.push_indent()
@@ -502,7 +474,7 @@ class ASTGenDefWrap is ASTGenDef
     g.line("fun val value(): " + _value_type + " => _value")
     
     // Declare a setter methods for the value field.
-    g.line("fun val with_value(value': " + _value_type + "): " + _name + " => _create(value', _attachments)")
+    g.line("fun val with_value(value': " + _value_type + "): " + _name + " => create(value', _attachments)")
     
     // Declare a string method to print itself.
     g.line("fun string(): String iso^ =>")
