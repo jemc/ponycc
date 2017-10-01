@@ -372,7 +372,7 @@ class val Program is AST
     error
   fun val packages(): coll.Vec[Package] => _packages
   
-  fun val with_packages(packages': coll.Vec[Package]): Program => create(packages', _attachments)
+  fun val with_packages(packages': (coll.Vec[Package] | Array[Package] val)): Program => create(packages', _attachments)
   
   fun val with_packages_push(x: val->Package): Program => with_packages(_packages.push(x))
   
@@ -455,7 +455,7 @@ class val Package is AST
     error
   fun val modules(): coll.Vec[Module] => _modules
   
-  fun val with_modules(modules': coll.Vec[Module]): Package => create(modules', _attachments)
+  fun val with_modules(modules': (coll.Vec[Module] | Array[Module] val)): Package => create(modules', _attachments)
   
   fun val with_modules_push(x: val->Module): Package => with_modules(_modules.push(x))
   
@@ -567,8 +567,8 @@ class val Module is AST
   fun val type_decls(): coll.Vec[TypeDecl] => _type_decls
   fun val docs(): (LitString | None) => _docs
   
-  fun val with_use_decls(use_decls': coll.Vec[UseDecl]): Module => create(use_decls', _type_decls, _docs, _attachments)
-  fun val with_type_decls(type_decls': coll.Vec[TypeDecl]): Module => create(_use_decls, type_decls', _docs, _attachments)
+  fun val with_use_decls(use_decls': (coll.Vec[UseDecl] | Array[UseDecl] val)): Module => create(use_decls', _type_decls, _docs, _attachments)
+  fun val with_type_decls(type_decls': (coll.Vec[TypeDecl] | Array[TypeDecl] val)): Module => create(_use_decls, type_decls', _docs, _attachments)
   fun val with_docs(docs': (LitString | None)): Module => create(_use_decls, _type_decls, docs', _attachments)
   
   fun val with_use_decls_push(x: val->UseDecl): Module => with_use_decls(_use_decls.push(x))
@@ -2124,8 +2124,8 @@ class val Members is AST
   fun val fields(): coll.Vec[Field] => _fields
   fun val methods(): coll.Vec[Method] => _methods
   
-  fun val with_fields(fields': coll.Vec[Field]): Members => create(fields', _methods, _attachments)
-  fun val with_methods(methods': coll.Vec[Method]): Members => create(_fields, methods', _attachments)
+  fun val with_fields(fields': (coll.Vec[Field] | Array[Field] val)): Members => create(fields', _methods, _attachments)
+  fun val with_methods(methods': (coll.Vec[Method] | Array[Method] val)): Members => create(_fields, methods', _attachments)
   
   fun val with_fields_push(x: val->Field): Members => with_fields(_fields.push(x))
   
@@ -3161,7 +3161,7 @@ class val TypeParams is AST
     error
   fun val list(): coll.Vec[TypeParam] => _list
   
-  fun val with_list(list': coll.Vec[TypeParam]): TypeParams => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[TypeParam] | Array[TypeParam] val)): TypeParams => create(list', _attachments)
   
   fun val with_list_push(x: val->TypeParam): TypeParams => with_list(_list.push(x))
   
@@ -3351,7 +3351,7 @@ class val TypeArgs is AST
     error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): TypeArgs => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): TypeArgs => create(list', _attachments)
   
   fun val with_list_push(x: val->Type): TypeArgs => with_list(_list.push(x))
   
@@ -3447,7 +3447,7 @@ class val Params is AST
   fun val list(): coll.Vec[Param] => _list
   fun val ellipsis(): (Ellipsis | None) => _ellipsis
   
-  fun val with_list(list': coll.Vec[Param]): Params => create(list', _ellipsis, _attachments)
+  fun val with_list(list': (coll.Vec[Param] | Array[Param] val)): Params => create(list', _ellipsis, _attachments)
   fun val with_ellipsis(ellipsis': (Ellipsis | None)): Params => create(_list, ellipsis', _attachments)
   
   fun val with_list_push(x: val->Param): Params => with_list(_list.push(x))
@@ -3644,7 +3644,7 @@ class val Sequence is (AST & Expr)
     error
   fun val list(): coll.Vec[Expr] => _list
   
-  fun val with_list(list': coll.Vec[Expr]): Sequence => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Expr] | Array[Expr] val)): Sequence => create(list', _attachments)
   
   fun val with_list_push(x: val->Expr): Sequence => with_list(_list.push(x))
   
@@ -5305,7 +5305,7 @@ class val IdTuple is (AST & Expr)
     error
   fun val elements(): coll.Vec[(Id | IdTuple)] => _elements
   
-  fun val with_elements(elements': coll.Vec[(Id | IdTuple)]): IdTuple => create(elements', _attachments)
+  fun val with_elements(elements': (coll.Vec[(Id | IdTuple)] | Array[(Id | IdTuple)] val)): IdTuple => create(elements', _attachments)
   
   fun val with_elements_push(x: val->(Id | IdTuple)): IdTuple => with_elements(_elements.push(x))
   
@@ -5388,7 +5388,7 @@ class val AssignTuple is AST
     error
   fun val elements(): coll.Vec[Assign] => _elements
   
-  fun val with_elements(elements': coll.Vec[Assign]): AssignTuple => create(elements', _attachments)
+  fun val with_elements(elements': (coll.Vec[Assign] | Array[Assign] val)): AssignTuple => create(elements', _attachments)
   
   fun val with_elements_push(x: val->Assign): AssignTuple => with_elements(_elements.push(x))
   
@@ -5578,7 +5578,7 @@ class val Cases is AST
     error
   fun val list(): coll.Vec[Case] => _list
   
-  fun val with_list(list': coll.Vec[Case]): Cases => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Case] | Array[Case] val)): Cases => create(list', _attachments)
   
   fun val with_list_push(x: val->Case): Cases => with_list(_list.push(x))
   
@@ -10856,7 +10856,7 @@ class val Args is AST
     error
   fun val list(): coll.Vec[Sequence] => _list
   
-  fun val with_list(list': coll.Vec[Sequence]): Args => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Sequence] | Array[Sequence] val)): Args => create(list', _attachments)
   
   fun val with_list_push(x: val->Sequence): Args => with_list(_list.push(x))
   
@@ -10939,7 +10939,7 @@ class val NamedArgs is AST
     error
   fun val list(): coll.Vec[NamedArg] => _list
   
-  fun val with_list(list': coll.Vec[NamedArg]): NamedArgs => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[NamedArg] | Array[NamedArg] val)): NamedArgs => create(list', _attachments)
   
   fun val with_list_push(x: val->NamedArg): NamedArgs => with_list(_list.push(x))
   
@@ -11516,7 +11516,7 @@ class val LambdaCaptures is AST
     error
   fun val list(): coll.Vec[LambdaCapture] => _list
   
-  fun val with_list(list': coll.Vec[LambdaCapture]): LambdaCaptures => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[LambdaCapture] | Array[LambdaCapture] val)): LambdaCaptures => create(list', _attachments)
   
   fun val with_list_push(x: val->LambdaCapture): LambdaCaptures => with_list(_list.push(x))
   
@@ -11898,7 +11898,7 @@ class val Tuple is (AST & Expr)
     error
   fun val elements(): coll.Vec[Sequence] => _elements
   
-  fun val with_elements(elements': coll.Vec[Sequence]): Tuple => create(elements', _attachments)
+  fun val with_elements(elements': (coll.Vec[Sequence] | Array[Sequence] val)): Tuple => create(elements', _attachments)
   
   fun val with_elements_push(x: val->Sequence): Tuple => with_elements(_elements.push(x))
   
@@ -13637,7 +13637,7 @@ class val UnionType is (AST & Type)
     error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): UnionType => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): UnionType => create(list', _attachments)
   
   fun val with_list_push(x: val->Type): UnionType => with_list(_list.push(x))
   
@@ -13720,7 +13720,7 @@ class val IsectType is (AST & Type)
     error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): IsectType => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): IsectType => create(list', _attachments)
   
   fun val with_list_push(x: val->Type): IsectType => with_list(_list.push(x))
   
@@ -13803,7 +13803,7 @@ class val TupleType is (AST & Type)
     error
   fun val list(): coll.Vec[Type] => _list
   
-  fun val with_list(list': coll.Vec[Type]): TupleType => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): TupleType => create(list', _attachments)
   
   fun val with_list_push(x: val->Type): TupleType => with_list(_list.push(x))
   
@@ -15704,7 +15704,7 @@ class val Semicolon is (AST & Expr)
     error
   fun val list(): coll.Vec[Expr] => _list
   
-  fun val with_list(list': coll.Vec[Expr]): Semicolon => create(list', _attachments)
+  fun val with_list(list': (coll.Vec[Expr] | Array[Expr] val)): Semicolon => create(list', _attachments)
   
   fun val with_list_push(x: val->Expr): Semicolon => with_list(_list.push(x))
   

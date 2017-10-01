@@ -232,7 +232,14 @@ class ASTGenDefFixed is ASTGenDef
     // Declare setter methods for all fields.
     for (field_name, field_type, _) in fields.values() do
       g.line("fun val with_" + field_name + "(")
-      g.add(field_name + "': " + field_type + "): " + _name)
+      g.add(field_name + "': ")
+      if field_type.at("coll.Vec[") then
+        let elem_type: String = field_type.substring(9, -1)
+        g.add("(" + field_type + " | Array[" + elem_type + "] val)")
+      else
+        g.add(field_type)
+      end
+      g.add("): " + _name)
       g.add(" => create(")
       for (other_field_name, _, _) in fields.values() do
         if other_field_name == field_name then
