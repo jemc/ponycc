@@ -7,11 +7,11 @@ class val ParseProgramFiles is Pass[Sources, Program]
   """
   TODO: Docs for this agreggated pass
   """
-  let _resolve_sources: {(String, String): Sources?} val
+  let _resolve_sources: {(String, String): (String, Sources)?} val
   
   fun name(): String => "parse-program-files"
   
-  new val create(resolve_sources': {(String, String): Sources?} val) =>
+  new val create(resolve_sources': {(String, String): (String, Sources)?} val) =>
     _resolve_sources = resolve_sources'
   
   fun apply(sources: Sources, fn: {(Program, Array[PassError] val)} val) =>
@@ -22,10 +22,10 @@ actor _ParseProgramFilesEngine
   let _packages: Array[(Package, Array[Module])] = _packages.create()
   var _errs: Array[PassError] trn                = []
   let _complete_fn: {(Program, Array[PassError] val)} val
-  let _resolve_sources: {(String, String): Sources?} val
+  let _resolve_sources: {(String, String): (String, Sources)?} val
   
   new create(
-    resolve_sources': {(String, String): Sources?} val,
+    resolve_sources': {(String, String): (String, Sources)?} val,
     complete_fn': {(Program, Array[PassError] val)} val)
   =>
     (_resolve_sources, _complete_fn) = (resolve_sources', complete_fn')
@@ -55,7 +55,7 @@ actor _ParseProgramFilesEngine
     for use_decl in module.use_decls().values() do
       match use_decl | let u: UsePackage =>
         try
-          let sources =
+          (let package_path, let sources) =
             _resolve_sources(u.pos().source().path(), u.package().value())?
           
           // TODO: assign same Uuid to Packages with the same absolute path.

@@ -19,7 +19,7 @@ class val ResolveSourceFiles
     """
     (_auth, _search_paths) = (auth', search_paths')
   
-  fun apply(start_path: String, path: String): Sources? =>
+  fun apply(start_path: String, path: String): (String, Sources)? =>
     """
     Given the path of a file or directory to start with, find a directory
     that exists relative to that starting path or one of the other search paths,
@@ -38,7 +38,7 @@ class val ResolveSourceFiles
         sources.push(Source(content, file_path.path))
       end
     end
-    consume sources
+    (dir_path.path, consume sources)
   
   fun _find_dir(start_path: String, path: String): FilePath? =>
     """
