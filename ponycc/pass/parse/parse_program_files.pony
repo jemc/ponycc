@@ -18,9 +18,9 @@ class val ParseProgramFiles is Pass[Sources, Program]
     _ParseProgramFilesEngine(_resolve_sources, fn).start(sources)
 
 actor _ParseProgramFilesEngine
-  let _pending: SetIs[Source]                    = _pending.create()
-  let _packages: Array[(Package, Array[Module])] = _packages.create()
-  var _errs: Array[PassError] trn                = []
+  let _pending: SetIs[Source]     = _pending.create()
+  let _packages: Array[Package]   = []
+  var _errs: Array[PassError] trn = []
   let _complete_fn: {(Program, Array[PassError] val)} val
   let _resolve_sources: {(String, String): (String, Sources)?} val
   
@@ -30,8 +30,7 @@ actor _ParseProgramFilesEngine
   =>
     (_resolve_sources, _complete_fn) = (resolve_sources', complete_fn')
   
-  be start(sources: Sources, package_uuid: Uuid = Uuid) =>
-    let package = Package.attach[Uuid](package_uuid)
+  be start(sources: Sources, package: Package = Package) =>
     for source in sources.values() do
       _pending.set(source)
       let this_tag: _ParseProgramFilesEngine = this
@@ -50,36 +49,37 @@ actor _ParseProgramFilesEngine
     // Take note of any errors.
     for err in errs.values() do _errs.push(err) end
     
+    let use_packages = Array[UsePackage]
+    
     // Call start for the source files of any referenced packages.
-    let new_use_decls: Array[UseDecl] trn = []
-    for use_decl in module.use_decls().values() do
-      match use_decl | let u: UsePackage =>
+    for u' in module.use_decls().values() do
+      match u'
+      | let u: UseFFIDecl => package.add_ffi_decl(u)
+      | let u: UsePackage =>
         try
           (let package_path, let sources) =
             _resolve_sources(u.pos().source().path(), u.package().value())?
           
-          // TODO: assign same Uuid to Packages with the same absolute path.
-          let package_uuid = Uuid
-          new_use_decls.push(u.attach[Uuid](package_uuid))
-          start(sources, package_uuid)
+          // TODO: assign same Package to packages with the same absolute path.
+          let new_package = Package
+          use_packages.push(u.attach[Package](new_package))
+          start(sources, new_package)
         else
           _errs.push(
             ("Couldn't resolve this package directory.", u.package().pos()))
         end
-      else
-        new_use_decls.push(use_decl)
       end
     end
-    module = module.with_use_decls(consume new_use_decls)
     
-    // Take note of this module as being within this package.
-    try
-      let idx = _packages.find(
-        (package, []) where predicate = {(l, r) => l._1 is r._1 })?
-      _packages(idx)?._2.push(module)
-    else
-      _packages.push((package, [module]))
+    for t in module.type_decls().values() do
+      let type_decl = PackageTypeDecl(t)
+      for u in use_packages.values() do type_decl.add_use_package(u) end
+      package.add_type_decl(type_decl)
     end
+    
+    try package.add_doc(module.docs() as LitString) end
+    
+    _packages.push(package)
     
     _maybe_complete()
   
@@ -92,15 +92,11 @@ actor _ParseProgramFilesEngine
     if _pending.size() == 0 then _complete() end
   
   fun ref _complete() =>
-    let packages: Array[Package] trn = []
+    let program = Program
     
     // Collect the modules into packages.
-    try while true do
-      (var package, let modules) = _packages.pop()?
-      for module in modules.values() do
-        package = package.with_modules_push(module)
-      end
-      packages.push(package)
-    end end
+    for package in _packages.values() do
+      program.add_package(package)
+    end
     
-    _complete_fn(Program(consume packages), _errs = [])
+    _complete_fn(program, _errs = [])

@@ -45,7 +45,7 @@ class ASTGenDefFixed is ASTGenDef
     g.push_indent()
     
     // Declare common fields.
-    g.line("let _attachments: (coll.Vec[Any val] | None)")
+    g.line("let _attachments: (Attachments | None)")
     g.line()
     
     // Declare all fields.
@@ -69,7 +69,7 @@ class ASTGenDefFixed is ASTGenDef
       if field_default.size() > 0 then g.add(" = " + field_default) end
       g.add(",")
     end
-    g.line("attachments': (coll.Vec[Any val] | None) = None)")
+    g.line("attachments': (Attachments | None) = None)")
     g.pop_indent()
     g.line("=>")
     g.push_indent()
@@ -101,7 +101,7 @@ class ASTGenDefFixed is ASTGenDef
         errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
-    g.line("_attachments = coll.Vec[Any val].push(pos')")
+    g.line("_attachments = Attachments.attach[SourcePosAny](pos')")
     
     var iter_next = "iter.next()?"
     for (field_name, field_type, field_default) in fields.values() do
@@ -204,23 +204,15 @@ class ASTGenDefFixed is ASTGenDef
     g.add(" => attach[SourcePosAny](pos')")
     g.line()
     
-    g.line("fun val attach[A: Any val](a: A): " + _name)
+    g.line("fun val attach[A: Any #share](a: A): " + _name)
     g.add(" => create(")
     for (field_name, _, _) in fields.values() do
       g.add("_" + field_name + ", ")
     end
-    g.add("(try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))")
+    g.add("(try _attachments as Attachments else Attachments end).attach[A](a))")
     g.line()
     
-    g.line("fun val find_attached[A: Any val](): A? =>")
-    g.push_indent()
-    g.line("for a in (_attachments as coll.Vec[Any val]).values() do")
-    g.push_indent()
-    g.line("try return a as A end")
-    g.pop_indent()
-    g.line("end")
-    g.line("error")
-    g.pop_indent()
+    g.line("fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?")
     
     // Declare getter methods for all fields.
     for (field_name, field_type, _) in fields.values() do
@@ -399,14 +391,14 @@ class ASTGenDefWrap is ASTGenDef
     g.push_indent()
     
     // Declare common fields.
-    g.line("let _attachments: (coll.Vec[Any val] | None)")
+    g.line("let _attachments: (Attachments | None)")
     
     // Declare the value field.
     g.line("let _value: " + _value_type)
     
     // Declare a constructor that initializes the value and pos from parameters.
     g.line("new val create(value': " + _value_type + ", ")
-    g.add("attachments': (coll.Vec[Any val] | None) = None) =>")
+    g.add("attachments': (Attachments | None) = None) =>")
     g.push_indent()
     g.line("_value = value'")
     g.line("_attachments = attachments'")
@@ -421,7 +413,7 @@ class ASTGenDefWrap is ASTGenDef
         errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
-    g.line("_attachments = coll.Vec[Any val].push(pos')")
+    g.line("_attachments = Attachments.attach[SourcePosAny](pos')")
     g.line("_value =")
     g.push_indent()
     g.line("try")
@@ -463,19 +455,10 @@ class ASTGenDefWrap is ASTGenDef
     g.add(" => attach[SourcePosAny](pos')")
     g.line()
     
-    g.line("fun val attach[A: Any val](a: A): " + _name)
-    g.add(" => create(_value, (try _attachments as coll.Vec[Any val] else coll.Vec[Any val] end).push(a))")
+    g.line("fun val attach[A: Any #share](a: A): " + _name)
+    g.add(" => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))")
     
-    g.line("fun val find_attached[A: Any val](): A? =>")
-    g.push_indent()
-    g.line("for a in (_attachments as coll.Vec[Any val]).values() do")
-    g.push_indent()
-    g.line("try return a as A end")
-    g.pop_indent()
-    g.line("end")
-    g.line("error")
-    g.pop_indent()
-    g.line()
+    g.line("fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?")
     
     // Declare a getter method for the value field.
     g.line("fun val value(): " + _value_type + " => _value")
@@ -551,8 +534,8 @@ class ASTGenDefLexeme is ASTGenDef
     g.line("fun val pos(): SourcePosAny => SourcePosNone")
     g.line("fun val with_pos(pos': SourcePosAny): " + _name + " => create()")
     g.line()
-    g.line("fun val attach[A: Any val](a: A): AST => this")
-    g.line("fun val find_attached[A: Any val](): A? => error")
+    g.line("fun val attach[A: Any #share](a: A): AST => this")
+    g.line("fun val find_attached[A: Any #share](): A? => error")
     g.line()
     
     // Declare a string method to print itself.
@@ -560,6 +543,67 @@ class ASTGenDefLexeme is ASTGenDef
     g.push_indent()
     g.line("recover String.>append(\"" + _name + "\") end")
     g.pop_indent()
+    
+    g.pop_indent()
+    g.line()
+
+class ASTGenDefActor is ASTGenDef
+  let _gen: ASTGen
+  let _name: String
+  let vars: Array[(String, String, String)] = []
+  let lists: Array[(String, String, String)] = []
+  
+  new create(g: ASTGen, n: String) =>
+    (_gen, _name) = (g, n)
+    _gen.defs.push(this)
+  
+  fun name(): String => _name
+  
+  fun ref has_list(n: String, e: String, t: String) => lists.push((n, e, t))
+  
+  fun ref has_var(n: String, t: String, d: String = "") => vars.push((n, t, d))
+  
+  fun code_gen(g: CodeGen) =>
+    g.line("actor " + _name)
+    g.push_indent()
+    
+    // Declare fields.
+    for (list_name, _, elem_type) in lists.values() do
+      g.line("let _" + list_name + ": Array[" + elem_type + "] = []")
+    end
+    for (var_name, var_type, _) in vars.values() do
+      g.line("var _" + var_name + ": " + var_type)
+    end
+    
+    // Declare constructor.
+    g.line("new create(")
+    for (idx, (var_name, var_type, var_default)) in vars.pairs() do
+      if idx > 0 then g.add(", ") end
+      g.add(var_name + "': " + var_type)
+      if var_default != "" then g.add(" = " + var_default) end
+    end
+    g.add(") => ")
+    for (idx, (var_name, _, _)) in vars.pairs() do
+      if idx > 0 then g.add("; ") end
+      g.add("_" + var_name + " = " + var_name + "'")
+    else
+      g.add("None")
+    end
+    
+    // Declare field access methods.
+    for (list_name, elem_name, elem_type) in lists.values() do
+      g.line("be add_" + elem_name + "(e: " + elem_type + ") =>")
+      g.add(" _" + list_name + ".push(e)")
+      
+      g.line("be access_" + list_name)
+      g.add("(fn: {(Array[" + elem_type + "])} val) =>")
+      g.add(" fn(_" + list_name + ")")
+    end
+    for (var_name, var_type, _) in vars.values() do
+      g.line("be access_" + var_name)
+      g.add("(fn: {(" + var_type + "): " + var_type + "} val) =>")
+      g.add(" _" + var_name + "= fn(_" + var_name + ")")
+    end
     
     g.pop_indent()
     g.line()

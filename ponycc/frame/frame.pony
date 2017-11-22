@@ -11,43 +11,80 @@ primitive FrameVisitorNone is FrameVisitor[FrameVisitorNone]
 
 actor FrameRunner[V: FrameVisitor[V]]
   """
-  Visit all of the AST nodes in the given Program, using the given FrameVisitor.
+  Visit all of the AST nodes in the given program, using the given FrameVisitor.
   
   The order of visitation is depth-first, with children being visited before
   their parent node is visited. Children have no knowledge of their parent,
   other than through the separate Frame object that is part of the visitation.
   """
-  new create(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
-    let errors = _FrameErrors
-    let frame  = Frame[V](ast, errors)
-    frame._visit(ast)
+  new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
+    let errors = _FrameErrors({(errs) => fn(program, errs) })
     
-    let program = frame.program()
-    errors.complete({(errs) => fn(program, errs) })
+    // TODO: figure out how to abstract this somehow.
+    program.access_packages({(packages)(program, errors) =>
+      errors.push_expectation()
+      for package in packages.values() do
+        errors.push_expectation()
+        package.access_type_decls({(type_decls)(program, package, errors) =>
+          for type_decl in type_decls.values() do
+            errors.push_expectation()
+            type_decl.access_type_decl({(ast)(program, package, type_decl, errors) =>
+              let top = _FrameTop[V](program, package, type_decl, ast, errors)
+              let frame = Frame[V]._create_under(top, ast)
+              frame._visit(ast)
+              errors.pop_expectation()
+              top.type_decl()
+            })
+          end
+          errors.pop_expectation()
+        })
+      end
+      errors.pop_expectation()
+    })
 
 actor _FrameErrors
   embed _errs: Array[PassError] = _errs.create()
+  var _expectations: USize = 0
+  let _complete_fn: {(Array[PassError] val)} val
+  
+  new create(complete_fn': {(Array[PassError] val)} val) =>
+    _complete_fn = complete_fn'
+  
   be err(a: AST, s: String) => _errs.push((s, a.pos()))
-  be complete(fn: {(Array[PassError] val)} val) =>
+  
+  be push_expectation() => _expectations = _expectations + 1
+  be pop_expectation() =>
+    if 0 <= (_expectations = _expectations - 1) then complete() end
+  
+  be complete() =>
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
-    fn(consume copy)
+    _complete_fn(consume copy)
 
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: _FrameErrors
-  var _program: Program
+  let _program: Program
+  let _package: Package
+  let _type_decl: PackageTypeDecl
+  var _ast: TypeDecl
   
-  new create(program': Program, errors': _FrameErrors) =>
-    (_program, _errors) = (program', errors')
+  new create(
+    program': Program,
+    package': Package,
+    type_decl': PackageTypeDecl,
+    ast': TypeDecl,
+    errors': _FrameErrors)
+  =>
+    (_program, _package, _type_decl, _ast, _errors) =
+      (program', package', type_decl', ast', errors')
   
   fun err(a: AST, s: String) => _errors.err(a, s)
   
-  fun parent(n: USize): AST => _program // ignore n - we can't go any higher
-  fun ref replace(a: AST) => try _program = a as Program end
+  fun parent(n: USize): AST => _ast // ignore n - we can't go any higher
+  fun ref replace(a: AST) => try _ast = a as TypeDecl end
   fun program(): Program => _program
-  fun package(): (Package | None) => None
-  fun module(): (Module | None) => None
-  fun type_decl(): (TypeDecl | None) => None
+  fun package(): Package => _package
+  fun type_decl(): TypeDecl => _ast
   fun method(): (Method | None) => None
   fun method_body(): (Sequence | None) => None
   fun constraint(): (Type | None) => None
@@ -57,11 +94,7 @@ class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
   var _ast: AST
   
-  new create(program': Program, errors': _FrameErrors) =>
-    _upper = _FrameTop[V](program', errors')
-    _ast   = program'
-  
-  new _create_under(upper': Frame[V], a: AST) =>
+  new _create_under(upper': (Frame[V] | _FrameTop[V]), a: AST) =>
     _upper = upper'
     _ast   = a
   
@@ -119,23 +152,17 @@ class Frame[V: FrameVisitor[V]]
     """
     _upper.program()
   
-  fun package(): (Package | None) =>
+  fun package(): Package =>
     """
     Get the nearest Package above this AST node.
     """
-    try _ast as Package else _upper.package() end
+    _upper.package()
   
-  fun module(): (Module | None) =>
-    """
-    Get the nearest Module above this AST node.
-    """
-    try _ast as Module else _upper.module() end
-  
-  fun type_decl(): (TypeDecl | None) =>
+  fun type_decl(): TypeDecl =>
     """
     Get the nearest TypeDecl above this AST node.
     """
-    try _ast as TypeDecl else _upper.type_decl() end
+    _upper.type_decl()
   
   fun method(): (Method | None) =>
     """

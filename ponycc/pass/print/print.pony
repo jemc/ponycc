@@ -88,7 +88,7 @@ primitive Print is Pass[Module, String]
     g.write("use @")
     _show(g, x.name())
     _show(g, x.return_type())
-    try _show(g, x.params() as Params) else g.write("()") end
+    _show(g, x.params())
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
     try let e = x.guard() as IfDefCond; g.write(" if "); _show(g, e) end
   
@@ -114,7 +114,7 @@ primitive Print is Pass[Module, String]
     try let p = x.provides() as Type; g.write(" is "); _show(g, p) end
     g.push_indent()
     try let d = x.docs() as LitString; g.line(); g.write(d.pos().string()) end // TODO: less cheating...
-    try _show(g, x.members() as Members) end
+    _show(g, x.members())
     g.pop_indent()
   
   fun _show(g: _Gen, x: Members) =>
@@ -136,7 +136,8 @@ primitive Print is Pass[Module, String]
       end)
     
     _show(g, x.name())
-    try let t = x.field_type() as Type; g.write(": "); _show(g, t) end
+    g.write(": ")
+    _show(g, x.field_type())
     try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
   
   fun _show(g: _Gen, x: (MethodFun | MethodNew | MethodBe)) =>
@@ -151,7 +152,7 @@ primitive Print is Pass[Module, String]
     try _show(g, x.cap() as Cap); g.write(" ") end
     _show(g, x.name())
     try _show(g, x.type_params() as TypeParams) end
-    try _show(g, x.params() as Params) else g.write("()") end
+    _show(g, x.params())
     try let t = x.return_type() as Type; g.write(": "); _show(g, t) end
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
     try let s = x.guard() as Sequence; g.write(" if "); _show(g, s) end
@@ -300,7 +301,6 @@ primitive Print is Pass[Module, String]
       | let _: NegUnsafe => "-~"
       | let _: AddressOf => "addressof "
       | let _: DigestOf  => "digestof "
-      else "???"
       end)
     
       match x.expr() | let s: Sequence =>
@@ -654,7 +654,7 @@ primitive Print is Pass[Module, String]
     try _show(g, x.method_cap() as Cap); g.write(" ") end
     try _show(g, x.name() as Id) end
     try _show(g, x.type_params() as TypeParams) end
-    try _show(g, x.params() as Params) else g.write("()") end
+    _show(g, x.params())
     try _show(g, x.captures() as LambdaCaptures) end
     try let r = x.return_type() as Type; g.write(": "); _show(g, r) end
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
@@ -749,11 +749,9 @@ primitive Print is Pass[Module, String]
     try let n = x.name() as Id; g.write(" "); _show(g, n) end
     try _show(g, x.type_params() as TypeParams) end
     g.write("(")
-    try
-      for (i, t) in (x.param_types() as TupleType).list().pairs() do
-        if i > 0 then g.write(", ") end
-        _show(g, t)
-      end
+    for (i, t) in x.param_types().list().pairs() do
+      if i > 0 then g.write(", ") end
+      _show(g, t)
     end
     g.write(")")
     try let t = x.return_type() as Type; g.write(": "); _show(g, t) end

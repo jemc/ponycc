@@ -16,6 +16,9 @@ class ASTGen
   fun ref def_lexeme(n: String): ASTGenDefLexeme =>
     ASTGenDefLexeme(this, n)
   
+  fun ref def_actor(n: String): ASTGenDefActor =>
+    ASTGenDefActor(this, n)
+  
   fun string(): String =>
     let g: CodeGen = CodeGen
     

@@ -1,11 +1,17 @@
 
 primitive ASTDefs
   fun apply(g: ASTGen) =>
-    g.def("Program")
-      .> has("packages", "coll.Vec[Package]", "coll.Vec[Package]")
+    g.def_actor("_Program")
+      .> has_list("packages", "package", "Package")
     
-    g.def("Package")
-      .> has("modules", "coll.Vec[Module]", "coll.Vec[Module]")
+    g.def_actor("Package")
+      .> has_list("type_decls", "type_decl", "PackageTypeDecl")
+      .> has_list("ffi_decls",  "ffi_decl",  "UseFFIDecl")
+      .> has_list("docs",       "doc",       "LitString")
+    
+    g.def_actor("PackageTypeDecl")
+      .> has_list("use_packages", "use_package", "UsePackage")
+      .> has_var("type_decl", "TypeDecl")
     
     g.def("Module")
       .> with_scope()

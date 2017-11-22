@@ -17,10 +17,18 @@ primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
   """
   fun name(): String => "parse-cleanup"
   
-  fun apply(ast: Module, fn: {(Module, Array[PassError] val)} val) =>
-    let program = Program([Package([ast])])
-    FrameRunner[ParseCleanup](program, {(program, errs)(fn) =>
-      fn(try program.packages()(0)?.modules()(0)? else Module end, errs)
+  fun apply(module: Module, fn: {(Module, Array[PassError] val)} val) =>
+    let program = Program
+    let package = Package
+    for t in module.type_decls().values() do
+      package.add_type_decl(PackageTypeDecl(t))
+    end
+    program.add_package(package)
+    
+    FrameRunner[ParseCleanup](program, {(program, errs)(module, fn) =>
+      program.get_all_type_decls({(type_decls) =>
+        fn(module.with_type_decls(type_decls), errs)
+      })
     })
   
   fun visit[A: AST val](frame: Frame[ParseCleanup], ast: A) =>

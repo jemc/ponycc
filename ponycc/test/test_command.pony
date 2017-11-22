@@ -79,25 +79,14 @@ class val TestCommand[T: TestCommandType val]
     end
   
   fun check_checks(program: Program) =>
-    let module = try program.packages()(0)?.modules()(0)? end
     for check in checks.values() do
-      var ast: (AST | None) = module
-      var last_crumb: String = ""
-      try
-        for crumb in check.message.clone().>strip().split_by(".").values() do
-          last_crumb = crumb
-          let pieces = crumb.split_by("-", 2)
-          
-          ast =
-            (ast as AST).get_child_dynamic(
-              pieces(0)?,
-              try pieces(1)?.usize()? else 0 end)?
+      program.get_child_dynamic_path(check.message.clone().>strip(), {(ast) =>
+        try
+          _h.assert_eq[String](
+            String.join(check.lines.values()),
+            (ast as AST).string())
+        else
+          _h.fail("Check failed to find dynamic path: " + check.message)
         end
-        
-        _h.assert_eq[String](String.join(check.lines.values()), ast.string())
-      else
-        _h.fail("Check failed to walk path: " + check.message)
-        _h.log("The crumb that failed parse and/or lookup was: " + last_crumb)
-        _h.log("The (AST | None) couldn't be looked up on was: " + ast.string())
-      end
+      })
     end

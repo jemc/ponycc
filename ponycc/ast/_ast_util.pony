@@ -14,9 +14,9 @@ primitive _ASTUtil
       then USize(3)
       else USize(1)
       end
-
+    
     if pos.length() < (2 * quotes_length) then error end
-
+    
     // TODO: handle escaped characters
     SourcePos(pos.source(), pos.offset() + quotes_length, pos.length() - (2 * quotes_length)).string()
   
