@@ -45,7 +45,7 @@ class ParserGen
         end
       
       fun _current_tk(): TkAny =>
-        try token._1 as TkAny else Tk[EOF] end
+        token._1
       
       fun _current_pos(): SourcePosAny =>
         token._2
