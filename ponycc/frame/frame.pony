@@ -45,7 +45,7 @@ actor FrameRunner[V: FrameVisitor[V]]
 actor _FrameErrors
   embed _errs: Array[PassError] = _errs.create()
   var _expectations: USize = 0
-  let _complete_fn: {(Array[PassError] val)} val
+  var _complete_fn: {(Array[PassError] val)} val
   
   new create(complete_fn': {(Array[PassError] val)} val) =>
     _complete_fn = complete_fn'
@@ -59,7 +59,7 @@ actor _FrameErrors
   be complete() =>
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
-    _complete_fn(consume copy)
+    (_complete_fn = {(_) => _ })(consume copy)
 
 class _FrameTop[V: FrameVisitor[V]]
   let _errors: _FrameErrors
