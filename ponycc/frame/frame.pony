@@ -54,7 +54,7 @@ actor _FrameErrors
   
   be push_expectation() => _expectations = _expectations + 1
   be pop_expectation() =>
-    if 0 <= (_expectations = _expectations - 1) then complete() end
+    if 1 >= (_expecting = _expecting - 1) then complete() end
   
   be complete() =>
     let copy = recover Array[PassError] end
