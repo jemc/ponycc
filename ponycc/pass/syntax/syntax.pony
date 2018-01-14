@@ -18,7 +18,16 @@ primitive Syntax is (Pass[Program, Program] & FrameVisitor[Syntax])
   fun name(): String => "syntax"
   
   fun apply(ast: Program, fn: {(Program, Array[PassError] val)} val) =>
-    FrameRunner[Syntax](ast, fn)
+    let runner = FrameRunner[Syntax](ast, fn)
+    
+    runner.view_each_ffi_decl({(ffi_decl) =>
+      for param in ffi_decl.params().list().values() do
+        try
+          runner.err(param.default() as Expr,
+            "An FFI declaration parameter may not have a default value.")
+        end
+      end
+    })
   
   fun visit[A: AST val](frame: Frame[Syntax], ast: A) =>
     iftype A <: TypeDecl then
@@ -178,18 +187,9 @@ primitive Syntax is (Pass[Program, Program] & FrameVisitor[Syntax])
       None
     
     elseif A <: Params then
-      try frame.parent() as UseFFIDecl
-        for param in ast.list().values() do
-          try
-            frame.err(param.default() as Expr,
-              "An FFI declaration parameter may not have a default value.")
-          end
-        end
-      else
-        try
-          frame.err(ast.ellipsis() as Ellipsis,
-            "An ellipsis may only appear in FFI declaration parameters.")
-        end
+      try
+        frame.err(ast.ellipsis() as Ellipsis,
+          "An ellipsis may only appear in FFI declaration parameters.")
       end
     
     elseif A <: CallFFI then

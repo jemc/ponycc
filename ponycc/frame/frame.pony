@@ -17,8 +17,16 @@ actor FrameRunner[V: FrameVisitor[V]]
   their parent node is visited. Children have no knowledge of their parent,
   other than through the separate Frame object that is part of the visitation.
   """
+  
+  let _errors: _FrameErrors
+  let _program: Program
+  
+  be err(a: AST, s: String) => _errors.err(a, s)
+  
   new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
     let errors = _FrameErrors({(errs) => fn(program, errs) })
+    _errors = errors
+    _program = program
     
     // TODO: figure out how to abstract this somehow.
     program.access_packages({(packages)(program, errors) =>
@@ -41,6 +49,23 @@ actor FrameRunner[V: FrameVisitor[V]]
       end
       errors.pop_expectation()
     })
+  
+  be view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
+    let errors = _errors
+    
+    errors.push_expectation()
+    _program.access_packages({(packages)(errors, fn) =>
+      for package in packages.values() do
+        errors.push_expectation()
+        package.access_ffi_decls({(ffi_decls)(errors, fn) =>
+          for ffi_decl in ffi_decls.values() do
+            fn(ffi_decl)
+          end
+          errors.pop_expectation()
+        })
+      end
+      errors.pop_expectation()
+    })
 
 actor _FrameErrors
   embed _errs: Array[PassError] = _errs.create()
@@ -54,9 +79,10 @@ actor _FrameErrors
   
   be push_expectation() => _expectations = _expectations + 1
   be pop_expectation() =>
-    if 1 >= (_expecting = _expecting - 1) then complete() end
+    if 1 >= (_expectations = _expectations - 1) then complete() end
   
   be complete() =>
+    // TODO: sort the copy by source location.
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
     (_complete_fn = {(_) => _ })(consume copy)
