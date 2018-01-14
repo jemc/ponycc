@@ -2,6 +2,7 @@
 use "ponytest"
 
 use "../ast"
+use "../pass"
 
 interface val TestCommandAny
   fun h(): TestHelper
@@ -13,9 +14,9 @@ interface val TestCommandAny
   
   fun val apply(source: Source)
   
-  fun print_errors(actual_errors: Array[(String, SourcePosAny)] box)
+  fun print_errors(actual_errors: Array[PassError] box)
   
-  fun check_errors(actual_errors: Array[(String, SourcePosAny)] box)
+  fun check_errors(actual_errors: Array[PassError] box)
   
   fun check_checks(program: Program)
 
@@ -42,28 +43,28 @@ class val TestCommand[T: TestCommandType val]
     _h.long_test(5_000_000_000) // 5 second timeout
     T(this, source)
   
-  fun print_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
-    for (err, pos) in actual_errors.values() do
-      _h.log(err)
-      (let pos1, let pos2) = pos.show_in_line()
+  fun print_errors(actual_errors: Array[PassError] box) =>
+    for err in actual_errors.values() do
+      _h.log(err.message)
+      (let pos1, let pos2) = err.pos.show_in_line()
       _h.log(pos1)
       _h.log(pos2)
     end
   
-  fun check_errors(actual_errors: Array[(String, SourcePosAny)] box) =>
+  fun check_errors(actual_errors: Array[PassError] box) =>
     _h.assert_eq[Bool](actual_errors.size() == 0, errors.size() == 0, "Success")
     
     for (i, expect) in errors.pairs() do
       try
         let actual = actual_errors(i)?
         try
-          actual._1.find(expect.message)?
+          actual.message.find(expect.message)?
         else
           _h.fail("error did not match expected message")
           _h.fail("expected: " + expect.message)
-          _h.fail("actual:   " + actual._1)
+          _h.fail("actual:   " + actual.message)
         end
-        (let line_1, let line_2) = actual._2.show_in_line()
+        (let line_1, let line_2) = actual.pos.show_in_line()
         try _h.assert_eq[String](expect.lines(0)?, line_1) end
         try _h.assert_eq[String](expect.lines(1)?, line_2) end
       else

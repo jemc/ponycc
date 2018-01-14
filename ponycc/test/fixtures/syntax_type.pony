@@ -15,10 +15,10 @@ $ERROR A tuple cannot be used as a type parameter constraint.
 $ERROR A type cannot be only a reference capability.
     let v: val = true
            ^~~
-$ERROR A type cannot be only a reference capability.
+$ERROR A reference capability set can only appear in a constraint.
     let v: #share = true
            ^~~~~~
-$ERROR A reference capability set can only appear in a constraint.
+$ERROR A type cannot be only a reference capability.
     let v: #share = true
            ^~~~~~
 $ERROR A reference capability set can only appear in a constraint.

@@ -1,6 +1,7 @@
 
 use "../ast"
 use "../pass"
+use poly = "../polyfill"
 
 interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
@@ -75,14 +76,14 @@ actor _FrameErrors
   new create(complete_fn': {(Array[PassError] val)} val) =>
     _complete_fn = complete_fn'
   
-  be err(a: AST, s: String) => _errs.push((s, a.pos()))
+  be err(a: AST, s: String) => _errs.push(PassError(a.pos(), s))
   
   be push_expectation() => _expectations = _expectations + 1
   be pop_expectation() =>
     if 1 >= (_expectations = _expectations - 1) then complete() end
   
   be complete() =>
-    // TODO: sort the copy by source location.
+    poly.Sort[PassError](_errs)
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
     (_complete_fn = {(_) => _ })(consume copy)

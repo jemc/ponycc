@@ -3,9 +3,12 @@ use "collections"
 
 type Sources is ReadSeq[Source] val
 
-interface val SourceAny
+interface val SourceAny is Comparable[SourceAny box]
   fun content(): String
   fun path():    String
+  
+  fun eq(that: SourceAny box): Bool => path() == that.path()
+  fun lt(that: SourceAny box): Bool => path() < that.path()
 
 primitive SourceNone is SourceAny
   fun content(): String => ""
@@ -21,10 +24,25 @@ class val Source is SourceAny
   fun content(): String => _content
   fun path():    String => _path
 
-interface val SourcePosAny
+interface val SourcePosAny is Comparable[SourcePosAny box]
   fun source(): SourceAny
   fun offset(): USize
   fun length(): USize
+  
+  fun eq(that: SourcePosAny box): Bool =>
+    (source() == that.source()) and
+    (offset() == that.offset()) and
+    (length() == that.length())
+  
+  fun lt(that: SourcePosAny box): Bool =>
+    (source() < that.source()) or (
+      (source() == that.source()) and (
+        (offset() < that.offset()) or (
+          (offset() == that.offset()) and
+            (length() < that.length())
+        )
+      )
+    )
   
   fun string(): String =>
     source().content().trim(offset(), offset() + length())

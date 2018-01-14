@@ -8,8 +8,13 @@ primitive Parse is Pass[Source, Module]
   fun apply(source: Source, fn: {(Module, Array[PassError] val)} val) =>
     var module = Module
     let errs = recover val
-      let errs: Array[(String, SourcePosAny)] = []
-      module = try Parser(source, errs)? else Module end
+      let err_tuples: Array[(String, SourcePosAny)] = []
+      module = try Parser(source, err_tuples)? else Module end
+      
+      let errs = Array[PassError](err_tuples.size())
+      for (message, pos) in err_tuples.values() do
+        errs.push(PassError(pos, message))
+      end
       errs
     end
     
