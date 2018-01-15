@@ -66,7 +66,7 @@ actor _FrameReactor[V: FrameVisitor[V]]
         recover
           let top = _FrameTop[V](reactor, program, package, type_decl, ast)
           let frame = Frame[V]._create_under(top, ast)
-          let continuation = frame._visit(ast)
+          let continuation = frame._visit()
           if continuation is None then reactor._pop_expectation() end
           ast = top.type_decl()
           continuation
