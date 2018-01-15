@@ -63,7 +63,7 @@ class Frame[V: FrameVisitor[V]]
     _upper = upper'
     _ast   = a
   
-  fun ref _visit(ast: AST) =>
+  fun ref _visit(ast: AST): (_FrameContinuation[V] | None) =>
     """
     Visit the given AST node in a new frame, after visiting its children.
     """
@@ -71,6 +71,7 @@ class Frame[V: FrameVisitor[V]]
     frame._visit_each()
     frame._ast.apply_specialised[Frame[V]](frame,
       {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
+    None // TODO: return continuation if interrupted
   
   fun ref _visit_each() =>
     """
