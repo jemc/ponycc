@@ -1,7 +1,5 @@
-
 use "../ast"
 use "../pass"
-use poly = "../polyfill"
 
 interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
@@ -27,67 +25,6 @@ class val FrameRunner[V: FrameVisitor[V]]
   
   fun view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
     _reactor.view_each_ffi_decl(fn)
-
-actor _FrameReactor[V: FrameVisitor[V]]
-  let _program: Program
-  var _complete_fn: {(Program, Array[PassError] val)} val
-  var _expectations: USize = 0
-  embed _errs: Array[PassError] = _errs.create()
-  
-  new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
-    _program = program
-    _complete_fn = fn
-    
-    // TODO: figure out how to abstract this somehow.
-    let reactor: _FrameReactor[V] = this
-    reactor.push_expectation()
-    program.access_packages({(packages)(reactor, program) =>
-      for package in packages.values() do
-        reactor.push_expectation()
-        package.access_type_decls({(type_decls)(reactor, program, package) =>
-          for type_decl in type_decls.values() do
-            reactor.push_expectation()
-            type_decl.access_type_decl({(ast)(reactor, program, package, type_decl) =>
-              let top = _FrameTop[V](reactor, program, package, type_decl, ast)
-              let frame = Frame[V]._create_under(top, ast)
-              frame._visit(ast)
-              reactor.pop_expectation()
-              top.type_decl()
-            })
-          end
-          reactor.pop_expectation()
-        })
-      end
-      reactor.pop_expectation()
-    })
-  
-  be view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
-    let reactor: _FrameReactor[V] = this
-    reactor.push_expectation()
-    _program.access_packages({(packages)(reactor, fn) =>
-      for package in packages.values() do
-        reactor.push_expectation()
-        package.access_ffi_decls({(ffi_decls)(reactor, fn) =>
-          for ffi_decl in ffi_decls.values() do
-            fn(ffi_decl)
-          end
-          reactor.pop_expectation()
-        })
-      end
-      reactor.pop_expectation()
-    })
-  
-  be err(a: AST, s: String) => _errs.push(PassError(a.pos(), s))
-  
-  be push_expectation() => _expectations = _expectations + 1
-  be pop_expectation() =>
-    if 1 >= (_expectations = _expectations - 1) then complete() end
-  
-  be complete() =>
-    poly.Sort[PassError](_errs)
-    let copy = recover Array[PassError] end
-    for e in _errs.values() do copy.push(e) end
-    (_complete_fn = {(_, _) => _ })(_program, consume copy)
 
 class _FrameTop[V: FrameVisitor[V]]
   let _reactor: _FrameReactor[V]
