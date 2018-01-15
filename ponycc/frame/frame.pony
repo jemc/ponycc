@@ -10,7 +10,7 @@ interface val FrameVisitor[V: FrameVisitor[V]]
 primitive FrameVisitorNone is FrameVisitor[FrameVisitorNone]
   fun visit[A: AST val](frame: Frame[FrameVisitorNone], a: A) => None
 
-actor FrameRunner[V: FrameVisitor[V]]
+class val FrameRunner[V: FrameVisitor[V]]
   """
   Visit all of the AST nodes in the given program, using the given FrameVisitor.
   
@@ -18,63 +18,64 @@ actor FrameRunner[V: FrameVisitor[V]]
   their parent node is visited. Children have no knowledge of their parent,
   other than through the separate Frame object that is part of the visitation.
   """
+  let _reactor: _FrameReactor[V]
   
-  let _errors: _FrameErrors
+  new val create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
+    _reactor = _FrameReactor[V](program, fn)
+  
+  fun err(a: AST, s: String) => _reactor.err(a, s)
+  
+  fun view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
+    _reactor.view_each_ffi_decl(fn)
+
+actor _FrameReactor[V: FrameVisitor[V]]
   let _program: Program
-  
-  be err(a: AST, s: String) => _errors.err(a, s)
+  var _complete_fn: {(Program, Array[PassError] val)} val
+  var _expectations: USize = 0
+  embed _errs: Array[PassError] = _errs.create()
   
   new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
-    let errors = _FrameErrors({(errs) => fn(program, errs) })
-    _errors = errors
     _program = program
+    _complete_fn = fn
     
     // TODO: figure out how to abstract this somehow.
-    program.access_packages({(packages)(program, errors) =>
-      errors.push_expectation()
+    let reactor: _FrameReactor[V] = this
+    reactor.push_expectation()
+    program.access_packages({(packages)(reactor, program) =>
       for package in packages.values() do
-        errors.push_expectation()
-        package.access_type_decls({(type_decls)(program, package, errors) =>
+        reactor.push_expectation()
+        package.access_type_decls({(type_decls)(reactor, program, package) =>
           for type_decl in type_decls.values() do
-            errors.push_expectation()
-            type_decl.access_type_decl({(ast)(program, package, type_decl, errors) =>
-              let top = _FrameTop[V](program, package, type_decl, ast, errors)
+            reactor.push_expectation()
+            type_decl.access_type_decl({(ast)(reactor, program, package, type_decl) =>
+              let top = _FrameTop[V](reactor, program, package, type_decl, ast)
               let frame = Frame[V]._create_under(top, ast)
               frame._visit(ast)
-              errors.pop_expectation()
+              reactor.pop_expectation()
               top.type_decl()
             })
           end
-          errors.pop_expectation()
+          reactor.pop_expectation()
         })
       end
-      errors.pop_expectation()
+      reactor.pop_expectation()
     })
   
   be view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
-    let errors = _errors
-    
-    errors.push_expectation()
-    _program.access_packages({(packages)(errors, fn) =>
+    let reactor: _FrameReactor[V] = this
+    reactor.push_expectation()
+    _program.access_packages({(packages)(reactor, fn) =>
       for package in packages.values() do
-        errors.push_expectation()
-        package.access_ffi_decls({(ffi_decls)(errors, fn) =>
+        reactor.push_expectation()
+        package.access_ffi_decls({(ffi_decls)(reactor, fn) =>
           for ffi_decl in ffi_decls.values() do
             fn(ffi_decl)
           end
-          errors.pop_expectation()
+          reactor.pop_expectation()
         })
       end
-      errors.pop_expectation()
+      reactor.pop_expectation()
     })
-
-actor _FrameErrors
-  embed _errs: Array[PassError] = _errs.create()
-  var _expectations: USize = 0
-  var _complete_fn: {(Array[PassError] val)} val
-  
-  new create(complete_fn': {(Array[PassError] val)} val) =>
-    _complete_fn = complete_fn'
   
   be err(a: AST, s: String) => _errs.push(PassError(a.pos(), s))
   
@@ -86,26 +87,26 @@ actor _FrameErrors
     poly.Sort[PassError](_errs)
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
-    (_complete_fn = {(_) => _ })(consume copy)
+    (_complete_fn = {(_, _) => _ })(_program, consume copy)
 
 class _FrameTop[V: FrameVisitor[V]]
-  let _errors: _FrameErrors
+  let _reactor: _FrameReactor[V]
   let _program: Program
   let _package: Package
   let _type_decl: PackageTypeDecl
   var _ast: TypeDecl
   
   new create(
+    reactor': _FrameReactor[V],
     program': Program,
     package': Package,
     type_decl': PackageTypeDecl,
-    ast': TypeDecl,
-    errors': _FrameErrors)
+    ast': TypeDecl)
   =>
-    (_program, _package, _type_decl, _ast, _errors) =
-      (program', package', type_decl', ast', errors')
+    (_reactor, _program, _package, _type_decl, _ast) =
+      (reactor', program', package', type_decl', ast')
   
-  fun err(a: AST, s: String) => _errors.err(a, s)
+  fun err(a: AST, s: String) => _reactor.err(a, s)
   
   fun parent(n: USize): AST => _ast // ignore n - we can't go any higher
   fun ref replace(a: AST) => try _ast = a as TypeDecl end
