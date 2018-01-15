@@ -68,16 +68,18 @@ class Frame[V: FrameVisitor[V]]
     Visit the given AST node in a new frame, after visiting its children.
     """
     let frame = Frame[V]._create_under(this, ast)
-    frame._visit_each()
+    frame._visit_each_child()
     frame._ast.apply_specialised[Frame[V]](frame,
       {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
     None // TODO: return continuation if interrupted
   
-  fun ref _visit_each() =>
+  fun ref _visit_each_child() =>
     """
     Visit each child of the current AST node.
     """
-    _ast.each({(child)(frame = this) => try frame._visit(child as AST) end })
+    for child in _ast.values() do
+      try _visit(child as AST) end
+    end
   
   fun err(a: AST, s: String) =>
     """

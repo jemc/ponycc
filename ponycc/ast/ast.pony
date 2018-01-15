@@ -1,10 +1,18 @@
 use coll = "collections/persistent"
 
 trait val AST
+  fun val size(): USize
+  fun val apply(idx: USize): (AST | None)?
+  fun val values(): Iterator[(AST | None)]^ =>
+    object is Iterator[(AST | None)]
+      let ast: AST = this
+      var idx: USize = 0
+      fun has_next(): Bool => idx < ast.size()
+      fun ref next(): (AST | None)? => ast(idx = idx + 1)?
+    end
   fun val attach[A: Any val](a: A): AST
   fun val find_attached[A: Any val](): A?
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
-  fun val each(fn: {ref ((AST | None))} ref)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST
   fun val pos(): SourcePosAny
@@ -410,13 +418,18 @@ class val Module is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Module](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _use_decls.values() do fn(x) end
-    for x in _type_decls.values() do fn(x) end
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Module => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _use_decls.size() + _type_decls.size() + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _use_decls.size()) then return _use_decls(idx - (0 + offset))? end
+    offset = (offset + _use_decls.size()) - 1
+    if idx < (1 + offset + _type_decls.size()) then return _type_decls(idx - (1 + offset))? end
+    offset = (offset + _type_decls.size()) - 1
+    if idx == (2 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Module => create(_use_decls, _type_decls, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -523,12 +536,15 @@ class val UsePackage is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UsePackage](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_prefix)
-    fn(_package)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): UsePackage => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _prefix end
+    if idx == (1 + offset) then return _package end
+    error
   fun val attach[A: Any #share](a: A): UsePackage => create(_prefix, _package, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -643,15 +659,18 @@ class val UseFFIDecl is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UseFFIDecl](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_return_type)
-    fn(_params)
-    fn(_partial)
-    fn(_guard)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): UseFFIDecl => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _return_type end
+    if idx == (2 + offset) then return _params end
+    if idx == (3 + offset) then return _partial end
+    if idx == (4 + offset) then return _guard end
+    error
   fun val attach[A: Any #share](a: A): UseFFIDecl => create(_name, _return_type, _params, _partial, _guard, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -794,17 +813,20 @@ class val TypeAlias is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeAlias](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeAlias => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): TypeAlias => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -961,17 +983,20 @@ class val Interface is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Interface](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Interface => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Interface => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1128,17 +1153,20 @@ class val Trait is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trait](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Trait => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Trait => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1295,17 +1323,20 @@ class val Primitive is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Primitive](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Primitive => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Primitive => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1462,17 +1493,20 @@ class val Struct is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Struct](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Struct => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Struct => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1629,17 +1663,20 @@ class val Class is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Class](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Class => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Class => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1796,17 +1833,20 @@ class val Actor is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Actor](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_provides)
-    fn(_members)
-    fn(_at)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Actor => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _provides end
+    if idx == (4 + offset) then return _members end
+    if idx == (5 + offset) then return _at end
+    if idx == (6 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): Actor => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -1929,12 +1969,17 @@ class val Members is AST
     _methods = methods'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Members](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _fields.values() do fn(x) end
-    for x in _methods.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Members => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _fields.size() + _methods.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _fields.size()) then return _fields(idx - (0 + offset))? end
+    offset = (offset + _fields.size()) - 1
+    if idx < (1 + offset + _methods.size()) then return _methods(idx - (1 + offset))? end
+    offset = (offset + _methods.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Members => create(_fields, _methods, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2044,13 +2089,16 @@ class val FieldLet is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLet](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_field_type)
-    fn(_default)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldLet => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _field_type end
+    if idx == (2 + offset) then return _default end
+    error
   fun val attach[A: Any #share](a: A): FieldLet => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2150,13 +2198,16 @@ class val FieldVar is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVar](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_field_type)
-    fn(_default)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldVar => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _field_type end
+    if idx == (2 + offset) then return _default end
+    error
   fun val attach[A: Any #share](a: A): FieldVar => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2256,13 +2307,16 @@ class val FieldEmbed is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbed](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_field_type)
-    fn(_default)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldEmbed => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _field_type end
+    if idx == (2 + offset) then return _default end
+    error
   fun val attach[A: Any #share](a: A): FieldEmbed => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2407,19 +2461,22 @@ class val MethodFun is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFun](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_params)
-    fn(_return_type)
-    fn(_partial)
-    fn(_guard)
-    fn(_body)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodFun => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _params end
+    if idx == (4 + offset) then return _return_type end
+    if idx == (5 + offset) then return _partial end
+    if idx == (6 + offset) then return _guard end
+    if idx == (7 + offset) then return _body end
+    if idx == (8 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): MethodFun => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2606,19 +2663,22 @@ class val MethodNew is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_params)
-    fn(_return_type)
-    fn(_partial)
-    fn(_guard)
-    fn(_body)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodNew => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _params end
+    if idx == (4 + offset) then return _return_type end
+    if idx == (5 + offset) then return _partial end
+    if idx == (6 + offset) then return _guard end
+    if idx == (7 + offset) then return _body end
+    if idx == (8 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): MethodNew => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2805,19 +2865,22 @@ class val MethodBe is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_type_params)
-    fn(_params)
-    fn(_return_type)
-    fn(_partial)
-    fn(_guard)
-    fn(_body)
-    fn(_docs)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodBe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _params end
+    if idx == (4 + offset) then return _return_type end
+    if idx == (5 + offset) then return _partial end
+    if idx == (6 + offset) then return _guard end
+    if idx == (7 + offset) then return _body end
+    if idx == (8 + offset) then return _docs end
+    error
   fun val attach[A: Any #share](a: A): MethodBe => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -2940,11 +3003,15 @@ class val TypeParams is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeParams => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): TypeParams => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3035,13 +3102,16 @@ class val TypeParam is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParam](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_constraint)
-    fn(_default)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeParam => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _constraint end
+    if idx == (2 + offset) then return _default end
+    error
   fun val attach[A: Any #share](a: A): TypeParam => create(_name, _constraint, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3122,11 +3192,15 @@ class val TypeArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeArgs => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): TypeArgs => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3212,12 +3286,16 @@ class val Params is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Params](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
-    fn(_ellipsis)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Params => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size() + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    if idx == (1 + offset) then return _ellipsis end
+    error
   fun val attach[A: Any #share](a: A): Params => create(_list, _ellipsis, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3316,13 +3394,16 @@ class val Param is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Param](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_param_type)
-    fn(_default)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Param => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _param_type end
+    if idx == (2 + offset) then return _default end
+    error
   fun val attach[A: Any #share](a: A): Param => create(_name, _param_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3403,11 +3484,15 @@ class val Sequence is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Sequence => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Sequence => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3479,11 +3564,14 @@ class val Return is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Return => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): Return => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3547,11 +3635,14 @@ class val Break is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Break => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): Break => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3615,11 +3706,14 @@ class val Continue is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Continue => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): Continue => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3683,11 +3777,14 @@ class val Error is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Error => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): Error => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3751,11 +3848,14 @@ class val CompileIntrinsic is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CompileIntrinsic => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): CompileIntrinsic => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3819,11 +3919,14 @@ class val CompileError is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CompileError => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): CompileError => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3890,11 +3993,14 @@ class val IfDefFlag is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfDefFlag => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): IfDefFlag => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -3961,11 +4067,14 @@ class val IfDefNot is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfDefNot => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): IfDefNot => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4043,12 +4152,15 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefAnd](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfDefAnd => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): IfDefAnd => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4133,12 +4245,15 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefOr](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfDefOr => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): IfDefOr => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4231,13 +4346,16 @@ class val IfDef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_condition)
-    fn(_then_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfDef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _condition end
+    if idx == (1 + offset) then return _then_body end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): IfDef => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4348,14 +4466,17 @@ class val IfType is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_sub)
-    fn(_super)
-    fn(_then_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IfType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _sub end
+    if idx == (1 + offset) then return _super end
+    if idx == (2 + offset) then return _then_body end
+    if idx == (3 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): IfType => create(_sub, _super, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4462,13 +4583,16 @@ class val If is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[If](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_condition)
-    fn(_then_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): If => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _condition end
+    if idx == (1 + offset) then return _then_body end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): If => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4568,13 +4692,16 @@ class val While is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[While](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_condition)
-    fn(_loop_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): While => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _condition end
+    if idx == (1 + offset) then return _loop_body end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): While => create(_condition, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4674,13 +4801,16 @@ class val Repeat is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Repeat](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_loop_body)
-    fn(_condition)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Repeat => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _loop_body end
+    if idx == (1 + offset) then return _condition end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): Repeat => create(_loop_body, _condition, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4791,14 +4921,17 @@ class val For is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[For](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_refs)
-    fn(_iterator)
-    fn(_loop_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): For => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _refs end
+    if idx == (1 + offset) then return _iterator end
+    if idx == (2 + offset) then return _loop_body end
+    if idx == (3 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): For => create(_refs, _iterator, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4905,13 +5038,16 @@ class val With is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_assigns)
-    fn(_body)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): With => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _assigns end
+    if idx == (1 + offset) then return _body end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): With => create(_assigns, _body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -4992,11 +5128,15 @@ class val IdTuple is (AST & Expr)
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IdTuple => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _elements.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
+    offset = (offset + _elements.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): IdTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5071,11 +5211,15 @@ class val AssignTuple is AST
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): AssignTuple => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _elements.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
+    offset = (offset + _elements.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): AssignTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5166,13 +5310,16 @@ class val Match is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Match](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
-    fn(_cases)
-    fn(_else_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Match => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    if idx == (1 + offset) then return _cases end
+    if idx == (2 + offset) then return _else_body end
+    error
   fun val attach[A: Any #share](a: A): Match => create(_expr, _cases, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5253,11 +5400,15 @@ class val Cases is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Cases => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Cases => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5348,13 +5499,16 @@ class val Case is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Case](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
-    fn(_guard)
-    fn(_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Case => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    if idx == (1 + offset) then return _guard end
+    if idx == (2 + offset) then return _body end
+    error
   fun val attach[A: Any #share](a: A): Case => create(_expr, _guard, _body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5451,13 +5605,16 @@ class val Try is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Try](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_body)
-    fn(_else_body)
-    fn(_then_body)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Try => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _body end
+    if idx == (1 + offset) then return _else_body end
+    if idx == (2 + offset) then return _then_body end
+    error
   fun val attach[A: Any #share](a: A): Try => create(_body, _else_body, _then_body, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5549,12 +5706,15 @@ class val Consume is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Consume](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_cap)
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Consume => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _cap end
+    if idx == (1 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): Consume => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5639,12 +5799,15 @@ class val Recover is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Recover](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_cap)
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Recover => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _cap end
+    if idx == (1 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): Recover => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5729,12 +5892,15 @@ class val As is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[As](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
-    fn(_as_type)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): As => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    if idx == (1 + offset) then return _as_type end
+    error
   fun val attach[A: Any #share](a: A): As => create(_expr, _as_type, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5827,13 +5993,16 @@ class val Add is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Add => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Add => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -5933,13 +6102,16 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): AddUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): AddUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6039,13 +6211,16 @@ class val Sub is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Sub => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Sub => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6145,13 +6320,16 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): SubUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): SubUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6251,13 +6429,16 @@ class val Mul is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Mul => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Mul => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6357,13 +6538,16 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MulUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): MulUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6463,13 +6647,16 @@ class val Div is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Div => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Div => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6569,13 +6756,16 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): DivUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): DivUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6675,13 +6865,16 @@ class val Mod is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Mod => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Mod => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6781,13 +6974,16 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ModUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): ModUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6887,13 +7083,16 @@ class val LShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LShift => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -6993,13 +7192,16 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LShiftUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7099,13 +7301,16 @@ class val RShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): RShift => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): RShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7205,13 +7410,16 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): RShiftUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): RShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7311,13 +7519,16 @@ class val Eq is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Eq => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Eq => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7417,13 +7628,16 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): EqUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): EqUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7523,13 +7737,16 @@ class val NE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NE => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): NE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7629,13 +7846,16 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NEUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): NEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7735,13 +7955,16 @@ class val LT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LT => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7841,13 +8064,16 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LTUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -7947,13 +8173,16 @@ class val LE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LE => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8053,13 +8282,16 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LEUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): LEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8159,13 +8391,16 @@ class val GE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GE => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): GE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8265,13 +8500,16 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GEUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): GEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8371,13 +8609,16 @@ class val GT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GT => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): GT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8477,13 +8718,16 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): GTUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): GTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8583,13 +8827,16 @@ class val Is is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Is => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Is => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8689,13 +8936,16 @@ class val Isnt is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Isnt => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Isnt => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8795,13 +9045,16 @@ class val And is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): And => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): And => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -8901,13 +9154,16 @@ class val Or is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Or => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Or => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9007,13 +9263,16 @@ class val XOr is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): XOr => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    if idx == (2 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): XOr => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9094,11 +9353,14 @@ class val Not is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Not => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): Not => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9165,11 +9427,14 @@ class val Neg is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Neg => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): Neg => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9236,11 +9501,14 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NegUnsafe => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): NegUnsafe => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9307,11 +9575,14 @@ class val AddressOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): AddressOf => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): AddressOf => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9378,11 +9649,14 @@ class val DigestOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_expr)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): DigestOf => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _expr end
+    error
   fun val attach[A: Any #share](a: A): DigestOf => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9457,12 +9731,15 @@ class val LocalLet is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLet](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_local_type)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LocalLet => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _local_type end
+    error
   fun val attach[A: Any #share](a: A): LocalLet => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9544,12 +9821,15 @@ class val LocalVar is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVar](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_local_type)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LocalVar => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _local_type end
+    error
   fun val attach[A: Any #share](a: A): LocalVar => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9634,12 +9914,15 @@ class val Assign is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Assign](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Assign => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): Assign => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9724,12 +10007,15 @@ class val Dot is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Dot](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Dot => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): Dot => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9814,12 +10100,15 @@ class val Chain is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Chain](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Chain => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): Chain => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9904,12 +10193,15 @@ class val Tilde is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tilde](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Tilde => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): Tilde => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -9994,12 +10286,15 @@ class val Qualify is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Qualify](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Qualify => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): Qualify => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10097,14 +10392,17 @@ class val Call is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_callable)
-    fn(_args)
-    fn(_named_args)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Call => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _callable end
+    if idx == (1 + offset) then return _args end
+    if idx == (2 + offset) then return _named_args end
+    if idx == (3 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): Call => create(_callable, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10224,15 +10522,18 @@ class val CallFFI is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CallFFI](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_type_args)
-    fn(_args)
-    fn(_named_args)
-    fn(_partial)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CallFFI => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _type_args end
+    if idx == (2 + offset) then return _args end
+    if idx == (3 + offset) then return _named_args end
+    if idx == (4 + offset) then return _partial end
+    error
   fun val attach[A: Any #share](a: A): CallFFI => create(_name, _type_args, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10327,11 +10628,15 @@ class val Args is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Args => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Args => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10406,11 +10711,15 @@ class val NamedArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NamedArgs => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): NamedArgs => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10496,12 +10805,15 @@ class val NamedArg is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArg](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NamedArg => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): NamedArg => create(_name, _value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10636,19 +10948,22 @@ class val Lambda is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Lambda](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_method_cap)
-    fn(_name)
-    fn(_type_params)
-    fn(_params)
-    fn(_captures)
-    fn(_return_type)
-    fn(_partial)
-    fn(_body)
-    fn(_object_cap)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Lambda => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _method_cap end
+    if idx == (1 + offset) then return _name end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _params end
+    if idx == (4 + offset) then return _captures end
+    if idx == (5 + offset) then return _return_type end
+    if idx == (6 + offset) then return _partial end
+    if idx == (7 + offset) then return _body end
+    if idx == (8 + offset) then return _object_cap end
+    error
   fun val attach[A: Any #share](a: A): Lambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10832,19 +11147,22 @@ class val BareLambda is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambda](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_method_cap)
-    fn(_name)
-    fn(_type_params)
-    fn(_params)
-    fn(_captures)
-    fn(_return_type)
-    fn(_partial)
-    fn(_body)
-    fn(_object_cap)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): BareLambda => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _method_cap end
+    if idx == (1 + offset) then return _name end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _params end
+    if idx == (4 + offset) then return _captures end
+    if idx == (5 + offset) then return _return_type end
+    if idx == (6 + offset) then return _partial end
+    if idx == (7 + offset) then return _body end
+    if idx == (8 + offset) then return _object_cap end
+    error
   fun val attach[A: Any #share](a: A): BareLambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -10967,11 +11285,15 @@ class val LambdaCaptures is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LambdaCaptures => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): LambdaCaptures => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11062,13 +11384,16 @@ class val LambdaCapture is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_local_type)
-    fn(_value)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LambdaCapture => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _local_type end
+    if idx == (2 + offset) then return _value end
+    error
   fun val attach[A: Any #share](a: A): LambdaCapture => create(_name, _local_type, _value, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11162,13 +11487,16 @@ class val Object is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Object](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_cap)
-    fn(_provides)
-    fn(_members)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Object => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _cap end
+    if idx == (1 + offset) then return _provides end
+    if idx == (2 + offset) then return _members end
+    error
   fun val attach[A: Any #share](a: A): Object => create(_cap, _provides, _members, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11254,12 +11582,15 @@ class val LitArray is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitArray](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_elem_type)
-    fn(_sequence)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitArray => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _elem_type end
+    if idx == (1 + offset) then return _sequence end
+    error
   fun val attach[A: Any #share](a: A): LitArray => create(_elem_type, _sequence, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11333,11 +11664,15 @@ class val Tuple is (AST & Expr)
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _elements.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Tuple => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _elements.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
+    offset = (offset + _elements.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Tuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11399,10 +11734,13 @@ class val This is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): This => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): This => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11442,10 +11780,13 @@ class val LitTrue is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitTrue => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): LitTrue => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11485,10 +11826,13 @@ class val LitFalse is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitFalse => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): LitFalse => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11536,12 +11880,13 @@ class val LitInteger is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitInteger](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitInteger => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   fun val attach[A: Any #share](a: A): LitInteger => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
   fun val value(): U128 => _value
@@ -11581,12 +11926,13 @@ class val LitFloat is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFloat](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitFloat => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   fun val attach[A: Any #share](a: A): LitFloat => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
   fun val value(): F64 => _value
@@ -11626,12 +11972,13 @@ class val LitString is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitString](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitString => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   fun val attach[A: Any #share](a: A): LitString => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
   fun val value(): String => _value
@@ -11671,12 +12018,13 @@ class val LitCharacter is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitCharacter](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitCharacter => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   fun val attach[A: Any #share](a: A): LitCharacter => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
   fun val value(): U8 => _value
@@ -11708,10 +12056,13 @@ class val LitLocation is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LitLocation => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): LitLocation => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11764,11 +12115,14 @@ class val Reference is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Reference => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): Reference => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11822,10 +12176,13 @@ class val DontCare is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): DontCare => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): DontCare => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11878,11 +12235,14 @@ class val PackageRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): PackageRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): PackageRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -11960,12 +12320,15 @@ class val MethodFunRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFunRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodFunRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): MethodFunRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12050,12 +12413,15 @@ class val MethodNewRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNewRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodNewRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): MethodNewRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12140,12 +12506,15 @@ class val MethodBeRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBeRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): MethodBeRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): MethodBeRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12230,12 +12599,15 @@ class val TypeRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_package)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _package end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): TypeRef => create(_package, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12320,12 +12692,15 @@ class val FieldLetRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLetRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldLetRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): FieldLetRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12410,12 +12785,15 @@ class val FieldVarRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVarRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldVarRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): FieldVarRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12500,12 +12878,15 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbedRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FieldEmbedRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): FieldEmbedRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12590,12 +12971,15 @@ class val TupleElementRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleElementRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_receiver)
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TupleElementRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _receiver end
+    if idx == (1 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): TupleElementRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12669,11 +13053,14 @@ class val LocalLetRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LocalLetRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): LocalLetRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12740,11 +13127,14 @@ class val LocalVarRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LocalVarRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): LocalVarRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12811,11 +13201,14 @@ class val ParamRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ParamRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    error
   fun val attach[A: Any #share](a: A): ParamRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12893,12 +13286,15 @@ class val ViewpointType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ViewpointType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_left)
-    fn(_right)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ViewpointType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _left end
+    if idx == (1 + offset) then return _right end
+    error
   fun val attach[A: Any #share](a: A): ViewpointType => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -12972,11 +13368,15 @@ class val UnionType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): UnionType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): UnionType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13051,11 +13451,15 @@ class val IsectType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): IsectType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): IsectType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13130,11 +13534,15 @@ class val TupleType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TupleType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): TupleType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13241,15 +13649,18 @@ class val NominalType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NominalType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_package)
-    fn(_type_args)
-    fn(_cap)
-    fn(_cap_mod)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): NominalType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _package end
+    if idx == (2 + offset) then return _type_args end
+    if idx == (3 + offset) then return _cap end
+    if idx == (4 + offset) then return _cap_mod end
+    error
   fun val attach[A: Any #share](a: A): NominalType => create(_name, _package, _type_args, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13368,14 +13779,17 @@ class val FunType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FunType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_cap)
-    fn(_type_params)
-    fn(_params)
-    fn(_return_type)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): FunType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _cap end
+    if idx == (1 + offset) then return _type_params end
+    if idx == (2 + offset) then return _params end
+    if idx == (3 + offset) then return _return_type end
+    error
   fun val attach[A: Any #share](a: A): FunType => create(_cap, _type_params, _params, _return_type, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13516,18 +13930,21 @@ class val LambdaType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_method_cap)
-    fn(_name)
-    fn(_type_params)
-    fn(_param_types)
-    fn(_return_type)
-    fn(_partial)
-    fn(_object_cap)
-    fn(_cap_mod)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LambdaType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _method_cap end
+    if idx == (1 + offset) then return _name end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _param_types end
+    if idx == (4 + offset) then return _return_type end
+    if idx == (5 + offset) then return _partial end
+    if idx == (6 + offset) then return _object_cap end
+    if idx == (7 + offset) then return _cap_mod end
+    error
   fun val attach[A: Any #share](a: A): LambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13696,18 +14113,21 @@ class val BareLambdaType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambdaType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_method_cap)
-    fn(_name)
-    fn(_type_params)
-    fn(_param_types)
-    fn(_return_type)
-    fn(_partial)
-    fn(_object_cap)
-    fn(_cap_mod)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): BareLambdaType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _method_cap end
+    if idx == (1 + offset) then return _name end
+    if idx == (2 + offset) then return _type_params end
+    if idx == (3 + offset) then return _param_types end
+    if idx == (4 + offset) then return _return_type end
+    if idx == (5 + offset) then return _partial end
+    if idx == (6 + offset) then return _object_cap end
+    if idx == (7 + offset) then return _cap_mod end
+    error
   fun val attach[A: Any #share](a: A): BareLambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13839,13 +14259,16 @@ class val TypeParamRef is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParamRef](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    fn(_name)
-    fn(_cap)
-    fn(_cap_mod)
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): TypeParamRef => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 1 + 1 + 1
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx == (0 + offset) then return _name end
+    if idx == (1 + offset) then return _cap end
+    if idx == (2 + offset) then return _cap_mod end
+    error
   fun val attach[A: Any #share](a: A): TypeParamRef => create(_name, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13913,10 +14336,13 @@ class val ThisType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ThisType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): ThisType => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13956,10 +14382,13 @@ class val DontCareType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): DontCareType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): DontCareType => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -13999,10 +14428,13 @@ class val ErrorType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): ErrorType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): ErrorType => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14042,10 +14474,13 @@ class val LiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LiteralType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): LiteralType => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14085,10 +14520,13 @@ class val LiteralTypeBranch is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): LiteralTypeBranch => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14128,10 +14566,13 @@ class val OpLiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): OpLiteralType => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): OpLiteralType => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14171,10 +14612,13 @@ class val Iso is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Iso => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Iso => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14214,10 +14658,13 @@ class val Trn is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Trn => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Trn => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14257,10 +14704,13 @@ class val Ref is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Ref => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Ref => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14300,10 +14750,13 @@ class val Val is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Val => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Val => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14343,10 +14796,13 @@ class val Box is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Box => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Box => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14386,10 +14842,13 @@ class val Tag is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Tag => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Tag => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14429,10 +14888,13 @@ class val CapRead is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CapRead => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): CapRead => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14472,10 +14934,13 @@ class val CapSend is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CapSend => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): CapSend => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14515,10 +14980,13 @@ class val CapShare is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CapShare => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): CapShare => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14558,10 +15026,13 @@ class val CapAlias is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CapAlias => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): CapAlias => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14601,10 +15072,13 @@ class val CapAny is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): CapAny => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): CapAny => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14644,10 +15118,13 @@ class val Aliased is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Aliased => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Aliased => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14687,10 +15164,13 @@ class val Ephemeral is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Ephemeral => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Ephemeral => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14730,10 +15210,13 @@ class val At is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): At => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): At => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14773,10 +15256,13 @@ class val Question is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Question => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Question => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14816,10 +15302,13 @@ class val Ellipsis is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Ellipsis => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Ellipsis => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14859,10 +15348,13 @@ class val Annotation is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Annotation](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Annotation => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    error
   fun val attach[A: Any #share](a: A): Annotation => create((try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14915,11 +15407,15 @@ class val Semicolon is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) =>
-    for x in _list.values() do fn(x) end
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Semicolon => attach[SourcePosAny](pos')
   
+  fun val size(): USize => _list.size()
+  fun val apply(idx: USize): (AST | None)? =>
+    var offset: USize = 0
+    if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
+    offset = (offset + _list.size()) - 1
+    error
   fun val attach[A: Any #share](a: A): Semicolon => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
   
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
@@ -14989,12 +15485,13 @@ class val Id is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Id](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
   fun val with_pos(pos': SourcePosAny): Id => attach[SourcePosAny](pos')
   
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   fun val attach[A: Any #share](a: A): Id => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
   fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
   fun val value(): String => _value
@@ -15014,11 +15511,13 @@ class val EOF is (AST & Lexeme)
     errs.push(("EOF is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EOF](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): EOF => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15036,11 +15535,13 @@ class val NewLine is (AST & Lexeme)
     errs.push(("NewLine is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NewLine](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): NewLine => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15058,11 +15559,13 @@ class val Use is (AST & Lexeme)
     errs.push(("Use is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Use](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Use => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15080,11 +15583,13 @@ class val Colon is (AST & Lexeme)
     errs.push(("Colon is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Colon](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Colon => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15102,11 +15607,13 @@ class val Comma is (AST & Lexeme)
     errs.push(("Comma is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Comma](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Comma => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15124,11 +15631,13 @@ class val Constant is (AST & Lexeme)
     errs.push(("Constant is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Constant](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Constant => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15146,11 +15655,13 @@ class val Pipe is (AST & Lexeme)
     errs.push(("Pipe is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Pipe](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Pipe => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15168,11 +15679,13 @@ class val Ampersand is (AST & Lexeme)
     errs.push(("Ampersand is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ampersand](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Ampersand => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15190,11 +15703,13 @@ class val SubType is (AST & Lexeme)
     errs.push(("SubType is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubType](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubType => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15212,11 +15727,13 @@ class val Arrow is (AST & Lexeme)
     errs.push(("Arrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Arrow](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Arrow => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15234,11 +15751,13 @@ class val DoubleArrow is (AST & Lexeme)
     errs.push(("DoubleArrow is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DoubleArrow](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): DoubleArrow => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15256,11 +15775,13 @@ class val AtLBrace is (AST & Lexeme)
     errs.push(("AtLBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AtLBrace](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): AtLBrace => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15278,11 +15799,13 @@ class val LBrace is (AST & Lexeme)
     errs.push(("LBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBrace](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBrace => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15300,11 +15823,13 @@ class val RBrace is (AST & Lexeme)
     errs.push(("RBrace is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RBrace](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RBrace => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15322,11 +15847,13 @@ class val LParen is (AST & Lexeme)
     errs.push(("LParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParen](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParen => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15344,11 +15871,13 @@ class val RParen is (AST & Lexeme)
     errs.push(("RParen is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RParen](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RParen => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15366,11 +15895,13 @@ class val LSquare is (AST & Lexeme)
     errs.push(("LSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquare](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquare => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15388,11 +15919,13 @@ class val RSquare is (AST & Lexeme)
     errs.push(("RSquare is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RSquare](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): RSquare => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15410,11 +15943,13 @@ class val LParenNew is (AST & Lexeme)
     errs.push(("LParenNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LParenNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LParenNew => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15432,11 +15967,13 @@ class val LBraceNew is (AST & Lexeme)
     errs.push(("LBraceNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LBraceNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LBraceNew => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15454,11 +15991,13 @@ class val LSquareNew is (AST & Lexeme)
     errs.push(("LSquareNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LSquareNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): LSquareNew => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15476,11 +16015,13 @@ class val SubNew is (AST & Lexeme)
     errs.push(("SubNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubNew => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15498,11 +16039,13 @@ class val SubUnsafeNew is (AST & Lexeme)
     errs.push(("SubUnsafeNew is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafeNew](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): SubUnsafeNew => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15520,11 +16063,13 @@ class val In is (AST & Lexeme)
     errs.push(("In is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[In](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): In => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15542,11 +16087,13 @@ class val Until is (AST & Lexeme)
     errs.push(("Until is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Until](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Until => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15564,11 +16111,13 @@ class val Do is (AST & Lexeme)
     errs.push(("Do is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Do](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Do => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15586,11 +16135,13 @@ class val Else is (AST & Lexeme)
     errs.push(("Else is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Else](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Else => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15608,11 +16159,13 @@ class val ElseIf is (AST & Lexeme)
     errs.push(("ElseIf is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ElseIf](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): ElseIf => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15630,11 +16183,13 @@ class val Then is (AST & Lexeme)
     errs.push(("Then is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Then](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Then => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15652,11 +16207,13 @@ class val End is (AST & Lexeme)
     errs.push(("End is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[End](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): End => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15674,11 +16231,13 @@ class val Var is (AST & Lexeme)
     errs.push(("Var is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Var](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Var => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15696,11 +16255,13 @@ class val Let is (AST & Lexeme)
     errs.push(("Let is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Let](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Let => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15718,11 +16279,13 @@ class val Embed is (AST & Lexeme)
     errs.push(("Embed is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Embed](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Embed => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error
@@ -15740,11 +16303,13 @@ class val Where is (AST & Lexeme)
     errs.push(("Where is a lexeme-only type append should never be built", pos')); error
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Where](consume c, this)
-  fun val each(fn: {ref ((AST | None))} ref) => None
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
   fun val pos(): SourcePosAny => SourcePosNone
   fun val with_pos(pos': SourcePosAny): Where => create()
+  
+  fun val size(): USize => 0
+  fun val apply(idx: USize): (AST | None)? => error
   
   fun val attach[A: Any #share](a: A): AST => this
   fun val find_attached[A: Any #share](): A? => error

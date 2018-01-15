@@ -184,18 +184,6 @@ class ASTGenDefFixed is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
-    g.line("fun val each(fn: {ref ((AST | None))} ref) =>")
-    g.push_indent()
-    for (field_name, field_type, _) in fields.values() do
-      if field_type.at("coll.Vec[") then
-        g.line("for x in _" + field_name + ".values() do fn(x) end")
-      else
-        g.line("fn(_" + field_name + ")")
-      end
-    else
-      g.add(" None")
-    end
-    g.pop_indent()
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny")
@@ -203,6 +191,36 @@ class ASTGenDefFixed is ASTGenDef
     g.line("fun val with_pos(pos': SourcePosAny): " + _name)
     g.add(" => attach[SourcePosAny](pos')")
     g.line()
+    
+    g.line("fun val size(): USize => ")
+    for (idx, (field_name, field_type, _)) in fields.pairs() do
+      if idx > 0 then g.add(" + ") end
+      if field_type.at("coll.Vec[") then
+        g.add("_" + field_name + ".size()")
+      else
+        g.add("1")
+      end
+    else
+      g.add("0")
+    end
+    
+    g.line("fun val apply(idx: USize): (AST | None)? =>")
+    g.push_indent()
+    g.line("var offset: USize = 0")
+    for (idx, (field_name, field_type, _)) in fields.pairs() do
+      if field_type.at("coll.Vec[") then
+        g.line("if idx < (" + idx.string() + " + offset")
+        g.add(" + _" + field_name + ".size())")
+        g.add(" then return _" + field_name)
+        g.add("(idx - (" + idx.string() + " + offset))? end")
+        g.line("offset = (offset + _" + field_name + ".size()) - 1")
+      else
+        g.line("if idx == (" + idx.string() + " + offset)")
+        g.add(" then return _" + field_name + " end")
+      end
+    end
+    g.line("error")
+    g.pop_indent()
     
     g.line("fun val attach[A: Any #share](a: A): " + _name)
     g.add(" => create(")
@@ -444,7 +462,6 @@ class ASTGenDefWrap is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
-    g.line("fun val each(fn: {ref ((AST | None))} ref) => None")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
@@ -454,6 +471,9 @@ class ASTGenDefWrap is ASTGenDef
     g.line("fun val with_pos(pos': SourcePosAny): " + _name)
     g.add(" => attach[SourcePosAny](pos')")
     g.line()
+    
+    g.line("fun val size(): USize => 0")
+    g.line("fun val apply(idx: USize): (AST | None)? => error")
     
     g.line("fun val attach[A: Any #share](a: A): " + _name)
     g.add(" => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))")
@@ -526,13 +546,15 @@ class ASTGenDefLexeme is ASTGenDef
     
     // Declare common helpers.
     g.line("fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[" + _name + "](consume c, this)")
-    g.line("fun val each(fn: {ref ((AST | None))} ref) => None")
     g.line("fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error")
     g.line("fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this")
     
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny => SourcePosNone")
     g.line("fun val with_pos(pos': SourcePosAny): " + _name + " => create()")
+    g.line()
+    g.line("fun val size(): USize => 0")
+    g.line("fun val apply(idx: USize): (AST | None)? => error")
     g.line()
     g.line("fun val attach[A: Any #share](a: A): AST => this")
     g.line("fun val find_attached[A: Any #share](): A? => error")
