@@ -58,23 +58,44 @@ class _FrameTop[V: FrameVisitor[V]]
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
   var _ast: AST
+  var _maybe_continuation: (_FrameContinuation[V] | None) = None
   
   new _create_under(upper': (Frame[V] | _FrameTop[V]), a: AST) =>
     _upper = upper'
     _ast   = a
   
-  fun ref _visit(): (_FrameContinuation[V] | None) =>
+  fun ref _visit(continue_from: (_FrameContinuation[V] | None) = None)
+    : (_FrameContinuation[V] | None)
+  =>
     """
     Visit the given AST node in a new frame, after visiting its children.
     """
-    for child in _ast.values() do
+    let continue_from_idx =
+      match continue_from
+      | let c: _FrameContinuation[V] =>
+        try
+          c.indices.pop()?
+        else
+          c.continue_fn(this)
+          return _maybe_continuation
+        end
+      else 0
+      end
+    
+    for (idx, child) in _ast.pairs() do
       match child | let child_ast: AST =>
-        Frame[V]._create_under(this, child_ast)._visit()
+        match Frame[V]._create_under(this, child_ast)._visit(continue_from)
+        | let continuation: _FrameContinuation[V] =>
+          continuation.indices.push(idx)
+          return continuation
+        end
       end
     end
+    
     _ast.apply_specialised[Frame[V]](this,
       {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
-    None // TODO: return continuation if interrupted
+    
+    _maybe_continuation
   
   fun err(a: AST, s: String) =>
     """

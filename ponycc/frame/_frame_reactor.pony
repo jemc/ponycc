@@ -3,16 +3,14 @@ use "../pass"
 use poly = "../polyfill"
 use "collections"
 
-class _FrameContinuation[V: FrameVisitor[V]]
-
 actor _FrameReactor[V: FrameVisitor[V]]
   let _program: Program
   var _complete_fn: {(Program, Array[PassError] val)} val
   var _expectations: USize = 0
   embed _errs: Array[PassError] = _errs.create()
-  embed _type_decl_results:
-    MapIs[PackageTypeDecl, (_FrameContinuation[V] iso | None)] =
-      _type_decl_results.create()
+  embed _continuations:
+    Array[(Program, Package, PackageTypeDecl, _FrameContinuation[V] iso)] =
+      _continuations.create()
   
   new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
     (_program, _complete_fn) = (program, fn)
@@ -22,7 +20,15 @@ actor _FrameReactor[V: FrameVisitor[V]]
   
   be _push_expectation() => _expectations = _expectations + 1
   be _pop_expectation() =>
-    if 1 >= (_expectations = _expectations - 1) then _complete() end
+    if 1 >= (_expectations = _expectations - 1) then _maybe_complete() end
+  
+  be _maybe_complete() =>
+    if _continuations.size() == 0 then _complete(); return end
+    
+    try while true do
+      (let a, let b, let c, let continuation) = _continuations.pop()?
+      visit_type_decl(a, b, c, consume continuation)
+    end end
   
   be _complete() =>
     poly.Sort[PassError](_errs)
@@ -30,11 +36,15 @@ actor _FrameReactor[V: FrameVisitor[V]]
     for e in _errs.values() do copy.push(e) end
     (_complete_fn = {(_, _) => _ })(_program, consume copy)
   
-  be _track_type_decl(
+  be _track_result(
+    program: Program,
+    package: Package,
     type_decl: PackageTypeDecl,
-    result: (_FrameContinuation[V] iso | None))
+    result: (_FrameContinuation[V] iso | None) = None)
   =>
-    _type_decl_results(type_decl) = consume result
+    match consume result | let continuation: _FrameContinuation[V] iso =>
+      _continuations.push((program, package, type_decl, consume continuation))
+    end
   
   fun tag visit_program(program: Program) =>
     _push_expectation()
@@ -57,21 +67,26 @@ actor _FrameReactor[V: FrameVisitor[V]]
   fun tag visit_type_decl(
     program: Program,
     package: Package,
-    type_decl: PackageTypeDecl)
+    type_decl: PackageTypeDecl,
+    continue_from: (_FrameContinuation[V] val | None) = None)
   =>
     _push_expectation()
     type_decl.access_type_decl({(ast')(reactor = this) =>
+     // TODO: remove the need for this clone
+      let continue_from' =
+        try (continue_from as _FrameContinuation[V] val).clone() end
+      
       var ast = ast'
-      reactor._track_type_decl(type_decl,
+      reactor._track_result(program, package, type_decl,
         recover
           let top = _FrameTop[V](reactor, program, package, type_decl, ast)
           let frame = Frame[V]._create_under(top, ast)
-          let continuation = frame._visit()
-          if continuation is None then reactor._pop_expectation() end
+          let continuation = frame._visit(consume continue_from')
           ast = top.type_decl()
           continuation
         end
       )
+      reactor._pop_expectation()
       ast
     })
   

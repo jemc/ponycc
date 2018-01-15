@@ -10,6 +10,13 @@ trait val AST
       fun has_next(): Bool => idx < ast.size()
       fun ref next(): (AST | None)? => ast(idx = idx + 1)?
     end
+  fun val pairs(): Iterator[(USize, (AST | None))]^ =>
+    object is Iterator[(USize, (AST | None))]
+      let ast: AST = this
+      var idx: USize = 0
+      fun has_next(): Bool => idx < ast.size()
+      fun ref next(): (USize, (AST | None))? => (idx, ast(idx = idx + 1)?)
+    end
   fun val attach[A: Any val](a: A): AST
   fun val find_attached[A: Any val](): A?
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
