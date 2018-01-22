@@ -6,6 +6,7 @@ use "../pass/print"
 use "../pass/parse"
 use "../pass/syntax"
 use "../pass/sugar"
+use "../pass/names"
 
 trait val TestCommandType
   new val create()
@@ -78,6 +79,29 @@ primitive _Sugar is TestCommandType
         end
       })
       .on_complete({(module) =>
+        command.check_checks(module)
+        command.h().complete(true)
+      })
+      .apply([source])
+
+primitive _Names is TestCommandType
+  fun apply(command: TestCommandAny, source: Source) =>
+    let resolve_sources = ResolveSourceFiles(command.auth())
+    BuildCompiler[Sources, Program](ParseProgramFiles(resolve_sources))
+      .next[Program](Syntax)
+      .next[Program](Sugar)
+      .next[Program](Names)
+      .on_errors({(pass, errs) =>
+        match pass | Names =>
+          command.check_errors(errs)
+          command.h().complete(true)
+        else
+          command.print_errors(errs)
+          command.h().fail("Unexpected " + pass.name() + " error(s) occurred.")
+        end
+      })
+      .on_complete({(module) =>
+        command.check_errors([])
         command.check_checks(module)
         command.h().complete(true)
       })

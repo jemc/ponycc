@@ -11,26 +11,43 @@ actor _FrameReactor[V: FrameVisitor[V]]
   embed _continuations:
     Array[(Program, Package, PackageTypeDecl, _FrameContinuation[V] iso)] =
       _continuations.create()
+  embed _ready_to_continue:
+    MapIs[_FrameContinuation[V] tag, Any val] =
+      _ready_to_continue.create()
   
   new create(program: Program, fn: {(Program, Array[PassError] val)} val) =>
     (_program, _complete_fn) = (program, fn)
     visit_program(_program)
   
-  be err(a: AST, s: String) => _errs.push(PassError(a.pos(), s))
+  be err(a: AST, s: String) =>
+    _errs.push(PassError(a.pos(), s))
   
   be _push_expectation() => _expectations = _expectations + 1
   be _pop_expectation() =>
-    if 1 >= (_expectations = _expectations - 1) then _maybe_complete() end
+    _expectations = _expectations - 1
+    if _expectations == 0 then _complete() end
   
-  be _maybe_complete() =>
-    if _continuations.size() == 0 then _complete(); return end
-    
+  be continue_with(c: _FrameContinuation[V] tag, value: Any val) =>
+    var found = false
     try while true do
-      (let a, let b, let c, let continuation) = _continuations.pop()?
-      visit_type_decl(a, b, c, consume continuation)
+      (let prog, let pkg, let td, let continuation) = _continuations.shift()?
+      if continuation is c then
+        found = true
+        continuation.value = value
+        visit_type_decl(prog, pkg, td, consume continuation)
+        _pop_expectation()
+      else
+        _continuations.push((prog, pkg, td, consume continuation))
+      end
     end end
+    if not found then _ready_to_continue(c) = value end
   
-  be _complete() =>
+  fun ref _complete() =>
+    if (_continuations.size() > 0) and (_errs.size() == 0) then
+      _errs.push(PassError(SourcePosNone, "compiler deadlock"))
+      // TODO: show info about pending continuations here.
+    end
+    
     poly.Sort[PassError](_errs)
     let copy = recover Array[PassError] end
     for e in _errs.values() do copy.push(e) end
@@ -43,7 +60,16 @@ actor _FrameReactor[V: FrameVisitor[V]]
     result: (_FrameContinuation[V] iso | None) = None)
   =>
     match consume result | let continuation: _FrameContinuation[V] iso =>
-      _continuations.push((program, package, type_decl, consume continuation))
+      if _ready_to_continue.contains(continuation) then
+        try
+          (_, let value) = _ready_to_continue.remove(continuation)?
+          continuation.value = value
+          visit_type_decl(program, package, type_decl, consume continuation)
+          _pop_expectation()
+        end
+      else
+        _continuations.push((program, package, type_decl, consume continuation))
+      end
     end
   
   fun tag visit_program(program: Program) =>
@@ -83,6 +109,9 @@ actor _FrameReactor[V: FrameVisitor[V]]
           let frame = Frame[V]._create_under(top, ast)
           let continuation = frame._visit(consume continue_from')
           ast = top.type_decl()
+          match continuation | let c: _FrameContinuation[V] =>
+            reactor._push_expectation()
+          end
           continuation
         end
       )

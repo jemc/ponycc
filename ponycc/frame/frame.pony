@@ -1,5 +1,6 @@
 use "../ast"
 use "../pass"
+use "../unreachable"
 
 interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
@@ -43,6 +44,8 @@ class _FrameTop[V: FrameVisitor[V]]
     (_reactor, _program, _package, _type_decl, _ast) =
       (reactor', program', package', type_decl', ast')
   
+  fun _r(): _FrameReactor[V] => _reactor
+  
   fun err(a: AST, s: String) => _reactor.err(a, s)
   
   fun parent(n: USize): AST => _ast // ignore n - we can't go any higher
@@ -54,6 +57,56 @@ class _FrameTop[V: FrameVisitor[V]]
   fun method_body(): (Sequence | None) => None
   fun constraint(): (Type | None) => None
   fun iftype_constraint(): (Type | None) => None
+  
+  fun find_type_decl(package_id': (Id | None), id: Id, fn: {(TypeDecl)} val) =>
+    let reactor = _reactor
+    match package_id'
+    | let package_id: Id =>
+      reactor._push_expectation()
+      _type_decl.access_use_packages({(use_packages)(reactor, id, fn) =>
+        for use_package in use_packages.values() do
+          if
+            try (use_package.prefix() as Id).value() == package_id.value()
+            else false
+            end
+          then
+            try
+              let package' = use_package.find_attached[Package]()?
+              reactor._push_expectation()
+              package'.access_type_decls({(type_decls)(reactor, id, fn) =>
+                for type_decl in type_decls.values() do
+                  reactor._push_expectation()
+                  type_decl.access_type_decl({(type_decl)(reactor, id, fn) =>
+                    if id.value() == type_decl.name().value() then
+                      fn(type_decl)
+                    end
+                    reactor._pop_expectation()
+                    type_decl
+                  })
+                end
+                reactor._pop_expectation()
+              })
+            end
+          end
+        end
+        reactor._pop_expectation()
+      })
+    else
+      reactor._push_expectation()
+      _package.access_type_decls({(type_decls)(reactor, id, fn) =>
+        for type_decl in type_decls.values() do
+          reactor._push_expectation()
+          type_decl.access_type_decl({(type_decl)(reactor, id, fn) =>
+            if id.value() == type_decl.name().value() then
+              fn(type_decl)
+            end
+            reactor._pop_expectation()
+            type_decl
+          })
+        end
+        reactor._pop_expectation()
+      })
+    end
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
@@ -76,7 +129,7 @@ class Frame[V: FrameVisitor[V]]
         try
           c.indices.pop()?
         else
-          c.continue_fn(this)
+          c.continue_fn(this, c.value)
           return _maybe_continuation
         end
       else 0
@@ -96,6 +149,8 @@ class Frame[V: FrameVisitor[V]]
       {[A: AST val](frame, a: A) => V.visit[A](frame, a) })
     
     _maybe_continuation
+  
+  fun _r(): _FrameReactor[V] => _upper._r()
   
   fun err(a: AST, s: String) =>
     """
@@ -129,6 +184,22 @@ class Frame[V: FrameVisitor[V]]
       end
       _ast = replace'
     end
+  
+  fun ref await_type_decl(package_id': (Id | None), id: Id, fn: {(Frame[V], (TypeDecl | None))} val) =>
+    // TODO: make this a generic function that works for any Promise.
+    let continuation = _FrameContinuation[V]({(frame, value) =>
+      try fn(frame, value as (TypeDecl | None)) else Unreachable end
+    })
+    
+    _maybe_continuation = continuation
+    
+    find_type_decl(package_id', id,
+      {(ast)(r = _r(), c: _FrameContinuation[V] tag = continuation) =>
+        r.continue_with(c, ast)
+      })
+  
+  fun find_type_decl(package_id': (Id | None), id: Id, fn: {(TypeDecl)} val) =>
+    _upper.find_type_decl(package_id', id, fn)
   
   fun program(): Program =>
     """
