@@ -13,7 +13,7 @@ primitive P
     "foo"
     'f'
     __loc
-  
+
   fun test_array() =>
     [
       A
@@ -25,7 +25,7 @@ primitive P
       B
       C
     ]
-  
+
   fun test_tuple() =>
     (A, B, C)
     ((A, B), C)

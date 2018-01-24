@@ -7,17 +7,17 @@ use "../ast"
 
 class TestFixture is UnitTest
   let source: Source
-  
+
   new iso create(source': Source) => source = source'
-  
+
   fun name(): String =>
     try Path.rel(Path.dir(__loc.file()), source.path())?
     else source.path()
     end
-  
+
   fun apply(h: TestHelper) =>
     let env = h.env
-    
+
     // Confirm that the start of the source file is a docstring.
     let triple = "\"\"\""
     var i: ISize = 0
@@ -26,7 +26,7 @@ class TestFixture is UnitTest
     else
       return h.fail("Expected the start of the source file to be a docstring.")
     end
-    
+
     // Parse the list of commands from the source file docstring.
     let commands = List[TestCommandAny iso]
     try
@@ -35,7 +35,7 @@ class TestFixture is UnitTest
         let j = source.content().find("\n", i)?
         let line: String = source.content().substring(i, j)
         i = j
-        
+
         commands.unshift(
           if line.at(triple)        then break
           elseif line.at("$PRINT")  then TestCommand[_Print](h, line.substring(7))?
@@ -52,12 +52,12 @@ class TestFixture is UnitTest
     else
       return h.fail("Expected to be able to parse the test plan docstring.")
     end
-    
+
     // Associate ERROR and CHECK commands with their preceding parent commands.
     try
       let errors = List[TestCommand[_Error]]
       let checks = List[TestCommand[_Check]]
-      
+
       for _ in Range(0, commands.size()) do
         match commands.shift()?
         | let e: TestCommand[_Error] iso => errors.unshift(consume e)
@@ -69,6 +69,6 @@ class TestFixture is UnitTest
         end
       end
     end
-    
+
     // Execute the final list of commands.
     try while true do commands.shift()?(source) end end

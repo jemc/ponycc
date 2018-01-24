@@ -36,15 +36,15 @@ primitive P
   fun apply(u: U64) =>
     match u | 0 | 1 => None else None end
     match u | 0 | 1 else None end
-    
+
     match u | let x: X => true end
     match u | var x: X => true end
     match u | let x => true end
-    
+
     match u | let x: (A, B) => true end
     match u | (let a: A, let b: B) => true end
     match u | (var a: A, let b) => true end
-    
+
     match u | (let x: X) => true end
     match u | (false; let x: X) => true end
     match u | (false; false) => true end

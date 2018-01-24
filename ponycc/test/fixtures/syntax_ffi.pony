@@ -20,6 +20,6 @@ use @ffi_with_default_params[I32](a: U8 = 0, b: U8 = 1)
 primitive P
   fun method_with_ellipsis(m: String, ...) => None
   fun method_with_default_params(a: U8 = 0, b: U8 = 1) => None
-  
+
   fun apply() =>
     @printf("foo".cstring() where okay = false)

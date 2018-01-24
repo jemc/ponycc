@@ -8,7 +8,7 @@ primitive P
     end
     object val is T
       let x: X = X
-      
+
       fun apply(): this->X =>
         x
     end

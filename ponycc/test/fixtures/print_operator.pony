@@ -19,7 +19,7 @@ primitive P
     -7 + 8 + 9
     -(7 + 8) + 9
     -(7 + 8 + 9)
-  
+
   fun test_arithmetic_unsafe() =>
     7 +~ 8 +~ 9
     (7 +~ 8) +~ 9
@@ -36,7 +36,7 @@ primitive P
     -~7 + 8 + 9
     -~(7 + 8) + 9
     -~(7 + 8 + 9)
-  
+
   fun test_comparison(a: A, b: B, c: C) =>
     a == b == c
     (a == b) == c
@@ -50,7 +50,7 @@ primitive P
     (a > b) > c
     a < b < c
     a < (b < c)
-  
+
   fun test_comparison_unsafe(a: A, b: B, c: C) =>
     a ==~ b ==~ c
     (a ==~ b) ==~ c
@@ -64,7 +64,7 @@ primitive P
     (a >~ b) >~ c
     a <~ b <~ c
     a <~ (b <~ c)
-  
+
   fun test_logical(a: Bool, b: Bool, c: Bool) =>
     a and b and c
     a and (b or c)
@@ -73,7 +73,7 @@ primitive P
     a xor b xor c
     (not a) and (not not b) and c
     not (a and (not not (b and c)))
-  
+
   fun test_identity(a: A, b: B, c: C) =>
     a is b is c
     (a is b) is c

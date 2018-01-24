@@ -8,15 +8,15 @@ primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
   """
   The purpose of the ParseCleanup pass is to check and/or clean up any oddities
   in the AST related to the specific implementation of the parser or grammar.
-  
+
   Checks or cleanup operations that would also need to also be done for AST
   nodes that had been created directly in Pony code do not belong here
   (they probably belong in the Sugar pass, or later).
-  
+
   This pass changes the AST, and is not idempotent.
   """
   fun name(): String => "parse-cleanup"
-  
+
   fun apply(module: Module, fn: {(Module, Array[PassError] val)} val) =>
     let program = Program
     let package = Package
@@ -24,13 +24,13 @@ primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
       package.add_type_decl(PackageTypeDecl(t))
     end
     program.add_package(package)
-    
+
     FrameRunner[ParseCleanup](program, {(program, errs)(module, fn) =>
       program.get_all_type_decls({(type_decls) =>
         fn(module.with_type_decls(type_decls), errs)
       })
     })
-  
+
   fun visit[A: AST val](frame: Frame[ParseCleanup], ast: A) =>
     iftype A <: Method then
       match ast.body() | let body: Sequence =>
@@ -51,7 +51,7 @@ primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
           end
         end
       end
-    
+
     elseif A <: BinaryOp then
       if
         match ast.left()
@@ -69,14 +69,14 @@ primitive ParseCleanup is (Pass[Module, Module] & FrameVisitor[ParseCleanup])
         frame.err(ast,
           "Operator precedence is not supported. Parentheses are required.")
       end
-    
+
     elseif A <: TupleType then
       // If the tuple type contains just one element, we unwrap it.
       // It isn't a tuple type; just a type that was surrounded by parentheses.
       if ast.list().size() == 1 then
         try frame.replace(ast.list()(0)?) end
       end
-    
+
     elseif A <: Semicolon then
       frame.err(ast,
         "Use semicolons only for separating expressions on the same line.")

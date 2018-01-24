@@ -40,26 +40,26 @@ $ERROR An error statement cannot have a value expression.
 
 actor A
   let field_default_return: None = (return None)
-  
+
   fun parameter_default_return(x: None = (return None)) => None
-  
+
   new constructor_return() => return
   new constructor_return_this() => return this
-  
+
   be behaviour_return() => return
   be behaviour_return_this() => return this
-  
+
   fun intrinsic() => compile_intrinsic
   fun true_intrinsic() => true; compile_intrinsic
   fun if_intrinsic() => if true then compile_intrinsic end
   fun intrinsic_true() => compile_intrinsic true
-  
+
   fun apply() =>
     ifdef windows then compile_error end
     ifdef windows then compile_error "sorry" end
     ifdef windows then compile_error true end
     compile_error "sorry"
     ifdef windows then true; compile_error "sorry" end
-    
+
     error
     error "value"

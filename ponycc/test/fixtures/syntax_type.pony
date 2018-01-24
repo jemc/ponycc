@@ -30,11 +30,11 @@ primitive P
   fun this_type(): this => None
   fun this_arrow_type(): this->None => None
   fun type_arrow_this(): None->this => None
-  
+
   fun constraint_tuple[A: (U8, U8)]() => None
   fun constraint_union_tuple[A: ((U8, U8) | U64)]() => None
   fun constraint_type_arg_tuple[A: Array[(U8, U8)]]() => None
-  
+
   fun apply() =>
     let v: val = true
     let v: #share = true

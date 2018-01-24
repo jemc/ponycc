@@ -15,7 +15,7 @@ primitive P
       None
       None
     end
-  
+
   fun test_repeat() =>
     repeat
       return
@@ -29,7 +29,7 @@ primitive P
       None
       None
     end
-  
+
   fun test_for(array: Array[A]) =>
     for a in array.values() do
       A

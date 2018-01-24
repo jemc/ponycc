@@ -35,26 +35,26 @@ class TkTree
   var pos: SourcePosAny
   embed children: Array[TkTree] = []
   // TODO: annotations
-  
+
   new ref create(token: _Token) => (tk, pos) = token
-  
+
   fun string(): String => _show()
-  
+
   fun _show(buf': String iso = recover String end): String iso^ =>
     var buf = consume buf'
     let nonterminal = children.size() > 0
-    
+
     if nonterminal then buf.push('(') end
     buf.append(tk.string())
-    
+
     for child in children.values() do
       buf.push(' ')
       buf = child._show(consume buf)
     end
-    
+
     if nonterminal then buf.push(')') end
     buf
-  
+
   fun to_ast(
     errs: Array[(String, SourcePosAny)] = [])
     : (AST | None) ?
@@ -63,7 +63,7 @@ class TkTree
     for child in children.values() do
       ast_children.push(child.to_ast(errs)?)
     end
-    
+
     // TODO: is there a less convoluted way to lift the AST to val?
     var errs' = recover Array[(String, SourcePosAny)] end
     try

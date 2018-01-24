@@ -35,7 +35,7 @@ primitive P
       None
       None
     end
-  
+
   fun test_ifdef() =>
     ifdef "custom" then
       A
@@ -68,7 +68,7 @@ primitive P
       compile_intrinsic
       compile_intrinsic None
     end
-  
+
   fun test_iftype[X: (A | B | C)]() =>
     iftype X <: A then
       A

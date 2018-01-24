@@ -7,7 +7,7 @@ actor Main
     | ""       => abort(env, "missing expected 'ast' or 'parser' argument")
     else          abort(env, "imvalid argument - expected 'ast' or 'parser'")
     end
-  
+
   fun ref abort(env: Env, msg: String) =>
     env.err.print(msg)
     @pony_exitcode[None](I32(1))

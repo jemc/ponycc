@@ -12,7 +12,7 @@ type _GenItem is (String | _GenIndentPush | _GenIndentPop | _GenNewline)
 class _Gen
   var _list: Array[_GenItem] = []
   new create() => None
-  
+
   fun ref string(): String iso^ =>
     var size:   USize = 0
     var indent: USize = 0
@@ -24,7 +24,7 @@ class _Gen
       | _GenNewline    => size = size + 1 + indent
       end
     end
-    
+
     let buf = recover String end
     indent = 0
     for x in _list.values() do
@@ -36,19 +36,19 @@ class _Gen
                           for i in Range(0, indent) do buf.push(' ') end
       end
     end
-    
+
     buf
-  
+
   fun ref write(s: String) => _list.push(s)
-  
+
   fun ref push_indent() => _list.push(_GenIndentPush)
   fun ref pop_indent()  => _list.push(_GenIndentPop)
-  
+
   fun ref line() => _list.push(_GenNewline)
   fun ref line_start() =>
     let last_item = try _list(_list.size() - 1)? else _GenNewline end
     if last_item isnt _GenNewline then line() end
-  
+
   fun ref string_triple(s: String) =>
     line_start(); write("\"\"\"")
     write(s) // TODO: split on newline and add indent to each line.
@@ -56,12 +56,12 @@ class _Gen
 
 primitive Print is Pass[Module, String]
   fun name(): String => "print"
-  
+
   fun apply(x: Module, fn: {(String, Array[PassError] val)} val) =>
     let g = _Gen
     _show(g, x)
     fn.apply(g.string(), []) // TODO: use apply sugar
-  
+
   fun _show(g: _Gen, x': AST) =>
     match x'
     | let x: Module =>
@@ -78,13 +78,13 @@ primitive Print is Pass[Module, String]
         _show(g, t)
       end
       g.line()
-    
+
     | let x: UsePackage =>
       g.line_start()
       g.write("use ")
       try _show(g, x.prefix() as Id); g.write(" = ") end
       _show(g, x.package())
-    
+
     | let x: UseFFIDecl =>
       g.line_start()
       g.write("use @")
@@ -93,7 +93,7 @@ primitive Print is Pass[Module, String]
       _show(g, x.params())
       try let q = x.partial() as Question; g.write(" "); _show(g, q) end
       try let e = x.guard() as IfDefCond; g.write(" if "); _show(g, e) end
-    
+
     | let x:
       (TypeAlias | Interface | Class | Actor | Struct | Primitive | Trait)
     =>
@@ -108,7 +108,7 @@ primitive Print is Pass[Module, String]
         | let _: Primitive => "primitive "
         | let _: Trait     => "trait "
         end)
-      
+
       try _show(g, x.at() as At) end
       try let c = x.cap() as Cap; _show(g, c); g.write(" ") end
       _show(g, x.name())
@@ -118,7 +118,7 @@ primitive Print is Pass[Module, String]
       try let d = x.docs() as LitString; g.line(); g.write(d.pos().string()) end // TODO: less cheating...
       _show(g, x.members())
       g.pop_indent()
-    
+
     | let x: Members =>
       for f in x.fields().values() do
         _show(g, f)
@@ -127,7 +127,7 @@ primitive Print is Pass[Module, String]
         if (x.fields().size() > 0) or (i > 0) then g.line(); g.line() end
         _show(g, m)
       end
-    
+
     | let x: (FieldLet | FieldVar | FieldEmbed) =>
       g.line_start()
       g.write(
@@ -136,12 +136,12 @@ primitive Print is Pass[Module, String]
         | let _: FieldVar   => "var "
         | let _: FieldEmbed => "embed "
         end)
-      
+
       _show(g, x.name())
       g.write(": ")
       _show(g, x.field_type())
       try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
-    
+
     | let x: (MethodFun | MethodNew | MethodBe) =>
       g.line_start()
       g.write(
@@ -150,7 +150,7 @@ primitive Print is Pass[Module, String]
         | let _: MethodNew => "new "
         | let _: MethodBe  => "be "
         end)
-      
+
       try _show(g, x.cap() as Cap); g.write(" ") end
       _show(g, x.name())
       try _show(g, x.type_params() as TypeParams) end
@@ -164,7 +164,7 @@ primitive Print is Pass[Module, String]
       try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
       try _show_bare(g, x.body() as Sequence) end
       g.pop_indent()
-    
+
     | let x: TypeParams =>
       g.write("[")
       for (i, p) in x.list().pairs() do
@@ -172,12 +172,12 @@ primitive Print is Pass[Module, String]
         _show(g, p)
       end
       g.write("]")
-    
+
     | let x: TypeParam =>
       _show(g, x.name())
       try let t = x.constraint() as Type; g.write(": "); _show(g, t) end
       try let t = x.default() as Type; g.write(" = "); _show(g, t) end
-    
+
     | let x: TypeArgs =>
       g.write("[")
       for (i, a) in x.list().pairs() do
@@ -185,7 +185,7 @@ primitive Print is Pass[Module, String]
         _show(g, a)
       end
       g.write("]")
-    
+
     | let x: Params =>
       g.write("(")
       let iter = x.list().values()
@@ -195,22 +195,22 @@ primitive Print is Pass[Module, String]
       end
       try _show(g, x.ellipsis() as Ellipsis) end
       g.write(")")
-    
+
     | let x: Param =>
       _show(g, x.name())
       try let t = x.param_type() as Type; g.write(": "); _show(g, t) end
       try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
-    
+
     | let x: Sequence =>
       if x.list().size() == 0 then return g.write("None") end
-      
+
       if x.list().size() > 1 then g.write("(") end
       for (i, expr) in x.list().pairs() do
         if i > 0 then g.write("; ") end
         _show(g, expr)
       end
       if x.list().size() > 1 then g.write(")") end
-    
+
     | let x:
       (Return | Break | Continue | Error | CompileIntrinsic | CompileError)
     =>
@@ -223,24 +223,24 @@ primitive Print is Pass[Module, String]
         | let _: CompileIntrinsic => "compile_intrinsic"
         | let _: CompileError     => "compile_error"
         end)
-      
+
       try let v = x.value() as AST; g.write(" "); _show(g, v) end
-    
+
     | let x: (LocalLet | LocalVar) =>
       g.write(
         match x
         | let _: LocalLet => "let "
         | let _: LocalVar => "var "
         end)
-      
+
       _show(g, x.name())
       try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
-    
+
     | let x: As =>
       _show(g, x.expr())
       g.write(" as ")
       _show(g, x.as_type())
-    
+
     | let x: Tuple =>
       g.write("(")
       for (i, e) in x.elements().pairs() do
@@ -248,7 +248,7 @@ primitive Print is Pass[Module, String]
         _show(g, e) // TODO: parenthesize if more than one expr in seq
       end
       g.write(")")
-    
+
     | let x: IdTuple =>
       g.write("(")
       for (i, e) in x.elements().pairs() do
@@ -256,18 +256,18 @@ primitive Print is Pass[Module, String]
         _show(g, e)
       end
       g.write(")")
-    
+
     | let x: AssignTuple =>
       for (i, e) in x.elements().pairs() do
         if i > 0 then g.write(", ") end
         _show(g, e)
       end
-    
+
     | let x: Consume =>
       g.write("consume ")
       try _show(g, x.cap() as Cap); g.write(" ") end
       _show(g, x.expr())
-    
+
     | let x: Recover =>
       g.write("recover")
       try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
@@ -276,7 +276,7 @@ primitive Print is Pass[Module, String]
       g.pop_indent()
       g.line_start()
       g.write("end")
-    
+
     | let x: (Not | Neg | NegUnsafe | AddressOf | DigestOf) =>
       g.write(
         match x
@@ -286,13 +286,13 @@ primitive Print is Pass[Module, String]
         | let _: AddressOf => "addressof "
         | let _: DigestOf  => "digestof "
         end)
-      
+
         match x.expr() | let s: Sequence =>
           _show_subsequence(g, s)
         else
           _show(g, x.expr())
         end
-    
+
     | let x:
       ( Add | AddUnsafe | Sub | SubUnsafe | Mul | MulUnsafe
       | Div | DivUnsafe | Mod | ModUnsafe | LShift
@@ -306,7 +306,7 @@ primitive Print is Pass[Module, String]
       else
         _show(g, x.left())
       end
-      
+
       g.write(
         match x
         | let _: Add          => " + "
@@ -342,30 +342,30 @@ primitive Print is Pass[Module, String]
         | let _: XOr          => " xor "
         | let _: Assign       => " = "
         end)
-      
-      
+
+
         match x.right() | let s: Sequence =>
           _show_subsequence(g, s)
         else
           _show(g, x.right())
         end
-    
+
     | let x: (Dot | Chain | Tilde) =>
       _show(g, x.left())
-      
+
       g.write(
         match x
         | let _: Dot   => "."
         | let _: Chain => ".>"
         | let _: Tilde => "~"
         end)
-      
+
       _show(g, x.right())
-    
+
     | let x: Qualify =>
       _show(g, x.left())
       _show(g, x.right())
-    
+
     | let x: Call =>
       _show(g, x.callable())
       g.write("(")
@@ -375,7 +375,7 @@ primitive Print is Pass[Module, String]
       end
       _show(g, x.named_args())
       g.write(")")
-    
+
     | let x: CallFFI =>
       g.write("@")
       _show(g, x.name())
@@ -388,42 +388,42 @@ primitive Print is Pass[Module, String]
       _show(g, x.named_args())
       g.write(")")
       try _show(g, x.partial() as Question) end
-    
+
     | let x: Args =>
       for (i, a) in x.list().pairs() do
         if i > 0 then g.write(", ") end
         _show(g, a)
       end
-    
+
     | let x: NamedArgs =>
       for (i, a) in x.list().pairs() do
         if i > 0 then g.write(", ") else g.write("where ") end
         _show(g, a)
       end
-    
+
     | let x: NamedArg =>
       _show(g, x.name())
       g.write(" = ")
       _show(g, x.value())
-    
+
     | let x: (IfDefAnd | IfDefOr) =>
       _show(g, x.left())
-      
+
       g.write(
         match x
         | let _: IfDefAnd => " and "
         | let _: IfDefOr  => " or "
         end)
-      
+
       _show(g, x.right())
-    
+
     | let x: IfDefNot =>
       g.write("not ")
       _show(g, x.expr())
-    
+
     | let x: IfDefFlag =>
       _show(g, x.name())
-    
+
     | let x: (If | IfDef | IfType) =>
       match x
       | let i: If =>
@@ -436,7 +436,7 @@ primitive Print is Pass[Module, String]
         g.write("iftype ")
         _show_if[IfType](g, i)
       end
-    
+
     | let x: While =>
       g.line_start()
       g.write("while ")
@@ -456,7 +456,7 @@ primitive Print is Pass[Module, String]
         g.line_start()
       end
       g.write("end")
-    
+
     | let x: Repeat =>
       g.line_start()
       g.write("repeat")
@@ -477,7 +477,7 @@ primitive Print is Pass[Module, String]
       end
       g.line_start()
       g.write("end")
-    
+
     | let x: For =>
       g.line_start()
       g.write("for ")
@@ -499,7 +499,7 @@ primitive Print is Pass[Module, String]
         g.line_start()
       end
       g.write("end")
-    
+
     | let x: With =>
       g.line_start()
       g.write("with ")
@@ -519,7 +519,7 @@ primitive Print is Pass[Module, String]
         g.line_start()
       end
       g.write("end")
-    
+
     | let x: Match =>
       g.line_start()
       g.write("match ")
@@ -536,7 +536,7 @@ primitive Print is Pass[Module, String]
         g.line_start()
       end
       g.write("end")
-    
+
     | let x: Cases =>
       var prev_body = true
       for c in x.list().values() do
@@ -544,7 +544,7 @@ primitive Print is Pass[Module, String]
         _show(g, c)
         prev_body = try c.body() as Sequence; true else false end
       end
-    
+
     | let x: Case =>
       g.write("| ")
       _show(g, x.expr())
@@ -562,7 +562,7 @@ primitive Print is Pass[Module, String]
         g.pop_indent()
         g.line_start()
       end
-    
+
     | let x: Try =>
       g.write("try")
       g.push_indent()
@@ -588,7 +588,7 @@ primitive Print is Pass[Module, String]
         g.line_start()
       end
       g.write("end")
-    
+
     | let x: Lambda =>
       g.write("{")
       try _show(g, x.method_cap() as Cap); g.write(" ") end
@@ -606,7 +606,7 @@ primitive Print is Pass[Module, String]
       g.line_start()
       g.write("}")
       try let c = x.object_cap() as Cap; g.write(" "); _show(g, c) end
-    
+
     | let x: LambdaCaptures =>
       g.write("(")
       for (i, c) in x.list().pairs() do
@@ -614,12 +614,12 @@ primitive Print is Pass[Module, String]
         _show(g, c)
       end
       g.write(")")
-    
+
     | let x: LambdaCapture =>
       _show(g, x.name())
       try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
       try let v = x.value() as Expr; g.write(" = "); _show(g, v) end
-    
+
     | let x: Object =>
       g.line_start()
       g.write("object")
@@ -630,7 +630,7 @@ primitive Print is Pass[Module, String]
       g.pop_indent()
       g.line_start()
       g.write("end")
-    
+
     | let x: LitArray =>
       g.write("[")
       try let t = x.elem_type() as Type; g.write("as "); _show(g, t); g.write(":") end
@@ -642,7 +642,7 @@ primitive Print is Pass[Module, String]
       g.pop_indent()
       if x.sequence().list().size() > 0 then g.line_start() end
       g.write("]")
-    
+
     | let x: Reference => _show(g, x.name())
     | let x: DontCare => g.write("_")
     | let x: PackageRef => _show(g, x.name())
@@ -653,7 +653,7 @@ primitive Print is Pass[Module, String]
     | let x: LocalLetRef => _show(g, x.name())
     | let x: LocalVarRef => _show(g, x.name())
     | let x: ParamRef => _show(g, x.name())
-    
+
     | let x: UnionType =>
       g.write("(")
       for (i, t) in x.list().pairs() do
@@ -661,7 +661,7 @@ primitive Print is Pass[Module, String]
         _show(g, t)
       end
       g.write(")")
-    
+
     | let x: IsectType =>
       g.write("(")
       for (i, t) in x.list().pairs() do
@@ -669,7 +669,7 @@ primitive Print is Pass[Module, String]
         _show(g, t)
       end
       g.write(")")
-    
+
     | let x: TupleType =>
       if x.list().size() > 1 then g.write("(") end
       for (i, t) in x.list().pairs() do
@@ -677,12 +677,12 @@ primitive Print is Pass[Module, String]
         _show(g, t)
       end
       if x.list().size() > 1 then g.write(")") end
-    
+
     | let x: ViewpointType =>
       _show(g, x.left())
       g.write("->")
       _show(g, x.right())
-    
+
     | let x: LambdaType =>
       g.write("{")
       try _show(g, x.method_cap() as Cap) end
@@ -699,41 +699,41 @@ primitive Print is Pass[Module, String]
       g.write("}")
       try let c = x.object_cap() as Cap; g.write(" "); _show(g, c) end
       try _show(g, x.cap_mod() as CapMod) end
-    
+
     | let x: NominalType =>
       try _show(g, x.package() as Id); g.write(".") end
       _show(g, x.name())
       try _show(g, x.type_args() as TypeArgs) end
       try let c = x.cap() as (Cap | GenCap); g.write(" "); _show(g, c) end
       try _show(g, x.cap_mod() as CapMod) end
-    
+
     | let x: TypeParamRef => None // TODO
-    
+
     | let x: ThisType => g.write("this")
     | let x: DontCareType => g.write("_")
-    
+
     | let x: Iso => g.write("iso")
     | let x: Trn => g.write("trn")
     | let x: Ref => g.write("ref")
     | let x: Val => g.write("val")
     | let x: Box => g.write("box")
     | let x: Tag => g.write("tag")
-    
+
     | let x: CapRead  => g.write("#read")
     | let x: CapSend  => g.write("#send")
     | let x: CapShare => g.write("#share")
     | let x: CapAlias => g.write("#alias")
     | let x: CapAny   => g.write("#any")
-    
+
     | let x: Aliased   => g.write("!")
     | let x: Ephemeral => g.write("^")
     | let x: At        => g.write("@")
     | let x: Question  => g.write("?")
     | let x: Ellipsis  => g.write("...")
-    
+
     | let x: Id   => g.write(x.pos().string()) // TODO: less cheating, here and below...
     | let x: This => g.write("this")
-    
+
     | let x: LitTrue      => g.write("true")
     | let x: LitFalse     => g.write("false")
     | let x: LitFloat     => g.write(x.pos().string())
@@ -741,11 +741,11 @@ primitive Print is Pass[Module, String]
     | let x: LitCharacter => g.write(x.pos().string()) // TODO: single-quote
     | let x: LitString    => g.write(x.pos().string()) // TODO: normal quote
     | let x: LitLocation  => g.write("__loc")
-    
+
     // TODO: remove these defaults when everything is implemented:
     | let x: AST  => g.write("/*~" + x.string() + "~*/")
     end
-  
+
   fun _show_if[A: (If val | IfDef val | IfType val)](g: _Gen, x: A) =>
     iftype A <: If val then
       _show(g, x.condition())
@@ -760,7 +760,7 @@ primitive Print is Pass[Module, String]
     g.push_indent()
     g.line_start()
     _show_bare(g, x.then_body())
-    
+
     g.pop_indent()
     g.line_start()
     iftype A <: If val then
@@ -770,7 +770,7 @@ primitive Print is Pass[Module, String]
     elseif A <: IfType val then
       _show_ifelse[A](g, x.else_body())
     end
-  
+
   fun _show_ifelse[A: (If val | IfDef val | IfType val)](g: _Gen,
     x: (Sequence | A | None))
   =>
@@ -789,20 +789,20 @@ primitive Print is Pass[Module, String]
     else
       g.write("end")
     end
-  
+
   fun _show_subsequence(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
-    
+
     g.write("(")
     for (i, expr) in x.list().pairs() do
       if i > 0 then g.write("; ") end
       _show(g, expr)
     end
     g.write(")")
-  
+
   fun _show_bare(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
-    
+
     for (i, expr) in x.list().pairs() do
       g.line_start()
       _show(g, expr)

@@ -9,23 +9,23 @@ class val ResolveSourceFiles
   """
   let _auth: AmbientAuth
   let _search_paths: Array[String] val
-  
+
   new val create(auth': AmbientAuth, search_paths': Array[String] val = []) =>
     """
     Ambient authority is required so that the entire filesystem is available.
-    
+
     The optional search_paths parameter will specify the global search paths
     to fall back to if a directory couldn't be found relative to the start path.
     """
     (_auth, _search_paths) = (auth', search_paths')
-  
+
   fun apply(start_path: String, path: String): (String, Sources)? =>
     """
     Given the path of a file or directory to start with, find a directory
     that exists relative to that starting path or one of the other search paths,
     and return all of the *.pony source files that exist in that directory,
     loaded into memory as Source objects, ready for parsing.
-    
+
     If the start_path is not a directory, the directory containing that file
     will be used as the actual starting path for the search.
     """
@@ -39,12 +39,12 @@ class val ResolveSourceFiles
       end
     end
     (dir_path.path, consume sources)
-  
+
   fun _find_dir(start_path: String, path: String): FilePath? =>
     """
     Given the path of a file or directory to start with, find a directory
     that exists relative to that starting path or one of the other search paths.
-    
+
     If the start_path is not a directory, the directory containing that file
     will be used as the actual starting path for the search.
     """
@@ -58,15 +58,15 @@ class val ResolveSourceFiles
             Path.join(Path.dir(search_path), path)
           end
         ))?
-        
+
         if _is_dir(dir_path.path) then return dir_path end
       else
         continue
       end
     end
-    
+
     error
-  
+
   fun _is_dir(path: String): Bool =>
     """
     Return true if the given path exists as a directory on the file system.

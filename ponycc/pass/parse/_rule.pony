@@ -11,17 +11,17 @@ class _RuleState
                                          // - None = rule is not optional
   var matched:    Bool = false           // Has the rule matched yet
   var deferred:   (_Token | None) = None // Deferred token, if any
-  
+
   new create(n: String, d: String) => (fn_name, desc) = (n, d)
-  
+
   fun ref add_tree(t: TkTree, build: _Build) =>
     process_deferred_tree()
-    
+
     if tree is None
     then tree = t
     else build(this, t)
     end
-  
+
   fun ref add_deferrable_ast(defer: _Token) =>
     if (not matched)
       and (tree is None)
@@ -30,9 +30,9 @@ class _RuleState
       deferred = defer
       return
     end
-    
+
     add_tree(TkTree(defer), _BuildDefault)
-  
+
   fun ref process_deferred_tree() =>
     try
       tree = TkTree(deferred as _Token)

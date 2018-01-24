@@ -29,18 +29,18 @@ class C[A, B = I] is (T & I)
 actor Main
   let _env: Env
   embed array: Array[String] = []
-  
+
   new create(env: Env) =>
     _env = env
-  
+
   be awesome() =>
     None
-  
+
   fun tag name[A: T = C[I]](i: I32): String if i == 0 =>
     "ZERO"
-  
+
   fun tag name[A: T = C[I]](i: I32): String =>
     "NONZERO"
-  
+
   fun fail() ? =>
     error
