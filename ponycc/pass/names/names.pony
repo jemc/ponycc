@@ -16,7 +16,8 @@ primitive Names is (Pass[Program, Program] & FrameVisitor[Names])
   
   fun visit[A: AST val](frame: Frame[Names], ast: A) =>
     iftype A <: NominalType then
-      frame.await_type_decl(ast.package(), ast.name(), {(frame, type_decl) =>
+      let promise = frame.find_type_decl(ast.package(), ast.name())
+      frame.await[TypeDecl](promise, {(frame, type_decl) =>
         frame.err(ast, "This is a reference.")
         try
           frame.err((type_decl as TypeDecl).name(),

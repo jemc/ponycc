@@ -1,6 +1,7 @@
 use "../ast"
 use "../pass"
 use "../unreachable"
+use "promises"
 
 interface val FrameVisitor[V: FrameVisitor[V]]
   new val create()
@@ -58,12 +59,13 @@ class _FrameTop[V: FrameVisitor[V]]
   fun constraint(): (Type | None) => None
   fun iftype_constraint(): (Type | None) => None
   
-  fun find_type_decl(package_id': (Id | None), id: Id, fn: {(TypeDecl)} val) =>
+  fun find_type_decl(package_id': (Id | None), id: Id): Promise[TypeDecl] =>
+    let promise = Promise[TypeDecl]
     let reactor = _reactor
     match package_id'
     | let package_id: Id =>
       reactor._push_expectation()
-      _type_decl.access_use_packages({(use_packages)(reactor, id, fn) =>
+      _type_decl.access_use_packages({(use_packages)(reactor, id, promise) =>
         for use_package in use_packages.values() do
           if
             try (use_package.prefix() as Id).value() == package_id.value()
@@ -73,12 +75,12 @@ class _FrameTop[V: FrameVisitor[V]]
             try
               let package' = use_package.find_attached[Package]()?
               reactor._push_expectation()
-              package'.access_type_decls({(type_decls)(reactor, id, fn) =>
+              package'.access_type_decls({(type_decls)(reactor, id, promise) =>
                 for type_decl in type_decls.values() do
                   reactor._push_expectation()
-                  type_decl.access_type_decl({(type_decl)(reactor, id, fn) =>
+                  type_decl.access_type_decl({(type_decl)(reactor, id, promise) =>
                     if id.value() == type_decl.name().value() then
-                      fn(type_decl)
+                      promise(type_decl)
                     end
                     reactor._pop_expectation()
                     type_decl
@@ -93,12 +95,12 @@ class _FrameTop[V: FrameVisitor[V]]
       })
     else
       reactor._push_expectation()
-      _package.access_type_decls({(type_decls)(reactor, id, fn) =>
+      _package.access_type_decls({(type_decls)(reactor, id, promise) =>
         for type_decl in type_decls.values() do
           reactor._push_expectation()
-          type_decl.access_type_decl({(type_decl)(reactor, id, fn) =>
+          type_decl.access_type_decl({(type_decl)(reactor, id, promise) =>
             if id.value() == type_decl.name().value() then
-              fn(type_decl)
+              promise(type_decl)
             end
             reactor._pop_expectation()
             type_decl
@@ -107,6 +109,7 @@ class _FrameTop[V: FrameVisitor[V]]
         reactor._pop_expectation()
       })
     end
+    promise
 
 class Frame[V: FrameVisitor[V]]
   let _upper: (Frame[V] | _FrameTop[V])
@@ -185,21 +188,35 @@ class Frame[V: FrameVisitor[V]]
       _ast = replace'
     end
   
-  fun ref await_type_decl(package_id': (Id | None), id: Id, fn: {(Frame[V], (TypeDecl | None))} val) =>
-    // TODO: make this a generic function that works for any Promise.
+  fun ref await[A: Any val](
+    promise: Promise[A],
+    fn: {(Frame[V], (A | None))} val)
+  =>
+    """
+    Cause AST traversal to pause when the current visit function is done with
+    the current Frame, and set it up so that when the given promise is fulfilled
+    the given fn will be called with the result (or None if rejected), alongside
+    a new mutable Frame that is ready to continue traversing the AST.
+    """
     let continuation = _FrameContinuation[V]({(frame, value) =>
-      try fn(frame, value as (TypeDecl | None)) else Unreachable end
+      try fn(frame, value as (A | None)) else Unreachable end
     })
     
+    // TODO: consider what to do when there may be more than one continuation.
     _maybe_continuation = continuation
     
-    find_type_decl(package_id', id,
-      {(ast)(r = _r(), c: _FrameContinuation[V] tag = continuation) =>
-        r.continue_with(c, ast)
-      })
+    let c: _FrameContinuation[V] tag = continuation
+    
+    promise.next[None](
+      {(value)(r = _r()) => r.continue_with(c, value) },
+      {()(r = _r()) => r.continue_with(c, None) })
   
-  fun find_type_decl(package_id': (Id | None), id: Id, fn: {(TypeDecl)} val) =>
-    _upper.find_type_decl(package_id', id, fn)
+  fun find_type_decl(package_id': (Id | None), id: Id): Promise[TypeDecl] =>
+    """
+    Search for a TypeDecl that has been imported into the current Module scope,
+    with an optional package id prefix for id-scoped package imports.
+    """
+    _upper.find_type_decl(package_id', id)
   
   fun program(): Program =>
     """
