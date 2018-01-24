@@ -4,14 +4,14 @@ use "frame"
 
 type _ErrsFn is {(PassAny, Array[PassError] val)} val
 
-interface val _CompilerPrev[I: Any #share = None, O: Any #share = None]
+interface val _CompilerPrev[I: Any val = None, O: Any val = None]
   fun val _compile(input: I, on_errors': _ErrsFn, on_complete': {(O)} val)
 
 primitive BuildCompiler
-  fun apply[I: Any #share, O: Any #share](p: Pass[I, O]): Compiler[I, O, I] =>
+  fun apply[I: Any val, O: Any val](p: Pass[I, O]): Compiler[I, O, I] =>
     Compiler[I, O, I](p)
 
-class val Compiler[I: Any #share, O: Any #share, M: Any #share = I]
+class val Compiler[I: Any val, O: Any val, M: Any val = I]
   let _prev: (_CompilerPrev[I, M] | None)
   let _pass: Pass[M, O]
   let _on_errors: _ErrsFn
@@ -53,7 +53,7 @@ class val Compiler[I: Any #share, O: Any #share, M: Any #share = I]
     """
     Compiler[I, O, M]._create(_prev, _pass, _on_errors, fn)
 
-  fun val next[O2: Any #share](pass': Pass[O, O2]): Compiler[I, O2, O] =>
+  fun val next[O2: Any val](pass': Pass[O, O2]): Compiler[I, O2, O] =>
     """
     Chain another pass onto this compiler, where the input of the new pass
     must be the same type as the output of the currently held pass.

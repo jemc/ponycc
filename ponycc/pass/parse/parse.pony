@@ -29,7 +29,7 @@ class val Parser
 
   new val create() => None
 
-  fun apply[A: AST = Module](
+  fun apply[A: AST val = Module]( // TODO: remove cap when https://github.com/ponylang/ponyc/pull/2675 is merged
     source: Source,
     errs: Array[(String, SourcePosAny)] = [])
     : A ?

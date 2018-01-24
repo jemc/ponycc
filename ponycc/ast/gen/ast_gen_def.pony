@@ -101,7 +101,7 @@ class ASTGenDefFixed is ASTGenDef
         errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
-    g.line("_attachments = Attachments.attach[SourcePosAny](pos')")
+    g.line("_attachments = Attachments.attach_val[SourcePosAny](pos')")
 
     var iter_next = "iter.next()?"
     for (field_name, field_type, field_default) in fields.values() do
@@ -187,9 +187,9 @@ class ASTGenDefFixed is ASTGenDef
 
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny")
-    g.add(" => try find_attached[SourcePosAny]()? else SourcePosNone end")
+    g.add(" => try find_attached_val[SourcePosAny]()? else SourcePosNone end")
     g.line("fun val with_pos(pos': SourcePosAny): " + _name)
-    g.add(" => attach[SourcePosAny](pos')")
+    g.add(" => attach_val[SourcePosAny](pos')")
     g.line()
 
     g.line("fun val size(): USize => ")
@@ -222,15 +222,25 @@ class ASTGenDefFixed is ASTGenDef
     g.line("error")
     g.pop_indent()
 
-    g.line("fun val attach[A: Any #share](a: A): " + _name)
+    g.line("fun val attach_val[A: Any val](a: A): " + _name)
     g.add(" => create(")
     for (field_name, _, _) in fields.values() do
       g.add("_" + field_name + ", ")
     end
-    g.add("(try _attachments as Attachments else Attachments end).attach[A](a))")
+    g.add("(try _attachments as Attachments else Attachments end).attach_val[A](a))")
     g.line()
 
-    g.line("fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?")
+    g.line("fun val attach_tag[A: Any tag](a: A): " + _name)
+    g.add(" => create(")
+    for (field_name, _, _) in fields.values() do
+      g.add("_" + field_name + ", ")
+    end
+    g.add("(try _attachments as Attachments else Attachments end).attach_tag[A](a))")
+    g.line()
+
+    g.line("fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?")
+
+    g.line("fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?")
 
     // Declare getter methods for all fields.
     for (field_name, field_type, _) in fields.values() do
@@ -431,7 +441,7 @@ class ASTGenDefWrap is ASTGenDef
         errs: Array[(String, SourcePosAny)] = [])?
       =>""")
     g.push_indent()
-    g.line("_attachments = Attachments.attach[SourcePosAny](pos')")
+    g.line("_attachments = Attachments.attach_val[SourcePosAny](pos')")
     g.line("_value =")
     g.push_indent()
     g.line("try")
@@ -467,18 +477,23 @@ class ASTGenDefWrap is ASTGenDef
 
     // Declare common getters and setters.
     g.line("fun val pos(): SourcePosAny")
-    g.add(" => try find_attached[SourcePosAny]()? else SourcePosNone end")
+    g.add(" => try find_attached_val[SourcePosAny]()? else SourcePosNone end")
     g.line("fun val with_pos(pos': SourcePosAny): " + _name)
-    g.add(" => attach[SourcePosAny](pos')")
+    g.add(" => attach_val[SourcePosAny](pos')")
     g.line()
 
     g.line("fun val size(): USize => 0")
     g.line("fun val apply(idx: USize): (AST | None)? => error")
 
-    g.line("fun val attach[A: Any #share](a: A): " + _name)
-    g.add(" => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))")
+    g.line("fun val attach_val[A: Any val](a: A): " + _name)
+    g.add(" => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))")
 
-    g.line("fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?")
+    g.line("fun val attach_tag[A: Any tag](a: A): " + _name)
+    g.add(" => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))")
+
+    g.line("fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?")
+
+    g.line("fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?")
 
     // Declare a getter method for the value field.
     g.line("fun val value(): " + _value_type + " => _value")
@@ -556,8 +571,10 @@ class ASTGenDefLexeme is ASTGenDef
     g.line("fun val size(): USize => 0")
     g.line("fun val apply(idx: USize): (AST | None)? => error")
     g.line()
-    g.line("fun val attach[A: Any #share](a: A): AST => this")
-    g.line("fun val find_attached[A: Any #share](): A? => error")
+    g.line("fun val attach_val[A: Any val](a: A): AST => this")
+    g.line("fun val attach_tag[A: Any tag](a: A): AST => this")
+    g.line("fun val find_attached_val[A: Any val](): A? => error")
+    g.line("fun val find_attached_tag[A: Any tag](): A? => error")
     g.line()
 
     // Declare a string method to print itself.

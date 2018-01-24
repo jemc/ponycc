@@ -87,7 +87,7 @@ class _FrameTop[V: FrameVisitor[V]]
             end
           then
             try
-              let package' = use_package.find_attached[Package]()?
+              let package' = use_package.find_attached_tag[Package]()?
               seeker.open()
               package'.access_type_decls({(type_decls)(id, seeker) =>
                 for type_decl in type_decls.values() do

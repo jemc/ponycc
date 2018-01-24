@@ -16,26 +16,14 @@ class val Attachments
     _val_map = val_map'
     _tag_map = tag_map'
 
-  fun find[A: Any #share](): A? =>
-    // WARNING: This uses an unsafe compiler loophole that will be closed.
-    try
-      _tag_map(_AttachmentTag[A])? as A
-    else
-      _val_map(_AttachmentTag[A])? as A
-    end
-    // TODO: reinstate this safe alternative when the compiler crash is fixed.
-    //   https://github.com/ponylang/ponyc/issues/2363
-    // iftype A <: Any tag then
-    //   _tag_map(_AttachmentTag[A])?
-    // else
-    //   _val_map(_AttachmentTag[A])?
-    // end as A
+  fun find_val[A: Any val](): A? =>
+    _val_map(_AttachmentTag[A])? as A
 
-  fun val attach[A: Any #share](a: A): Attachments =>
-    iftype A <: Any tag then
-      create(_val_map, _tag_map(_AttachmentTag[A]) = a)
-    elseif A <: Any val then
-      create(_val_map(_AttachmentTag[A]) = a, _tag_map)
-    else
-      this
-    end
+  fun find_tag[A: Any tag](): A? =>
+    _tag_map(_AttachmentTag[A])? as A
+
+  fun val attach_val[A: Any val](a: A): Attachments =>
+    create(_val_map(_AttachmentTag[A]) = a, _tag_map)
+
+  fun val attach_tag[A: Any tag](a: A): Attachments =>
+    create(_val_map, _tag_map(_AttachmentTag[A]) = a)

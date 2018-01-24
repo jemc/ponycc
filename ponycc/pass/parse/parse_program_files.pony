@@ -62,7 +62,7 @@ actor _ParseProgramFilesEngine
 
           // TODO: assign same Package to packages with the same absolute path.
           let new_package = Package
-          use_packages.push(u.attach[Package](new_package))
+          use_packages.push(u.attach_tag[Package](new_package))
           start(sources, new_package)
         else
           _errs.push(PassError(u.package().pos(),
