@@ -28,6 +28,16 @@ class val FrameRunner[V: FrameVisitor[V]]
   fun view_each_ffi_decl(fn: {(UseFFIDecl)} val) =>
     _reactor.view_each_ffi_decl(fn)
 
+actor _Seeker[A: Any #share]
+  var _open: USize = 0
+  var _found: Bool = false
+  let _promise: Promise[A]
+  new create(p: Promise[A]) => _promise = p
+  be apply(a: A) => if not (_found = true) then _promise(a) end
+  be open() => _open = _open + 1
+  be close() => _open = _open - 1
+    if (not _found) and (_open == 0) then _promise.reject() end
+
 class _FrameTop[V: FrameVisitor[V]]
   let _reactor: _FrameReactor[V]
   let _program: Program
@@ -60,12 +70,16 @@ class _FrameTop[V: FrameVisitor[V]]
   fun iftype_constraint(): (Type | None) => None
   
   fun find_type_decl(package_id': (Id | None), id: Id): Promise[TypeDecl] =>
-    let promise = Promise[TypeDecl]
     let reactor = _reactor
+    reactor._push_expectation()
+    let promise = Promise[TypeDecl].>next[None](
+      {(_) => reactor._pop_expectation()},
+      {()  => reactor._pop_expectation()})
+    let seeker = _Seeker[TypeDecl](promise)
     match package_id'
     | let package_id: Id =>
-      reactor._push_expectation()
-      _type_decl.access_use_packages({(use_packages)(reactor, id, promise) =>
+      seeker.open()
+      _type_decl.access_use_packages({(use_packages)(id, seeker) =>
         for use_package in use_packages.values() do
           if
             try (use_package.prefix() as Id).value() == package_id.value()
@@ -74,39 +88,39 @@ class _FrameTop[V: FrameVisitor[V]]
           then
             try
               let package' = use_package.find_attached[Package]()?
-              reactor._push_expectation()
-              package'.access_type_decls({(type_decls)(reactor, id, promise) =>
+              seeker.open()
+              package'.access_type_decls({(type_decls)(id, seeker) =>
                 for type_decl in type_decls.values() do
-                  reactor._push_expectation()
-                  type_decl.access_type_decl({(type_decl)(reactor, id, promise) =>
+                  seeker.open()
+                  type_decl.access_type_decl({(type_decl)(id, seeker) =>
                     if id.value() == type_decl.name().value() then
-                      promise(type_decl)
+                      seeker(type_decl)
                     end
-                    reactor._pop_expectation()
+                    seeker.close()
                     type_decl
                   })
                 end
-                reactor._pop_expectation()
+                seeker.close()
               })
             end
           end
         end
-        reactor._pop_expectation()
+        seeker.close()
       })
     else
-      reactor._push_expectation()
-      _package.access_type_decls({(type_decls)(reactor, id, promise) =>
+      seeker.open()
+      _package.access_type_decls({(type_decls)(id, seeker) =>
         for type_decl in type_decls.values() do
-          reactor._push_expectation()
-          type_decl.access_type_decl({(type_decl)(reactor, id, promise) =>
+          seeker.open()
+          type_decl.access_type_decl({(type_decl)(id, seeker) =>
             if id.value() == type_decl.name().value() then
-              promise(type_decl)
+              seeker(type_decl)
             end
-            reactor._pop_expectation()
+            seeker.close()
             type_decl
           })
         end
-        reactor._pop_expectation()
+        seeker.close()
       })
     end
     promise
@@ -130,20 +144,25 @@ class Frame[V: FrameVisitor[V]]
       match continue_from
       | let c: _FrameContinuation[V] =>
         try
-          c.indices.pop()?
-        else
-          c.continue_fn(this, c.value)
-          return _maybe_continuation
+          let idx = c.indices.pop()?
+          if idx == -1 then
+            c.continue_fn(this, c.value)
+            return _maybe_continuation
+          end
+          idx
+        else 0
         end
       else 0
       end
     
     for (idx, child) in _ast.pairs() do
-      match child | let child_ast: AST =>
-        match Frame[V]._create_under(this, child_ast)._visit(continue_from)
-        | let continuation: _FrameContinuation[V] =>
-          continuation.indices.push(idx)
-          return continuation
+      if idx >= continue_from_idx then
+        match child | let child_ast: AST =>
+          match Frame[V]._create_under(this, child_ast)._visit(continue_from)
+          | let continuation: _FrameContinuation[V] =>
+            continuation.indices.push(idx)
+            return continuation
+          end
         end
       end
     end
@@ -203,6 +222,7 @@ class Frame[V: FrameVisitor[V]]
     })
     
     // TODO: consider what to do when there may be more than one continuation.
+    continuation.indices.push(-1)
     _maybe_continuation = continuation
     
     let c: _FrameContinuation[V] tag = continuation
