@@ -12,7 +12,7 @@ type _GenItem is (String | _GenIndentPush | _GenIndentPop | _GenNewline)
 class _Gen
   var _list: Array[_GenItem] = []
   new create() => None
-  
+
   fun ref string(): String iso^ =>
     var size:   USize = 0
     var indent: USize = 0
@@ -24,7 +24,7 @@ class _Gen
       | _GenNewline    => size = size + 1 + indent
       end
     end
-    
+
     let buf = recover String end
     indent = 0
     for x in _list.values() do
@@ -36,19 +36,19 @@ class _Gen
                           for i in Range(0, indent) do buf.push(' ') end
       end
     end
-    
+
     buf
-  
+
   fun ref write(s: String) => _list.push(s)
-  
+
   fun ref push_indent() => _list.push(_GenIndentPush)
   fun ref pop_indent()  => _list.push(_GenIndentPop)
-  
+
   fun ref line() => _list.push(_GenNewline)
   fun ref line_start() =>
     let last_item = try _list(_list.size() - 1)? else _GenNewline end
     if last_item isnt _GenNewline then line() end
-  
+
   fun ref string_triple(s: String) =>
     line_start(); write("\"\"\"")
     write(s) // TODO: split on newline and add indent to each line.
@@ -56,13 +56,117 @@ class _Gen
 
 primitive Print is Pass[Module, String]
   fun name(): String => "print"
-  
+
   fun apply(x: Module, fn: {(String, Array[PassError] val)} val) =>
     let g = _Gen
     _show(g, x)
     fn.apply(g.string(), []) // TODO: use apply sugar
-  
-  fun _show(g: _Gen, x: Module) =>
+
+  fun _show(g: _Gen, ast: AST) =>
+    match ast
+    | let m: Module => _show_module(g, m)
+    | let u: UsePackage => _show_use_package(g, u)
+    | let u: UseFFIDecl => _show_use_ffi(g, u)
+    | let t: (TypeAlias | Interface | Class | Actor | Struct | Primitive | Trait ) =>
+      _show_entity(t)
+    | let m: Members => _show_members(g, m)
+    | let f: (FieldLet | FieldVar | FieldEmbed) => _show_field(g, f)
+    | let m:(MethodFun | MethodNew | MethodBe) => _show_method(g, m)
+    | let tps: TypeParams => _show_type_params(g, tps)
+    | let tp: TypeParam => _show_type_param(g, tp)
+    | let tas: TypeArgs => _show_type_args(g, tas)
+    | let ps: Params => _show_params(g, ps)
+    | let p: Param => _show_param(g, p)
+    | let s: Sequence => _show_seq(g, s)
+    | let j: (Return | Break | Continue | Error | CompileIntrinsic | CompileError) => _show_jump_away(j)
+    | let l: (LocalLet | LocalVar) => _show_local(g, l)
+    | let a: As => _show_as(g, a)
+    | let t: Tuple => _show_tuple(g, t)
+    | let it: IdTuple => _show_id_tuple(g, it)
+    | let at: AssignTuple => _show_assign_tuple(g, at)
+    | let c: Consume => _show_consume(g, c)
+    | let r: Recover => _show_recover(g, r)
+    | let uo: (Not | Neg | NegUnsafe | AddressOf | DigestOf) => _show_unary_op(g, uo)
+    | let bo: ( Add | AddUnsafe | Sub | SubUnsafe | Mul | MulUnsafe
+      | Div | DivUnsafe | Mod | ModUnsafe | LShift
+      | LShiftUnsafe | RShift | RShiftUnsafe | Is | Isnt
+      | Eq | EqUnsafe | NE | NEUnsafe | LT | LTUnsafe
+      | LE | LEUnsafe | GE | GEUnsafe | GT | GTUnsafe
+      | And | Or | XOr | Assign) => _show_binary_op(g, bo)
+    | let d:(Dot | Chain | Tilde) => _show_dot(g, d)
+    | let q: Qualify => _show_qualify(g, q)
+    | let c: Call => _show_call(g, c)
+    | let cf: CallFFI => _show_call_ffi(g, cf)
+    | let a: Args => _show_args(g, a)
+    | let nas: NamedArgs => _show_named_args(g, nas)
+    | let na: NamedArg => _show_named_arg(g, na)
+    | let idao: (IfDefAnd | IfDefOr) => _show_ifdef_andor(g, idao)
+    | let idn: IfDefNot => _show_ifdef_not(g, idn)
+    | let idf: IfDefFlag => _show_ifdef_flag(g, idf)
+    | let ifs: (If | IfDef | IfType) => _show_ifs(g, ifs)
+    | let w: While => _show_while(g, w)
+    | let r: Repeat => _show_repeat(g, r)
+    | let f: For => _show_for(g, f)
+    | let w: With => _show_with(g, w)
+    | let m: Match => _show_match(g, m)
+    | let cs: Cases => _show_cases(g, cs)
+    | let c: Case => _show_case(g, c)
+    | let t: Try => _show_try(g, t)
+    | let l: Lambda => _show_lambda(g, l)
+    | let lcs: LambdaCaptures => _show_lambda_captures(g, lcs)
+    | let lc: LambdaCapture => _show_lambda_capture(g, lc)
+    | let la: LitArray => _show_lit_array(g, la)
+    | let lr: Reference => _show(g, lr.name())
+    | let _: DontCare => g.write("_")
+    | let pr: PackageRef => _show(g, pr.name())
+    | let mr: MethodRef => None // TODO
+    | let tr: TypeRef => None // TODO
+    | let fr: FieldRef => None // TODO
+    | let ter: TupleElementRef => None // TODO
+    | let llr: LocalLetRef => _show(g, llr.name())
+    | let lvr: LocalVarRef => _show(g, lvr.name())
+    | let pr: ParamRef => _show(g, pr.name())
+    | let ut: UnionType => _show_union_t(g, ut)
+    | let it: IsectType => _show_isect_t(g, it)
+    | let tt: TupleType => _show_tuple_t(g, tt)
+    | let vpt: ViewpointType => _show_viewpoint_t(g, vpt)
+    | let lt: LambdaType => _show_lambda_t(g, lt)
+    | let nt: NominalType => _show_nominal_t(g, nt)
+    | let tpr: TypeParamRef => None // TODO
+    | let _: ThisType => g.write("this")
+    | let _: DontCareType => g.write("_")
+    | let _: Iso => g.write("iso")
+    | let _: Trn => g.write("trn")
+    | let _: Iso => g.write("ref")
+    | let _: Iso => g.write("val")
+    | let _: Iso => g.write("box")
+    | let _: Iso => g.write("tag")
+    | let _: CapRead  => g.write("#read")
+    | let _: CapSend  => g.write("#send")
+    | let _: CapShare => g.write("#share")
+    | let _: CapAlias => g.write("#alias")
+    | let _: CapAny   => g.write("#any")
+    | let _: Aliased   => g.write("!")
+    | let _: Ephemeral => g.write("^")
+    | let _: At        => g.write("@")
+    | let _: Question  => g.write("?")
+    | let _: Ellipsis  => g.write("...")
+    | let x: Id   => g.write(x.pos().string()) // TODO: less cheating, here and below...
+    | let _: This => g.write("this")
+    | let _: LitTrue      => g.write("true")
+    | let _: LitFalse     => g.write("false")
+    | let x: LitFloat     => g.write(x.pos().string())
+    | let x: LitInteger   => g.write(x.pos().string())
+    | let x: LitCharacter => g.write(x.pos().string()) // TODO: single-quote
+    | let x: LitString    => g.write(x.pos().string()) // TODO: normal quote
+    | let _: LitLocation  => g.write("__loc")
+    else
+      // TODO: remove these defaults when everything is implemented:
+      g.write("/*~" + ast.string() + "~*/")
+    end
+
+
+  fun _show_module(g: _Gen, x: Module) =>
     try
       g.write((x.docs() as LitString).pos().string()) // TODO: less cheating...
       if (x.use_decls().size() + x.type_decls().size()) > 0 then
@@ -76,14 +180,14 @@ primitive Print is Pass[Module, String]
       _show(g, t)
     end
     g.line()
-  
-  fun _show(g: _Gen, x: UsePackage) =>
+
+  fun _show_use_package(g: _Gen, x: UsePackage) =>
     g.line_start()
     g.write("use ")
     try _show(g, x.prefix() as Id); g.write(" = ") end
     _show(g, x.package())
-  
-  fun _show(g: _Gen, x: UseFFIDecl) =>
+
+  fun _show_use_ffi(g: _Gen, x: UseFFIDecl) =>
     g.line_start()
     g.write("use @")
     _show(g, x.name())
@@ -91,8 +195,8 @@ primitive Print is Pass[Module, String]
     _show(g, x.params())
     try let q = x.partial() as Question; g.write(" "); _show(g, q) end
     try let e = x.guard() as IfDefCond; g.write(" if "); _show(g, e) end
-  
-  fun _show(g: _Gen,
+
+  fun _show_entity(g: _Gen,
     x: (TypeAlias | Interface | Class | Actor | Struct | Primitive | Trait))
   =>
     g.line_start()
@@ -106,7 +210,7 @@ primitive Print is Pass[Module, String]
       | let _: Primitive => "primitive "
       | let _: Trait     => "trait "
       end)
-    
+
     try _show(g, x.at() as At) end
     try let c = x.cap() as Cap; _show(g, c); g.write(" ") end
     _show(g, x.name())
@@ -116,8 +220,8 @@ primitive Print is Pass[Module, String]
     try let d = x.docs() as LitString; g.line(); g.write(d.pos().string()) end // TODO: less cheating...
     _show(g, x.members())
     g.pop_indent()
-  
-  fun _show(g: _Gen, x: Members) =>
+
+  fun _show_members(g: _Gen, x: Members) =>
     for f in x.fields().values() do
       _show(g, f)
     end
@@ -125,8 +229,8 @@ primitive Print is Pass[Module, String]
       if (x.fields().size() > 0) or (i > 0) then g.line(); g.line() end
       _show(g, m)
     end
-  
-  fun _show(g: _Gen, x: (FieldLet | FieldVar | FieldEmbed)) =>
+
+  fun _show_field(g: _Gen, x: (FieldLet | FieldVar | FieldEmbed)) =>
     g.line_start()
     g.write(
       match x
@@ -134,13 +238,13 @@ primitive Print is Pass[Module, String]
       | let _: FieldVar   => "var "
       | let _: FieldEmbed => "embed "
       end)
-    
+
     _show(g, x.name())
     g.write(": ")
     _show(g, x.field_type())
     try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
-  
-  fun _show(g: _Gen, x: (MethodFun | MethodNew | MethodBe)) =>
+
+  fun _show_method(g: _Gen, x: (MethodFun | MethodNew | MethodBe)) =>
     g.line_start()
     g.write(
       match x
@@ -148,7 +252,7 @@ primitive Print is Pass[Module, String]
       | let _: MethodNew => "new "
       | let _: MethodBe  => "be "
       end)
-    
+
     try _show(g, x.cap() as Cap); g.write(" ") end
     _show(g, x.name())
     try _show(g, x.type_params() as TypeParams) end
@@ -162,29 +266,29 @@ primitive Print is Pass[Module, String]
     try g.write((x.docs() as LitString).pos().string()) end // TODO: less cheating...
     try _show_bare(g, x.body() as Sequence) end
     g.pop_indent()
-  
-  fun _show(g: _Gen, x: TypeParams) =>
+
+  fun _show_type_params(g: _Gen, x: TypeParams) =>
     g.write("[")
     for (i, p) in x.list().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, p)
     end
     g.write("]")
-  
-  fun _show(g: _Gen, x: TypeParam) =>
+
+  fun _show_type_param(g: _Gen, x: TypeParam) =>
     _show(g, x.name())
     try let t = x.constraint() as Type; g.write(": "); _show(g, t) end
     try let t = x.default() as Type; g.write(" = "); _show(g, t) end
-  
-  fun _show(g: _Gen, x: TypeArgs) =>
+
+  fun _show_type_args(g: _Gen, x: TypeArgs) =>
     g.write("[")
     for (i, a) in x.list().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, a)
     end
     g.write("]")
-  
-  fun _show(g: _Gen, x: Params) =>
+
+  fun _show_params(g: _Gen, x: Params) =>
     g.write("(")
     let iter = x.list().values()
     for t in iter do
@@ -193,41 +297,41 @@ primitive Print is Pass[Module, String]
     end
     try _show(g, x.ellipsis() as Ellipsis) end
     g.write(")")
-  
-  fun _show(g: _Gen, x: Param) =>
+
+  fun _show_param(g: _Gen, x: Param) =>
     _show(g, x.name())
     try let t = x.param_type() as Type; g.write(": "); _show(g, t) end
     try let d = x.default() as Expr; g.write(" = "); _show(g, d) end
-  
-  fun _show(g: _Gen, x: Sequence) =>
+
+  fun _show_seq(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
-    
+
     if x.list().size() > 1 then g.write("(") end
     for (i, expr) in x.list().pairs() do
       if i > 0 then g.write("; ") end
       _show(g, expr)
     end
     if x.list().size() > 1 then g.write(")") end
-  
+
   fun _show_subsequence(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
-    
+
     g.write("(")
     for (i, expr) in x.list().pairs() do
       if i > 0 then g.write("; ") end
       _show(g, expr)
     end
     g.write(")")
-  
+
   fun _show_bare(g: _Gen, x: Sequence) =>
     if x.list().size() == 0 then return g.write("None") end
-    
+
     for (i, expr) in x.list().pairs() do
       g.line_start()
       _show(g, expr)
     end
-  
-  fun _show(g: _Gen,
+
+  fun _show_jump_away(g: _Gen,
     x: (Return | Break | Continue | Error | CompileIntrinsic | CompileError))
   =>
     g.write(
@@ -239,52 +343,52 @@ primitive Print is Pass[Module, String]
       | let _: CompileIntrinsic => "compile_intrinsic"
       | let _: CompileError     => "compile_error"
       end)
-    
+
     try let v = x.value() as AST; g.write(" "); _show(g, v) end
-  
-  fun _show(g: _Gen, x: (LocalLet | LocalVar)) =>
+
+  fun _show_local(g: _Gen, x: (LocalLet | LocalVar)) =>
     g.write(
       match x
       | let _: LocalLet => "let "
       | let _: LocalVar => "var "
       end)
-    
+
     _show(g, x.name())
     try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
-  
-  fun _show(g: _Gen, x: As) =>
+
+  fun _show_as(g: _Gen, x: As) =>
     _show(g, x.expr())
     g.write(" as ")
     _show(g, x.as_type())
-  
-  fun _show(g: _Gen, x: Tuple) =>
+
+  fun _show_tuple(g: _Gen, x: Tuple) =>
     g.write("(")
     for (i, e) in x.elements().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, e) // TODO: parenthesize if more than one expr in seq
     end
     g.write(")")
-  
-  fun _show(g: _Gen, x: IdTuple) =>
+
+  fun _show_id_tuple(g: _Gen, x: IdTuple) =>
     g.write("(")
     for (i, e) in x.elements().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, e)
     end
     g.write(")")
-  
-  fun _show(g: _Gen, x: AssignTuple) =>
+
+  fun _show_assign_tuple(g: _Gen, x: AssignTuple) =>
     for (i, e) in x.elements().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, e)
     end
-  
-  fun _show(g: _Gen, x: Consume) =>
+
+  fun _show_consume(g: _Gen, x: Consume) =>
     g.write("consume ")
     try _show(g, x.cap() as Cap); g.write(" ") end
     _show(g, x.expr())
-  
-  fun _show(g: _Gen, x: Recover) =>
+
+  fun _show_recover(g: _Gen, x: Recover) =>
     g.write("recover")
     try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
     g.push_indent()
@@ -292,8 +396,8 @@ primitive Print is Pass[Module, String]
     g.pop_indent()
     g.line_start()
     g.write("end")
-  
-  fun _show(g: _Gen, x: (Not | Neg | NegUnsafe | AddressOf | DigestOf)) =>
+
+  fun _show_unary_op(g: _Gen, x: (Not | Neg | NegUnsafe | AddressOf | DigestOf)) =>
     g.write(
       match x
       | let _: Not       => "not "
@@ -302,14 +406,14 @@ primitive Print is Pass[Module, String]
       | let _: AddressOf => "addressof "
       | let _: DigestOf  => "digestof "
       end)
-    
+
       match x.expr() | let s: Sequence =>
         _show_subsequence(g, s)
       else
         _show(g, x.expr())
       end
-  
-  fun _show(g: _Gen, x:
+
+  fun _show_binary_op(g: _Gen, x:
     ( Add | AddUnsafe | Sub | SubUnsafe | Mul | MulUnsafe
     | Div | DivUnsafe | Mod | ModUnsafe | LShift
     | LShiftUnsafe | RShift | RShiftUnsafe | Is | Isnt
@@ -322,7 +426,7 @@ primitive Print is Pass[Module, String]
     else
       _show(g, x.left())
     end
-    
+
     g.write(
       match x
       | let _: Add          => " + "
@@ -358,31 +462,31 @@ primitive Print is Pass[Module, String]
       | let _: XOr          => " xor "
       | let _: Assign       => " = "
       end)
-    
-    
+
+
       match x.right() | let s: Sequence =>
         _show_subsequence(g, s)
       else
         _show(g, x.right())
       end
-  
-  fun _show(g: _Gen, x: (Dot | Chain | Tilde)) =>
+
+  fun _show_dot(g: _Gen, x: (Dot | Chain | Tilde)) =>
     _show(g, x.left())
-    
+
     g.write(
       match x
       | let _: Dot   => "."
       | let _: Chain => ".>"
       | let _: Tilde => "~"
       end)
-    
+
     _show(g, x.right())
-  
-  fun _show(g: _Gen, x: Qualify) =>
+
+  fun _show_qualify(g: _Gen, x: Qualify) =>
     _show(g, x.left())
     _show(g, x.right())
-  
-  fun _show(g: _Gen, x: Call) =>
+
+  fun _show_call(g: _Gen, x: Call) =>
     _show(g, x.callable())
     g.write("(")
     _show(g, x.args())
@@ -391,8 +495,8 @@ primitive Print is Pass[Module, String]
     end
     _show(g, x.named_args())
     g.write(")")
-  
-  fun _show(g: _Gen, x: CallFFI) =>
+
+  fun _show_call_ffi(g: _Gen, x: CallFFI) =>
     g.write("@")
     _show(g, x.name())
     try _show(g, x.type_args() as TypeArgs) end
@@ -404,43 +508,43 @@ primitive Print is Pass[Module, String]
     _show(g, x.named_args())
     g.write(")")
     try _show(g, x.partial() as Question) end
-  
-  fun _show(g: _Gen, x: Args) =>
+
+  fun _show_args(g: _Gen, x: Args) =>
     for (i, a) in x.list().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, a)
     end
-  
-  fun _show(g: _Gen, x: NamedArgs) =>
+
+  fun _show_named_args(g: _Gen, x: NamedArgs) =>
     for (i, a) in x.list().pairs() do
       if i > 0 then g.write(", ") else g.write("where ") end
       _show(g, a)
     end
-  
-  fun _show(g: _Gen, x: NamedArg) =>
+
+  fun _show_named_arg(g: _Gen, x: NamedArg) =>
     _show(g, x.name())
     g.write(" = ")
     _show(g, x.value())
-  
-  fun _show(g: _Gen, x: (IfDefAnd | IfDefOr)) =>
+
+  fun _show_ifdef_andor(g: _Gen, x: (IfDefAnd | IfDefOr)) =>
     _show(g, x.left())
-    
+
     g.write(
       match x
       | let _: IfDefAnd => " and "
       | let _: IfDefOr  => " or "
       end)
-    
+
     _show(g, x.right())
-  
-  fun _show(g: _Gen, x: IfDefNot) =>
+
+  fun _show_ifdef_not(g: _Gen, x: IfDefNot) =>
     g.write("not ")
     _show(g, x.expr())
-  
-  fun _show(g: _Gen, x: IfDefFlag) =>
+
+  fun _show_ifdef_flag(g: _Gen, x: IfDefFlag) =>
     _show(g, x.name())
-  
-  fun _show(g: _Gen, x: (If | IfDef | IfType)) =>
+
+  fun _show_ifs(g: _Gen, x: (If | IfDef | IfType)) =>
     match x
     | let i: If =>
       g.write("if ")
@@ -452,7 +556,7 @@ primitive Print is Pass[Module, String]
       g.write("iftype ")
       _show_if[IfType](g, i)
     end
-  
+
   fun _show_if[A: (If val | IfDef val | IfType val)](g: _Gen, x: A) =>
     iftype A <: If val then
       _show(g, x.condition())
@@ -467,7 +571,7 @@ primitive Print is Pass[Module, String]
     g.push_indent()
     g.line_start()
     _show_bare(g, x.then_body())
-    
+
     g.pop_indent()
     g.line_start()
     iftype A <: If val then
@@ -477,7 +581,7 @@ primitive Print is Pass[Module, String]
     elseif A <: IfType val then
       _show_ifelse[A](g, x.else_body())
     end
-  
+
   fun _show_ifelse[A: (If val | IfDef val | IfType val)](g: _Gen,
     x: (Sequence | A | None))
   =>
@@ -496,8 +600,8 @@ primitive Print is Pass[Module, String]
     else
       g.write("end")
     end
-  
-  fun _show(g: _Gen, x: While) =>
+
+  fun _show_while(g: _Gen, x: While) =>
     g.line_start()
     g.write("while ")
     _show(g, x.condition())
@@ -516,8 +620,8 @@ primitive Print is Pass[Module, String]
       g.line_start()
     end
     g.write("end")
-  
-  fun _show(g: _Gen, x: Repeat) =>
+
+  fun _show_repeat(g: _Gen, x: Repeat) =>
     g.line_start()
     g.write("repeat")
     g.push_indent()
@@ -537,8 +641,8 @@ primitive Print is Pass[Module, String]
     end
     g.line_start()
     g.write("end")
-  
-  fun _show(g: _Gen, x: For) =>
+
+  fun _show_for(g: _Gen, x: For) =>
     g.line_start()
     g.write("for ")
     _show(g, x.refs())
@@ -559,8 +663,8 @@ primitive Print is Pass[Module, String]
       g.line_start()
     end
     g.write("end")
-  
-  fun _show(g: _Gen, x: With) =>
+
+  fun _show_with(g: _Gen, x: With) =>
     g.line_start()
     g.write("with ")
     _show(g, x.assigns())
@@ -579,8 +683,8 @@ primitive Print is Pass[Module, String]
       g.line_start()
     end
     g.write("end")
-  
-  fun _show(g: _Gen, x: Match) =>
+
+  fun _show_match(g: _Gen, x: Match) =>
     g.line_start()
     g.write("match ")
     _show(g, x.expr())
@@ -596,16 +700,16 @@ primitive Print is Pass[Module, String]
       g.line_start()
     end
     g.write("end")
-  
-  fun _show(g: _Gen, x: Cases) =>
+
+  fun _show_cases(g: _Gen, x: Cases) =>
     var prev_body = true
     for c in x.list().values() do
       if prev_body then g.line_start() else g.write(" ") end
       _show(g, c)
       prev_body = try c.body() as Sequence; true else false end
     end
-  
-  fun _show(g: _Gen, x: Case) =>
+
+  fun _show_case(g: _Gen, x: Case) =>
     g.write("| ")
     _show(g, x.expr())
     try
@@ -622,8 +726,8 @@ primitive Print is Pass[Module, String]
       g.pop_indent()
       g.line_start()
     end
-  
-  fun _show(g: _Gen, x: Try) =>
+
+  fun _show_try(g: _Gen, x: Try) =>
     g.write("try")
     g.push_indent()
     g.line_start()
@@ -648,8 +752,8 @@ primitive Print is Pass[Module, String]
       g.line_start()
     end
     g.write("end")
-  
-  fun _show(g: _Gen, x: Lambda) =>
+
+  fun _show_lambda(g: _Gen, x: Lambda) =>
     g.write("{")
     try _show(g, x.method_cap() as Cap); g.write(" ") end
     try _show(g, x.name() as Id) end
@@ -666,21 +770,21 @@ primitive Print is Pass[Module, String]
     g.line_start()
     g.write("}")
     try let c = x.object_cap() as Cap; g.write(" "); _show(g, c) end
-  
-  fun _show(g: _Gen, x: LambdaCaptures) =>
+
+  fun _show_lambda_captures(g: _Gen, x: LambdaCaptures) =>
     g.write("(")
     for (i, c) in x.list().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, c)
     end
     g.write(")")
-  
-  fun _show(g: _Gen, x: LambdaCapture) =>
+
+  fun _show_lambda_capture(g: _Gen, x: LambdaCapture) =>
     _show(g, x.name())
     try let t = x.local_type() as Type; g.write(": "); _show(g, t) end
     try let v = x.value() as Expr; g.write(" = "); _show(g, v) end
-  
-  fun _show(g: _Gen, x: Object) =>
+
+  fun _show_object(g: _Gen, x: Object) =>
     g.line_start()
     g.write("object")
     try let c = x.cap() as Cap; g.write(" "); _show(g, c) end
@@ -690,8 +794,8 @@ primitive Print is Pass[Module, String]
     g.pop_indent()
     g.line_start()
     g.write("end")
-  
-  fun _show(g: _Gen, x: LitArray) =>
+
+  fun _show_lit_array(g: _Gen, x: LitArray) =>
     g.write("[")
     try let t = x.elem_type() as Type; g.write("as "); _show(g, t); g.write(":") end
     g.push_indent()
@@ -702,48 +806,37 @@ primitive Print is Pass[Module, String]
     g.pop_indent()
     if x.sequence().list().size() > 0 then g.line_start() end
     g.write("]")
-  
-  fun _show(g: _Gen, x: Reference) => _show(g, x.name())
-  fun _show(g: _Gen, x: DontCare) => g.write("_")
-  fun _show(g: _Gen, x: PackageRef) => _show(g, x.name())
-  fun _show(g: _Gen, x: MethodRef) => None // TODO
-  fun _show(g: _Gen, x: TypeRef) => None // TODO
-  fun _show(g: _Gen, x: FieldRef) => None // TODO
-  fun _show(g: _Gen, x: TupleElementRef) => None // TODO
-  fun _show(g: _Gen, x: LocalLetRef) => _show(g, x.name())
-  fun _show(g: _Gen, x: LocalVarRef) => _show(g, x.name())
-  fun _show(g: _Gen, x: ParamRef) => _show(g, x.name())
-  
-  fun _show(g: _Gen, x: UnionType) =>
+
+  fun _show_union_t(g: _Gen, x: UnionType) =>
     g.write("(")
     for (i, t) in x.list().pairs() do
       if i > 0 then g.write(" | ") end
       _show(g, t)
     end
     g.write(")")
-  
-  fun _show(g: _Gen, x: IsectType) =>
+
+  fun _show_isect_t(g: _Gen, x: IsectType) =>
     g.write("(")
     for (i, t) in x.list().pairs() do
       if i > 0 then g.write(" & ") end
       _show(g, t)
     end
     g.write(")")
-  
-  fun _show(g: _Gen, x: TupleType) =>
+
+  fun _show_tuple_t(g: _Gen, x: TupleType) =>
     if x.list().size() > 1 then g.write("(") end
     for (i, t) in x.list().pairs() do
       if i > 0 then g.write(", ") end
       _show(g, t)
     end
     if x.list().size() > 1 then g.write(")") end
-  
-  fun _show(g: _Gen, x: ViewpointType) =>
+
+  fun _show_viewpoint_t(g: _Gen, x: ViewpointType) =>
     _show(g, x.left())
     g.write("->")
     _show(g, x.right())
-  
-  fun _show(g: _Gen, x: LambdaType) =>
+
+  fun _show_lambda_t(g: _Gen, x: LambdaType) =>
     g.write("{")
     try _show(g, x.method_cap() as Cap) end
     try let n = x.name() as Id; g.write(" "); _show(g, n) end
@@ -759,48 +852,10 @@ primitive Print is Pass[Module, String]
     g.write("}")
     try let c = x.object_cap() as Cap; g.write(" "); _show(g, c) end
     try _show(g, x.cap_mod() as CapMod) end
-  
-  fun _show(g: _Gen, x: NominalType) =>
+
+  fun _show_nominal_t(g: _Gen, x: NominalType) =>
     try _show(g, x.package() as Id); g.write(".") end
     _show(g, x.name())
     try _show(g, x.type_args() as TypeArgs) end
     try let c = x.cap() as (Cap | GenCap); g.write(" "); _show(g, c) end
     try _show(g, x.cap_mod() as CapMod) end
-  
-  fun _show(g: _Gen, x: TypeParamRef) => None // TODO
-  
-  fun _show(g: _Gen, x: ThisType) => g.write("this")
-  fun _show(g: _Gen, x: DontCareType) => g.write("_")
-  
-  fun _show(g: _Gen, x: Iso) => g.write("iso")
-  fun _show(g: _Gen, x: Trn) => g.write("trn")
-  fun _show(g: _Gen, x: Ref) => g.write("ref")
-  fun _show(g: _Gen, x: Val) => g.write("val")
-  fun _show(g: _Gen, x: Box) => g.write("box")
-  fun _show(g: _Gen, x: Tag) => g.write("tag")
-  
-  fun _show(g: _Gen, x: CapRead)  => g.write("#read")
-  fun _show(g: _Gen, x: CapSend)  => g.write("#send")
-  fun _show(g: _Gen, x: CapShare) => g.write("#share")
-  fun _show(g: _Gen, x: CapAlias) => g.write("#alias")
-  fun _show(g: _Gen, x: CapAny)   => g.write("#any")
-  
-  fun _show(g: _Gen, x: Aliased)   => g.write("!")
-  fun _show(g: _Gen, x: Ephemeral) => g.write("^")
-  fun _show(g: _Gen, x: At)        => g.write("@")
-  fun _show(g: _Gen, x: Question)  => g.write("?")
-  fun _show(g: _Gen, x: Ellipsis)  => g.write("...")
-  
-  fun _show(g: _Gen, x: Id)   => g.write(x.pos().string()) // TODO: less cheating, here and below...
-  fun _show(g: _Gen, x: This) => g.write("this")
-  
-  fun _show(g: _Gen, x: LitTrue)      => g.write("true")
-  fun _show(g: _Gen, x: LitFalse)     => g.write("false")
-  fun _show(g: _Gen, x: LitFloat)     => g.write(x.pos().string())
-  fun _show(g: _Gen, x: LitInteger)   => g.write(x.pos().string())
-  fun _show(g: _Gen, x: LitCharacter) => g.write(x.pos().string()) // TODO: single-quote
-  fun _show(g: _Gen, x: LitString)    => g.write(x.pos().string()) // TODO: normal quote
-  fun _show(g: _Gen, x: LitLocation)  => g.write("__loc")
-  
-  // TODO: remove these defaults when everything is implemented:
-  fun _show(g: _Gen, x: AST)  => g.write("/*~" + x.string() + "~*/")
