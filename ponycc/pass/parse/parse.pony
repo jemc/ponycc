@@ -4,20 +4,20 @@ use "../../ast"
 
 primitive Parse is Pass[Source, Module]
   fun name(): String => "parse"
-  
+
   fun apply(source: Source, fn: {(Module, Array[PassError] val)} val) =>
     var module = Module
     let errs = recover val
       let err_tuples: Array[(String, SourcePosAny)] = []
       module = try Parser(source, err_tuples)? else Module end
-      
+
       let errs = Array[PassError](err_tuples.size())
       for (message, pos) in err_tuples.values() do
         errs.push(PassError(pos, message))
       end
       errs
     end
-    
+
     if errs.size() > 0 then
       fn(module, errs)
     else
@@ -26,10 +26,10 @@ primitive Parse is Pass[Source, Module]
 
 class val Parser
   let _lexer: _Lexer = _Lexer
-  
+
   new val create() => None
-  
-  fun apply[A: AST = Module](
+
+  fun apply[A: AST val = Module]( // TODO: remove cap when https://github.com/ponylang/ponyc/pull/2675 is merged
     source: Source,
     errs: Array[(String, SourcePosAny)] = [])
     : A ?
@@ -54,5 +54,5 @@ class val Parser
     | let err_idx: USize =>
       errs.push(("Unknown syntax", SourcePos(source, err_idx, 1)))
     end
-    
+
     error

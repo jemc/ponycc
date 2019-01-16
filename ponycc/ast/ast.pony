@@ -17,8 +17,10 @@ trait val AST
       fun has_next(): Bool => idx < ast.size()
       fun ref next(): (USize, (AST | None))? => (idx, ast(idx = idx + 1)?)
     end
-  fun val attach[A: Any val](a: A): AST
-  fun val find_attached[A: Any val](): A?
+  fun val attach_val[A: Any val](a: A): AST
+  fun val attach_tag[A: Any tag](a: A): AST
+  fun val find_attached_val[A: Any val](): A?
+  fun val find_attached_tag[A: Any tag](): A?
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)?
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST
@@ -395,7 +397,7 @@ class val Module is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var use_decls' = coll.Vec[UseDecl]
     var use_decls_next' = try iter.next()? else None end
     while true do
@@ -425,8 +427,8 @@ class val Module is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Module](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Module => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Module => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _use_decls.size() + _type_decls.size() + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -437,9 +439,12 @@ class val Module is AST
     offset = (offset + _type_decls.size()) - 1
     if idx == (2 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Module => create(_use_decls, _type_decls, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Module => create(_use_decls, _type_decls, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Module => create(_use_decls, _type_decls, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val use_decls(): coll.Vec[UseDecl] => _use_decls
   fun val type_decls(): coll.Vec[TypeDecl] => _type_decls
   fun val docs(): (LitString | None) => _docs
@@ -519,7 +524,7 @@ class val UsePackage is (AST & UseDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let prefix': (AST | None) = try iter.next()? else None end
     let package': (AST | None) =
       try iter.next()?
@@ -543,8 +548,8 @@ class val UsePackage is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UsePackage](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): UsePackage => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UsePackage => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -552,9 +557,12 @@ class val UsePackage is (AST & UseDecl)
     if idx == (0 + offset) then return _prefix end
     if idx == (1 + offset) then return _package end
     error
-  fun val attach[A: Any #share](a: A): UsePackage => create(_prefix, _package, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): UsePackage => create(_prefix, _package, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): UsePackage => create(_prefix, _package, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val prefix(): (Id | None) => _prefix
   fun val package(): LitString => _package
   
@@ -618,7 +626,7 @@ class val UseFFIDecl is (AST & UseDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("UseFFIDecl missing required field: name", pos')); error
@@ -666,8 +674,8 @@ class val UseFFIDecl is (AST & UseDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UseFFIDecl](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): UseFFIDecl => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UseFFIDecl => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -678,9 +686,12 @@ class val UseFFIDecl is (AST & UseDecl)
     if idx == (3 + offset) then return _partial end
     if idx == (4 + offset) then return _guard end
     error
-  fun val attach[A: Any #share](a: A): UseFFIDecl => create(_name, _return_type, _params, _partial, _guard, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): UseFFIDecl => create(_name, _return_type, _params, _partial, _guard, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): UseFFIDecl => create(_name, _return_type, _params, _partial, _guard, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): (Id | LitString) => _name
   fun val return_type(): TypeArgs => _return_type
   fun val params(): Params => _params
@@ -771,7 +782,7 @@ class val TypeAlias is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeAlias missing required field: name", pos')); error
@@ -820,8 +831,8 @@ class val TypeAlias is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeAlias](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeAlias => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeAlias => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -834,9 +845,12 @@ class val TypeAlias is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): TypeAlias => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeAlias => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeAlias => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -941,7 +955,7 @@ class val Interface is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Interface missing required field: name", pos')); error
@@ -990,8 +1004,8 @@ class val Interface is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Interface](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Interface => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Interface => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1004,9 +1018,12 @@ class val Interface is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Interface => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Interface => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Interface => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1111,7 +1128,7 @@ class val Trait is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Trait missing required field: name", pos')); error
@@ -1160,8 +1177,8 @@ class val Trait is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trait](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Trait => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Trait => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1174,9 +1191,12 @@ class val Trait is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Trait => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Trait => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Trait => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1281,7 +1301,7 @@ class val Primitive is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Primitive missing required field: name", pos')); error
@@ -1330,8 +1350,8 @@ class val Primitive is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Primitive](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Primitive => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Primitive => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1344,9 +1364,12 @@ class val Primitive is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Primitive => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Primitive => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Primitive => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1451,7 +1474,7 @@ class val Struct is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Struct missing required field: name", pos')); error
@@ -1500,8 +1523,8 @@ class val Struct is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Struct](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Struct => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Struct => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1514,9 +1537,12 @@ class val Struct is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Struct => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Struct => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Struct => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1621,7 +1647,7 @@ class val Class is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Class missing required field: name", pos')); error
@@ -1670,8 +1696,8 @@ class val Class is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Class](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Class => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Class => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1684,9 +1710,12 @@ class val Class is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Class => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Class => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Class => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1791,7 +1820,7 @@ class val Actor is (AST & TypeDecl)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Actor missing required field: name", pos')); error
@@ -1840,8 +1869,8 @@ class val Actor is (AST & TypeDecl)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Actor](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Actor => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Actor => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -1854,9 +1883,12 @@ class val Actor is (AST & TypeDecl)
     if idx == (5 + offset) then return _at end
     if idx == (6 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): Actor => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Actor => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Actor => create(_name, _cap, _type_params, _provides, _members, _at, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -1954,7 +1986,7 @@ class val Members is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var fields' = coll.Vec[Field]
     var fields_next' = try iter.next()? else None end
     while true do
@@ -1976,8 +2008,8 @@ class val Members is AST
     _methods = methods'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Members](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Members => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Members => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _fields.size() + _methods.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -1987,9 +2019,12 @@ class val Members is AST
     if idx < (1 + offset + _methods.size()) then return _methods(idx - (1 + offset))? end
     offset = (offset + _methods.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Members => create(_fields, _methods, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Members => create(_fields, _methods, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Members => create(_fields, _methods, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val fields(): coll.Vec[Field] => _fields
   fun val methods(): coll.Vec[Method] => _methods
   
@@ -2064,7 +2099,7 @@ class val FieldLet is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldLet missing required field: name", pos')); error
@@ -2096,8 +2131,8 @@ class val FieldLet is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLet](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldLet => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldLet => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2106,9 +2141,12 @@ class val FieldLet is (AST & Field)
     if idx == (1 + offset) then return _field_type end
     if idx == (2 + offset) then return _default end
     error
-  fun val attach[A: Any #share](a: A): FieldLet => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldLet => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldLet => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
@@ -2173,7 +2211,7 @@ class val FieldVar is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldVar missing required field: name", pos')); error
@@ -2205,8 +2243,8 @@ class val FieldVar is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVar](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldVar => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldVar => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2215,9 +2253,12 @@ class val FieldVar is (AST & Field)
     if idx == (1 + offset) then return _field_type end
     if idx == (2 + offset) then return _default end
     error
-  fun val attach[A: Any #share](a: A): FieldVar => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldVar => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldVar => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
@@ -2282,7 +2323,7 @@ class val FieldEmbed is (AST & Field)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("FieldEmbed missing required field: name", pos')); error
@@ -2314,8 +2355,8 @@ class val FieldEmbed is (AST & Field)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbed](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldEmbed => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldEmbed => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2324,9 +2365,12 @@ class val FieldEmbed is (AST & Field)
     if idx == (1 + offset) then return _field_type end
     if idx == (2 + offset) then return _default end
     error
-  fun val attach[A: Any #share](a: A): FieldEmbed => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldEmbed => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldEmbed => create(_name, _field_type, _default, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val field_type(): Type => _field_type
   fun val default(): (Expr | None) => _default
@@ -2409,7 +2453,7 @@ class val MethodFun is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodFun missing required field: name", pos')); error
@@ -2468,8 +2512,8 @@ class val MethodFun is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFun](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodFun => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodFun => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2484,9 +2528,12 @@ class val MethodFun is (AST & Method)
     if idx == (7 + offset) then return _body end
     if idx == (8 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): MethodFun => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodFun => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodFun => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2611,7 +2658,7 @@ class val MethodNew is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodNew missing required field: name", pos')); error
@@ -2670,8 +2717,8 @@ class val MethodNew is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNew](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodNew => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodNew => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2686,9 +2733,12 @@ class val MethodNew is (AST & Method)
     if idx == (7 + offset) then return _body end
     if idx == (8 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): MethodNew => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodNew => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodNew => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2813,7 +2863,7 @@ class val MethodBe is (AST & Method)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("MethodBe missing required field: name", pos')); error
@@ -2872,8 +2922,8 @@ class val MethodBe is (AST & Method)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodBe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodBe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -2888,9 +2938,12 @@ class val MethodBe is (AST & Method)
     if idx == (7 + offset) then return _body end
     if idx == (8 + offset) then return _docs end
     error
-  fun val attach[A: Any #share](a: A): MethodBe => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodBe => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodBe => create(_name, _cap, _type_params, _params, _return_type, _partial, _guard, _body, _docs, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | At | None) => _cap
   fun val type_params(): (TypeParams | None) => _type_params
@@ -2995,7 +3048,7 @@ class val TypeParams is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[TypeParam]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3010,8 +3063,8 @@ class val TypeParams is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParams](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeParams => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParams => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -3019,9 +3072,12 @@ class val TypeParams is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): TypeParams => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeParams => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeParams => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[TypeParam] => _list
   
   fun val with_list(list': (coll.Vec[TypeParam] | Array[TypeParam] val)): TypeParams => create(list', _attachments)
@@ -3080,7 +3136,7 @@ class val TypeParam is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeParam missing required field: name", pos')); error
@@ -3109,8 +3165,8 @@ class val TypeParam is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParam](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeParam => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParam => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -3119,9 +3175,12 @@ class val TypeParam is AST
     if idx == (1 + offset) then return _constraint end
     if idx == (2 + offset) then return _default end
     error
-  fun val attach[A: Any #share](a: A): TypeParam => create(_name, _constraint, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeParam => create(_name, _constraint, _default, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeParam => create(_name, _constraint, _default, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val constraint(): (Type | None) => _constraint
   fun val default(): (Type | None) => _default
@@ -3184,7 +3243,7 @@ class val TypeArgs is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3199,8 +3258,8 @@ class val TypeArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeArgs](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeArgs => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeArgs => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -3208,9 +3267,12 @@ class val TypeArgs is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): TypeArgs => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeArgs => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeArgs => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Type] => _list
   
   fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): TypeArgs => create(list', _attachments)
@@ -3270,7 +3332,7 @@ class val Params is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Param]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3293,8 +3355,8 @@ class val Params is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Params](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Params => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Params => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size() + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -3303,9 +3365,12 @@ class val Params is AST
     offset = (offset + _list.size()) - 1
     if idx == (1 + offset) then return _ellipsis end
     error
-  fun val attach[A: Any #share](a: A): Params => create(_list, _ellipsis, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Params => create(_list, _ellipsis, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Params => create(_list, _ellipsis, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Param] => _list
   fun val ellipsis(): (Ellipsis | None) => _ellipsis
   
@@ -3372,7 +3437,7 @@ class val Param is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Param missing required field: name", pos')); error
@@ -3401,8 +3466,8 @@ class val Param is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Param](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Param => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Param => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -3411,9 +3476,12 @@ class val Param is AST
     if idx == (1 + offset) then return _param_type end
     if idx == (2 + offset) then return _default end
     error
-  fun val attach[A: Any #share](a: A): Param => create(_name, _param_type, _default, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Param => create(_name, _param_type, _default, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Param => create(_name, _param_type, _default, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val param_type(): (Type | None) => _param_type
   fun val default(): (Expr | None) => _default
@@ -3476,7 +3544,7 @@ class val Sequence is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Expr]
     var list_next' = try iter.next()? else None end
     while true do
@@ -3491,8 +3559,8 @@ class val Sequence is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sequence](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Sequence => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Sequence => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -3500,9 +3568,12 @@ class val Sequence is (AST & Expr)
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Sequence => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Sequence => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Sequence => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Expr] => _list
   
   fun val with_list(list': (coll.Vec[Expr] | Array[Expr] val)): Sequence => create(list', _attachments)
@@ -3555,7 +3626,7 @@ class val Return is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3571,17 +3642,20 @@ class val Return is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Return](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Return => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Return => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): Return => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Return => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Return => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): Return => create(value', _attachments)
@@ -3626,7 +3700,7 @@ class val Break is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3642,17 +3716,20 @@ class val Break is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Break](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Break => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Break => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): Break => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Break => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Break => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): Break => create(value', _attachments)
@@ -3697,7 +3774,7 @@ class val Continue is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3713,17 +3790,20 @@ class val Continue is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Continue](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Continue => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Continue => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): Continue => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Continue => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Continue => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): Continue => create(value', _attachments)
@@ -3768,7 +3848,7 @@ class val Error is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3784,17 +3864,20 @@ class val Error is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Error](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Error => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Error => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): Error => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Error => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Error => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): Error => create(value', _attachments)
@@ -3839,7 +3922,7 @@ class val CompileIntrinsic is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3855,17 +3938,20 @@ class val CompileIntrinsic is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileIntrinsic](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CompileIntrinsic => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CompileIntrinsic => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): CompileIntrinsic => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CompileIntrinsic => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CompileIntrinsic => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): CompileIntrinsic => create(value', _attachments)
@@ -3910,7 +3996,7 @@ class val CompileError is (AST & Jump & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let value': (AST | None) = try iter.next()? else None end
     if
       try
@@ -3926,17 +4012,20 @@ class val CompileError is (AST & Jump & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CompileError](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CompileError => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CompileError => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): CompileError => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CompileError => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CompileError => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): (Expr | None) => _value
   
   fun val with_value(value': (Expr | None)): CompileError => create(value', _attachments)
@@ -3981,7 +4070,7 @@ class val IfDefFlag is (AST & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefFlag missing required field: name", pos')); error
@@ -4000,17 +4089,20 @@ class val IfDefFlag is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefFlag](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfDefFlag => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefFlag => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): IfDefFlag => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfDefFlag => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfDefFlag => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): (Id | LitString) => _name
   
   fun val with_name(name': (Id | LitString)): IfDefFlag => create(name', _attachments)
@@ -4055,7 +4147,7 @@ class val IfDefNot is (AST & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefNot missing required field: expr", pos')); error
@@ -4074,17 +4166,20 @@ class val IfDefNot is (AST & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefNot](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfDefNot => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefNot => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): IfDefNot => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfDefNot => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfDefNot => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): IfDefCond => _expr
   
   fun val with_expr(expr': IfDefCond): IfDefNot => create(expr', _attachments)
@@ -4132,7 +4227,7 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefAnd missing required field: left", pos')); error
@@ -4159,8 +4254,8 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefAnd](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfDefAnd => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefAnd => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4168,9 +4263,12 @@ class val IfDefAnd is (AST & IfDefBinaryOp & IfDefCond)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): IfDefAnd => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfDefAnd => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfDefAnd => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
@@ -4225,7 +4323,7 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("IfDefOr missing required field: left", pos')); error
@@ -4252,8 +4350,8 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDefOr](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfDefOr => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDefOr => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4261,9 +4359,12 @@ class val IfDefOr is (AST & IfDefBinaryOp & IfDefCond)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): IfDefOr => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfDefOr => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfDefOr => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): IfDefCond => _left
   fun val right(): IfDefCond => _right
   
@@ -4321,7 +4422,7 @@ class val IfDef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("IfDef missing required field: condition", pos')); error
@@ -4353,8 +4454,8 @@ class val IfDef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfDef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfDef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfDef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4363,9 +4464,12 @@ class val IfDef is (AST & Expr)
     if idx == (1 + offset) then return _then_body end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): IfDef => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfDef => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfDef => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val condition(): IfDefCond => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | IfDef | None) => _else_body
@@ -4433,7 +4537,7 @@ class val IfType is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let sub': (AST | None) =
       try iter.next()?
       else errs.push(("IfType missing required field: sub", pos')); error
@@ -4473,8 +4577,8 @@ class val IfType is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IfType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IfType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IfType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4484,9 +4588,12 @@ class val IfType is (AST & Expr)
     if idx == (2 + offset) then return _then_body end
     if idx == (3 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): IfType => create(_sub, _super, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IfType => create(_sub, _super, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IfType => create(_sub, _super, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val sub(): Type => _sub
   fun val super(): Type => _super
   fun val then_body(): Sequence => _then_body
@@ -4558,7 +4665,7 @@ class val If is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("If missing required field: condition", pos')); error
@@ -4590,8 +4697,8 @@ class val If is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[If](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): If => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): If => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4600,9 +4707,12 @@ class val If is (AST & Expr)
     if idx == (1 + offset) then return _then_body end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): If => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): If => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): If => create(_condition, _then_body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val condition(): Sequence => _condition
   fun val then_body(): Sequence => _then_body
   fun val else_body(): (Sequence | If | None) => _else_body
@@ -4667,7 +4777,7 @@ class val While is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let condition': (AST | None) =
       try iter.next()?
       else errs.push(("While missing required field: condition", pos')); error
@@ -4699,8 +4809,8 @@ class val While is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[While](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): While => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): While => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4709,9 +4819,12 @@ class val While is (AST & Expr)
     if idx == (1 + offset) then return _loop_body end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): While => create(_condition, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): While => create(_condition, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): While => create(_condition, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val condition(): Sequence => _condition
   fun val loop_body(): Sequence => _loop_body
   fun val else_body(): (Sequence | None) => _else_body
@@ -4776,7 +4889,7 @@ class val Repeat is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let loop_body': (AST | None) =
       try iter.next()?
       else errs.push(("Repeat missing required field: loop_body", pos')); error
@@ -4808,8 +4921,8 @@ class val Repeat is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Repeat](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Repeat => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Repeat => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4818,9 +4931,12 @@ class val Repeat is (AST & Expr)
     if idx == (1 + offset) then return _condition end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): Repeat => create(_loop_body, _condition, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Repeat => create(_loop_body, _condition, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Repeat => create(_loop_body, _condition, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val loop_body(): Sequence => _loop_body
   fun val condition(): Sequence => _condition
   fun val else_body(): (Sequence | None) => _else_body
@@ -4888,7 +5004,7 @@ class val For is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let refs': (AST | None) =
       try iter.next()?
       else errs.push(("For missing required field: refs", pos')); error
@@ -4928,8 +5044,8 @@ class val For is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[For](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): For => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): For => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -4939,9 +5055,12 @@ class val For is (AST & Expr)
     if idx == (2 + offset) then return _loop_body end
     if idx == (3 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): For => create(_refs, _iterator, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): For => create(_refs, _iterator, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): For => create(_refs, _iterator, _loop_body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val refs(): (Id | IdTuple) => _refs
   fun val iterator(): Sequence => _iterator
   fun val loop_body(): Sequence => _loop_body
@@ -5013,7 +5132,7 @@ class val With is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let assigns': (AST | None) =
       try iter.next()?
       else errs.push(("With missing required field: assigns", pos')); error
@@ -5045,8 +5164,8 @@ class val With is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[With](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): With => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): With => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5055,9 +5174,12 @@ class val With is (AST & Expr)
     if idx == (1 + offset) then return _body end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): With => create(_assigns, _body, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): With => create(_assigns, _body, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): With => create(_assigns, _body, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val assigns(): AssignTuple => _assigns
   fun val body(): Sequence => _body
   fun val else_body(): (Sequence | None) => _else_body
@@ -5120,7 +5242,7 @@ class val IdTuple is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var elements' = coll.Vec[(Id | IdTuple)]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -5135,8 +5257,8 @@ class val IdTuple is (AST & Expr)
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IdTuple](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IdTuple => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IdTuple => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _elements.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -5144,9 +5266,12 @@ class val IdTuple is (AST & Expr)
     if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
     offset = (offset + _elements.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): IdTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IdTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IdTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val elements(): coll.Vec[(Id | IdTuple)] => _elements
   
   fun val with_elements(elements': (coll.Vec[(Id | IdTuple)] | Array[(Id | IdTuple)] val)): IdTuple => create(elements', _attachments)
@@ -5203,7 +5328,7 @@ class val AssignTuple is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var elements' = coll.Vec[Assign]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -5218,8 +5343,8 @@ class val AssignTuple is AST
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AssignTuple](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): AssignTuple => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AssignTuple => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _elements.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -5227,9 +5352,12 @@ class val AssignTuple is AST
     if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
     offset = (offset + _elements.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): AssignTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): AssignTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): AssignTuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val elements(): coll.Vec[Assign] => _elements
   
   fun val with_elements(elements': (coll.Vec[Assign] | Array[Assign] val)): AssignTuple => create(elements', _attachments)
@@ -5288,7 +5416,7 @@ class val Match is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Match missing required field: expr", pos')); error
@@ -5317,8 +5445,8 @@ class val Match is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Match](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Match => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Match => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5327,9 +5455,12 @@ class val Match is (AST & Expr)
     if idx == (1 + offset) then return _cases end
     if idx == (2 + offset) then return _else_body end
     error
-  fun val attach[A: Any #share](a: A): Match => create(_expr, _cases, _else_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Match => create(_expr, _cases, _else_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Match => create(_expr, _cases, _else_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Sequence => _expr
   fun val cases(): Cases => _cases
   fun val else_body(): (Sequence | None) => _else_body
@@ -5392,7 +5523,7 @@ class val Cases is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Case]
     var list_next' = try iter.next()? else None end
     while true do
@@ -5407,8 +5538,8 @@ class val Cases is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Cases](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Cases => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Cases => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -5416,9 +5547,12 @@ class val Cases is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Cases => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Cases => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Cases => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Case] => _list
   
   fun val with_list(list': (coll.Vec[Case] | Array[Case] val)): Cases => create(list', _attachments)
@@ -5477,7 +5611,7 @@ class val Case is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Case missing required field: expr", pos')); error
@@ -5506,8 +5640,8 @@ class val Case is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Case](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Case => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Case => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5516,9 +5650,12 @@ class val Case is AST
     if idx == (1 + offset) then return _guard end
     if idx == (2 + offset) then return _body end
     error
-  fun val attach[A: Any #share](a: A): Case => create(_expr, _guard, _body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Case => create(_expr, _guard, _body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Case => create(_expr, _guard, _body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   fun val guard(): (Sequence | None) => _guard
   fun val body(): (Sequence | None) => _body
@@ -5583,7 +5720,7 @@ class val Try is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let body': (AST | None) =
       try iter.next()?
       else errs.push(("Try missing required field: body", pos')); error
@@ -5612,8 +5749,8 @@ class val Try is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Try](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Try => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Try => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5622,9 +5759,12 @@ class val Try is (AST & Expr)
     if idx == (1 + offset) then return _else_body end
     if idx == (2 + offset) then return _then_body end
     error
-  fun val attach[A: Any #share](a: A): Try => create(_body, _else_body, _then_body, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Try => create(_body, _else_body, _then_body, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Try => create(_body, _else_body, _then_body, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val body(): Sequence => _body
   fun val else_body(): (Sequence | None) => _else_body
   fun val then_body(): (Sequence | None) => _then_body
@@ -5686,7 +5826,7 @@ class val Consume is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("Consume missing required field: cap", pos')); error
@@ -5713,8 +5853,8 @@ class val Consume is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Consume](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Consume => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Consume => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5722,9 +5862,12 @@ class val Consume is (AST & Expr)
     if idx == (0 + offset) then return _cap end
     if idx == (1 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): Consume => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Consume => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Consume => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val cap(): (Cap | None) => _cap
   fun val expr(): (Reference | This) => _expr
   
@@ -5779,7 +5922,7 @@ class val Recover is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("Recover missing required field: cap", pos')); error
@@ -5806,8 +5949,8 @@ class val Recover is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Recover](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Recover => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Recover => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5815,9 +5958,12 @@ class val Recover is (AST & Expr)
     if idx == (0 + offset) then return _cap end
     if idx == (1 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): Recover => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Recover => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Recover => create(_cap, _expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val cap(): (Cap | None) => _cap
   fun val expr(): Sequence => _expr
   
@@ -5872,7 +6018,7 @@ class val As is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("As missing required field: expr", pos')); error
@@ -5899,8 +6045,8 @@ class val As is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[As](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): As => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): As => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -5908,9 +6054,12 @@ class val As is (AST & Expr)
     if idx == (0 + offset) then return _expr end
     if idx == (1 + offset) then return _as_type end
     error
-  fun val attach[A: Any #share](a: A): As => create(_expr, _as_type, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): As => create(_expr, _as_type, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): As => create(_expr, _as_type, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   fun val as_type(): Type => _as_type
   
@@ -5968,7 +6117,7 @@ class val Add is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Add missing required field: left", pos')); error
@@ -6000,8 +6149,8 @@ class val Add is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Add](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Add => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Add => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6010,9 +6159,12 @@ class val Add is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Add => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Add => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Add => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6077,7 +6229,7 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("AddUnsafe missing required field: left", pos')); error
@@ -6109,8 +6261,8 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): AddUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AddUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6119,9 +6271,12 @@ class val AddUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): AddUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): AddUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): AddUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6186,7 +6341,7 @@ class val Sub is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Sub missing required field: left", pos')); error
@@ -6218,8 +6373,8 @@ class val Sub is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Sub](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Sub => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Sub => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6228,9 +6383,12 @@ class val Sub is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Sub => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Sub => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Sub => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6295,7 +6453,7 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("SubUnsafe missing required field: left", pos')); error
@@ -6327,8 +6485,8 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[SubUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): SubUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): SubUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6337,9 +6495,12 @@ class val SubUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): SubUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): SubUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): SubUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6404,7 +6565,7 @@ class val Mul is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Mul missing required field: left", pos')); error
@@ -6436,8 +6597,8 @@ class val Mul is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mul](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Mul => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Mul => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6446,9 +6607,12 @@ class val Mul is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Mul => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Mul => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Mul => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6513,7 +6677,7 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("MulUnsafe missing required field: left", pos')); error
@@ -6545,8 +6709,8 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MulUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MulUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MulUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6555,9 +6719,12 @@ class val MulUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): MulUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MulUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MulUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6622,7 +6789,7 @@ class val Div is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Div missing required field: left", pos')); error
@@ -6654,8 +6821,8 @@ class val Div is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Div](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Div => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Div => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6664,9 +6831,12 @@ class val Div is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Div => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Div => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Div => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6731,7 +6901,7 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("DivUnsafe missing required field: left", pos')); error
@@ -6763,8 +6933,8 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DivUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): DivUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DivUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6773,9 +6943,12 @@ class val DivUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): DivUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): DivUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): DivUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6840,7 +7013,7 @@ class val Mod is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Mod missing required field: left", pos')); error
@@ -6872,8 +7045,8 @@ class val Mod is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Mod](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Mod => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Mod => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6882,9 +7055,12 @@ class val Mod is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Mod => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Mod => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Mod => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -6949,7 +7125,7 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("ModUnsafe missing required field: left", pos')); error
@@ -6981,8 +7157,8 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ModUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): ModUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ModUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -6991,9 +7167,12 @@ class val ModUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): ModUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): ModUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): ModUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7058,7 +7237,7 @@ class val LShift is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LShift missing required field: left", pos')); error
@@ -7090,8 +7269,8 @@ class val LShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShift](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LShift => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LShift => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7100,9 +7279,12 @@ class val LShift is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7167,7 +7349,7 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LShiftUnsafe missing required field: left", pos')); error
@@ -7199,8 +7381,8 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LShiftUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LShiftUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LShiftUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7209,9 +7391,12 @@ class val LShiftUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7276,7 +7461,7 @@ class val RShift is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("RShift missing required field: left", pos')); error
@@ -7308,8 +7493,8 @@ class val RShift is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShift](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): RShift => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): RShift => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7318,9 +7503,12 @@ class val RShift is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): RShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): RShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): RShift => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7385,7 +7573,7 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("RShiftUnsafe missing required field: left", pos')); error
@@ -7417,8 +7605,8 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[RShiftUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): RShiftUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): RShiftUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7427,9 +7615,12 @@ class val RShiftUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): RShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): RShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): RShiftUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7494,7 +7685,7 @@ class val Eq is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Eq missing required field: left", pos')); error
@@ -7526,8 +7717,8 @@ class val Eq is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Eq](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Eq => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Eq => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7536,9 +7727,12 @@ class val Eq is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Eq => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Eq => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Eq => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7603,7 +7797,7 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("EqUnsafe missing required field: left", pos')); error
@@ -7635,8 +7829,8 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[EqUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): EqUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): EqUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7645,9 +7839,12 @@ class val EqUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): EqUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): EqUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): EqUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7712,7 +7909,7 @@ class val NE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("NE missing required field: left", pos')); error
@@ -7744,8 +7941,8 @@ class val NE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NE](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NE => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NE => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7754,9 +7951,12 @@ class val NE is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): NE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7821,7 +8021,7 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("NEUnsafe missing required field: left", pos')); error
@@ -7853,8 +8053,8 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NEUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NEUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NEUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7863,9 +8063,12 @@ class val NEUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): NEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -7930,7 +8133,7 @@ class val LT is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LT missing required field: left", pos')); error
@@ -7962,8 +8165,8 @@ class val LT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LT](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LT => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LT => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -7972,9 +8175,12 @@ class val LT is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8039,7 +8245,7 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LTUnsafe missing required field: left", pos')); error
@@ -8071,8 +8277,8 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LTUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LTUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LTUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8081,9 +8287,12 @@ class val LTUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8148,7 +8357,7 @@ class val LE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LE missing required field: left", pos')); error
@@ -8180,8 +8389,8 @@ class val LE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LE](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LE => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LE => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8190,9 +8399,12 @@ class val LE is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8257,7 +8469,7 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("LEUnsafe missing required field: left", pos')); error
@@ -8289,8 +8501,8 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LEUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LEUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LEUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8299,9 +8511,12 @@ class val LEUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): LEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8366,7 +8581,7 @@ class val GE is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GE missing required field: left", pos')); error
@@ -8398,8 +8613,8 @@ class val GE is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GE](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): GE => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GE => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8408,9 +8623,12 @@ class val GE is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): GE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): GE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): GE => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8475,7 +8693,7 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GEUnsafe missing required field: left", pos')); error
@@ -8507,8 +8725,8 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GEUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): GEUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GEUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8517,9 +8735,12 @@ class val GEUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): GEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): GEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): GEUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8584,7 +8805,7 @@ class val GT is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GT missing required field: left", pos')); error
@@ -8616,8 +8837,8 @@ class val GT is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GT](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): GT => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GT => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8626,9 +8847,12 @@ class val GT is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): GT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): GT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): GT => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8693,7 +8917,7 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("GTUnsafe missing required field: left", pos')); error
@@ -8725,8 +8949,8 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[GTUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): GTUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): GTUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8735,9 +8959,12 @@ class val GTUnsafe is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): GTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): GTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): GTUnsafe => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8802,7 +9029,7 @@ class val Is is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Is missing required field: left", pos')); error
@@ -8834,8 +9061,8 @@ class val Is is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Is](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Is => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Is => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8844,9 +9071,12 @@ class val Is is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Is => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Is => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Is => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -8911,7 +9141,7 @@ class val Isnt is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Isnt missing required field: left", pos')); error
@@ -8943,8 +9173,8 @@ class val Isnt is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Isnt](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Isnt => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Isnt => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -8953,9 +9183,12 @@ class val Isnt is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Isnt => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Isnt => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Isnt => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -9020,7 +9253,7 @@ class val And is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("And missing required field: left", pos')); error
@@ -9052,8 +9285,8 @@ class val And is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[And](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): And => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): And => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9062,9 +9295,12 @@ class val And is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): And => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): And => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): And => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -9129,7 +9365,7 @@ class val Or is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Or missing required field: left", pos')); error
@@ -9161,8 +9397,8 @@ class val Or is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Or](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Or => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Or => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9171,9 +9407,12 @@ class val Or is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Or => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Or => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Or => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -9238,7 +9477,7 @@ class val XOr is (AST & BinaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("XOr missing required field: left", pos')); error
@@ -9270,8 +9509,8 @@ class val XOr is (AST & BinaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[XOr](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): XOr => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): XOr => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9280,9 +9519,12 @@ class val XOr is (AST & BinaryOp & Expr)
     if idx == (1 + offset) then return _right end
     if idx == (2 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): XOr => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): XOr => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): XOr => create(_left, _right, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   fun val partial(): (Question | None) => _partial
@@ -9341,7 +9583,7 @@ class val Not is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Not missing required field: expr", pos')); error
@@ -9360,17 +9602,20 @@ class val Not is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Not](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Not => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Not => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): Not => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Not => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Not => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   
   fun val with_expr(expr': Expr): Not => create(expr', _attachments)
@@ -9415,7 +9660,7 @@ class val Neg is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("Neg missing required field: expr", pos')); error
@@ -9434,17 +9679,20 @@ class val Neg is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Neg](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Neg => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Neg => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): Neg => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Neg => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Neg => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   
   fun val with_expr(expr': Expr): Neg => create(expr', _attachments)
@@ -9489,7 +9737,7 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("NegUnsafe missing required field: expr", pos')); error
@@ -9508,17 +9756,20 @@ class val NegUnsafe is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NegUnsafe](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NegUnsafe => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NegUnsafe => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): NegUnsafe => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NegUnsafe => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NegUnsafe => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   
   fun val with_expr(expr': Expr): NegUnsafe => create(expr', _attachments)
@@ -9563,7 +9814,7 @@ class val AddressOf is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("AddressOf missing required field: expr", pos')); error
@@ -9582,17 +9833,20 @@ class val AddressOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[AddressOf](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): AddressOf => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): AddressOf => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): AddressOf => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): AddressOf => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): AddressOf => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   
   fun val with_expr(expr': Expr): AddressOf => create(expr', _attachments)
@@ -9637,7 +9891,7 @@ class val DigestOf is (AST & UnaryOp & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let expr': (AST | None) =
       try iter.next()?
       else errs.push(("DigestOf missing required field: expr", pos')); error
@@ -9656,17 +9910,20 @@ class val DigestOf is (AST & UnaryOp & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DigestOf](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): DigestOf => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DigestOf => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _expr end
     error
-  fun val attach[A: Any #share](a: A): DigestOf => create(_expr, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): DigestOf => create(_expr, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): DigestOf => create(_expr, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val expr(): Expr => _expr
   
   fun val with_expr(expr': Expr): DigestOf => create(expr', _attachments)
@@ -9714,7 +9971,7 @@ class val LocalLet is (AST & Local & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalLet missing required field: name", pos')); error
@@ -9738,8 +9995,8 @@ class val LocalLet is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLet](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LocalLet => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalLet => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9747,9 +10004,12 @@ class val LocalLet is (AST & Local & Expr)
     if idx == (0 + offset) then return _name end
     if idx == (1 + offset) then return _local_type end
     error
-  fun val attach[A: Any #share](a: A): LocalLet => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LocalLet => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LocalLet => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
@@ -9804,7 +10064,7 @@ class val LocalVar is (AST & Local & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalVar missing required field: name", pos')); error
@@ -9828,8 +10088,8 @@ class val LocalVar is (AST & Local & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVar](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LocalVar => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalVar => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9837,9 +10097,12 @@ class val LocalVar is (AST & Local & Expr)
     if idx == (0 + offset) then return _name end
     if idx == (1 + offset) then return _local_type end
     error
-  fun val attach[A: Any #share](a: A): LocalVar => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LocalVar => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LocalVar => create(_name, _local_type, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   
@@ -9894,7 +10157,7 @@ class val Assign is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Assign missing required field: left", pos')); error
@@ -9921,8 +10184,8 @@ class val Assign is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Assign](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Assign => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Assign => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -9930,9 +10193,12 @@ class val Assign is (AST & Expr)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): Assign => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Assign => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Assign => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Expr => _right
   
@@ -9987,7 +10253,7 @@ class val Dot is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Dot missing required field: left", pos')); error
@@ -10014,8 +10280,8 @@ class val Dot is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Dot](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Dot => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Dot => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10023,9 +10289,12 @@ class val Dot is (AST & Expr)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): Dot => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Dot => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Dot => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
@@ -10080,7 +10349,7 @@ class val Chain is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Chain missing required field: left", pos')); error
@@ -10107,8 +10376,8 @@ class val Chain is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Chain](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Chain => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Chain => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10116,9 +10385,12 @@ class val Chain is (AST & Expr)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): Chain => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Chain => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Chain => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
@@ -10173,7 +10445,7 @@ class val Tilde is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Tilde missing required field: left", pos')); error
@@ -10200,8 +10472,8 @@ class val Tilde is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tilde](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Tilde => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tilde => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10209,9 +10481,12 @@ class val Tilde is (AST & Expr)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): Tilde => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Tilde => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Tilde => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): Id => _right
   
@@ -10266,7 +10541,7 @@ class val Qualify is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("Qualify missing required field: left", pos')); error
@@ -10293,8 +10568,8 @@ class val Qualify is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Qualify](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Qualify => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Qualify => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10302,9 +10577,12 @@ class val Qualify is (AST & Expr)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): Qualify => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Qualify => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Qualify => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Expr => _left
   fun val right(): TypeArgs => _right
   
@@ -10365,7 +10643,7 @@ class val Call is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let callable': (AST | None) =
       try iter.next()?
       else errs.push(("Call missing required field: callable", pos')); error
@@ -10399,8 +10677,8 @@ class val Call is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Call](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Call => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Call => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10410,9 +10688,12 @@ class val Call is (AST & Expr)
     if idx == (2 + offset) then return _named_args end
     if idx == (3 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): Call => create(_callable, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Call => create(_callable, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Call => create(_callable, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val callable(): Expr => _callable
   fun val args(): Args => _args
   fun val named_args(): NamedArgs => _named_args
@@ -10490,7 +10771,7 @@ class val CallFFI is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("CallFFI missing required field: name", pos')); error
@@ -10529,8 +10810,8 @@ class val CallFFI is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CallFFI](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CallFFI => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CallFFI => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10541,9 +10822,12 @@ class val CallFFI is (AST & Expr)
     if idx == (3 + offset) then return _named_args end
     if idx == (4 + offset) then return _partial end
     error
-  fun val attach[A: Any #share](a: A): CallFFI => create(_name, _type_args, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CallFFI => create(_name, _type_args, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CallFFI => create(_name, _type_args, _args, _named_args, _partial, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): (Id | LitString) => _name
   fun val type_args(): (TypeArgs | None) => _type_args
   fun val args(): Args => _args
@@ -10620,7 +10904,7 @@ class val Args is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Sequence]
     var list_next' = try iter.next()? else None end
     while true do
@@ -10635,8 +10919,8 @@ class val Args is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Args](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Args => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Args => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -10644,9 +10928,12 @@ class val Args is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Args => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Args => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Args => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Sequence] => _list
   
   fun val with_list(list': (coll.Vec[Sequence] | Array[Sequence] val)): Args => create(list', _attachments)
@@ -10703,7 +10990,7 @@ class val NamedArgs is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[NamedArg]
     var list_next' = try iter.next()? else None end
     while true do
@@ -10718,8 +11005,8 @@ class val NamedArgs is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArgs](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NamedArgs => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NamedArgs => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -10727,9 +11014,12 @@ class val NamedArgs is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): NamedArgs => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NamedArgs => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NamedArgs => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[NamedArg] => _list
   
   fun val with_list(list': (coll.Vec[NamedArg] | Array[NamedArg] val)): NamedArgs => create(list', _attachments)
@@ -10785,7 +11075,7 @@ class val NamedArg is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("NamedArg missing required field: name", pos')); error
@@ -10812,8 +11102,8 @@ class val NamedArg is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NamedArg](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NamedArg => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NamedArg => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10821,9 +11111,12 @@ class val NamedArg is AST
     if idx == (0 + offset) then return _name end
     if idx == (1 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): NamedArg => create(_name, _value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NamedArg => create(_name, _value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NamedArg => create(_name, _value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val value(): Sequence => _value
   
@@ -10899,7 +11192,7 @@ class val Lambda is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -10955,8 +11248,8 @@ class val Lambda is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Lambda](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Lambda => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Lambda => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -10971,9 +11264,12 @@ class val Lambda is (AST & Expr)
     if idx == (7 + offset) then return _body end
     if idx == (8 + offset) then return _object_cap end
     error
-  fun val attach[A: Any #share](a: A): Lambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Lambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Lambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -11098,7 +11394,7 @@ class val BareLambda is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -11154,8 +11450,8 @@ class val BareLambda is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambda](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): BareLambda => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): BareLambda => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -11170,9 +11466,12 @@ class val BareLambda is (AST & Expr)
     if idx == (7 + offset) then return _body end
     if idx == (8 + offset) then return _object_cap end
     error
-  fun val attach[A: Any #share](a: A): BareLambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): BareLambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): BareLambda => create(_method_cap, _name, _type_params, _params, _captures, _return_type, _partial, _body, _object_cap, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -11277,7 +11576,7 @@ class val LambdaCaptures is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[LambdaCapture]
     var list_next' = try iter.next()? else None end
     while true do
@@ -11292,8 +11591,8 @@ class val LambdaCaptures is AST
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCaptures](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LambdaCaptures => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaCaptures => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -11301,9 +11600,12 @@ class val LambdaCaptures is AST
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): LambdaCaptures => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LambdaCaptures => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LambdaCaptures => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[LambdaCapture] => _list
   
   fun val with_list(list': (coll.Vec[LambdaCapture] | Array[LambdaCapture] val)): LambdaCaptures => create(list', _attachments)
@@ -11362,7 +11664,7 @@ class val LambdaCapture is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LambdaCapture missing required field: name", pos')); error
@@ -11391,8 +11693,8 @@ class val LambdaCapture is AST
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaCapture](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LambdaCapture => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaCapture => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -11401,9 +11703,12 @@ class val LambdaCapture is AST
     if idx == (1 + offset) then return _local_type end
     if idx == (2 + offset) then return _value end
     error
-  fun val attach[A: Any #share](a: A): LambdaCapture => create(_name, _local_type, _value, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LambdaCapture => create(_name, _local_type, _value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LambdaCapture => create(_name, _local_type, _value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val local_type(): (Type | None) => _local_type
   fun val value(): (Expr | None) => _value
@@ -11468,7 +11773,7 @@ class val Object is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let cap': (AST | None) = try iter.next()? else None end
     let provides': (AST | None) = try iter.next()? else None end
     let members': (AST | None) = try iter.next()? else None end
@@ -11494,8 +11799,8 @@ class val Object is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Object](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Object => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Object => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -11504,9 +11809,12 @@ class val Object is (AST & Expr)
     if idx == (1 + offset) then return _provides end
     if idx == (2 + offset) then return _members end
     error
-  fun val attach[A: Any #share](a: A): Object => create(_cap, _provides, _members, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Object => create(_cap, _provides, _members, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Object => create(_cap, _provides, _members, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val cap(): (Cap | None) => _cap
   fun val provides(): (Type | None) => _provides
   fun val members(): (Members | None) => _members
@@ -11568,7 +11876,7 @@ class val LitArray is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let elem_type': (AST | None) = try iter.next()? else None end
     let sequence': (AST | None) = try iter.next()? else Sequence end
     if
@@ -11589,8 +11897,8 @@ class val LitArray is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitArray](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitArray => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitArray => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -11598,9 +11906,12 @@ class val LitArray is (AST & Expr)
     if idx == (0 + offset) then return _elem_type end
     if idx == (1 + offset) then return _sequence end
     error
-  fun val attach[A: Any #share](a: A): LitArray => create(_elem_type, _sequence, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LitArray => create(_elem_type, _sequence, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LitArray => create(_elem_type, _sequence, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val elem_type(): (Type | None) => _elem_type
   fun val sequence(): Sequence => _sequence
   
@@ -11656,7 +11967,7 @@ class val Tuple is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var elements' = coll.Vec[Sequence]
     var elements_next' = try iter.next()? else None end
     while true do
@@ -11671,8 +11982,8 @@ class val Tuple is (AST & Expr)
     _elements = elements'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tuple](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Tuple => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tuple => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _elements.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -11680,9 +11991,12 @@ class val Tuple is (AST & Expr)
     if idx < (0 + offset + _elements.size()) then return _elements(idx - (0 + offset))? end
     offset = (offset + _elements.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Tuple => create(_elements, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Tuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Tuple => create(_elements, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val elements(): coll.Vec[Sequence] => _elements
   
   fun val with_elements(elements': (coll.Vec[Sequence] | Array[Sequence] val)): Tuple => create(elements', _attachments)
@@ -11731,7 +12045,7 @@ class val This is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -11741,16 +12055,19 @@ class val This is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[This](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): This => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): This => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): This => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): This => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): This => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11777,7 +12094,7 @@ class val LitTrue is (AST & LitBool & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -11787,16 +12104,19 @@ class val LitTrue is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitTrue](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitTrue => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitTrue => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): LitTrue => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LitTrue => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LitTrue => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11823,7 +12143,7 @@ class val LitFalse is (AST & LitBool & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -11833,16 +12153,19 @@ class val LitFalse is (AST & LitBool & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFalse](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitFalse => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitFalse => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): LitFalse => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LitFalse => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LitFalse => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -11869,7 +12192,7 @@ class val LitInteger is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     _value =
       try
         _ASTUtil.parse_lit_integer(pos')?
@@ -11889,13 +12212,15 @@ class val LitInteger is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitInteger](consume c, this)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitInteger => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitInteger => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
-  fun val attach[A: Any #share](a: A): LitInteger => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_val[A: Any val](a: A): LitInteger => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
+  fun val attach_tag[A: Any tag](a: A): LitInteger => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): U128 => _value
   fun val with_value(value': U128): LitInteger => create(value', _attachments)
   fun string(): String iso^ =>
@@ -11915,7 +12240,7 @@ class val LitFloat is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     _value =
       try
         _ASTUtil.parse_lit_float(pos')?
@@ -11935,13 +12260,15 @@ class val LitFloat is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitFloat](consume c, this)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitFloat => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitFloat => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
-  fun val attach[A: Any #share](a: A): LitFloat => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_val[A: Any val](a: A): LitFloat => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
+  fun val attach_tag[A: Any tag](a: A): LitFloat => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): F64 => _value
   fun val with_value(value': F64): LitFloat => create(value', _attachments)
   fun string(): String iso^ =>
@@ -11961,7 +12288,7 @@ class val LitString is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     _value =
       try
         _ASTUtil.parse_lit_string(pos')?
@@ -11981,13 +12308,15 @@ class val LitString is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitString](consume c, this)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitString => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitString => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
-  fun val attach[A: Any #share](a: A): LitString => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_val[A: Any val](a: A): LitString => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
+  fun val attach_tag[A: Any tag](a: A): LitString => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): String => _value
   fun val with_value(value': String): LitString => create(value', _attachments)
   fun string(): String iso^ =>
@@ -12007,7 +12336,7 @@ class val LitCharacter is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     _value =
       try
         _ASTUtil.parse_lit_character(pos')?
@@ -12027,13 +12356,15 @@ class val LitCharacter is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitCharacter](consume c, this)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitCharacter => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitCharacter => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
-  fun val attach[A: Any #share](a: A): LitCharacter => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_val[A: Any val](a: A): LitCharacter => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
+  fun val attach_tag[A: Any tag](a: A): LitCharacter => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): U8 => _value
   fun val with_value(value': U8): LitCharacter => create(value', _attachments)
   fun string(): String iso^ =>
@@ -12053,7 +12384,7 @@ class val LitLocation is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -12063,16 +12394,19 @@ class val LitLocation is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LitLocation](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LitLocation => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LitLocation => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): LitLocation => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LitLocation => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LitLocation => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -12103,7 +12437,7 @@ class val Reference is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("Reference missing required field: name", pos')); error
@@ -12122,17 +12456,20 @@ class val Reference is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Reference](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Reference => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Reference => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): Reference => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Reference => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Reference => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   
   fun val with_name(name': Id): Reference => create(name', _attachments)
@@ -12173,7 +12510,7 @@ class val DontCare is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -12183,16 +12520,19 @@ class val DontCare is (AST & Expr)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCare](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): DontCare => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DontCare => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): DontCare => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): DontCare => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): DontCare => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -12223,7 +12563,7 @@ class val PackageRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("PackageRef missing required field: name", pos')); error
@@ -12242,17 +12582,20 @@ class val PackageRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[PackageRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): PackageRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): PackageRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): PackageRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): PackageRef => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): PackageRef => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   
   fun val with_name(name': Id): PackageRef => create(name', _attachments)
@@ -12300,7 +12643,7 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodFunRef missing required field: receiver", pos')); error
@@ -12327,8 +12670,8 @@ class val MethodFunRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodFunRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodFunRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodFunRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12336,9 +12679,12 @@ class val MethodFunRef is (AST & MethodRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): MethodFunRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodFunRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodFunRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
@@ -12393,7 +12739,7 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodNewRef missing required field: receiver", pos')); error
@@ -12420,8 +12766,8 @@ class val MethodNewRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodNewRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodNewRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodNewRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12429,9 +12775,12 @@ class val MethodNewRef is (AST & MethodRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): MethodNewRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodNewRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodNewRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
@@ -12486,7 +12835,7 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("MethodBeRef missing required field: receiver", pos')); error
@@ -12513,8 +12862,8 @@ class val MethodBeRef is (AST & MethodRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[MethodBeRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): MethodBeRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): MethodBeRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12522,9 +12871,12 @@ class val MethodBeRef is (AST & MethodRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): MethodBeRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): MethodBeRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): MethodBeRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): (Id | TypeArgs) => _name
   
@@ -12579,7 +12931,7 @@ class val TypeRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let package': (AST | None) =
       try iter.next()?
       else errs.push(("TypeRef missing required field: package", pos')); error
@@ -12606,8 +12958,8 @@ class val TypeRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12615,9 +12967,12 @@ class val TypeRef is (AST & Expr)
     if idx == (0 + offset) then return _package end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): TypeRef => create(_package, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeRef => create(_package, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeRef => create(_package, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val package(): Expr => _package
   fun val name(): (Id | TypeArgs) => _name
   
@@ -12672,7 +13027,7 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldLetRef missing required field: receiver", pos')); error
@@ -12699,8 +13054,8 @@ class val FieldLetRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldLetRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldLetRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldLetRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12708,9 +13063,12 @@ class val FieldLetRef is (AST & FieldRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): FieldLetRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldLetRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldLetRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
@@ -12765,7 +13123,7 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldVarRef missing required field: receiver", pos')); error
@@ -12792,8 +13150,8 @@ class val FieldVarRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldVarRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldVarRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldVarRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12801,9 +13159,12 @@ class val FieldVarRef is (AST & FieldRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): FieldVarRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldVarRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldVarRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
@@ -12858,7 +13219,7 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("FieldEmbedRef missing required field: receiver", pos')); error
@@ -12885,8 +13246,8 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FieldEmbedRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FieldEmbedRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FieldEmbedRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12894,9 +13255,12 @@ class val FieldEmbedRef is (AST & FieldRef & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): FieldEmbedRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FieldEmbedRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FieldEmbedRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): Id => _name
   
@@ -12951,7 +13315,7 @@ class val TupleElementRef is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let receiver': (AST | None) =
       try iter.next()?
       else errs.push(("TupleElementRef missing required field: receiver", pos')); error
@@ -12978,8 +13342,8 @@ class val TupleElementRef is (AST & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleElementRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TupleElementRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TupleElementRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -12987,9 +13351,12 @@ class val TupleElementRef is (AST & Expr)
     if idx == (0 + offset) then return _receiver end
     if idx == (1 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): TupleElementRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TupleElementRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TupleElementRef => create(_receiver, _name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val receiver(): Expr => _receiver
   fun val name(): LitInteger => _name
   
@@ -13041,7 +13408,7 @@ class val LocalLetRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalLetRef missing required field: name", pos')); error
@@ -13060,17 +13427,20 @@ class val LocalLetRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalLetRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LocalLetRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalLetRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): LocalLetRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LocalLetRef => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LocalLetRef => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   
   fun val with_name(name': Id): LocalLetRef => create(name', _attachments)
@@ -13115,7 +13485,7 @@ class val LocalVarRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("LocalVarRef missing required field: name", pos')); error
@@ -13134,17 +13504,20 @@ class val LocalVarRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LocalVarRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LocalVarRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LocalVarRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): LocalVarRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LocalVarRef => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LocalVarRef => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   
   fun val with_name(name': Id): LocalVarRef => create(name', _attachments)
@@ -13189,7 +13562,7 @@ class val ParamRef is (AST & LocalRef & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("ParamRef missing required field: name", pos')); error
@@ -13208,17 +13581,20 @@ class val ParamRef is (AST & LocalRef & Expr)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ParamRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): ParamRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ParamRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     if idx == (0 + offset) then return _name end
     error
-  fun val attach[A: Any #share](a: A): ParamRef => create(_name, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): ParamRef => create(_name, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): ParamRef => create(_name, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   
   fun val with_name(name': Id): ParamRef => create(name', _attachments)
@@ -13266,7 +13642,7 @@ class val ViewpointType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let left': (AST | None) =
       try iter.next()?
       else errs.push(("ViewpointType missing required field: left", pos')); error
@@ -13293,8 +13669,8 @@ class val ViewpointType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ViewpointType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): ViewpointType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ViewpointType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -13302,9 +13678,12 @@ class val ViewpointType is (AST & Type)
     if idx == (0 + offset) then return _left end
     if idx == (1 + offset) then return _right end
     error
-  fun val attach[A: Any #share](a: A): ViewpointType => create(_left, _right, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): ViewpointType => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): ViewpointType => create(_left, _right, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val left(): Type => _left
   fun val right(): Type => _right
   
@@ -13360,7 +13739,7 @@ class val UnionType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -13375,8 +13754,8 @@ class val UnionType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[UnionType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): UnionType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): UnionType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -13384,9 +13763,12 @@ class val UnionType is (AST & Type)
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): UnionType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): UnionType => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): UnionType => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Type] => _list
   
   fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): UnionType => create(list', _attachments)
@@ -13443,7 +13825,7 @@ class val IsectType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -13458,8 +13840,8 @@ class val IsectType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[IsectType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): IsectType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): IsectType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -13467,9 +13849,12 @@ class val IsectType is (AST & Type)
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): IsectType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): IsectType => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): IsectType => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Type] => _list
   
   fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): IsectType => create(list', _attachments)
@@ -13526,7 +13911,7 @@ class val TupleType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Type]
     var list_next' = try iter.next()? else None end
     while true do
@@ -13541,8 +13926,8 @@ class val TupleType is (AST & Type)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TupleType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TupleType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TupleType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -13550,9 +13935,12 @@ class val TupleType is (AST & Type)
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): TupleType => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TupleType => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TupleType => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Type] => _list
   
   fun val with_list(list': (coll.Vec[Type] | Array[Type] val)): TupleType => create(list', _attachments)
@@ -13617,7 +14005,7 @@ class val NominalType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("NominalType missing required field: name", pos')); error
@@ -13656,8 +14044,8 @@ class val NominalType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[NominalType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): NominalType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): NominalType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -13668,9 +14056,12 @@ class val NominalType is (AST & Type)
     if idx == (3 + offset) then return _cap end
     if idx == (4 + offset) then return _cap_mod end
     error
-  fun val attach[A: Any #share](a: A): NominalType => create(_name, _package, _type_args, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): NominalType => create(_name, _package, _type_args, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): NominalType => create(_name, _package, _type_args, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val package(): (Id | None) => _package
   fun val type_args(): (TypeArgs | None) => _type_args
@@ -13752,7 +14143,7 @@ class val FunType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let cap': (AST | None) =
       try iter.next()?
       else errs.push(("FunType missing required field: cap", pos')); error
@@ -13786,8 +14177,8 @@ class val FunType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[FunType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): FunType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): FunType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -13797,9 +14188,12 @@ class val FunType is (AST & Type)
     if idx == (2 + offset) then return _params end
     if idx == (3 + offset) then return _return_type end
     error
-  fun val attach[A: Any #share](a: A): FunType => create(_cap, _type_params, _params, _return_type, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): FunType => create(_cap, _type_params, _params, _return_type, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): FunType => create(_cap, _type_params, _params, _return_type, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val cap(): Cap => _cap
   fun val type_params(): (TypeParams | None) => _type_params
   fun val params(): Params => _params
@@ -13886,7 +14280,7 @@ class val LambdaType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -13937,8 +14331,8 @@ class val LambdaType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LambdaType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LambdaType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LambdaType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -13952,9 +14346,12 @@ class val LambdaType is (AST & Type)
     if idx == (6 + offset) then return _object_cap end
     if idx == (7 + offset) then return _cap_mod end
     error
-  fun val attach[A: Any #share](a: A): LambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -14069,7 +14466,7 @@ class val BareLambdaType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let method_cap': (AST | None) = try iter.next()? else None end
     let name': (AST | None) = try iter.next()? else None end
     let type_params': (AST | None) = try iter.next()? else None end
@@ -14120,8 +14517,8 @@ class val BareLambdaType is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[BareLambdaType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): BareLambdaType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): BareLambdaType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -14135,9 +14532,12 @@ class val BareLambdaType is (AST & Type)
     if idx == (6 + offset) then return _object_cap end
     if idx == (7 + offset) then return _cap_mod end
     error
-  fun val attach[A: Any #share](a: A): BareLambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): BareLambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): BareLambdaType => create(_method_cap, _name, _type_params, _param_types, _return_type, _partial, _object_cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val method_cap(): (Cap | None) => _method_cap
   fun val name(): (Id | None) => _name
   fun val type_params(): (TypeParams | None) => _type_params
@@ -14237,7 +14637,7 @@ class val TypeParamRef is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     let name': (AST | None) =
       try iter.next()?
       else errs.push(("TypeParamRef missing required field: name", pos')); error
@@ -14266,8 +14666,8 @@ class val TypeParamRef is (AST & Type)
       end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[TypeParamRef](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): TypeParamRef => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): TypeParamRef => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 1 + 1 + 1
   fun val apply(idx: USize): (AST | None)? =>
@@ -14276,9 +14676,12 @@ class val TypeParamRef is (AST & Type)
     if idx == (1 + offset) then return _cap end
     if idx == (2 + offset) then return _cap_mod end
     error
-  fun val attach[A: Any #share](a: A): TypeParamRef => create(_name, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): TypeParamRef => create(_name, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): TypeParamRef => create(_name, _cap, _cap_mod, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val name(): Id => _name
   fun val cap(): (Cap | GenCap | None) => _cap
   fun val cap_mod(): (CapMod | None) => _cap_mod
@@ -14333,7 +14736,7 @@ class val ThisType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14343,16 +14746,19 @@ class val ThisType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ThisType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): ThisType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ThisType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): ThisType => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): ThisType => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): ThisType => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14379,7 +14785,7 @@ class val DontCareType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14389,16 +14795,19 @@ class val DontCareType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[DontCareType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): DontCareType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): DontCareType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): DontCareType => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): DontCareType => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): DontCareType => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14425,7 +14834,7 @@ class val ErrorType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14435,16 +14844,19 @@ class val ErrorType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[ErrorType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): ErrorType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): ErrorType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): ErrorType => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): ErrorType => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): ErrorType => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14471,7 +14883,7 @@ class val LiteralType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14481,16 +14893,19 @@ class val LiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LiteralType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LiteralType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): LiteralType => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LiteralType => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LiteralType => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14517,7 +14932,7 @@ class val LiteralTypeBranch is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14527,16 +14942,19 @@ class val LiteralTypeBranch is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[LiteralTypeBranch](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): LiteralTypeBranch => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): LiteralTypeBranch => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): LiteralTypeBranch => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): LiteralTypeBranch => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14563,7 +14981,7 @@ class val OpLiteralType is (AST & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14573,16 +14991,19 @@ class val OpLiteralType is (AST & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[OpLiteralType](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): OpLiteralType => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): OpLiteralType => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): OpLiteralType => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): OpLiteralType => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): OpLiteralType => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14609,7 +15030,7 @@ class val Iso is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14619,16 +15040,19 @@ class val Iso is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Iso](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Iso => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Iso => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Iso => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Iso => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Iso => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14655,7 +15079,7 @@ class val Trn is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14665,16 +15089,19 @@ class val Trn is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Trn](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Trn => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Trn => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Trn => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Trn => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Trn => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14701,7 +15128,7 @@ class val Ref is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14711,16 +15138,19 @@ class val Ref is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ref](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Ref => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ref => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Ref => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Ref => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Ref => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14747,7 +15177,7 @@ class val Val is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14757,16 +15187,19 @@ class val Val is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Val](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Val => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Val => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Val => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Val => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Val => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14793,7 +15226,7 @@ class val Box is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14803,16 +15236,19 @@ class val Box is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Box](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Box => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Box => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Box => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Box => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Box => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14839,7 +15275,7 @@ class val Tag is (AST & Cap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14849,16 +15285,19 @@ class val Tag is (AST & Cap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Tag](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Tag => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Tag => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Tag => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Tag => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Tag => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14885,7 +15324,7 @@ class val CapRead is (AST & GenCap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14895,16 +15334,19 @@ class val CapRead is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapRead](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CapRead => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapRead => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): CapRead => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CapRead => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CapRead => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14931,7 +15373,7 @@ class val CapSend is (AST & GenCap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14941,16 +15383,19 @@ class val CapSend is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapSend](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CapSend => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapSend => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): CapSend => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CapSend => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CapSend => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -14977,7 +15422,7 @@ class val CapShare is (AST & GenCap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -14987,16 +15432,19 @@ class val CapShare is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapShare](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CapShare => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapShare => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): CapShare => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CapShare => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CapShare => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15023,7 +15471,7 @@ class val CapAlias is (AST & GenCap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15033,16 +15481,19 @@ class val CapAlias is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAlias](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CapAlias => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapAlias => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): CapAlias => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CapAlias => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CapAlias => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15069,7 +15520,7 @@ class val CapAny is (AST & GenCap & Type)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15079,16 +15530,19 @@ class val CapAny is (AST & GenCap & Type)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[CapAny](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): CapAny => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): CapAny => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): CapAny => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): CapAny => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): CapAny => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15115,7 +15569,7 @@ class val Aliased is (AST & CapMod)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15125,16 +15579,19 @@ class val Aliased is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Aliased](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Aliased => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Aliased => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Aliased => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Aliased => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Aliased => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15161,7 +15618,7 @@ class val Ephemeral is (AST & CapMod)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15171,16 +15628,19 @@ class val Ephemeral is (AST & CapMod)
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ephemeral](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Ephemeral => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ephemeral => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Ephemeral => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Ephemeral => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Ephemeral => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15207,7 +15667,7 @@ class val At is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15217,16 +15677,19 @@ class val At is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[At](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): At => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): At => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): At => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): At => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): At => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15253,7 +15716,7 @@ class val Question is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15263,16 +15726,19 @@ class val Question is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Question](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Question => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Question => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Question => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Question => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Question => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15299,7 +15765,7 @@ class val Ellipsis is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15309,16 +15775,19 @@ class val Ellipsis is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Ellipsis](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Ellipsis => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Ellipsis => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Ellipsis => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Ellipsis => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Ellipsis => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15345,7 +15814,7 @@ class val Annotation is AST
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     if
       try
         let extra' = iter.next()?
@@ -15355,16 +15824,19 @@ class val Annotation is AST
     then error end
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Annotation](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Annotation => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Annotation => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? =>
     var offset: USize = 0
     error
-  fun val attach[A: Any #share](a: A): Annotation => create((try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Annotation => create((try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Annotation => create((try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST =>
@@ -15399,7 +15871,7 @@ class val Semicolon is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     var list' = coll.Vec[Expr]
     var list_next' = try iter.next()? else None end
     while true do
@@ -15414,8 +15886,8 @@ class val Semicolon is (AST & Expr)
     _list = list'
   
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Semicolon](consume c, this)
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Semicolon => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Semicolon => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => _list.size()
   fun val apply(idx: USize): (AST | None)? =>
@@ -15423,9 +15895,12 @@ class val Semicolon is (AST & Expr)
     if idx < (0 + offset + _list.size()) then return _list(idx - (0 + offset))? end
     offset = (offset + _list.size()) - 1
     error
-  fun val attach[A: Any #share](a: A): Semicolon => create(_list, (try _attachments as Attachments else Attachments end).attach[A](a))
+  fun val attach_val[A: Any val](a: A): Semicolon => create(_list, (try _attachments as Attachments else Attachments end).attach_val[A](a))
   
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_tag[A: Any tag](a: A): Semicolon => create(_list, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val list(): coll.Vec[Expr] => _list
   
   fun val with_list(list': (coll.Vec[Expr] | Array[Expr] val)): Semicolon => create(list', _attachments)
@@ -15474,7 +15949,7 @@ class val Id is (AST & Expr)
     pos': SourcePosAny = SourcePosNone,
     errs: Array[(String, SourcePosAny)] = [])?
   =>
-    _attachments = Attachments.attach[SourcePosAny](pos')
+    _attachments = Attachments.attach_val[SourcePosAny](pos')
     _value =
       try
         _ASTUtil.parse_id(pos')?
@@ -15494,13 +15969,15 @@ class val Id is (AST & Expr)
   fun val apply_specialised[C](c: C, fn: {[A: AST val](C, A)} val) => fn[Id](consume c, this)
   fun val get_child_dynamic(child': String, index': USize = 0): (AST | None)? => error
   fun val with_replaced_child(child': AST, replace': (AST | None)): AST => this
-  fun val pos(): SourcePosAny => try find_attached[SourcePosAny]()? else SourcePosNone end
-  fun val with_pos(pos': SourcePosAny): Id => attach[SourcePosAny](pos')
+  fun val pos(): SourcePosAny => try find_attached_val[SourcePosAny]()? else SourcePosNone end
+  fun val with_pos(pos': SourcePosAny): Id => attach_val[SourcePosAny](pos')
   
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
-  fun val attach[A: Any #share](a: A): Id => create(_value, (try _attachments as Attachments else Attachments end).attach[A](a))
-  fun val find_attached[A: Any #share](): A? => (_attachments as Attachments).find[A]()?
+  fun val attach_val[A: Any val](a: A): Id => create(_value, (try _attachments as Attachments else Attachments end).attach_val[A](a))
+  fun val attach_tag[A: Any tag](a: A): Id => create(_value, (try _attachments as Attachments else Attachments end).attach_tag[A](a))
+  fun val find_attached_val[A: Any val](): A? => (_attachments as Attachments).find_val[A]()?
+  fun val find_attached_tag[A: Any tag](): A? => (_attachments as Attachments).find_tag[A]()?
   fun val value(): String => _value
   fun val with_value(value': String): Id => create(value', _attachments)
   fun string(): String iso^ =>
@@ -15526,8 +16003,10 @@ class val EOF is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("EOF") end
@@ -15550,8 +16029,10 @@ class val NewLine is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("NewLine") end
@@ -15574,8 +16055,10 @@ class val Use is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Use") end
@@ -15598,8 +16081,10 @@ class val Colon is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Colon") end
@@ -15622,8 +16107,10 @@ class val Comma is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Comma") end
@@ -15646,8 +16133,10 @@ class val Constant is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Constant") end
@@ -15670,8 +16159,10 @@ class val Pipe is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Pipe") end
@@ -15694,8 +16185,10 @@ class val Ampersand is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Ampersand") end
@@ -15718,8 +16211,10 @@ class val SubType is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("SubType") end
@@ -15742,8 +16237,10 @@ class val Arrow is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Arrow") end
@@ -15766,8 +16263,10 @@ class val DoubleArrow is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("DoubleArrow") end
@@ -15790,8 +16289,10 @@ class val AtLBrace is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("AtLBrace") end
@@ -15814,8 +16315,10 @@ class val LBrace is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LBrace") end
@@ -15838,8 +16341,10 @@ class val RBrace is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RBrace") end
@@ -15862,8 +16367,10 @@ class val LParen is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LParen") end
@@ -15886,8 +16393,10 @@ class val RParen is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RParen") end
@@ -15910,8 +16419,10 @@ class val LSquare is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LSquare") end
@@ -15934,8 +16445,10 @@ class val RSquare is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("RSquare") end
@@ -15958,8 +16471,10 @@ class val LParenNew is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LParenNew") end
@@ -15982,8 +16497,10 @@ class val LBraceNew is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LBraceNew") end
@@ -16006,8 +16523,10 @@ class val LSquareNew is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("LSquareNew") end
@@ -16030,8 +16549,10 @@ class val SubNew is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("SubNew") end
@@ -16054,8 +16575,10 @@ class val SubUnsafeNew is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("SubUnsafeNew") end
@@ -16078,8 +16601,10 @@ class val In is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("In") end
@@ -16102,8 +16627,10 @@ class val Until is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Until") end
@@ -16126,8 +16653,10 @@ class val Do is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Do") end
@@ -16150,8 +16679,10 @@ class val Else is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Else") end
@@ -16174,8 +16705,10 @@ class val ElseIf is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("ElseIf") end
@@ -16198,8 +16731,10 @@ class val Then is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Then") end
@@ -16222,8 +16757,10 @@ class val End is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("End") end
@@ -16246,8 +16783,10 @@ class val Var is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Var") end
@@ -16270,8 +16809,10 @@ class val Let is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Let") end
@@ -16294,8 +16835,10 @@ class val Embed is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Embed") end
@@ -16318,8 +16861,10 @@ class val Where is (AST & Lexeme)
   fun val size(): USize => 0
   fun val apply(idx: USize): (AST | None)? => error
   
-  fun val attach[A: Any #share](a: A): AST => this
-  fun val find_attached[A: Any #share](): A? => error
+  fun val attach_val[A: Any val](a: A): AST => this
+  fun val attach_tag[A: Any tag](a: A): AST => this
+  fun val find_attached_val[A: Any val](): A? => error
+  fun val find_attached_tag[A: Any tag](): A? => error
   
   fun string(): String iso^ =>
     recover String.>append("Where") end
