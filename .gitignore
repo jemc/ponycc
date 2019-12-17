@@ -1,3 +1,4 @@
 .deps
 ponycc/ast/gen/gen
 ponycc/test/test
+ponycc/**/*.dSYM
