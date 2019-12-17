@@ -6,7 +6,7 @@ primitive _ASTUtil
   fun parse_lit_float(pos: SourcePosAny): F64 ? =>
     // TODO: fix stdlib String.f64 to error on failure.
     if pos.length() == 0 then error end
-    pos.string().f64()
+    pos.string().f64()?
 
   fun parse_lit_string(pos: SourcePosAny): String ? =>
     let quotes_length =
