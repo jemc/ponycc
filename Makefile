@@ -11,6 +11,7 @@ clean:
 	rm -f ponycc/ast/ast.pony
 	rm -f ponycc/pass/parse/_parser.pony
 	rm -f ponycc/test/test
+	find -d ponycc -name *.dSYM -delete
 
 ponycc/ast/gen/gen: $(shell ls ponycc/ast/gen/*.pony)
 	stable env $(PONYC) --debug -o ponycc/ast/gen ponycc/ast/gen
