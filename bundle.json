@@ -7,6 +7,14 @@
     {
       "type": "github",
       "repo": "jemc/pony-inspect"
+    },
+    {
+      "type": "github",
+      "repo": "ponylang/glob"
+    },
+    {
+      "type": "github",
+      "repo": "ponylang/regex"
     }
   ]
 }
