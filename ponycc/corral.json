@@ -1,0 +1,11 @@
+{
+  "deps": [
+    {
+      "locator": "github.com/ponylang/peg.git"
+    },
+    {
+      "locator": "github.com/ponylang/glob.git"
+    }
+  ],
+  "info": {}
+}

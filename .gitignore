@@ -1,3 +1,5 @@
 .deps
 ponycc/ast/gen/gen
 ponycc/test/test
+_repos
+_corral
